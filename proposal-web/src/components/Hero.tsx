@@ -1,0 +1,93 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { FaWhatsapp, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'
+
+export default function Hero() {
+  return (
+    <section className="relative bg-gradient-to-br from-primary via-primary-dark to-black text-white py-20 px-4">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center"
+        >
+          <div className="mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
+              PROPUESTA DE DISEÑO WEB
+            </h1>
+            <h2 className="text-2xl md:text-3xl font-semibold mb-2">
+              PÁGINA CATÁLOGO DINÁMICA
+            </h2>
+            <h3 className="text-xl md:text-2xl font-medium">
+              URBANISMA CONSTRUCTORA SRL
+            </h3>
+            <p className="text-lg mt-4 text-gray-200">
+              VERSIÓN FINAL 3.0 - 2025
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mt-12 text-left bg-white/10 backdrop-blur-sm rounded-2xl p-8">
+            {/* Información de la Cotización */}
+            <div className="space-y-3">
+              <h4 className="text-xl font-bold mb-4 text-primary-light">📄 Información de Cotización</h4>
+              <InfoItem label="Cotización" value="#004-2025" />
+              <InfoItem label="Versión" value="1.0" />
+              <InfoItem label="Fecha de emisión" value="11 de noviembre de 2025" />
+              <InfoItem label="Fecha de vencimiento" value="11 de diciembre de 2025" />
+              <InfoItem label="Tiempo de validez" value="30 días" />
+              <InfoItem label="Presupuesto" value="Menos de $300 USD" />
+              <InfoItem label="Moneda" value="USD" />
+            </div>
+
+            {/* Información del Cliente y Proveedor */}
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-xl font-bold mb-4 text-primary-light">👤 PARA:</h4>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Empresa:</strong> Urbanisma Constructora SRL</p>
+                  <p><strong>Sector:</strong> Construcción, Servicios y Comercialización de Materiales</p>
+                  <p><strong>Ubicación:</strong> Calle 12/2da y 3ra, No 36, Ampliación de Marbella, Habana del Este, La Habana, CUBA</p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xl font-bold mb-4 text-primary-light">👨‍💼 DE:</h4>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Profesional:</strong> Daniel Treasure Espinosa</p>
+                  <p><strong>Empresa:</strong> DGTECNOVA</p>
+                  <div className="flex items-center gap-2">
+                    <FaEnvelope className="text-primary-light" />
+                    <a href="mailto:dgtecnova@gmail.com" className="hover:text-primary-light transition">
+                      dgtecnova@gmail.com
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FaWhatsapp className="text-primary-light" />
+                    <a href="https://wa.me/5358569291" className="hover:text-primary-light transition">
+                      +535 856 9291
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-primary-light" />
+                    <span>Arroyo 203, e/ Lindero y Nueva del Pilar, Centro Habana, La Habana, CUBA</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-center py-2 border-b border-white/20">
+      <span className="font-semibold">{label}:</span>
+      <span className="text-gray-200">{value}</span>
+    </div>
+  )
+}
