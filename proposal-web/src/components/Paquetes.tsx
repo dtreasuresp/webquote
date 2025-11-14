@@ -5,7 +5,7 @@ import { FaStar } from 'react-icons/fa'
 
 export default function Paquetes() {
   return (
-    <section id="paquetes" className="py-20 px-4 bg-gradient-to-br from-gray-50 to-gray-100">
+    <section id="paquetes" className="py-20 px-4 bg-gradient-to-br from-secondary via-secondary-light to-neutral-900">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -13,28 +13,29 @@ export default function Paquetes() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-gray-900">
-            📦 Propuesta de 3 Paquetes
+          <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
+            ¿Qué ofrecemos?
+          </h1>
+          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-primary">
+            DGTECNOVA te presenta los siguientes paquetes de Servicios
           </h2>
-          <p className="text-center text-xl text-gray-600 mb-12">
+          <p className="text-center text-xl text-neutral-200 mb-12">
             Hemos diseñado tres opciones que se ajustan a diferentes necesidades y presupuestos
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* Paquete Constructor */}
             <PaqueteCard
+              href="/paquete/constructor"
               icon="🥉"
               nombre="CONSTRUCTOR"
               subtitulo="INVERSIÓN: $208 USD"
-              invertidos={208}
+              invertidos={200}
               description="Empresas que buscan presencia digital confiable, simple pero efectiva."
               features={[
-                { category: 'Hosting (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Hosting (luego 3 meses)', items: ['$28 USD/mes ($252 USD/9 meses)'] },
-                { category: 'Mailbox (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Mailbox (luego 3 meses)', items: ['$4 USD/mes ($36 USD/9 meses)'] },
-                { category: 'Dominio (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Dominio (luego 3 meses)', items: ['$18 USD/mes ($162 USD/9 meses)'] },
+                { category: 'Hosting (luego del 4to mes)', items: ['$28 USD/mes ($252 USD/9 meses)'] },
+                { category: 'Mailbox (luego del 4to mes)', items: ['$4 USD/mes ($36 USD/9 meses)'] },
+                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($162 USD/9 meses)'] },
               ]}
               pages={8}
               timelineWeeks={4}
@@ -43,40 +44,36 @@ export default function Paquetes() {
 
             {/* Paquete Obra Maestra */}
             <PaqueteCard
+              href="/paquete/obra-maestra"
               icon="🥈"
               nombre="OBRA MAESTRA"
               subtitulo="INVERSIÓN: $257 USD"
               invertidos={257}
               description="Empresas que desean máximo impacto digital, profesionalismo y estar listas para captar clientes desde el primer día."
               features={[
-                { category: 'Hosting (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Hosting (luego 3 meses)', items: ['$35 USD/mes ($315/9 meses)'] },
-                { category: 'Mailbox (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Mailbox (luego 3 meses)', items: ['$4 USD/mes ($36/9 meses)'] },
-                { category: 'Dominio (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Dominio (luego 3 meses)', items: ['$18 USD/mes ($162/9 meses)'] },
+                { category: 'Hosting (luego del 4to mes)', items: ['$35 USD/mes ($315/9 meses)'] },
+                { category: 'Mailbox (luego del 4to mes)', items: ['$4 USD/mes ($36/9 meses)'] },
+                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($162/9 meses)'] },
               ]}
-              pages={8}
+              pages={'8+'}
               timelineWeeks={6}
               recomendado={true}
             />
 
             {/* Paquete Premium */}
             <PaqueteCard
+              href="/paquete/imperio-digital"
               icon="🥇"
               nombre="IMPERIO DIGITAL"
               subtitulo="INVERSIÓN: $300 USD"
               invertidos={300}
               description="Empresas que desean ser referentes en su sector con presencia digital de clase mundial."
               features={[
-                { category: 'Hosting (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Hosting (luego 3 meses)', items: ['$40 USD/mes ($360 USD/9 meses)'] },
-                { category: 'Mailbox (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Mailbox (luego 3 meses)', items: ['$4 USD/mes ($36 USD/9 meses)'] },
-                { category: 'Dominio (primeros 3 meses)', items: ['$0 USD (Gratis incluido)'] },
-                { category: 'Dominio (luego 3 meses)', items: ['$18 USD/mes ($162 USD/9 meses)'] },
+                { category: 'Hosting (luego del 4to mes)', items: ['$40 USD/mes ($360 USD/9 meses)'] },
+                { category: 'Mailbox (luego del 4to mes)', items: ['$4 USD/mes ($36 USD/9 meses)'] },
+                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($162 USD/9 meses)'] },
               ]}
-              pages={8}
+              pages={'8+'}
               timelineWeeks={8}
               recomendado={false}
             />
@@ -87,11 +84,11 @@ export default function Paquetes() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16 bg-gradient-to-r from-primary to-primary-dark text-white p-12 rounded-2xl shadow-2xl"
+            className="mt-16 bg-gradient-to-r from-primary via-primary-dark to-secondary text-white p-12 rounded-2xl shadow-2xl border-2 border-accent"
           >
             <h3 className="text-3xl font-bold mb-8">🎁 ¿QUÉ ESTÁ INCLUIDO SIEMPRE?</h3>
             <p className="text-xl mb-8">
-              Independientemente del paquete que elijas, SIEMPRE recibes:
+              Independientemente del paquete que elijas, todos incluyen 3 meses gratis de Hosting, Mailbox y Dominio, 1 mes gratis de gestión de contenidos y también ofrecemos actualizaciones planificadas libres de costo. Además de lo anterior SIEMPRE recibes:
             </p>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -138,7 +135,7 @@ export default function Paquetes() {
                   <ul className="space-y-2">
                     {section.items.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-3">
-                        <span className="text-yellow-300 mt-1">✓</span>
+                        <span className="text-accent mt-1 font-bold">✓</span>
                         <span>{item}</span>
                       </li>
                     ))}
@@ -159,6 +156,7 @@ interface Feature {
 }
 
 function PaqueteCard({
+  href,
   icon,
   nombre,
   subtitulo,
@@ -169,28 +167,59 @@ function PaqueteCard({
   timelineWeeks,
   recomendado,
 }: {
+  href: string
   icon: string
   nombre: string
   subtitulo: string
   invertidos: number
   description: string
   features: Feature[]
-  pages: number
+  pages: number | string
   timelineWeeks: number
   recomendado: boolean
 }) {
+  // Esquema de colores jerárquico según paquete
+  const getCardStyles = () => {
+    if (recomendado) {
+      return {
+        container: 'bg-white border-4 border-accent shadow-2xl shadow-accent/50 scale-105',
+        badge: 'bg-gradient-to-r from-accent to-accent-dark',
+        priceBox: 'bg-gradient-to-br from-accent/10 to-accent-light/20 border-l-4 border-accent',
+        priceText: 'text-accent-dark',
+        button: 'bg-gradient-to-r from-accent to-accent-dark text-white hover:from-accent-dark hover:to-accent shadow-lg',
+      }
+    }
+    if (nombre === 'CONSTRUCTOR') {
+      return {
+        container: 'bg-white border-2 border-primary shadow-lg',
+        badge: '',
+        priceBox: 'bg-gradient-to-br from-primary/10 to-primary-light/20 border-l-4 border-primary',
+        priceText: 'text-primary',
+        button: 'bg-primary text-white hover:bg-primary-dark',
+      }
+    }
+    // Imperio Digital
+    return {
+      container: 'bg-white border-2 border-secondary shadow-lg',
+      badge: '',
+      priceBox: 'bg-gradient-to-br from-secondary/10 to-neutral-200 border-l-4 border-secondary',
+      priceText: 'text-secondary',
+      button: 'bg-secondary text-white hover:bg-secondary-light',
+    }
+  }
+
+  const styles = getCardStyles()
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       whileHover={{ y: -10 }}
-      className={`relative rounded-2xl overflow-hidden shadow-xl transition-all ${
-        recomendado ? 'ring-2 ring-primary scale-105' : ''
-      }`}
+      className={`relative rounded-2xl overflow-hidden transition-all ${styles.container}`}
     >
       {recomendado && (
-        <div className="absolute top-0 left-0 right-0 bg-primary text-white py-2 text-center font-bold flex items-center justify-center gap-2">
+        <div className={`absolute top-0 left-0 right-0 ${styles.badge} text-white py-2 text-center font-bold flex items-center justify-center gap-2 z-10`}>
           <FaStar /> ⭐ RECOMENDADO
         </div>
       )}
@@ -198,44 +227,40 @@ function PaqueteCard({
       <div className={`p-8 ${recomendado ? 'pt-16' : 'pt-8'} h-full flex flex-col`}>
         <div className="text-center mb-6">
           <span className="text-4xl">{icon}</span>
-          <h3 className="text-2xl font-bold text-gray-900 mt-2">{nombre}</h3>
-          <p className="text-primary font-bold text-lg">{subtitulo}</p>
+          <h3 className="text-2xl font-bold text-secondary mt-2">{nombre}</h3>
+          <p className={`${styles.priceText} font-bold text-lg`}>{subtitulo}</p>
         </div>
 
-        <p className="text-gray-700 text-center mb-6 flex-grow">{description}</p>
+        <p className="text-neutral-700 text-center mb-6 flex-grow">{description}</p>
 
-        <div className="bg-gray-50 p-4 rounded-lg mb-6 border-l-4 border-primary">
-          <p className="text-sm text-gray-600">Pago Inicial</p>
-          <p className="text-3xl font-bold text-primary">${invertidos} USD</p>
+        <div className={`${styles.priceBox} p-4 rounded-lg mb-6`}>
+          <p className="text-sm text-neutral-600">Pago Inicial</p>
+          <p className={`text-3xl font-bold ${styles.priceText}`}>${invertidos} USD</p>
         </div>
 
-        <div className="space-y-4 mb-6 flex-grow">
-          {features.slice(0, 3).map((feature, index) => (
+        <div className="grid grid-cols-1 gap-4 mb-6 flex-grow">
+          {features.map((feature, index) => (
             <div key={index} className="text-sm">
-              <p className="font-semibold text-gray-900">{feature.category}</p>
-              <p className="text-gray-600">{feature.items[0]}</p>
+              <p className="font-semibold text-secondary text-xs leading-tight">{feature.category}</p>
+              <p className="text-neutral-600 text-xs">{feature.items[0]}</p>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-200">
+        <div className="grid grid-cols-2 gap-4 pt-6 border-t border-neutral-200">
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary">{pages}</p>
-            <p className="text-xs text-gray-600">Páginas</p>
+            <p className={`text-2xl font-bold ${styles.priceText}`}>{pages}</p>
+            <p className="text-xs text-neutral-600">Páginas</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-primary">{timelineWeeks}</p>
-            <p className="text-xs text-gray-600">Semanas</p>
+            <p className={`text-2xl font-bold ${styles.priceText}`}>{timelineWeeks}</p>
+            <p className="text-xs text-neutral-600">Semanas</p>
           </div>
         </div>
 
         <a
-          href="#contacto"
-          className={`mt-6 py-3 px-4 rounded-lg font-bold text-center transition-all ${
-            recomendado
-              ? 'bg-primary text-white hover:bg-primary-dark'
-              : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-          }`}
+          href={href}
+          className={`mt-6 py-3 px-4 rounded-lg font-bold text-center transition-all ${styles.button}`}
         >
           Ver Detalles
         </a>

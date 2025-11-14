@@ -19,14 +19,14 @@ export default function GarantiasYFAQ() {
           id="garantias"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900">
-            🛡️ Garantías y Responsabilidades
+            Garantías y Responsabilidades
           </h2>
 
           <div className="grid md:grid-cols-2 gap-8 mb-16">
             {/* Proveedor Responsable */}
-            <div className="bg-green-50 p-8 rounded-2xl border-2 border-green-200">
-              <h3 className="text-2xl font-bold mb-6 text-green-900 flex items-center gap-2">
-                <FaCheckCircle className="text-green-600" />
+            <div className="bg-accent/10 p-8 rounded-2xl border-2 border-accent">
+              <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
+                <FaCheckCircle className="text-accent" />
                 EL PROVEEDOR GARANTIZA:
               </h3>
               <ul className="space-y-3">
@@ -41,9 +41,15 @@ export default function GarantiasYFAQ() {
                   'Cambios realizados puntualmente',
                   'Diseño profesional de tu sitio',
                   'Hosting, dominio y correo funcionando',
+                  'Descuentos aplicados según paquete',
+                  'Cumplimiento de normativas legales',
+                  'Protección de datos y privacidad',
+                  'Confidencialidad de la información',
+                  'Soporte post-lanzamiento',
+                  'Período de garantía definido (30 a 60 días según paquete)',
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3 text-gray-800">
-                    <FaCheckCircle className="text-green-600 mt-1 flex-shrink-0" />
+                    <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -51,9 +57,9 @@ export default function GarantiasYFAQ() {
             </div>
 
             {/* Cliente Responsable */}
-            <div className="bg-yellow-50 p-8 rounded-2xl border-2 border-yellow-200">
-              <h3 className="text-2xl font-bold mb-6 text-yellow-900 flex items-center gap-2">
-                <FaTimesCircle className="text-yellow-600" />
+            <div className="bg-neutral-50 p-8 rounded-2xl border-2 border-neutral-300">
+              <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
+                <FaTimesCircle className="text-primary" />
                 EL CLIENTE ES RESPONSABLE DE:
               </h3>
               <ul className="space-y-3">
@@ -63,9 +69,20 @@ export default function GarantiasYFAQ() {
                   'Aprobar diseños y funcionalidades puntualmente',
                   'Usar el sitio legalmente',
                   'Notificar si hay problemas',
+                  'Solicitar cambios dentro del alcance acordado',
+                  'Mantener la confidencialidad de accesos',
+                  'No transferir el sitio sin consentimiento', 
+                  'Cumplir con las políticas de uso',
+                  'Respetar los términos de servicio',
+                  'No realizar modificaciones no autorizadas',
+                  'Proporcionar feedback constructivo',
+                  'Colaborar en pruebas y revisiones',
+                  'Mantener comunicación abierta',
+                  'Seguir las recomendaciones de seguridad',
+                  'Respetar los plazos acordados',
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3 text-gray-800">
-                    <FaCheckCircle className="text-yellow-600 mt-1 flex-shrink-0" />
+                    <FaCheckCircle className="text-primary mt-1 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -74,7 +91,7 @@ export default function GarantiasYFAQ() {
           </div>
 
           {/* Políticas de Cancelación */}
-          <div className="bg-gradient-to-r from-red-50 to-orange-50 p-8 rounded-2xl border-2 border-red-300 mb-16">
+          <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-8 rounded-2xl border-2 border-red-300 mb-16">
             <h3 className="text-2xl font-bold mb-6 text-red-900">
               📋 POLÍTICAS DE CANCELACIÓN
             </h3>
@@ -85,7 +102,7 @@ export default function GarantiasYFAQ() {
                   detail: 'Se devuelve hasta el 50% de la inversión inicial (solo desarrollo)',
                 },
                 {
-                  title: 'Luego del segundo mes',
+                  title: 'Luego del segundo mes de lanzamiento',
                   detail: 'Reembolso de 30% de la inversión inicial (solo desarrollo)',
                 },
                 {
@@ -102,8 +119,8 @@ export default function GarantiasYFAQ() {
           </div>
 
           {/* Si Incumple el Proveedor */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-2xl border-2 border-blue-300 mb-16">
-            <h3 className="text-2xl font-bold mb-6 text-blue-900">
+          <div className="bg-gradient-to-r from-secondary/10 to-neutral-100 p-8 rounded-2xl border-2 border-secondary mb-16">
+            <h3 className="text-2xl font-bold mb-6 text-secondary">
               ⚖️ SI EL PROVEEDOR INCUMPLE
             </h3>
             <div className="space-y-3">
@@ -111,9 +128,17 @@ export default function GarantiasYFAQ() {
                 'Procede a compensación al cliente por inactividad (descuento de hasta un 40% en el próximo mes)',
                 'Corrección inmediata sin costo adicional',
                 'Reembolso parcial según el impacto',
+                'Revisión de los términos del contrato',
+                'Terminación del contrato si persisten incumplimientos',
+                'Notificación formal por escrito',
+                'Plazo de 15 días para subsanar el incumplimiento',
+                'Acceso a soporte prioritario',
+                'Informe detallado de acciones correctivas',
+                'Garantía extendida en caso de fallos recurrentes',
+                'Suspensión temporal del servicio si es necesario',
               ].map((item, index) => (
                 <div key={index} className="flex items-start gap-3 text-gray-800">
-                  <FaCheckCircle className="text-blue-600 mt-1 flex-shrink-0" />
+                  <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -129,7 +154,7 @@ export default function GarantiasYFAQ() {
           id="faq"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900">
-            ❓ Preguntas Frecuentes
+            Preguntas Frecuentes
           </h2>
 
           <div className="space-y-4 max-w-3xl mx-auto">
@@ -227,7 +252,7 @@ const faqData = [
     question: '¿Qué pasa si el cliente quiere más cambios de los incluidos?',
     answer: [
       'Se debe valorar el impacto y complejidad de los cambios solicitados:',
-      '• Constructor: Cambios extras = $10 cada uno',
+      '• Constructor: Cambios extras = $1.5 USD cada uno',
       '• Obra Maestra: Ilimitados',
       '• Imperio Digital: Ilimitados',
     ],
@@ -271,5 +296,27 @@ const faqData = [
   {
     question: '¿Necesito conocimientos técnicos?',
     answer: 'NO. El proveedor hace TODO lo técnico. El cliente sólo dice qué cambios quiere.',
+  },
+  {
+    question: '¿Puedo agregar más servicios después?',
+    answer: [
+      'Sí. Podemos incluir servicios adicionales como:',
+      '• SEO pagado adicional',
+      '• Publicidad digital',
+      '• Email marketing',
+      '• Diseño gráfico',
+      '• Redes sociales',
+      '• Mantenimiento avanzado',
+      '• Consultoría estratégica',
+      '• Otros servicios digitales (Manual visual, branding, etc.)',
+      '• Desarrollo de aplicaciones móviles',
+      '• Elaboración de campañas publicitarias',
+      '• Elaboracion de documentos del negocio',
+      '👌 Por supuesto, estos servicios se cotizan por separado y según el paquete contratado se aplican descuentos por fidelidad del cliente.',
+    ],
+  },
+    {
+    question: '¿El cliente puede dejar de pagar después?',
+    answer: 'Sí, pero el sitio se desactivará, teniendo en cuenta que las plataformas que se usan para desplegar el sitio requieren pagos continuos. El cliente pierde el dominio y el hosting. Si lo retoma, existe el riesgo de perder totalmente el dominio por indisponibilidad, por haber sido comprado por otro cliente global',
   },
 ]

@@ -1,7 +1,7 @@
 ════════════════════════════════════════════════════════════════════════════════
 
                           PROPUESTA DE DISEÑO WEB
-                   PÁGINA CATÁLOGO DINÁMICA - URBANISMA CONSTRUCTORA SRL
+                   PÁGINA CATÁLOGO DINÁMICA - Urbanisima CONSTRUCTORA SRL
                           VERSIÓN FINAL 3.0 - 2025
                           
 ═══════════════════════════════════════════════════════════════════════════════
@@ -17,7 +17,7 @@
 ───────────────────────────────────────────────────────────────────────────────
 
 👤 PARA:
-   - Empresa: Urbanisma Constructora SRL
+   - Empresa: Urbanisima Constructora SRL
    - Sector: Construcción, Servicios y Comercialización de Materiales
    - Ubicación: Calle 12/2da y 3ra, No 36, Ampliación de Marbella
                 Habana del Este, La Habana, CUBA
@@ -56,7 +56,7 @@
 
 Tenemos el placer de presentar esta propuesta profesional para el desarrollo de tu sitio web corporativo.
 
-Luego de analizar detalladamente tus respuestas del cuestionario y las necesidades específicas de Urbanisma Constructora, ofrecemos una **solución dinámica** que te permitirá:
+Luego de analizar detalladamente tus respuestas del cuestionario y las necesidades específicas de Urbanisima Constructora, ofrecemos una **solución dinámica** que te permitirá:
 
 - ✅ Mostrar profesionalmente tu catálogo de 10 servicios/productos
 - ✅ Actualizar contenido fácilmente SIN necesidad de programador
@@ -89,7 +89,7 @@ Este modelo es:
 - ✓ Actualizar productos/servicios
 - ✓ Cambiar precios y disponibilidad
 - ✓ Agregar nuevas fotos
-- ✓ Subir videos
+- ✓ Subir videos entregados por el cliente o escogidos desde las redes
 - ✓ Escribir o publicar artículos de blog
 - ✓ Actualizar información de contacto
 - ✓ Cambiar banners y promociones
@@ -148,7 +148,7 @@ Cliente: Ve el sitio actualizado en vivo
 
 | Campo | Detalle |
 |-------|---------|
-| **Empresa** | Urbanisma Constructora SRL |
+| **Empresa** | Urbanisima Constructora SRL |
 | **Sector** | Construcción |
 | **Ubicación** | Calle 12/2da y 3ra, No 36, Ampliación de Marbella, Habana del Este, La Habana, Cuba |
 | **Trayectoria** | 15 años en el mercado |
@@ -503,7 +503,7 @@ Si lo decides, puede actualizar el contenido desde un panel fácil, sin llamar a
 
 ---
 
-### 🎯 ¿CUÁL RECOMENDAMOS PARA URBANISMA?
+### 🎯 ¿CUÁL RECOMENDAMOS PARA Urbanisima?
 
 **NUESTRA RECOMENDACIÓN: SITIO DINÁMICO**
 
@@ -615,6 +615,7 @@ Optimización:
 - ✓ Guía para actualizar contenido
 
 **Soporte post-lanzamiento:**
+
 - ✓ 30 días de garantía técnica
 - ✓ Corrección de bugs menores sin costo
 - ✓ Soporte por email
@@ -843,7 +844,7 @@ A las opciones de pago anterior se suman los costos iniciales de hosting, mailbo
 - Si paga 100% del desarrollo adelantado: **10% DESCUENTO DEL DESARROLLO = Pagas $180 USD**
 (+ $35 USD hosting + $4 USD mailbox + $18 USD dominio = $237 USD total inicial). Se cobra por separado la gestión mensual a partir del primer mes de lanzamiento.
 
-**BONUS EXCLUSIVO DEL PAQUETE PREMIUM:**
+**BONUS EXCLUSIVO DEL PAQUETE OBRA MAESTRA:**
 - ✓ 2 banners diseñados para redes sociales
 - ✓ Descuento en futuros servicios (5%)
 
@@ -1490,7 +1491,7 @@ Solo tu decisión de transformar tu presencia digital.
 ### OPCIÓN A: RESPONDE ESTA PROPUESTA
 ```
 📧 Email: dgtecnova@gmail.com
-Asunto: "Confirmo paquete [CONSTRUCTOR/OBRA MAESTRA/IMPERIO DIGITAL] - Urbanisma"
+Asunto: "Confirmo paquete [CONSTRUCTOR/OBRA MAESTRA/IMPERIO DIGITAL] - Urbanisima"
 ```
 
 ### OPCIÓN B: CONTÁCTO DIRECTO O A TRAVES DE PERSONA DESIGNADA
@@ -1514,9 +1515,9 @@ Asunto: "Confirmo paquete [CONSTRUCTOR/OBRA MAESTRA/IMPERIO DIGITAL] - Urbanisma
 
 ## 💬 Observación Final
 
-Urbanisma Constructora SRL representa una oportunidad de proyecto interesante con un cliente comprometido y motivado. Sin embargo, es **fundamental negociar los aspectos de presupuesto, cronograma y alcance** antes de iniciar el desarrollo para garantizar el éxito del proyecto y la satisfacción del cliente.
+Urbanisima Constructora SRL representa una oportunidad de proyecto interesante con un cliente comprometido y motivado. Sin embargo, es **fundamental negociar los aspectos de presupuesto, cronograma y alcance** antes de iniciar el desarrollo para garantizar el éxito del proyecto y la satisfacción del cliente.
 
-La empresa tiene claras sus necesidades comerciales y la presencia digital es estratégica para su crecimiento. Con la ejecución adecuada, este sitio web puede convertirse en una herramienta poderosa para captar nuevos clientes y consolidar la posición de mercado de Urbanisma.
+La empresa tiene claras sus necesidades comerciales y la presencia digital es estratégica para su crecimiento. Con la ejecución adecuada, este sitio web puede convertirse en una herramienta poderosa para captar nuevos clientes y consolidar la posición de mercado de Urbanisima.
 
 Quedo atento a tu respuesta.
 
@@ -1529,6 +1530,6 @@ CEO DGTECNOVA
 
 - **Actualización:** 11 de noviembre de 2025
 - **Versión:** Final 3.1 - Gestión Total a Cargo del Proveedor
-- **Estado:** Pendiente de aprobación del cliente Urbanisma Constructora SRL
+- **Estado:** Pendiente de aprobación del cliente Urbanisima Constructora SRL
 
 ═══════════════════════════════════════════════════════════════════════════════

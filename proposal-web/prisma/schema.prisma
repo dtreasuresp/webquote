@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model PackageSnapshot {
+  id              String   @id @default(cuid())
+  nombre          String
+  
+  // Servicios Base
+  hostingPrice    Float
+  mailboxPrice    Float
+  dominioPrice    Float
+  mesesGratis     Int
+  mesesPago       Int
+  
+  // Gestión
+  gestionPrecio   Float
+  gestionMesesGratis Int
+  gestionMesesPago Int
+  
+  // Paquete
+  desarrollo      Float
+  descuento       Int
+  
+  // Otros Servicios (JSON)
+  otrosServicios  Json
+  
+  // Costos
+  costoInicial    Float
+  costoAño1       Float
+  costoAño2       Float
+  
+  // Metadata
+  activo          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([createdAt])
+}

@@ -1,0 +1,33 @@
+
+> Urbanisima-propuesta-web@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.33
+
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/8) ...
+   Generating static pages (2/8) 
+   Generating static pages (4/8) 
+   Generating static pages (6/8) 
+ Ô£ô Generating static pages (8/8)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Ôöî Ôùï /                                    24.7 kB         161 kB
+Ôö£ Ôùï /_not-found                          873 B          88.2 kB
+Ôö£ Ôùï /administrador                       3.96 kB         141 kB
+Ôö£ Ôùï /paquete/constructor                 4.8 kB          142 kB
+Ôö£ Ôùï /paquete/imperio-digital             5.68 kB         142 kB
+Ôöö Ôùï /paquete/obra-maestra                5.4 kB          142 kB
++ First Load JS shared by all            87.3 kB
+  Ôö£ chunks/117-e6238b5346d41c6a.js       31.8 kB
+  Ôö£ chunks/fd9d1056-b11b2651f33aae7f.js  53.6 kB
+  Ôöö other shared chunks (total)          1.89 kB
+
+
+Ôùï  (Static)  prerendered as static content
+

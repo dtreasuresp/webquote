@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaBars, FaTimes } from 'react-icons/fa'
+import Link from 'next/link'
 
 const navItems = [
-  { id: 'resumen', label: 'Resumen Ejecutivo' },
-  { id: 'analisis', label: 'Análisis' },
-  { id: 'dinamico-vs-estatico', label: 'Dinámico vs Estático' },
+  { id: 'resumen', label: 'Inicio' },
+  { id: 'analisis', label: 'Solicitudes' },
+  { id: 'dinamico-vs-estatico', label: 'Definición' },
   { id: 'paquetes', label: 'Paquetes' },
   { id: 'comparativa', label: 'Comparativa' },
   { id: 'garantias', label: 'Garantías' },
@@ -51,11 +52,11 @@ export default function Navigation() {
                 isScrolled ? 'text-primary' : 'text-white'
               }`}
             >
-              URBANISMA CONSTRUCTORA
+              Urbanisima CONSTRUCTORA SRL
             </motion.div>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex space-x-6">
+            <div className="hidden lg:flex space-x-6 items-center">
               {navItems.map((item, index) => (
                 <motion.button
                   key={item.id}
@@ -72,6 +73,22 @@ export default function Navigation() {
                   {item.label}
                 </motion.button>
               ))}
+              
+              {/* Botón Admin */}
+              <Link href="/administrador">
+                <motion.button
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className={`px-4 py-2 rounded-lg font-bold transition-all duration-300 flex items-center gap-2 ${
+                    isScrolled
+                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-lg'
+                      : 'bg-gradient-to-r from-accent to-accent-dark text-white hover:shadow-lg'
+                  }`}
+                >
+                  Admin
+                </motion.button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -93,9 +110,9 @@ export default function Navigation() {
           initial={{ opacity: 0, x: '100%' }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: '100%' }}
-          className="fixed inset-0 z-40 bg-white lg:hidden"
+          className="fixed inset-0 z-40 bg-white lg:hidden pt-20"
         >
-          <div className="flex flex-col items-center justify-center h-full space-y-6">
+          <div className="flex flex-col items-center justify-start h-full space-y-6 p-4">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -105,6 +122,16 @@ export default function Navigation() {
                 {item.label}
               </button>
             ))}
+            
+            {/* Admin Link Mobile */}
+            <Link href="/administrador">
+              <motion.button
+                className="text-2xl font-bold px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                📊 Admin
+              </motion.button>
+            </Link>
           </div>
         </motion.div>
       )}

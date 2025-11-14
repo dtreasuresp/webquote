@@ -14,7 +14,7 @@ export default function Contacto() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-4">
-            📞 Próximos Pasos
+            Próximos Pasos
           </h2>
           <p className="text-center text-xl mb-12 text-gray-100">
             Ya sabes qué necesitas. Ya sabes qué cuesta. Ya sabes qué obtienes.
@@ -37,7 +37,7 @@ export default function Contacto() {
                 transition={{ delay: index * 0.1 }}
                 className="bg-white/10 backdrop-blur-sm p-6 rounded-xl text-center hover:bg-white/20 transition-all"
               >
-                <div className="text-4xl font-bold mb-2 text-yellow-300">{step.num}</div>
+                <div className="text-4xl font-bold mb-2 text-accent">{step.num}</div>
                 <div className="font-bold mb-2">{step.label}</div>
                 <div className="text-sm text-gray-200">{step.desc}</div>
                 {index < 4 && (
@@ -56,7 +56,7 @@ export default function Contacto() {
               href="https://wa.me/5358569291"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-green-500/30 transition-all"
+              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-accent/30 transition-all"
             >
               <FaWhatsapp className="text-4xl mx-auto mb-4" />
               <h3 className="text-2xl font-bold mb-2">WhatsApp</h3>
@@ -67,7 +67,7 @@ export default function Contacto() {
             <motion.a
               whileHover={{ scale: 1.05 }}
               href="mailto:dgtecnova@gmail.com"
-              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-blue-500/30 transition-all"
+              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-primary/30 transition-all"
             >
               <FaEnvelope className="text-4xl mx-auto mb-4" />
               <h3 className="text-2xl font-bold mb-2">Email</h3>
@@ -78,7 +78,7 @@ export default function Contacto() {
             <motion.a
               whileHover={{ scale: 1.05 }}
               href="tel:+5358569291"
-              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-purple-500/30 transition-all"
+              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-secondary/30 transition-all"
             >
               <FaPhone className="text-4xl mx-auto mb-4" />
               <h3 className="text-2xl font-bold mb-2">Llamada</h3>
@@ -87,39 +87,6 @@ export default function Contacto() {
             </motion.a>
           </div>
 
-          {/* Ofertas especiales */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 p-8 rounded-2xl mb-16"
-          >
-            <h3 className="text-2xl font-bold mb-4">🎁 OFERTAS ESPECIALES</h3>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-white mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-bold">Constructor:</p>
-                  <p>Sin oferta especial</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-white mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-bold">Obra Maestra:</p>
-                  <p>Si pagas 100% adelantado: 10% DESCUENTO = Pagas $180 USD</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <FaCheckCircle className="text-white mt-1 flex-shrink-0" />
-                <div>
-                  <p className="font-bold">Imperio Digital:</p>
-                  <p>Si pagas 100% adelantado: 15% DESCUENTO = Pagas $202 USD</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
           {/* Información de Ubicación */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -127,7 +94,7 @@ export default function Contacto() {
             viewport={{ once: true }}
             className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl text-center mb-12"
           >
-            <h3 className="text-2xl font-bold mb-6">📍 UBICACIÓN</h3>
+            <h3 className="text-2xl font-bold mb-6">NUESTRA UBICACIÓN</h3>
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-3">
                 <FaMapMarkerAlt className="text-2xl" />
@@ -154,37 +121,6 @@ export default function Contacto() {
             <p className="text-xl mb-8 text-gray-700">
               Solo tu decisión de transformar tu presencia digital
             </p>
-
-            <div className="grid md:grid-cols-3 gap-4">
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                href="https://wa.me/5358569291"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-green-500 text-white py-3 px-6 rounded-lg font-bold hover:bg-green-600 transition-all flex items-center justify-center gap-2"
-              >
-                <FaWhatsapp />
-                Chatear por WhatsApp
-              </motion.a>
-
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                href="mailto:dgtecnova@gmail.com?subject=Confirmo%20paquete%20-%20Urbanisma&body=Hola%2C%20estoy%20interesado%20en%20conocer%20m%C3%A1s%20sobre%20los%20paquetes%20de%20desarrollo%20web."
-                className="bg-blue-500 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
-              >
-                <FaEnvelope />
-                Enviar Email
-              </motion.a>
-
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                href="tel:+5358569291"
-                className="bg-purple-500 text-white py-3 px-6 rounded-lg font-bold hover:bg-purple-600 transition-all flex items-center justify-center gap-2"
-              >
-                <FaPhone />
-                Llamar Ahora
-              </motion.a>
-            </div>
           </motion.div>
 
           {/* Footer */}
@@ -198,7 +134,7 @@ export default function Contacto() {
               Daniel Treasure Espinosa | CEO DGTECNOVA
             </p>
             <p className="text-sm mb-4">
-              Propuesta actualizada: 11 de noviembre de 2025 | Versión: Final 3.1
+              Propuesta actualizada: 11 de noviembre de 2025 | Versión: 1.0
             </p>
             <p className="text-sm text-gray-400">
               © 2025 DGTECNOVA. Todos los derechos reservados.
