@@ -31,7 +31,8 @@ interface PackageData {
   nivelProfesional: string
   tipo?: string
   subtitulo: string
-  invertidos: number
+  pagoInicial: number
+  inversionAnio1: number
   description: string
   features: Array<{ category: string; items: string[] }>
   serviciosOpcionales?: Array<{ nombre: string; precio: number }>
@@ -68,7 +69,8 @@ export default function Paquetes() {
       return 0
     }
 
-    const inversionAnio1 = getPagoInicial() + getServiciosPorAño() + getGestionAnual()
+    const pagoInicial = getPagoInicial()
+    const inversionAnio1 = pagoInicial + getServiciosPorAño() + getGestionAnual()
 
     // Construcción de features
     const features: Array<{ category: string; items: string[] }> = []
@@ -129,7 +131,8 @@ export default function Paquetes() {
       nivelProfesional,
       tipo: snap.paquete.tipo || '',
       subtitulo: `INVERSIÓN: $${inversionAnio1} USD`,
-      invertidos: inversionAnio1,
+      pagoInicial,
+      inversionAnio1,
       description: snap.paquete.descripcion || `Paquete personalizado para empresas.`,
       features,
       serviciosOpcionales,
@@ -144,7 +147,7 @@ export default function Paquetes() {
   // Asignar colores y emojis según inversión
   if (paquetesData.length > 0) {
     // Sort por inversión (año1)
-    paquetesData.sort((a, b) => a.invertidos - b.invertidos)
+    paquetesData.sort((a, b) => a.inversionAnio1 - b.inversionAnio1)
 
     // Asignar emojis: 🥉 (3er), 🥈 (2do), ⭐ (VIP/3er si hay 4+), 🥇 (1er)
     const iconos = ['🥉', '🥈', '⭐', '🥇']
@@ -358,7 +361,7 @@ function PaqueteCard({
 
         <div className={`${styles.priceBox} p-4 rounded-lg mb-6`}>
           <p className="text-sm text-neutral-600">Pago Inicial</p>
-          <p className={`text-3xl font-bold ${styles.priceText}`}>${data.invertidos} USD</p>
+          <p className={`text-3xl font-bold ${styles.priceText}`}>${data.pagoInicial} USD</p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 mb-6 flex-grow">
