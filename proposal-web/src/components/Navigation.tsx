@@ -17,22 +17,22 @@ const navItems = [
   { id: 'contacto', label: 'Contacto' },
 ]
 
-// Mapeo de secciones a colores
-const sectionColors: { [key: string]: { bg: string; text: string; cssClass: string } } = {
-  resumen: { bg: 'from-blue-600 to-blue-500', text: 'text-white', cssClass: 'navOverlayResumen' },
-  analisis: { bg: 'from-purple-600 to-purple-500', text: 'text-white', cssClass: 'navOverlayAnalisis' },
-  'dinamico-vs-estatico': { bg: 'from-pink-600 to-pink-500', text: 'text-white', cssClass: 'navOverlayDinamico' },
-  paquetes: { bg: 'from-emerald-600 to-emerald-500', text: 'text-white', cssClass: 'navOverlayPaquetes' },
-  comparativa: { bg: 'from-amber-600 to-amber-500', text: 'text-white', cssClass: 'navOverlayComparativa' },
-  garantias: { bg: 'from-cyan-600 to-cyan-500', text: 'text-white', cssClass: 'navOverlayGarantias' },
-  faq: { bg: 'from-indigo-600 to-indigo-500', text: 'text-white', cssClass: 'navOverlayFaq' },
-  contacto: { bg: 'from-red-600 to-red-500', text: 'text-white', cssClass: 'navOverlayContacto' },
+// Mapeo de secciones a estilos (rojo, negro, blanco - coherencia corporativa)
+const sectionStyles: { [key: string]: { overlayClass: string; textClass: string } } = {
+  resumen: { overlayClass: 'navOverlayResumen', textClass: 'navTextResumen' },
+  analisis: { overlayClass: 'navOverlayAnalisis', textClass: 'navTextAnalisis' },
+  'dinamico-vs-estatico': { overlayClass: 'navOverlayDinamico', textClass: 'navTextDinamico' },
+  paquetes: { overlayClass: 'navOverlayPaquetes', textClass: 'navTextPaquetes' },
+  comparativa: { overlayClass: 'navOverlayComparativa', textClass: 'navTextComparativa' },
+  garantias: { overlayClass: 'navOverlayGarantias', textClass: 'navTextGarantias' },
+  faq: { overlayClass: 'navOverlayFaq', textClass: 'navTextFaq' },
+  contacto: { overlayClass: 'navOverlayContacto', textClass: 'navTextContacto' },
 }
 
 export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [activeSectionColor, setActiveSectionColor] = useState(sectionColors.resumen)
+  const [activeSectionStyle, setActiveSectionStyle] = useState(sectionStyles.resumen)
   const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -55,8 +55,8 @@ export default function Navigation() {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           const sectionId = entry.target.id
-          const colors = sectionColors[sectionId] || sectionColors.resumen
-          setActiveSectionColor(colors)
+          const styleConfig = sectionStyles[sectionId] || sectionStyles.resumen
+          setActiveSectionStyle(styleConfig)
         }
       }
     }, observerOptions)
@@ -84,7 +84,7 @@ export default function Navigation() {
         ref={navRef}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled 
-            ? `shadow-lg py-3 ${styles.navBackdropActive} ${styles[activeSectionColor.cssClass] || styles.navOverlayResumen}`
+            ? `shadow-lg py-3 ${styles.navBackdropActive} ${styles[activeSectionStyle.overlayClass]}`
             : 'bg-transparent py-4 md:py-5 lg:py-4'
         } ${styles.navBackdrop}`}
       >
@@ -96,11 +96,11 @@ export default function Navigation() {
               animate={{ opacity: 1, x: 0 }}
               className={`font-bold transition-all duration-300 ${
                 isScrolled
-                  ? `text-white text-lg md:text-lg ${styles.navTextWithShadow}`
+                  ? `text-base md:text-lg lg:text-xl ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}`
                   : 'text-white text-base md:text-lg lg:text-xl'
               }`}
             >
-              Urbanisima CONSTRUCTORA SRL
+              Urbanisima
             </motion.div>
 
             {/* Desktop Navigation - xl y mayores */}
@@ -114,7 +114,7 @@ export default function Navigation() {
                   onClick={() => scrollToSection(item.id)}
                   className={`px-2 py-2 text-sm 2xl:text-base rounded-lg transition-all duration-300 whitespace-nowrap font-medium ${
                     isScrolled
-                      ? `text-white hover:text-accent hover:bg-white/20 ${styles.navTextWithShadow}`
+                      ? `hover:text-accent hover:bg-white/10 ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}`
                       : 'text-white hover:bg-white/20'
                   }`}
                 >
@@ -150,7 +150,7 @@ export default function Navigation() {
                   onClick={() => scrollToSection(item.id)}
                   className={`px-2 py-2 text-xs rounded-lg transition-all duration-300 whitespace-nowrap font-medium ${
                     isScrolled
-                      ? `text-white hover:text-accent hover:bg-white/20 ${styles.navTextWithShadow}`
+                      ? `hover:text-accent hover:bg-white/10 ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}`
                       : 'text-white hover:bg-white/20'
                   }`}
                 >
@@ -178,7 +178,7 @@ export default function Navigation() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={`lg:hidden p-2 transition-colors duration-300 ${
-                isScrolled ? `text-white hover:text-accent ${styles.navTextWithShadow}` : 'text-white hover:text-gray-200'
+                isScrolled ? `hover:text-accent ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}` : 'text-white hover:text-gray-200'
               }`}
             >
               {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
@@ -200,7 +200,7 @@ export default function Navigation() {
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className="text-left px-4 py-3 text-lg text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                className="text-left px-4 py-3 text-lg text-gray-700 hover:text-white hover:bg-primary rounded-lg transition-all duration-200"
               >
                 {item.label}
               </button>
