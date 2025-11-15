@@ -210,6 +210,13 @@ function PaqueteCard({
 
   const styles = getCardStyles()
 
+  // Etiqueta profesional según el nombre del paquete
+  const nivelProfesional = nombre === 'CONSTRUCTOR'
+    ? 'BÁSICO'
+    : nombre === 'OBRA MAESTRA'
+      ? 'PROFESIONAL'
+      : 'PREMIUM'
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -227,6 +234,7 @@ function PaqueteCard({
       <div className={`p-8 ${recomendado ? 'pt-16' : 'pt-8'} h-full flex flex-col`}>
         <div className="text-center mb-6">
           <span className="text-4xl">{icon}</span>
+          <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500">{nivelProfesional}</p>
           <h3 className="text-2xl font-bold text-secondary mt-2">{nombre}</h3>
           <p className={`${styles.priceText} font-bold text-lg`}>{subtitulo}</p>
         </div>
