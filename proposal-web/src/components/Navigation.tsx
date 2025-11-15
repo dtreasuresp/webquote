@@ -100,7 +100,7 @@ export default function Navigation() {
                   : 'text-white text-base md:text-lg lg:text-xl'
               }`}
             >
-              Urbanisima
+              Urbanisima CONSTRUCTORA SRL
             </motion.div>
 
             {/* Desktop Navigation - xl y mayores */}
@@ -114,7 +114,7 @@ export default function Navigation() {
                   onClick={() => scrollToSection(item.id)}
                   className={`px-2 py-2 text-sm 2xl:text-base rounded-lg transition-all duration-300 whitespace-nowrap font-medium ${
                     isScrolled
-                      ? `hover:text-accent hover:bg-white/10 ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}`
+                      ? `hover:bg-white/20 ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}`
                       : 'text-white hover:bg-white/20'
                   }`}
                 >
@@ -150,7 +150,7 @@ export default function Navigation() {
                   onClick={() => scrollToSection(item.id)}
                   className={`px-2 py-2 text-xs rounded-lg transition-all duration-300 whitespace-nowrap font-medium ${
                     isScrolled
-                      ? `hover:text-accent hover:bg-white/10 ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}`
+                      ? `hover:bg-white/20 ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}`
                       : 'text-white hover:bg-white/20'
                   }`}
                 >
@@ -178,7 +178,7 @@ export default function Navigation() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={`lg:hidden p-2 transition-colors duration-300 ${
-                isScrolled ? `hover:text-accent ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}` : 'text-white hover:text-gray-200'
+                isScrolled ? `hover:opacity-80 ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}` : 'text-white hover:text-gray-200'
               }`}
             >
               {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
