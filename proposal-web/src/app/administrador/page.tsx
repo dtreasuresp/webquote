@@ -1690,22 +1690,71 @@ export default function Administrador() {
               </div>
 
               <div className="p-6 space-y-6">
-                {/* Nombre */}
-                <div>
-                  <label className="block font-semibold text-secondary mb-2">
-                    📦 Nombre del Paquete
-                  </label>
-                  <input
-                    type="text"
-                    value={snapshotEditando.nombre}
-                    onChange={(e) =>
-                      setSnapshotEditando({ ...snapshotEditando, nombre: e.target.value })
-                    }
-                    className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
-                    ref={nombrePaqueteInputRef}
-                    aria-describedby="ayuda-nombre-paquete"
-                  />
-                  <p id="ayuda-nombre-paquete" className="mt-1 text-xs text-neutral-500">Nombre visible en listado y PDF.</p>
+                {/* Información General del Paquete */}
+                <div className="bg-gradient-to-r from-secondary/5 to-accent/5 p-6 rounded-xl border-2 border-secondary/20">
+                  <h3 className="text-lg font-bold text-secondary mb-4">📦 Información General del Paquete</h3>
+                  
+                  {/* Nombre - Full width */}
+                  <div className="mb-4">
+                    <label className="block font-semibold text-secondary mb-2">
+                      Nombre del Paquete
+                    </label>
+                    <input
+                      type="text"
+                      value={snapshotEditando.nombre}
+                      onChange={(e) =>
+                        setSnapshotEditando({ ...snapshotEditando, nombre: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                      ref={nombrePaqueteInputRef}
+                      aria-describedby="ayuda-nombre-paquete"
+                    />
+                    <p id="ayuda-nombre-paquete" className="mt-1 text-xs text-neutral-500">Nombre visible en listado y PDF.</p>
+                  </div>
+
+                  {/* Tipo y Descripción */}
+                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        🏆 Tipo de Paquete
+                      </label>
+                      <input
+                        type="text"
+                        value={snapshotEditando.paquete.tipo || ''}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              tipo: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Ej: Básico"
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        📋 Descripción del Paquete
+                      </label>
+                      <input
+                        type="text"
+                        value={snapshotEditando.paquete.descripcion || ''}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              descripcion: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Ej: Paquete personalizado para empresas..."
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Servicios Base */}
@@ -1922,53 +1971,6 @@ export default function Administrador() {
                         className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
                         min="0"
                         max="100"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tipo y Descripción */}
-                <div className="bg-secondary/5 p-6 rounded-xl border-2 border-secondary/20">
-                  <h3 className="text-lg font-bold text-secondary mb-4">📝 Información del Paquete</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        🏆 Tipo de Paquete
-                      </label>
-                      <input
-                        type="text"
-                        value={snapshotEditando.paquete.tipo || ''}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              tipo: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="Ej: Básico, Profesional, Premium, VIP"
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        📋 Descripción del Paquete
-                      </label>
-                      <input
-                        type="text"
-                        value={snapshotEditando.paquete.descripcion || ''}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              descripcion: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="Ej: Paquete personalizado para empresas..."
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
                       />
                     </div>
                   </div>
