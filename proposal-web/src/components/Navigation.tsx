@@ -96,7 +96,7 @@ export default function Navigation() {
               animate={{ opacity: 1, x: 0 }}
               className={`font-bold transition-all duration-300 ${
                 isScrolled
-                  ? 'text-gray-800 text-lg md:text-lg'
+                  ? `text-white text-lg md:text-lg ${styles.navTextWithShadow}`
                   : 'text-white text-base md:text-lg lg:text-xl'
               }`}
             >
@@ -112,9 +112,9 @@ export default function Navigation() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => scrollToSection(item.id)}
-                  className={`px-2 py-2 text-sm 2xl:text-base rounded-lg transition-all duration-300 whitespace-nowrap ${
+                  className={`px-2 py-2 text-sm 2xl:text-base rounded-lg transition-all duration-300 whitespace-nowrap font-medium ${
                     isScrolled
-                      ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-200/50'
+                      ? `text-white hover:text-accent hover:bg-white/20 ${styles.navTextWithShadow}`
                       : 'text-white hover:bg-white/20'
                   }`}
                 >
@@ -130,7 +130,7 @@ export default function Navigation() {
                   transition={{ delay: 0.4 }}
                   className={`px-3 py-2 text-sm 2xl:text-base rounded-lg font-bold transition-all duration-300 flex items-center gap-2 ${
                     isScrolled
-                      ? 'bg-gray-800 text-white hover:bg-gray-900 hover:shadow-lg'
+                      ? 'bg-primary text-white hover:bg-primary-dark hover:shadow-lg'
                       : 'bg-gradient-to-r from-accent to-accent-dark text-white hover:shadow-lg'
                   }`}
                 >
@@ -148,9 +148,9 @@ export default function Navigation() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => scrollToSection(item.id)}
-                  className={`px-2 py-2 text-xs rounded-lg transition-all duration-300 whitespace-nowrap ${
+                  className={`px-2 py-2 text-xs rounded-lg transition-all duration-300 whitespace-nowrap font-medium ${
                     isScrolled
-                      ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-200/50'
+                      ? `text-white hover:text-accent hover:bg-white/20 ${styles.navTextWithShadow}`
                       : 'text-white hover:bg-white/20'
                   }`}
                 >
@@ -165,7 +165,7 @@ export default function Navigation() {
                   transition={{ delay: 0.2 }}
                   className={`px-2 py-2 text-xs rounded-lg font-bold transition-all duration-300 ${
                     isScrolled
-                      ? 'bg-gray-800 text-white hover:bg-gray-900'
+                      ? 'bg-primary text-white hover:bg-primary-dark'
                       : 'bg-gradient-to-r from-accent to-accent-dark text-white hover:shadow-lg'
                   }`}
                 >
@@ -178,7 +178,7 @@ export default function Navigation() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={`lg:hidden p-2 transition-colors duration-300 ${
-                isScrolled ? 'text-gray-800 hover:text-gray-900' : 'text-white hover:text-gray-200'
+                isScrolled ? `text-white hover:text-accent ${styles.navTextWithShadow}` : 'text-white hover:text-gray-200'
               }`}
             >
               {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}

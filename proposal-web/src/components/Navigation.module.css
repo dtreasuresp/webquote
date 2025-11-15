@@ -4,38 +4,43 @@
 }
 
 .navBackdropActive {
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px) brightness(0.95);
 }
 
-/* Color overlays by section */
+/* Color overlays by section - Increased opacity for better contrast */
 .navOverlayResumen {
-  background-color: rgba(37, 99, 235, 0.2);
+  background-color: rgba(37, 99, 235, 0.5);
 }
 
 .navOverlayAnalisis {
-  background-color: rgba(147, 51, 234, 0.2);
+  background-color: rgba(147, 51, 234, 0.5);
 }
 
 .navOverlayDinamico {
-  background-color: rgba(236, 72, 153, 0.2);
+  background-color: rgba(236, 72, 153, 0.5);
 }
 
 .navOverlayPaquetes {
-  background-color: rgba(5, 150, 105, 0.2);
+  background-color: rgba(5, 150, 105, 0.5);
 }
 
 .navOverlayComparativa {
-  background-color: rgba(217, 119, 6, 0.2);
+  background-color: rgba(217, 119, 6, 0.5);
 }
 
 .navOverlayGarantias {
-  background-color: rgba(6, 182, 212, 0.2);
+  background-color: rgba(6, 182, 212, 0.5);
 }
 
 .navOverlayFaq {
-  background-color: rgba(79, 70, 229, 0.2);
+  background-color: rgba(79, 70, 229, 0.5);
 }
 
 .navOverlayContacto {
-  background-color: rgba(239, 68, 68, 0.2);
+  background-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Text shadow for better legibility on dark backgrounds */
+.navTextWithShadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
