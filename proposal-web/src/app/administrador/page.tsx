@@ -1927,6 +1927,53 @@ export default function Administrador() {
                   </div>
                 </div>
 
+                {/* Tipo y Descripción */}
+                <div className="bg-secondary/5 p-6 rounded-xl border-2 border-secondary/20">
+                  <h3 className="text-lg font-bold text-secondary mb-4">📝 Información del Paquete</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        🏆 Tipo de Paquete
+                      </label>
+                      <input
+                        type="text"
+                        value={snapshotEditando.paquete.tipo || ''}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              tipo: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Ej: Básico, Profesional, Premium, VIP"
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        📋 Descripción del Paquete
+                      </label>
+                      <input
+                        type="text"
+                        value={snapshotEditando.paquete.descripcion || ''}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              descripcion: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Ej: Paquete personalizado para empresas..."
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Otros Servicios */}
                 <div className="bg-secondary/5 p-6 rounded-xl border-2 border-secondary/20">
                   <h3 className="text-lg font-bold text-secondary mb-4">🎁 Otros Servicios</h3>
