@@ -25,6 +25,8 @@ model PackageSnapshot {
   // Paquete
   desarrollo      Float
   descuento       Int
+  tipo            String?
+  descripcion     String?
   
   // Otros Servicios (JSON)
   otrosServicios  Json

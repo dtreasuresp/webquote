@@ -455,14 +455,97 @@ export default function Administrador() {
     }
   }
 
+  // Estado para autoguardado y control de cambios
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [lastSavedJson, setLastSavedJson] = useState<string | null>(null)
+  const autoSaveDelay = 800 // ms
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Función de autoguardado debounced
+  useEffect(() => {
+    if (!snapshotEditando) return
+
+    const currentJson = JSON.stringify({
+      id: snapshotEditando.id,
+      nombre: snapshotEditando.nombre,
+      paquete: snapshotEditando.paquete,
+      serviciosBase: snapshotEditando.serviciosBase,
+      gestion: snapshotEditando.gestion,
+      otrosServicios: snapshotEditando.otrosServicios,
+      costos: snapshotEditando.costos,
+      activo: snapshotEditando.activo,
+    })
+
+    // Si no hay cambios respecto al último guardado, no programar autoguardado
+    if (lastSavedJson && lastSavedJson === currentJson) {
+      return
+    }
+
+    // Limpiar timeout previo
+    if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current)
+
+    // Programar autoguardado
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      setAutoSaveStatus('saving')
+      try {
+        const actualizado = { ...snapshotEditando }
+        actualizado.costos.inicial = calcularCostoInicialSnapshot(actualizado)
+        actualizado.costos.año1 = calcularCostoAño1Snapshot(actualizado)
+        actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
+        const snapshotActualizado = await actualizarSnapshot(actualizado.id, actualizado)
+        setSnapshots(prev => prev.map(s => s.id === actualizado.id ? snapshotActualizado : s))
+        const savedJson = JSON.stringify({
+          id: snapshotActualizado.id,
+          nombre: snapshotActualizado.nombre,
+          paquete: snapshotActualizado.paquete,
+          serviciosBase: snapshotActualizado.serviciosBase,
+          gestion: snapshotActualizado.gestion,
+          otrosServicios: snapshotActualizado.otrosServicios,
+          costos: snapshotActualizado.costos,
+          activo: snapshotActualizado.activo,
+        })
+        setLastSavedJson(savedJson)
+        setAutoSaveStatus('saved')
+        // Después de breve tiempo, volver a idle
+        setTimeout(() => setAutoSaveStatus('idle'), 1500)
+      } catch (e) {
+        console.error('Error en autoguardado:', e)
+        setAutoSaveStatus('error')
+        // Reintentar luego
+        setTimeout(() => setAutoSaveStatus('idle'), 4000)
+      }
+    }, autoSaveDelay)
+
+    return () => {
+      if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current)
+    }
+  }, [snapshotEditando])
+
+  // Ajustar lógica de cierre para considerar autoguardado
+  const tieneCambiosSinGuardar = () => {
+    if (!snapshotEditando) return false
+    const currentJson = JSON.stringify({
+      id: snapshotEditando.id,
+      nombre: snapshotEditando.nombre,
+      paquete: snapshotEditando.paquete,
+      serviciosBase: snapshotEditando.serviciosBase,
+      gestion: snapshotEditando.gestion,
+      otrosServicios: snapshotEditando.otrosServicios,
+      costos: snapshotEditando.costos,
+      activo: snapshotEditando.activo,
+    })
+    return !lastSavedJson || lastSavedJson !== currentJson
+  }
+
   // Cerrar modal con validación de cambios sin guardar
   const handleCerrarModalEditar = () => {
-    if (snapshotEditando && snapshotOriginalJson) {
-      const actual = JSON.stringify(snapshotEditando)
-      if (actual !== snapshotOriginalJson) {
-        const confirmar = confirm('Hay cambios sin guardar. ¿Deseas cerrar y descartar los cambios?')
-        if (!confirmar) return
-      }
+    // Usar nueva verificación basada en lastSavedJson y estado de autoguardado
+    if (snapshotEditando && tieneCambiosSinGuardar() && autoSaveStatus === 'saving') {
+      const confirmar = confirm('Se están guardando cambios. ¿Cerrar igualmente?')
+      if (!confirmar) return
+    } else if (snapshotEditando && tieneCambiosSinGuardar()) {
+      const confirmar = confirm('Hay cambios sin guardar. ¿Cerrar y descartar los cambios?')
+      if (!confirmar) return
     }
     setShowModalEditar(false)
     setSnapshotEditando(null)
@@ -2115,6 +2198,18 @@ export default function Administrador() {
 
                 {/* Botones de Acción */}
                 <div className="flex gap-4 pt-4 border-t-2 border-neutral-200">
+                  {/* Indicador de autoguardado */}
+                  <div className="flex-1 flex items-center gap-3">
+                    {autoSaveStatus === 'saving' && (
+                      <span className="text-sm text-accent animate-pulse">Guardando cambios...</span>
+                    )}
+                    {autoSaveStatus === 'saved' && (
+                      <span className="text-sm text-green-600">✓ Cambios guardados</span>
+                    )}
+                    {autoSaveStatus === 'error' && (
+                      <span className="text-sm text-red-600">❌ Error al guardar. Reintentando...</span>
+                    )}
+                  </div>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

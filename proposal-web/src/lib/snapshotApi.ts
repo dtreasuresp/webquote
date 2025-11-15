@@ -13,6 +13,8 @@ export interface SnapshotFromDB {
   gestionMesesPago: number
   desarrollo: number
   descuento: number
+  tipo?: string
+  descripcion?: string
   otrosServicios: any[]
   costoInicial: number
   costoAño1: number
@@ -73,6 +75,8 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
     gestionMesesPago: snapshot.gestion?.mesesPago || 0,
     desarrollo: snapshot.paquete?.desarrollo || 0,
     descuento: snapshot.paquete?.descuento || 0,
+    tipo: snapshot.paquete?.tipo || '',
+    descripcion: snapshot.paquete?.descripcion || '',
     otrosServicios: snapshot.otrosServicios || [],
     costoInicial: snapshot.costos?.inicial || 0,
     costoAño1: snapshot.costos?.año1 || 0,
@@ -95,6 +99,8 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
     paquete: {
       desarrollo: dbSnapshot.desarrollo,
       descuento: dbSnapshot.descuento,
+      tipo: dbSnapshot.tipo || '',
+      descripcion: dbSnapshot.descripcion || '',
     },
     otrosServicios: dbSnapshot.otrosServicios,
     costos: {
