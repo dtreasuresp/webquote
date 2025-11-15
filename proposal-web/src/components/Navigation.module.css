@@ -1,0 +1,41 @@
+/* Navigation blur effect */
+.navBackdrop {
+  transition: background-color 500ms ease, backdrop-filter 500ms ease;
+}
+
+.navBackdropActive {
+  backdrop-filter: blur(12px);
+}
+
+/* Color overlays by section */
+.navOverlayResumen {
+  background-color: rgba(37, 99, 235, 0.2);
+}
+
+.navOverlayAnalisis {
+  background-color: rgba(147, 51, 234, 0.2);
+}
+
+.navOverlayDinamico {
+  background-color: rgba(236, 72, 153, 0.2);
+}
+
+.navOverlayPaquetes {
+  background-color: rgba(5, 150, 105, 0.2);
+}
+
+.navOverlayComparativa {
+  background-color: rgba(217, 119, 6, 0.2);
+}
+
+.navOverlayGarantias {
+  background-color: rgba(6, 182, 212, 0.2);
+}
+
+.navOverlayFaq {
+  background-color: rgba(79, 70, 229, 0.2);
+}
+
+.navOverlayContacto {
+  background-color: rgba(239, 68, 68, 0.2);
+}
