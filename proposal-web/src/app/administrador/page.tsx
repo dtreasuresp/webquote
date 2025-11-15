@@ -215,8 +215,17 @@ export default function Administrador() {
   // Calcular costo inicial para un snapshot
   const calcularCostoInicialSnapshot = (snapshot: PackageSnapshot) => {
     const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
-    // Pago inicial: solo desarrollo con descuento (servicios base son gratis primeros meses)
-    return desarrolloConDescuento
+    
+    // Servicios base del mes 1 (Hosting, Mailbox, Dominio - sin Gestión)
+    const serviciosBaseMes1 = snapshot.serviciosBase.reduce((sum, s) => {
+      if (s.nombre.toLowerCase() !== 'gestión') {
+        return sum + (s.precio || 0)
+      }
+      return sum
+    }, 0)
+    
+    // Pago inicial: Desarrollo con descuento + Servicios Base mes 1
+    return desarrolloConDescuento + serviciosBaseMes1
   }
 
   // Calcular costo año 1 para un snapshot
