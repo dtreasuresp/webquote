@@ -1519,18 +1519,36 @@ export default function Administrador() {
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 relative">
                               <input
                                 id={`snapshot-activo-${snapshot.id}`}
                                 type="checkbox"
                                 checked={snapshot.activo}
-                                onChange={(e) => {
-                                  const actualizado = { ...snapshot, activo: e.target.checked }
-                                  setSnapshots(snapshots.map(s => s.id === snapshot.id ? actualizado : s))
+                                onChange={async (e) => {
+                                  const marcado = e.target.checked
+                                  // Actualización optimista inmediata
+                                  const provisional = { ...snapshot, activo: marcado }
+                                  setSnapshots(prev => prev.map(s => s.id === snapshot.id ? provisional : s))
+                                  try {
+                                    // Recalcular costos por consistencia (aunque activo no afecta costos)
+                                    const actualizado = { ...provisional }
+                                    actualizado.costos.inicial = calcularCostoInicialSnapshot(actualizado)
+                                    actualizado.costos.año1 = calcularCostoAño1Snapshot(actualizado)
+                                    actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
+                                    const guardado = await actualizarSnapshot(actualizado.id, actualizado)
+                                    setSnapshots(prev => prev.map(s => s.id === snapshot.id ? guardado : s))
+                                  } catch (err) {
+                                    console.error('Error al autoguardar estado activo:', err)
+                                    // Revertir si falla
+                                    setSnapshots(prev => prev.map(s => s.id === snapshot.id ? { ...s, activo: !marcado } : s))
+                                    alert('❌ No se pudo actualizar el estado Activo. Intenta nuevamente.')
+                                  }
                                 }}
                                 className="w-5 h-5 cursor-pointer"
                               />
                               <label htmlFor={`snapshot-activo-${snapshot.id}`} className="font-semibold text-secondary text-sm">Activo</label>
+                              {/* Feedback rápido */}
+                              <span className="text-[10px] absolute -bottom-4 left-0 text-neutral-500">{snapshot.activo ? '✓' : '–'}</span>
                             </div>
                             <motion.button
                               whileHover={{ scale: 1.05 }}
