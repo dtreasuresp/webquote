@@ -754,6 +754,53 @@ export default function Administrador() {
     alert('✅ Configuración y paquetes guardados correctamente en localStorage')
   }
 
+  // ---- Autoguardado de configuración general fuera del modal ----
+  const [configAutoSaveStatus, setConfigAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [lastConfigJson, setLastConfigJson] = useState<string | null>(null)
+  const configAutoSaveDelay = 1000 // ms
+  const configAutoSaveRef = useRef<NodeJS.Timeout | null>(null)
+
+  const buildConfigJson = () => JSON.stringify({
+    serviciosBase,
+    gestion,
+    paqueteActual,
+    serviciosOpcionales,
+  })
+
+  useEffect(() => {
+    // Evitar autoguardado antes de que carguen snapshots por primera vez
+    if (snapshots.length === 0) return
+
+    const current = buildConfigJson()
+    if (lastConfigJson && current === lastConfigJson) return
+
+    if (configAutoSaveRef.current) clearTimeout(configAutoSaveRef.current)
+    configAutoSaveRef.current = setTimeout(() => {
+      try {
+        setConfigAutoSaveStatus('saving')
+        const configActual = {
+          serviciosBase,
+          gestion,
+          paqueteActual,
+          serviciosOpcionales,
+          timestamp: new Date().toISOString(),
+        }
+        localStorage.setItem('configuracionAdministrador', JSON.stringify(configActual))
+        localStorage.setItem('paquetesSnapshots', JSON.stringify(snapshots))
+        setLastConfigJson(current)
+        setConfigAutoSaveStatus('saved')
+        setTimeout(() => setConfigAutoSaveStatus('idle'), 1500)
+      } catch (e) {
+        console.error('Error autoguardando configuración:', e)
+        setConfigAutoSaveStatus('error')
+        setTimeout(() => setConfigAutoSaveStatus('idle'), 4000)
+      }
+    }, configAutoSaveDelay)
+    return () => {
+      if (configAutoSaveRef.current) clearTimeout(configAutoSaveRef.current)
+    }
+  }, [serviciosBase, gestion, paqueteActual, serviciosOpcionales, snapshots])
+
   return (
     <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-secondary via-secondary-light to-secondary-dark">
       {/* Overlay dorado sutil para coherencia de marca */}
@@ -779,6 +826,13 @@ export default function Administrador() {
               <p className="text-xl text-neutral-200">
                 Calculadora de Presupuestos y Gestión de Servicios
               </p>
+              {configAutoSaveStatus !== 'idle' && (
+                <p className="text-sm mt-2">
+                  {configAutoSaveStatus === 'saving' && <span className="text-accent animate-pulse">Guardando configuración...</span>}
+                  {configAutoSaveStatus === 'saved' && <span className="text-green-400">✓ Configuración guardada</span>}
+                  {configAutoSaveStatus === 'error' && <span className="text-red-400">❌ Error al guardar configuración</span>}
+                </p>
+              )}
             </div>
             <div className="flex flex-wrap gap-3 items-center">
               <motion.button
@@ -1798,7 +1852,7 @@ export default function Administrador() {
                   {/* Nombre - Full width */}
                   <div className="mb-4">
                     <label className="block font-semibold text-secondary mb-2">
-                      Nombre del Paquete
+                    📦 Nombre del Paquete
                     </label>
                     <input
                       type="text"
