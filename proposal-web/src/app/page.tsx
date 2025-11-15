@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import Navigation from '@/components/Navigation'
 import Hero from '@/components/Hero'
 import ResumenEjecutivo from '@/components/ResumenEjecutivo'
@@ -17,7 +17,7 @@ import MatrizPrioridades from '@/components/MatrizPrioridades'
 import GarantiasYFAQ from '@/components/GarantiasYFAQ'
 import Contacto from '@/components/Contacto'
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams()
   
   useEffect(() => {
@@ -50,5 +50,13 @@ export default function Home() {
       <GarantiasYFAQ />
       <Contacto />
     </main>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <HomeContent />
+    </Suspense>
   )
 }

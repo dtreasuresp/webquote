@@ -77,7 +77,7 @@ export default function Navigation() {
   const scrollToSection = (id: string) => {
     if (isAdminPage) {
       // Si estamos en /administrador, navega a la página principal primero
-      router.push(`/?scrollTo=${id}`)
+      router.push(`/?section=${id}`)
     } else {
       // Si estamos en la página principal, desplázate a la sección
       const element = document.getElementById(id)

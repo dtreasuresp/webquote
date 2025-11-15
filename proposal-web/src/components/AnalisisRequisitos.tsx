@@ -1,6 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
+import Logo from '@/img/logo_urbanisima_constructora_S.R.L.png'
 
 export default function AnalisisRequisitos() {
   return (
@@ -58,7 +60,7 @@ export default function AnalisisRequisitos() {
 
             {/* Identidad Visual */}
             <InfoCard title="🎨 Identidad Visual">
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-3 gap-[40px]">
                 <div>
                   <h4 className="font-bold mb-2">Colores Corporativos</h4>
                   <div className="flex items-center gap-3">
@@ -80,12 +82,27 @@ export default function AnalisisRequisitos() {
                   <h4 className="font-bold mb-2">Elementos que dispones</h4>
                   <ul className="space-y-2 text-gray-700">
                     <li>✅ Logo: Diseñado</li>
-                    <li>❌ Manual de Marca o Identidad Visual: No disponible</li>
+                    <li>❌ Manual de Identidad Visual: No disponible</li>
                     <li className="text-lg mt-4">
                       <strong className="text-primary">❌ Colores a Evitar:</strong> Rosado
                     </li>
                     <li>✅ Estilo visual preferido: Corporativo y profesional</li>
                   </ul>
+                </div>
+                <div>
+                  <h4 className="font-bold mb-2 text-left">Logo de tu negocio</h4>
+                  <div className="flex items-left justify-left">
+                      <Image
+                        src={Logo}
+                        alt="Logo de Urbanísima Constructora S.R.L"
+                        width={Math.max(64, Math.round(Logo.width * 0.50))}
+                        height={Math.round(Logo.height * (Math.max(64, Math.round(Logo.width * 0.50)) / Logo.width))}
+                        className="rounded-lg shadow-md border-4 border-accent/0 bg-white"
+                        placeholder="empty"
+                        sizes="(max-width: 768px) 160px, 224px"
+                        priority
+                      />
+                  </div>
                 </div>
               </div>
             </InfoCard>
