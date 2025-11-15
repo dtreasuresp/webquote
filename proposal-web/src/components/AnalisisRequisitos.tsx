@@ -60,18 +60,19 @@ export default function AnalisisRequisitos() {
 
             {/* Identidad Visual */}
             <InfoCard title="🎨 Identidad Visual">
-              <div className="grid md:grid-cols-3 gap-[40px]">
+              <div className="grid md:grid-cols-4 gap-[40px]">
                 <div>
                   <h4 className="font-bold mb-2">Colores Corporativos</h4>
+                  <p className="text-sm mb-2 text-gray-700">Deseados por ti</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-20 h-20 bg-primary rounded-lg shadow-md border-4 border-primary"></div>
+                    <div className="w-16 h-16 bg-primary rounded-lg shadow-md border-4 border-primary"></div>
                     <div>
                       <p className="font-semibold">Rojo</p>
                       <p className="text-gray-600">#DC2626</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-4">
-                    <div className="w-20 h-20 bg-black rounded-lg shadow-md border-4 border-gray-300"></div>
+                    <div className="w-16 h-16 bg-black rounded-lg shadow-md border-4 border-black"></div>
                     <div>
                       <p className="font-semibold">Negro</p>
                       <p className="text-gray-600">#000000</p>
@@ -79,30 +80,85 @@ export default function AnalisisRequisitos() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-bold mb-2">Elementos que dispones</h4>
+                  <h4 className="font-bold mb-2">Colores a evitar</h4>
+                  <p className="text-sm mb-2 text-gray-700">Evitar su uso en todo el sitio</p>
                   <ul className="space-y-2 text-gray-700">
-                    <li>✅ Logo: Diseñado</li>
-                    <li>❌ Manual de Identidad Visual: No disponible</li>
-                    <li className="text-lg mt-4">
-                      <strong className="text-primary">❌ Colores a Evitar:</strong> Rosado
-                    </li>
-                    <li>✅ Estilo visual preferido: Corporativo y profesional</li>
+                  <div className="flex items-center gap-3 mt-4">
+                    <div className="w-16 h-16 bg-pink-500 rounded-lg shadow-md border-4 border-pink-500"></div>
+                    <div>
+                      <p className="font-semibold">Rosado</p>
+                      <p className="text-gray-600">#FFC0CB</p>
+                    </div>
+                  </div>
                   </ul>
                 </div>
+                <div>
+                  <h4 className="font-bold mb-2">Estilo visual</h4>
+                  <p className="text-sm mb-2 text-gray-700">Profesional y Corporativo</p>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-16 bg-primary rounded-lg shadow-md border-4 border-primary"></div>
+                      <div>
+                        <p className="font-semibold text-sm">Rojo</p>
+                        <p className="text-gray-600 text-xs">#DC2626</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-16 bg-black rounded-lg shadow-md border-4 border-black"></div>
+                      <div>
+                        <p className="font-semibold text-sm">Negro</p>
+                        <p className="text-gray-600 text-xs">#000000</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-16 bg-gradient-to-br from-primary to-black rounded-lg shadow-md border-gray-300"></div>
+                      <div>
+                        <p className="font-semibold text-sm">Mixto</p>
+                        <p className="text-gray-600 text-xs">Rojo-Negro</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-16 bg-accent rounded-lg shadow-md border-4 border-accent"></div>
+                      <div>
+                        <p className="font-semibold text-sm">Dorado</p>
+                        <p className="text-gray-600 text-xs">#F59E0B</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <h4 className="font-bold mb-2 text-left">Logo de tu negocio</h4>
                   <div className="flex items-left justify-left">
                       <Image
                         src={Logo}
                         alt="Logo de Urbanísima Constructora S.R.L"
-                        width={Math.max(64, Math.round(Logo.width * 0.50))}
-                        height={Math.round(Logo.height * (Math.max(64, Math.round(Logo.width * 0.50)) / Logo.width))}
+                        width={Math.max(64, Math.round(Logo.width * 0.5))}
+                        height={Math.round(Logo.height * (Math.max(64, Math.round(Logo.width * 0.5)) / Logo.width))}
                         className="rounded-lg shadow-md border-4 border-accent/0 bg-white"
                         placeholder="empty"
                         sizes="(max-width: 768px) 160px, 224px"
                         priority
                       />
                   </div>
+                </div>
+              </div>
+              <div className="mt-8">
+                <h4 className="font-bold mb-2">Contenido que tienes</h4>
+                <div className="space-y-2 mt-4">
+                  {[
+                    { item: 'Videos corporativos', status: '✅ Está disponible', note: 'El cliente cuenta con el material' },
+                    { item: 'Textos/Contenidos', status: '❌ No Disponible', note: 'Será desarrollados por el nosotros' },
+                    { item: 'Manual de identidad visual', status: '❌ No Disponible', note: 'Será creado una versión básica, cuya propiedad será nuestra. Puedes adquirir la versión profesional con un costo adicional' },
+                  ].map((item) => (
+                    <div key={item.item} className="flex justify-between items-start p-4 border-l-4 border-primary bg-primary/5 rounded">
+                      <div>
+                        <p className="font-bold text-gray-900">{item.item}</p>
+                        <p className="text-sm text-gray-600">{item.note}</p>
+                      </div>
+                      <span className="font-bold text-primary">{item.status}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </InfoCard>
@@ -172,8 +228,8 @@ export default function AnalisisRequisitos() {
                       'Disponibilidad',
                       'Videos demostrativos',
                       'Documentos descargables (fichas técnicas)',
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center gap-2 text-gray-700 bg-accent/10 p-2 rounded">
+                    ].map((item) => (
+                      <div key={item} className="flex items-center gap-2 text-gray-700 bg-accent/10 p-2 rounded">
                         <span className="text-primary font-bold">✓</span>
                         <span>{item}</span>
                       </div>
@@ -195,8 +251,8 @@ export default function AnalisisRequisitos() {
                       'Chat vía WhatsApp',
                       'Integración con Google Maps',
                       'Calendario de eventos/disponibilidad',
-                    ].map((item, index) => (
-                      <li key={index} className="flex items-center gap-2">
+                    ].map((item) => (
+                      <li key={item} className="flex items-center gap-2">
                         <span className="text-accent font-bold">✓</span>
                         <span>{item}</span>
                       </li>
@@ -212,8 +268,8 @@ export default function AnalisisRequisitos() {
                       'YouTube (enlace/referencias)',
                       'TikTok (enlace/referencias)',
                       'Telegram (enlace/referencias)',
-                    ].map((item, index) => (
-                      <li key={index} className="flex items-center gap-2">
+                    ].map((item) => (
+                      <li key={item} className="flex items-center gap-2">
                         <span className="text-accent font-bold">✓</span>
                         <span>{item}</span>
                       </li>
@@ -223,25 +279,6 @@ export default function AnalisisRequisitos() {
               </div>
             </InfoCard>
 
-            {/* Contenido Disponible */}
-            <InfoCard title="📸 Contenido disponible">
-              <div className="space-y-3">
-                {[
-                  { item: 'Logo', status: '✅ Disponible', note: 'Listo para implementar' },
-                  { item: 'Videos', status: '✅ Disponible', note: 'El cliente cuenta con el material' },
-                  { item: 'Textos/Contenidos', status: '❌ No Disponible', note: 'Será desarrollados por el nosotros' },
-                  { item: 'Manual de identidad visual', status: '❌ No Disponible', note: 'Será creado una versión básica durante desarrollo del Sitio Web para documentar todo el estilo empleado, cuya propiedad será nuestra. Puedes adquirir la versión profesional con un costo adicional' },
-                ].map((item, index) => (
-                  <div key={index} className="flex justify-between items-start p-4 border-l-4 border-primary bg-primary/5 rounded">
-                    <div>
-                      <p className="font-bold text-gray-900">{item.item}</p>
-                      <p className="text-sm text-gray-600">{item.note}</p>
-                    </div>
-                    <span className="font-bold text-primary">{item.status}</span>
-                  </div>
-                ))}
-              </div>
-            </InfoCard>
           </div>
         </motion.div>
       </div>
@@ -249,7 +286,7 @@ export default function AnalisisRequisitos() {
   )
 }
 
-function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
+function InfoCard({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -263,7 +300,7 @@ function InfoCard({ title, children }: { title: string; children: React.ReactNod
   )
 }
 
-function TableRow({ label, value }: { label: string; value: string }) {
+function TableRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <tr className="border-b border-gray-200 hover:bg-gray-50">
       <td className="py-3 px-4 font-semibold text-gray-900 w-1/3">{label}</td>

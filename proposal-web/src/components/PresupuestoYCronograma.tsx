@@ -1,9 +1,18 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaCalendarAlt, FaDollarSign, FaCheckCircle } from 'react-icons/fa'
+import { FaCalendarAlt, FaDollarSign } from 'react-icons/fa'
+import useSnapshots from '@/lib/hooks/useSnapshots'
+import { 
+  getDevelopmentRange, 
+  getHostingRange, 
+  getDomainRange, 
+  getMailboxRange, 
+  getManagementRange 
+} from '@/lib/utils/priceRangeCalculator'
 
 export default function PresupuestoYCronograma() {
+  const { snapshots, loading } = useSnapshots()
   return (
     <section id="presupuesto" className="py-20 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -22,13 +31,13 @@ export default function PresupuestoYCronograma() {
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border-l-4 border-primary">
               <div className="flex items-center gap-3 mb-6">
                 <FaDollarSign className="text-primary text-3xl" />
-                <h3 className="text-3xl font-bold text-gray-900">Presupuesto</h3>
+                <h3 className="text-3xl font-bold text-gray-900">Presupuesto disponible</h3>
               </div>
 
               <div className="space-y-6">
                 {/* Presupuesto Total */}
                 <div className="bg-white rounded-lg p-6 shadow-sm">
-                  <p className="text-gray-600 mb-2">Presupuesto     disponible por el cliente</p>
+                  <p className="text-gray-600 mb-2">Presupuesto disponible por el cliente</p>
                   <p className="text-4xl font-bold text-primary">Menos de $300 USD</p>
                   <p className="text-sm text-gray-500 mt-3">DGTecnova valora tu presupuesto y somos flexibles según el paquete seleccionado</p>
                 </div>
@@ -36,21 +45,38 @@ export default function PresupuestoYCronograma() {
                 {/* Desglose */}
                 <div className="bg-white rounded-lg p-6 shadow-sm">
                   <h4 className="font-bold text-gray-900 mb-4">Desglose por elementos según paquete contratado:</h4>
-                  <div className="space-y-3">
-                    <BudgetItem label="Desarrollo del Sitio Web (Se aplican descuentos)" value="$150 - $238" />
-                    <BudgetItem label="Hosting Anual (primeros 3 meses gratis)" value="$252 - $360" />
-                    <BudgetItem label="Dominio Anual (primeros 3 meses gratis)" value="$162" />
-                    <BudgetItem label="Mailbox Corporativo (primeros 3 meses gratis)" value="$36" />
-                    <BudgetItem label="Gestión Mensual" value="$8 - $15/mes" />
-                  </div>
+                  {loading ? (
+                    <div className="space-y-3">
+                      {['desarrollo', 'hosting', 'dominio', 'mailbox', 'gestion'].map((item) => (
+                        <div key={`skeleton-${item}`} className="flex justify-between items-center py-2 border-b border-gray-200">
+                          <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                          <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <BudgetItem label="Desarrollo" value={getDevelopmentRange(snapshots)} />
+                      <BudgetItem label="Hosting" value={getHostingRange(snapshots)} />
+                      <BudgetItem label="Dominio" value={getDomainRange(snapshots)} />
+                      <BudgetItem label="Correo" value={getMailboxRange(snapshots)} />
+                      <BudgetItem label="Gestión" value={getManagementRange(snapshots)} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Opciones de Pago */}
                 <div className="bg-white rounded-lg p-6 shadow-sm">
-                  <h4 className="font-bold text-gray-900 mb-4">Métodos de Pago Disponibles:</h4>
+                  <h4 className="font-bold text-gray-900 mb-4">Métodos de pago disponibles:</h4>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <span className="text-primary">✓</span> Transferencia bancaria (Nacional o Internacional)
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-primary">✓</span> Tarjeta crédito/débito
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="text-primary">✓</span> Efectivo (si es local)
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-primary">✓</span> PayPal
@@ -58,15 +84,11 @@ export default function PresupuestoYCronograma() {
                     <li className="flex items-center gap-2">
                       <span className="text-primary">✓</span> Stripe
                     </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-primary">✓</span> Tarjeta crédito/débito
-                    </li>
+
                     <li className="flex items-center gap-2">
                       <span className="text-primary">✓</span> Wise
                     </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-primary">✓</span> Efectivo (si es local)
-                    </li>
+
                   </ul>
                 </div>
               </div>
@@ -76,7 +98,7 @@ export default function PresupuestoYCronograma() {
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border-l-4 border-primary">
               <div className="flex items-center gap-3 mb-6">
                 <FaCalendarAlt className="text-primary text-3xl" />
-                <h3 className="text-3xl font-bold text-gray-900">Cronograma</h3>
+                <h3 className="text-3xl font-bold text-gray-900">Cronograma del proyecto</h3>
               </div>
 
               <div className="space-y-4">
@@ -143,8 +165,8 @@ export default function PresupuestoYCronograma() {
                 { icon: '✅', title: 'Testing', desc: 'QA y correcciones finales' },
                 { icon: '🚀', title: 'Lanzamiento', desc: 'Publicación en producción' },
                 { icon: '📊', title: 'Reporte', desc: 'Capacitación y documentación' },
-              ].map((item, idx) => (
-                <div key={idx} className="flex gap-4">
+              ].map((item) => (
+                <div key={item.title} className="flex gap-4">
                   <div className="text-4xl">{item.icon}</div>
                   <div>
                     <h4 className="font-bold text-lg">{item.title}</h4>
@@ -160,7 +182,7 @@ export default function PresupuestoYCronograma() {
   )
 }
 
-function BudgetItem({ label, value }: { label: string; value: string }) {
+function BudgetItem({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex justify-between items-center py-2 border-b border-gray-200">
       <span className="text-gray-700">{label}</span>

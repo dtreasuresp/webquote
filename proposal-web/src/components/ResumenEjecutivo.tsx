@@ -93,7 +93,6 @@ export default function ResumenEjecutivo() {
             </div>
 
             {/* Responsabilidades */}
-
             <p className="text-lg text-gray-700 mb-6">
               Teniendo en cuenta lo anterior, las <strong className="text-primary">responsabilidades</strong> de ambas partes son las siguientes:
             </p>
@@ -101,7 +100,7 @@ export default function ResumenEjecutivo() {
             <div className="grid md:grid-cols-2 gap-8 my-12">
               
               {/* Lo que NOSOTROS hacemos */}
-              <div className="bg-accent/10 p-8 rounded-2xl border-2 border-accent">
+              <div className="bg-accent/10 p-8 rounded-2xl border-0 border-accent ">
                 <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
                   <FaCheckCircle className="text-accent" />
                   NOSOTROS NOS ENCARGAMOS DE:
@@ -147,7 +146,7 @@ export default function ResumenEjecutivo() {
               </div>
 
               {/* Lo que el cliente NO hace */}
-              <div className="bg-primary/10 p-8 rounded-2xl border-2 border-primary">
+              <div className="bg-primary/10 p-8 rounded-2xl border-0 border-primary">
                 <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
                   <span>❌</span>
                   NO TIENES QUE PREOCUPARTE DE:
@@ -165,7 +164,7 @@ export default function ResumenEjecutivo() {
             </div>
 
             {/* Flujo de Comunicación */}
-            <div className="bg-gradient-to-br from-secondary/5 to-secondary/10 p-8 md:p-12 rounded-2xl border-2 border-accent my-12">
+            <div className="bg-gradient-to-br from-secondary/5 to-secondary/10 p-8 md:p-12 rounded-2xl border-0 border-accent my-12">
               <h3 className="text-3xl font-bold mb-4 text-center text-secondary">
                 FLUJO DE COMUNICACIÓN CLIENTE - PROVEEDOR
               </h3>
