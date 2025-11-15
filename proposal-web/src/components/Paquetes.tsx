@@ -29,6 +29,7 @@ interface PackageData {
   href: string
   icon: string
   nivelProfesional: string
+  tipo?: string
   subtitulo: string
   invertidos: number
   description: string
@@ -126,9 +127,10 @@ export default function Paquetes() {
       href: `/paquete/${slugify(snap.nombre)}`,
       icon: '🎁',
       nivelProfesional,
+      tipo: snap.paquete.tipo || '',
       subtitulo: `INVERSIÓN: $${inversionAnio1} USD`,
       invertidos: inversionAnio1,
-      description: `Paquete personalizado para empresas.`,
+      description: snap.paquete.descripcion || `Paquete personalizado para empresas.`,
       features,
       serviciosOpcionales,
       gestion: gestionData,
@@ -139,33 +141,41 @@ export default function Paquetes() {
     }
   })
 
-  // Asignar colores según inversión
+  // Asignar colores y emojis según inversión
   if (paquetesData.length > 0) {
+    // Sort por inversión (año1)
     paquetesData.sort((a, b) => a.invertidos - b.invertidos)
 
-    // Rojo: menor costo
+    // Asignar emojis: 🥉 (3er), 🥈 (2do), ⭐ (VIP/3er si hay 4+), 🥇 (1er)
+    const iconos = ['🥉', '🥈', '⭐', '🥇']
+    for (let idx = 0; idx < paquetesData.length; idx += 1) {
+      if (idx < iconos.length) {
+        paquetesData[idx].icon = iconos[idx]
+      }
+    }
+
+    // Asignar colores
+    // Rojo: menor costo (primer elemento)
     paquetesData[0].colorScheme = 'rojo'
 
-    // Negro: mayor costo
+    // Dorado: segundo elemento O si es ⭐ (VIP)
+    if (paquetesData.length >= 2) {
+      if (paquetesData[1].icon === '⭐') {
+        paquetesData[1].colorScheme = 'dorado'
+      } else {
+        paquetesData[1].colorScheme = 'dorado'
+        paquetesData[1].recomendado = true
+      }
+    }
+
+    // Si hay ⭐ en posición 2 (índice 2), siempre dorado
+    if (paquetesData.length >= 3 && paquetesData[2].icon === '⭐') {
+      paquetesData[2].colorScheme = 'dorado'
+    }
+
+    // Negro: mayor costo (último elemento)
     if (paquetesData.length > 1) {
       paquetesData.at(-1)!.colorScheme = 'negro'
-    }
-
-    // Dorado: mejor costo-beneficio (intermedio o el que mejor relación tenga)
-    if (paquetesData.length >= 3) {
-      paquetesData[1].colorScheme = 'dorado'
-      paquetesData[1].recomendado = true
-    } else if (paquetesData.length === 2) {
-      paquetesData[0].colorScheme = 'dorado'
-      paquetesData[0].recomendado = true
-    }
-  }
-
-  // Asignar iconos por posición
-  const iconos = ['🥉', '🥈', '🥇']
-  for (let idx = 0; idx < paquetesData.length; idx += 1) {
-    if (idx < iconos.length) {
-      paquetesData[idx].icon = iconos[idx]
     }
   }
 
@@ -188,7 +198,7 @@ export default function Paquetes() {
             Hemos diseñado opciones que se ajustan a diferentes necesidades y presupuestos
           </p>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className={`grid ${activos.length <= 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-8`}>
             {loading && (
               <>
                 {['skel-1', 'skel-2', 'skel-3'].map((id) => (
@@ -338,6 +348,7 @@ function PaqueteCard({
       <div className={`p-8 ${data.recomendado ? 'pt-16' : 'pt-8'} h-full flex flex-col`}>
         <div className="text-center mb-6">
           <span className="text-4xl">{data.icon}</span>
+          {data.tipo && <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{data.tipo}</p>}
           <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500">{data.nivelProfesional}</p>
           <h3 className="text-2xl font-bold text-secondary mt-2">{data.nombre}</h3>
           <p className={`${styles.priceText} font-bold text-lg`}>{data.subtitulo}</p>

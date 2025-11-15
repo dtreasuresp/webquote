@@ -19,6 +19,8 @@ export interface Package {
   desarrollo: number
   descuento: number
   activo: boolean
+  tipo?: string
+  descripcion?: string
 }
 
 export interface Servicio {
@@ -50,6 +52,8 @@ export interface PackageSnapshot {
   paquete: {
     desarrollo: number
     descuento: number
+    tipo?: string
+    descripcion?: string
   }
   otrosServicios: OtroServicioSnapshot[]
   costos: {

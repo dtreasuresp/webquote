@@ -27,6 +27,8 @@ interface Package {
   desarrollo: number
   descuento: number
   activo: boolean
+  tipo?: string
+  descripcion?: string
 }
 
 interface Servicio {
@@ -58,6 +60,8 @@ interface PackageSnapshot {
   paquete: {
     desarrollo: number
     descuento: number
+    tipo?: string
+    descripcion?: string
   }
   otrosServicios: OtroServicioSnapshot[]
   costos: {
@@ -99,6 +103,8 @@ export default function Administrador() {
     desarrollo: 0,
     descuento: 0,
     activo: true,
+    tipo: '',
+    descripcion: '',
   })
 
   // Estados legacy eliminados: otrosServicios y servicios (ahora unificados en serviciosOpcionales)
@@ -209,9 +215,8 @@ export default function Administrador() {
   // Calcular costo inicial para un snapshot
   const calcularCostoInicialSnapshot = (snapshot: PackageSnapshot) => {
     const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
-    const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => sum + s.precio, 0)
-    // Pago inicial: desarrollo con descuento + precios base de todos los servicios
-    return desarrolloConDescuento + serviciosBaseCosto
+    // Pago inicial: solo desarrollo con descuento (servicios base son gratis primeros meses)
+    return desarrolloConDescuento
   }
 
   // Calcular costo año 1 para un snapshot
@@ -377,6 +382,8 @@ export default function Administrador() {
         paquete: {
           desarrollo: paqueteActual.desarrollo,
           descuento: paqueteActual.descuento,
+          tipo: paqueteActual.tipo || '',
+          descripcion: paqueteActual.descripcion || 'Paquete personalizado para empresas.',
         },
         otrosServicios: otrosServiciosUnificados,
         costos: {
@@ -398,7 +405,7 @@ export default function Administrador() {
       setSnapshots([...snapshots, snapshotGuardado])
       
       // Limpiar campos
-      setPaqueteActual({ nombre: '', desarrollo: 0, descuento: 0, activo: true })
+      setPaqueteActual({ nombre: '', desarrollo: 0, descuento: 0, tipo: '', descripcion: '', activo: true })
       // Limpiar estados legacy
       // Legacy ya removido, solo limpiar serviciosOpcionales
       setServiciosOpcionales([])
@@ -983,7 +990,7 @@ export default function Administrador() {
                       onChange={(e) =>
                         setPaqueteActual({
                           ...paqueteActual,
-                          desarrollo: parseFloat(e.target.value) || 0,
+                          desarrollo: Number.parseFloat(e.target.value) || 0,
                         })
                       }
                       className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
@@ -1002,12 +1009,44 @@ export default function Administrador() {
                       onChange={(e) =>
                         setPaqueteActual({
                           ...paqueteActual,
-                          descuento: parseFloat(e.target.value) || 0,
+                          descuento: Number.parseFloat(e.target.value) || 0,
                         })
                       }
                       className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
                       min="0"
                       max="100"
+                    />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="paqueteTipo" className="block font-semibold text-secondary mb-2">
+                      🏆 Tipo de Paquete (Básico, Profesional, Premium, VIP)
+                    </label>
+                    <input
+                      id="paqueteTipo"
+                      type="text"
+                      placeholder="Ej: Básico"
+                      value={paqueteActual.tipo || ''}
+                      onChange={(e) =>
+                        setPaqueteActual({ ...paqueteActual, tipo: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="paqueteDescripcion" className="block font-semibold text-secondary mb-2">
+                      📝 Descripción del Paquete
+                    </label>
+                    <input
+                      id="paqueteDescripcion"
+                      type="text"
+                      placeholder="Ej: Paquete personalizado para empresas..."
+                      value={paqueteActual.descripcion || ''}
+                      onChange={(e) =>
+                        setPaqueteActual({ ...paqueteActual, descripcion: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1373,7 +1412,17 @@ export default function Administrador() {
                             <h3 className="text-xl font-bold text-secondary">
                               📦 {snapshot.nombre}
                             </h3>
-                            <p className="text-sm text-neutral-500">
+                            {snapshot.paquete.tipo && (
+                              <p className="text-xs font-semibold tracking-wide text-neutral-500 uppercase mt-1">
+                                🏆 {snapshot.paquete.tipo}
+                              </p>
+                            )}
+                            {snapshot.paquete.descripcion && (
+                              <p className="text-sm text-neutral-600 italic mt-1">
+                                {snapshot.paquete.descripcion}
+                              </p>
+                            )}
+                            <p className="text-sm text-neutral-500 mt-2">
                               {new Date(snapshot.createdAt).toLocaleDateString('es-ES')}
                             </p>
                           </div>
