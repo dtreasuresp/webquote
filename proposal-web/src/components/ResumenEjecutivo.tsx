@@ -19,14 +19,14 @@ export default function ResumenEjecutivo() {
 
           <div className="prose prose-lg max-w-none">
             <p className="text-xl text-gray-700 mb-8 leading-relaxed">
-              Tenemos el placer de presentar esta propuesta profesional para el desarrollo de tu sitio web corporativo. Luego de analizar detalladamente tus respuestas del cuestionario y las necesidades específicas de Urbanisima Constructora SRL, ofrecemos una <strong className="text-primary">solución dinámica</strong> que te permitirá:
+              Tenemos el placer de presentar esta propuesta profesional para el desarrollo de tu sitio web corporativo. Luego de analizar detalladamente tus respuestas del cuestionario y las necesidades específicas de Urbanísima Constructora S.R.L, ofrecemos una <strong className="text-primary">solución dinámica</strong> que te permitirá:
             </p>
 
             {/* Beneficios Principales */}
             <div className="grid md:grid-cols-2 gap-6 my-12">
               {[
                 'Mostrar profesionalmente tu catálogo de 10 servicios/productos',
-                'Actualizar contenido fácilmente SIN necesidad de programador',
+                'Actualizar contenido fácilmente sin necesidad de programador',
                 'Posicionarte como empresa confiable en tu sector',
                 'Captar clientes a través de WhatsApp, llamadas y contactos',
                 'Administrar todo desde un panel intuitivo',
@@ -50,18 +50,17 @@ export default function ResumenEjecutivo() {
               La propuesta está diseñada en <strong className="text-primary">3 paquetes de inversión</strong> para que elijas según tus necesidades y presupuesto, todas con calidad profesional garantizada.
             </p>
 
-            {/* Diferencia Clave */}
+            {/* Diferencias Claves */}
             <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border-l-8 border-primary p-8 rounded-lg my-12">
               <h3 className="text-2xl font-bold mb-6 text-secondary">
-                DIFERENCIA CLAVE
+                DIFERENCIAS CLAVES
               </h3>
               <p className="text-lg text-gray-700 mb-6">
-                A diferencia de otras propuestas donde el cliente gestiona su propio sitio, en este caso y a tu solicitud, <strong className="text-primary">nosotros nos encargamos de toda la administración y gestión del sitio web</strong>. Esto significa que:
+                A diferencia de otras propuestas donde el cliente gestiona su propio sitio, en este caso has solicitado que <strong className="text-primary">nosotros nos encargamos de toda la administración y gestión del sitio web</strong>. Esto significa que:
               </p>
               
               <div className="grid md:grid-cols-2 gap-4 mb-6">
                 {[
-                  '✅ NOSOTROS administramos TODO el sitio web',
                   '✅ El cliente accede al panel administrativo con permisos limitados',
                   '✅ El cliente puede solicitar cambios vía email, WhatsApp o llamada',
                   '✅ El proveedor realiza las actualizaciones y te informa su finalización',
@@ -77,10 +76,14 @@ export default function ResumenEjecutivo() {
               <p className="text-lg text-gray-700 mb-4">Este modelo es:</p>
               <div className="grid md:grid-cols-2 gap-3">
                 {[
-                  '🔴 Más seguro (nosotros tenemos acceso a la administración)',
-                  '🔴 Más profesional (evita errores del usuario)',
-                  '🔴 Mejor mantenimiento (actualizaciones garantizadas)',
-                  '🔴 Más confiable (soporte 24/7 de nuestro lado)',
+                  '🔴 Más seguro',
+                  '🔴 Ofrece mejor mantenimiento',
+                  '🟠 Permite mayor flexibilidad',
+                  '🟠 Asegura actualizaciones constantes',
+                  '🟡 Facilita la gestión de cambios',
+                  '🟡 Reduce la carga del cliente',
+                  '🟢 Mejora la experiencia del usuario final',
+                  '🟢 Aumenta la satisfacción del cliente',
                 ].map((benefit, index) => (
                   <div key={index} className="bg-white p-3 rounded-lg shadow-sm text-secondary font-medium">
                     {benefit}
@@ -90,17 +93,23 @@ export default function ResumenEjecutivo() {
             </div>
 
             {/* Responsabilidades */}
+
+            <p className="text-lg text-gray-700 mb-6">
+              Teniendo en cuenta lo anterior, las <strong className="text-primary">responsabilidades</strong> de ambas partes son las siguientes:
+            </p>
+
             <div className="grid md:grid-cols-2 gap-8 my-12">
+              
               {/* Lo que NOSOTROS hacemos */}
               <div className="bg-accent/10 p-8 rounded-2xl border-2 border-accent">
                 <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
                   <FaCheckCircle className="text-accent" />
-                  NOSOTROS SOMOS RESPONSABLES DE:
+                  NOSOTROS NOS ENCARGAMOS DE:
                 </h3>
                 
                 <div className="space-y-6">
                   <div>
-                    <h4 className="font-bold text-secondary mb-3">Contenidos:</h4>
+                    <h4 className="font-bold text-secondary mb-3">Todo el contenido:</h4>
                     <ul className="space-y-2 text-gray-700">
                       <li>✓ Actualizar productos/servicios</li>
                       <li>✓ Cambiar precios y disponibilidad</li>
@@ -113,25 +122,25 @@ export default function ResumenEjecutivo() {
                   </div>
 
                   <div>
-                    <h4 className="font-bold text-secondary mb-3">Técnico:</h4>
+                    <h4 className="font-bold text-secondary mb-3">La parte técnica:</h4>
                     <ul className="space-y-2 text-gray-700">
                       <li>✓ Actualizaciones de la plataforma web</li>
-                      <li>✓ Actualizaciones de plugins</li>
-                      <li>✓ Backups automáticos</li>
+                      <li>✓ Actualizaciones de componentes</li>
+                      <li>✓ Salvas automáticas</li>
                       <li>✓ Seguridad y monitoreo</li>
                       <li>✓ Corrección de errores técnicos</li>
                       <li>✓ Optimización de velocidad</li>
-                      <li>✓ Configuración de SEO</li>
+                      <li>✓ Configuración de SEO para que te encuentren en internet</li>
                     </ul>
                   </div>
 
                   <div>
-                    <h4 className="font-bold text-secondary mb-3">Comunicación:</h4>
+                    <h4 className="font-bold text-secondary mb-3">Comunicarnos contigo:</h4>
                     <ul className="space-y-2 text-gray-700">
-                      <li>✓ Reporte mensual de cambios realizados</li>
+                      <li>✓ Reporte de los cambios realizados cuando no son iniciados por ti</li>
                       <li>✓ Sugerencias de mejoras</li>
                       <li>✓ Análisis de tráfico y conversiones</li>
-                      <li>✓ Respuesta a solicitudes en 24-48 horas</li>
+                      <li>✓ Respondemos en un plazo de 30 minutos hasta 6 horas</li>
                     </ul>
                   </div>
                 </div>
@@ -141,16 +150,16 @@ export default function ResumenEjecutivo() {
               <div className="bg-primary/10 p-8 rounded-2xl border-2 border-primary">
                 <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
                   <span>❌</span>
-                  TU NO HARÁS NINGUNA DE ESTAS TAREAS:
+                  NO TIENES QUE PREOCUPARTE DE:
                 </h3>
                 
                 <ul className="space-y-3 text-gray-700">
-                  <li>❌ No ingresa al panel administrativo, a menos que sea para demostraciones o control de negocios</li>
-                  <li>❌ No instala plugins</li>
-                  <li>❌ No hace backups</li>
-                  <li>❌ No actualiza la plataforma web</li>
-                  <li>❌ No maneja seguridad</li>
-                  <li>❌ No toma decisiones técnicas</li>
+                  <li>❌ Ingresar al panel administrativo, a menos que sea para demostraciones o control de negocios</li>
+                  <li>❌ Instalar complementos</li>
+                  <li>❌ Hacer salvas</li>
+                  <li>❌ Actualizar la plataforma</li>
+                  <li>❌ Preocuparte de la seguridad</li>
+                  <li>❌ Tomar decisiones técnicas</li>
                 </ul>
               </div>
             </div>
@@ -175,7 +184,7 @@ export default function ResumenEjecutivo() {
                     <TimelineStep 
                       step={1}
                       icon="👤"
-                      title="Cliente solicita"
+                      title="Solicitud de un cambio"
                       description="Quiero agregar un nuevo servicio con estas fotos"
                       color="primary"
                       delay={0}
@@ -183,8 +192,8 @@ export default function ResumenEjecutivo() {
                     <TimelineStep 
                       step={2}
                       icon="📧"
-                      title="Recepción"
-                      description="Recibimos el email/WhatsApp y confirmamos"
+                      title="Recepción del cambio"
+                      description="Recibimos el email, WhatsApp o tu llamada y confirmamos"
                       color="accent"
                       delay={0.1}
                     />
@@ -200,7 +209,7 @@ export default function ResumenEjecutivo() {
                       step={4}
                       icon="✏️"
                       title="Edición"
-                      description="Agregamos el servicio, fotos y contenido"
+                      description="Agregamos el servicio, fotos y contenido solicitado por ti"
                       color="accent"
                       delay={0.3}
                     />
@@ -208,7 +217,7 @@ export default function ResumenEjecutivo() {
                       step={5}
                       icon="🎯"
                       title="Optimización SEO"
-                      description="Optimizamos para buscadores"
+                      description="Optimizamos el contenido para que los buscadores en internet lo encuentren"
                       color="accent"
                       delay={0.4}
                     />
@@ -216,7 +225,7 @@ export default function ResumenEjecutivo() {
                       step={6}
                       icon="✅"
                       title="Notificación"
-                      description="Notificamos: Hecho, está publicado"
+                      description="Te notificamos cuando el trabajo esté listo y publicado"
                       color="accent"
                       delay={0.5}
                     />
@@ -224,7 +233,7 @@ export default function ResumenEjecutivo() {
                       step={7}
                       icon="🎉"
                       title="Cliente verifica"
-                      description="Ve el sitio actualizado en vivo"
+                      description="Vas al sitio actualizado en vivo y confirmas si estás de acuerdo"
                       color="primary"
                       delay={0.6}
                     />
@@ -236,11 +245,11 @@ export default function ResumenEjecutivo() {
               <div className="flex flex-wrap justify-center gap-6 mt-12 pt-8 border-t border-gray-300">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-primary"></div>
-                  <span className="text-sm font-semibold text-gray-700">Cliente</span>
+                  <span className="text-sm font-semibold text-gray-700">Cliente (Urbanísima Constructora S.R.L)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-accent"></div>
-                  <span className="text-sm font-semibold text-gray-700">Nosotros (Urbanísima)</span>
+                  <span className="text-sm font-semibold text-gray-700">Nosotros (DGTECNOVA)</span>
                 </div>
               </div>
             </div>

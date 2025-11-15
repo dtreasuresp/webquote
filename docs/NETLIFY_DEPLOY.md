@@ -5,7 +5,7 @@
 1. **Ve a [Netlify](https://app.netlify.com)**
 2. **Click en "New site from Git"**
 3. **Selecciona "GitHub"** como proveedor
-4. **Busca y selecciona**: `Urbanisima_Constructora`
+4. **Busca y selecciona**: `Urbanísima_Constructora`
 5. **Configuración de build:**
    - Branch: `main`
    - Build command: `npm run build`
@@ -29,7 +29,7 @@ netlify deploy --prod --dir=.next
 
 ## Información del Sitio
 
-- **Repositorio**: https://github.com/dtreasuresp/Urbanisima_Constructora
+- **Repositorio**: https://github.com/dtreasuresp/Urbanísima_Constructora
 - **Rama**: main
 - **Carpeta del proyecto**: proposal-web/
 - **Build command**: npm run build

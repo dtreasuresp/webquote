@@ -135,8 +135,8 @@ export default function ConstructorPage() {
                 <tr className="hover:bg-gray-50 bg-accent/5">
                   <td className="px-6 py-4 font-semibold">Dominio (desde 4 meses)</td>
                   <td className="px-6 py-4 text-primary font-bold">$18 USD/año</td>
-                  <td className="px-6 py-4 text-primary font-bold">$162 USD/año (9 meses)</td>
-                  <td className="px-6 py-4 text-gray-600">Renovación anual del dominio</td>
+                  <td className="px-6 py-4 text-primary font-bold">$108 USD/año (6 meses)</td>
+                  <td className="px-6 py-4 text-gray-600">Renovación del dominio</td>
                 </tr>
               </tbody>
             </table>
@@ -466,7 +466,7 @@ export default function ConstructorPage() {
                   <td className="px-6 py-4 text-center text-accent">$0</td>
                   <td className="px-6 py-4 text-center text-accent">$0</td>
                   <td className="px-6 py-4 text-center text-accent">$16</td>
-                  <td className="px-6 py-4 text-center text-accent font-bold">$0 USD</td>
+                  <td className="px-6 py-4 text-center text-accent font-bold">$16 USD</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-semibold">Año 1 (meses 4–12)</td>

@@ -1,7 +1,7 @@
 ════════════════════════════════════════════════════════════════════════════════
                               
                         🌐 PROPUESTA COMERCIAL
-                     SITIO WEB PROFESIONAL PARA Urbanisima
+                     SITIO WEB PROFESIONAL PARA Urbanísima
                     "Tu Presencia Digital que Vende 24/7"
                     
 ════════════════════════════════════════════════════════════════════════════════
@@ -10,7 +10,7 @@
 📊 Cotización: #004-2025
 📅 Válido hasta: 11 de diciembre de 2025 (30 días)
 
-Para: **Urbanisima Constructora SRL**
+Para: **Urbanísima Constructora S.R.L**
 De: **DGTECNOVA** (Daniel Treasure Espinosa)
 Contacto: dgtecnova@gmail.com | +535 856 9291
 
@@ -19,7 +19,7 @@ Contacto: dgtecnova@gmail.com | +535 856 9291
 ## 📌 RESUMEN EJECUTIVO (LÉE ESTO PRIMERO)
 
 ### El Problema
-Urbanisima tiene **15 años de excelencia**, pero falta en internet. Tus clientes potenciales 
+Urbanísima tiene **15 años de excelencia**, pero falta en internet. Tus clientes potenciales 
 te buscan online y **no te encuentran**. Pierdes ventas cada día que pases sin presencia digital.
 
 ### La Solución

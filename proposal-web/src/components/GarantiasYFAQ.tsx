@@ -31,7 +31,6 @@ export default function GarantiasYFAQ() {
               </h3>
               <ul className="space-y-3">
                 {[
-                  'Tiempo de carga < 3 segundos',
                   'Uptime 99.9%',
                   'SSL/HTTPS gratis',
                   'Backups diarios (automáticos)',
@@ -41,12 +40,10 @@ export default function GarantiasYFAQ() {
                   'Cambios realizados puntualmente',
                   'Diseño profesional de tu sitio',
                   'Hosting, dominio y correo funcionando',
-                  'Descuentos aplicados según paquete',
                   'Cumplimiento de normativas legales',
                   'Protección de datos y privacidad',
-                  'Confidencialidad de la información',
                   'Soporte post-lanzamiento',
-                  'Período de garantía definido (30 a 60 días según paquete)',
+                  'Período de garantía definido (30 a 90 días según paquete)',
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3 text-gray-800">
                     <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
@@ -232,24 +229,24 @@ function FAQItem({
 
 const faqData = [
   {
-    question: '¿El cliente tendrá acceso al panel administrativo?',
-    answer: 'NO. Solo el proveedor (DGTecnova) tiene acceso. El cliente solo ve el sitio público. No obstante, puede acceder con permisos limitados si lo acuerdas.',
+    question: '¿Puedo tener acceso al panel administrativo?',
+    answer: 'No. Solo el proveedor (DGTecnova) tiene acceso. El cliente ve el sitio público. No obstante, puedes acceder con permisos limitados si lo acuerdas.',
   },
   {
-    question: '¿Cómo solicita cambios el cliente?',
-    answer: 'Por email o WhatsApp. Describe lo que quiere y nosotros lo realizamos. El horario de atención es de lunes a viernes, 9am-6pm, pero puede variar en dependencia del paquete de servicios contratado.',
+    question: '¿Cómo solicito cambios?',
+    answer: 'Por email, WhatsApp o una llamada. Describes lo que quieres y nosotros lo realizamos. El horario de atención es de lunes a viernes, 9am-6pm.',
   },
   {
     question: '¿Cuánto tarda en realizarse un cambio?',
     answer: [
       'Depende del paquete contratado:',
-      '• Constructor: 24 horas',
-      '• Obra Maestra: 12 horas',
-      '• Imperio Digital: 6 horas',
+      '• Constructor: 12 horas',
+      '• Obra Maestra: 8 horas',
+      '• Imperio Digital: 2 horas',
     ],
   },
   {
-    question: '¿Qué pasa si el cliente quiere más cambios de los incluidos?',
+    question: '¿Qué pasa si quiero más cambios de los incluidos?',
     answer: [
       'Se debe valorar el impacto y complejidad de los cambios solicitados:',
       '• Constructor: Cambios extras = $1.5 USD cada uno',
@@ -258,65 +255,61 @@ const faqData = [
     ],
   },
   {
-    question: '¿El cliente puede vender productos directamente en el sitio?',
-    answer: 'El paquete Constructor es solo un catálogo. Los paquetes Obra Maestra e Imperio Digital incluyen un sistema de reservas o cotizaciones online.',
+    question: '¿Puedo vender productos directamente en el sitio?',
+    answer: 'No. El paquete Constructor es solo un catálogo. Los paquetes Obra Maestra e Imperio Digital incluyen un sistema de reservas online.',
   },
   {
     question: '¿El sitio funcionará en móvil?',
-    answer: '100% garantizado. Es optimizado para que se vea perfecto en cualquier dispositivo (teléfono, tablet, computadora).',
+    answer: '100% garantizado. Será optimizado para que se vea perfecto en cualquier dispositivo (teléfono, tablet o computadora).',
   },
   {
     question: '¿Y si sube el tráfico? ¿El sitio se va a poner lento?',
-    answer: 'No. Nuestra infraestructura escala automáticamente. Aunque tengas 100,000 visitantes/mes, seguirá rápido.',
+    answer: 'No. La infraestructura a emplear escala automáticamente. Aunque tengas 100,000 visitantes/mes, seguirá rápido.',
   },
   {
     question: '¿Qué pasa con la información? ¿Es segura?',
-    answer: 'Totalmente. La plataforma utiliza encriptación SSL 256-bit. Los datos son sagrados.',
+    answer: 'Totalmente. La plataforma a emplear utiliza encriptación SSL 256-bit. Los datos son sagrados.',
   },
   {
-    question: '¿El cliente puede transferir el sitio después?',
-    answer: 'Sí, pero NO sin nuestro consentimiento, teniendo en cuenta que se deben realizar acciones de traspasos de accesos a las plataformas. Se acuerda por separado.',
+    question: '¿Puedo transferir el sitio después?',
+    answer: 'Sí, pero con nuestro consentimiento, teniendo en cuenta que se deben realizar acciones de traspasos de accesos a las plataformas.',
   },
   {
-    question: '¿Incluye posicionamiento en Google (SEO)?',
-    answer: 'SEO técnico sí. Posicionamiento orgánico toma 3-6 meses.',
+    question: '¿Incluye posicionamiento en Google?',
+    answer: 'Si, se incluye el posicionamiento técnico, pero el posicionamiento orgánico toma de 3 a 6 meses.',
   },
   {
-    question: '¿Qué pasa si el cliente no paga la gestión mensual?',
-    answer: 'El sitio continúa funcionando, pero NO habrán actualizaciones. Se acuerda por contrato.',
+    question: '¿Qué pasa si no pago la gestión mensual?',
+    answer: 'El sitio continúa funcionando, pero no habrá actualizaciones.',
   },
   {
     question: '¿Cuánto tiempo lleva ver los resultados?',
-    answer: 'El sitio estará listo en 4-8 semanas, dependiendo del paquete contratado. Los primeros contactos pueden llegar a los 2-3 días del lanzamiento, aunque el posicionamiento en Google puede demorar 2-3 meses.',
+    answer: 'El sitio estará listo entre 4-8 semanas, dependiendo del paquete contratado. Los primeros contactos pueden llegar a los 2-3 días del lanzamiento, aunque el posicionamiento en Google puede demorar 2-3 meses.',
   },
   {
-    question: '¿Incluye publicidad digital/Facebook Ads?',
-    answer: 'No, eso es servicio adicional que el cliente puede contratar.',
+    question: '¿Incluye publicidad digital?',
+    answer: 'No, eso es servicio adicional que puedes contratar.',
   },
   {
     question: '¿Necesito conocimientos técnicos?',
-    answer: 'NO. El proveedor hace TODO lo técnico. El cliente sólo dice qué cambios quiere.',
+    answer: 'No. Nosotros hacemos todo el trabajo técnico. Tú solo te enfocas en tu negocio.',
   },
   {
     question: '¿Puedo agregar más servicios después?',
     answer: [
       'Sí. Podemos incluir servicios adicionales como:',
-      '• SEO pagado adicional',
       '• Publicidad digital',
-      '• Email marketing',
       '• Diseño gráfico',
-      '• Redes sociales',
-      '• Mantenimiento avanzado',
+      '• Posicionamiento en Redes sociales',
       '• Consultoría estratégica',
-      '• Otros servicios digitales (Manual visual, branding, etc.)',
+      '• Otros servicios digitales (Manual visual, gestión de marca, etc.)',
       '• Desarrollo de aplicaciones móviles',
-      '• Elaboración de campañas publicitarias',
-      '• Elaboracion de documentos del negocio',
-      '👌 Por supuesto, estos servicios se cotizan por separado y según el paquete contratado se aplican descuentos por fidelidad del cliente.',
+      '• Elaboración de documentos del negocio',
+      'Estos servicios se cotizan por separado y según el paquete contratado se aplican descuentos por fidelidad del cliente.',
     ],
   },
     {
-    question: '¿El cliente puede dejar de pagar después?',
-    answer: 'Sí, pero el sitio se desactivará, teniendo en cuenta que las plataformas que se usan para desplegar el sitio requieren pagos continuos. El cliente pierde el dominio y el hosting. Si lo retoma, existe el riesgo de perder totalmente el dominio por indisponibilidad, por haber sido comprado por otro cliente global',
+    question: '¿Puedo dejar de pagar después?',
+    answer: 'Sí, pero el sitio se desactivará, teniendo en cuenta que las plataformas que se usan para desplegarlo requieren pagos continuos. Pierdes el dominio y el hosting. Si lo retomas, existe el riesgo de perder totalmente el dominio (dirección web de tu sitio) por indisponibilidad, por haber sido comprado por otro cliente global',
   },
 ]

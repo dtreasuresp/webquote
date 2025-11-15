@@ -1,5 +1,7 @@
 'use client'
 
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import Navigation from '@/components/Navigation'
 import Hero from '@/components/Hero'
 import ResumenEjecutivo from '@/components/ResumenEjecutivo'
@@ -16,6 +18,21 @@ import GarantiasYFAQ from '@/components/GarantiasYFAQ'
 import Contacto from '@/components/Contacto'
 
 export default function Home() {
+  const searchParams = useSearchParams()
+  
+  useEffect(() => {
+    const section = searchParams.get('section')
+    if (section) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(section)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams])
+
   return (
     <main className="bg-white">
       <Navigation />

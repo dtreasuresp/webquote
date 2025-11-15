@@ -1,17 +1,19 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck } from 'react-icons/fa'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import { jsPDF } from 'jspdf'
 import { obtenerSnapshots, crearSnapshot, actualizarSnapshot, eliminarSnapshot } from '@/lib/snapshotApi'
 
-interface ServicePrice {
-  hosting: number
-  mailbox: number
-  dominio: number
+interface ServicioBase {
+  id: string
+  nombre: string
+  precio: number
+  mesesGratis: number
+  mesesPago: number
 }
 
 interface GestionConfig {
@@ -47,13 +49,7 @@ interface OtroServicioSnapshot extends OtroServicio {}
 interface PackageSnapshot {
   id: string
   nombre: string
-  servicios: {
-    hosting: number
-    mailbox: number
-    dominio: number
-    mesesGratis: number
-    mesesPago: number
-  }
+  serviciosBase: ServicioBase[]
   gestion: {
     precio: number
     mesesGratis: number
@@ -75,20 +71,27 @@ interface PackageSnapshot {
 
 export default function Administrador() {
   // Estados principales
-  const [precios, setPrecios] = useState<ServicePrice>({
-    hosting: 28,
-    mailbox: 4,
-    dominio: 18,
-  })
+  const [serviciosBase, setServiciosBase] = useState<ServicioBase[]>([
+    { id: '1', nombre: 'Hosting', precio: 28, mesesGratis: 3, mesesPago: 9 },
+    { id: '2', nombre: 'Mailbox', precio: 4, mesesGratis: 3, mesesPago: 9 },
+    { id: '3', nombre: 'Dominio', precio: 18, mesesGratis: 3, mesesPago: 9 },
+  ])
+
+  const [nuevoServicioBase, setNuevoServicioBase] = useState<{
+    nombre: string
+    precio: number
+    mesesGratis: number
+    mesesPago: number
+  }>({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
+
+  const [editandoServicioBaseId, setEditandoServicioBaseId] = useState<string | null>(null)
+  const [servicioBaseEditando, setServicioBaseEditando] = useState<ServicioBase | null>(null)
 
   const [gestion, setGestion] = useState<GestionConfig>({
     precio: 0,
     mesesGratis: 0,
     mesesPago: 12,
   })
-
-  const [mesesGratis, setMesesGratis] = useState(3)
-  const [mesesPago, setMesesPago] = useState(9)
 
   // Definición de Paquetes
   const [paqueteActual, setPaqueteActual] = useState<Package>({
@@ -98,22 +101,7 @@ export default function Administrador() {
     activo: true,
   })
 
-  // Otros Servicios
-  const [otrosServicios, setOtrosServicios] = useState<OtroServicio[]>([])
-  const [nuevoOtroServicio, setNuevoOtroServicio] = useState<{
-    nombre: string
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-  }>({ 
-    nombre: '', 
-    precio: 0,
-    mesesGratis: 0,
-    mesesPago: 12,
-  })
-
-  // Servicios (Sección 4)
-  const [servicios, setServicios] = useState<Servicio[]>([])
+  // Estados legacy eliminados: otrosServicios y servicios (ahora unificados en serviciosOpcionales)
   const [nuevoServicio, setNuevoServicio] = useState<{
     nombre: string
     precio: number
@@ -127,10 +115,18 @@ export default function Administrador() {
   })
   const [editandoServicioId, setEditandoServicioId] = useState<string | null>(null)
   const [servicioEditando, setServicioEditando] = useState<Servicio | null>(null)
+  
+  // Estado unificado (fase inicial): representación única para servicios opcionales evitando duplicados en snapshot.
+  // En esta primera fase se poblará desde ambos arrays legacy (otrosServicios y servicios) al cargar configuración.
+  const [serviciosOpcionales, setServiciosOpcionales] = useState<Servicio[]>([])
   const [snapshots, setSnapshots] = useState<PackageSnapshot[]>([])
   const [editingSnapshotId, setEditingSnapshotId] = useState<string | null>(null)
   const [showModalEditar, setShowModalEditar] = useState(false)
   const [snapshotEditando, setSnapshotEditando] = useState<PackageSnapshot | null>(null)
+  // Estado para comparar cambios en el modal (versión original serializada)
+  const [snapshotOriginalJson, setSnapshotOriginalJson] = useState<string | null>(null)
+  // Ref para foco inicial en modal
+  const nombrePaqueteInputRef = useRef<HTMLInputElement | null>(null)
   const [cargandoSnapshots, setCargandoSnapshots] = useState(true)
   const [errorSnapshots, setErrorSnapshots] = useState<string | null>(null)
 
@@ -159,13 +155,39 @@ export default function Administrador() {
     if (configGuardada) {
       try {
         const config = JSON.parse(configGuardada)
-        if (config.precios) setPrecios(config.precios)
+        if (config.serviciosBase) setServiciosBase(config.serviciosBase)
         if (config.gestion) setGestion(config.gestion)
-        if (config.mesesGratis !== undefined) setMesesGratis(config.mesesGratis)
-        if (config.mesesPago !== undefined) setMesesPago(config.mesesPago)
         if (config.paqueteActual) setPaqueteActual(config.paqueteActual)
-        if (config.otrosServicios) setOtrosServicios(config.otrosServicios)
-        if (config.servicios) setServicios(config.servicios)
+        const fusionFuenteServicios: Servicio[] = (config.servicios || []).map((s: any) => ({
+          id: s.id || `${Date.now()}-${Math.random()}`,
+          nombre: s.nombre,
+          precio: s.precio,
+          mesesGratis: s.mesesGratis,
+          mesesPago: s.mesesPago,
+        }))
+        const fusionFuenteOtros: Servicio[] = (config.otrosServicios || []).map((s: any, idx: number) => ({
+          id: s.id || `legacy-${Date.now()}-${idx}`,
+          nombre: s.nombre,
+          precio: s.precio,
+          mesesGratis: s.mesesGratis,
+          mesesPago: s.mesesPago,
+        }))
+        const fusionFuenteUnificada: Servicio[] = (config.serviciosOpcionales || []).map((s: any) => ({
+          id: s.id || `${Date.now()}-${Math.random()}`,
+          nombre: s.nombre,
+          precio: s.precio,
+          mesesGratis: s.mesesGratis,
+          mesesPago: s.mesesPago,
+        }))
+        // Prioridad: serviciosOpcionales > servicios > otrosServicios
+        const fusion: Servicio[] = [...fusionFuenteOtros, ...fusionFuenteServicios, ...fusionFuenteUnificada]
+        const vistos = new Set<string>()
+        const dedup = fusion.filter(s => {
+          if (vistos.has(s.nombre)) return false
+          vistos.add(s.nombre)
+          return true
+        })
+        setServiciosOpcionales(dedup)
       } catch (e) {
         console.error('Error cargando configuración:', e)
       }
@@ -177,32 +199,28 @@ export default function Administrador() {
 
   // Validaciones
   const paqueteEsValido = paqueteActual.nombre && paqueteActual.desarrollo > 0
-  const preciosValidos = precios.hosting > 0 || precios.mailbox > 0 || precios.dominio > 0
-  const serviciosValidos = mesesGratis >= 0 && mesesPago > mesesGratis
+  const serviciosBaseValidos = serviciosBase.length > 0 && serviciosBase.every(s => s.precio > 0 && s.nombre)
   // Gestión es OPCIONAL
   const gestionValida = gestion.precio === 0 || (gestion.precio > 0 && gestion.mesesPago > gestion.mesesGratis)
-  const todoEsValido = paqueteEsValido && preciosValidos && serviciosValidos && gestionValida
+  // Servicios opcionales (opcionales, no bloquean creación): si existen, cada uno debe sumar 12 meses y tener precio/nombre
+  const serviciosOpcionalesValidos = serviciosOpcionales.every(s => s.nombre && s.precio > 0 && (s.mesesGratis + s.mesesPago === 12))
+  const todoEsValido = paqueteEsValido && serviciosBaseValidos && gestionValida
 
   // Calcular costo inicial para un snapshot
   const calcularCostoInicialSnapshot = (snapshot: PackageSnapshot) => {
     const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
-    const serviciosBase =
-      snapshot.servicios.hosting +
-      snapshot.servicios.mailbox +
-      snapshot.servicios.dominio
-    // Pago inicial: desarrollo con descuento + precios base de hosting, mailbox y dominio
-    return desarrolloConDescuento + serviciosBase
+    const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => sum + s.precio, 0)
+    // Pago inicial: desarrollo con descuento + precios base de todos los servicios
+    return desarrolloConDescuento + serviciosBaseCosto
   }
 
   // Calcular costo año 1 para un snapshot
   const calcularCostoAño1Snapshot = (snapshot: PackageSnapshot) => {
     const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
-    // Año 1: se facturan los meses de pago (12 - meses gratis) para cada grupo
-    const mesesPagoServicios = snapshot.servicios.mesesPago
-    const serviciosBase =
-      snapshot.servicios.hosting * mesesPagoServicios +
-      snapshot.servicios.mailbox * mesesPagoServicios +
-      snapshot.servicios.dominio * mesesPagoServicios
+    // Año 1: se facturan los meses de pago para cada servicio base
+    const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => {
+      return sum + (s.precio * s.mesesPago)
+    }, 0)
 
     const mesesPagoGestion = snapshot.gestion.mesesPago
     const gestionCosto = snapshot.gestion.precio * mesesPagoGestion
@@ -212,16 +230,15 @@ export default function Administrador() {
       return sum + s.precio * mesesServicio
     }, 0)
 
-    return desarrolloConDescuento + serviciosBase + gestionCosto + otrosServiciosTotal
+    return desarrolloConDescuento + serviciosBaseCosto + gestionCosto + otrosServiciosTotal
   }
 
   // Calcular costo año 2 para un snapshot
   const calcularCostoAño2Snapshot = (snapshot: PackageSnapshot) => {
     // Año 2: no se consideran meses gratis, todo a 12 meses, sin desarrollo
-    const serviciosBase =
-      snapshot.servicios.hosting * 12 +
-      snapshot.servicios.mailbox * 12 +
-      snapshot.servicios.dominio * 12
+    const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => {
+      return sum + (s.precio * 12)
+    }, 0)
 
     const gestionCosto = snapshot.gestion.precio * 12
 
@@ -229,68 +246,108 @@ export default function Administrador() {
       return sum + s.precio * 12
     }, 0)
 
-    return serviciosBase + gestionCosto + otrosServiciosTotal
+    return serviciosBaseCosto + gestionCosto + otrosServiciosTotal
   }
 
-  const actualizarPrecio = (servicio: keyof ServicePrice, valor: number) => {
-    setPrecios({ ...precios, [servicio]: valor })
-  }
-
-  // Funciones para Otros Servicios (legacy para snapshots)
-  const agregarOtroServicio = () => {
-    if (nuevoOtroServicio.nombre && nuevoOtroServicio.precio > 0) {
-      setOtrosServicios([
-        ...otrosServicios,
-        {
-          nombre: nuevoOtroServicio.nombre,
-          precio: nuevoOtroServicio.precio,
-          mesesGratis: nuevoOtroServicio.mesesGratis,
-          mesesPago: nuevoOtroServicio.mesesPago,
-        }
-      ])
-      setNuevoOtroServicio({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
+  // Funciones CRUD para Servicios Base
+  const agregarServicioBase = () => {
+    if (nuevoServicioBase.nombre && nuevoServicioBase.precio > 0) {
+      const nuevoServ: ServicioBase = {
+        id: Date.now().toString(),
+        nombre: nuevoServicioBase.nombre,
+        precio: nuevoServicioBase.precio,
+        mesesGratis: nuevoServicioBase.mesesGratis,
+        mesesPago: nuevoServicioBase.mesesPago,
+      }
+      setServiciosBase([...serviciosBase, nuevoServ])
+      setNuevoServicioBase({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
     }
   }
 
-  const eliminarOtroServicio = (index: number) => {
-    setOtrosServicios(otrosServicios.filter((_, i) => i !== index))
+  const abrirEditarServicioBase = (servicio: ServicioBase) => {
+    setServicioBaseEditando({ ...servicio })
+    setEditandoServicioBaseId(servicio.id)
   }
 
+  const guardarEditarServicioBase = () => {
+    if (servicioBaseEditando && servicioBaseEditando.nombre && servicioBaseEditando.precio > 0) {
+      setServiciosBase(serviciosBase.map(s => s.id === servicioBaseEditando.id ? servicioBaseEditando : s))
+      setEditandoServicioBaseId(null)
+      setServicioBaseEditando(null)
+    }
+  }
+
+  const cancelarEditarServicioBase = () => {
+    setEditandoServicioBaseId(null)
+    setServicioBaseEditando(null)
+  }
+
+  const eliminarServicioBase = (id: string) => {
+    if (serviciosBase.length > 1) {
+      setServiciosBase(serviciosBase.filter(s => s.id !== id))
+    } else {
+      alert('⚠️ Debe haber al menos un servicio base')
+    }
+  }
+
+  // Eliminadas funciones legacy agregar/eliminar otros servicios (unificadas)
+
   // Funciones para Servicios (Sección 4)
-  const agregarServicio = () => {
-    if (nuevoServicio.nombre && nuevoServicio.precio > 0) {
+  // Unificación de lógica CRUD para servicios opcionales usando 'serviciosOpcionales'
+  const normalizarMeses = (mesesGratis: number, mesesPago: number) => {
+    let g = Math.max(0, Math.min(mesesGratis, 12))
+    let p = Math.max(0, Math.min(mesesPago, 12))
+    if (g + p !== 12) {
+      if (g > 0) p = 12 - g
+      else if (p > 0) g = 12 - p
+      else p = 12 // ambos 0 -> 12 meses pago
+    }
+    if (g === 12) return { mesesGratis: 12, mesesPago: 0 }
+    if (p === 0) return { mesesGratis: g, mesesPago: 1 } // asegurar al menos 1 pago si no todo gratis
+    return { mesesGratis: g, mesesPago: p }
+  }
+
+  const agregarServicioOpcional = () => {
+    if (nuevoServicio.nombre.trim() && nuevoServicio.precio > 0) {
+      const { mesesGratis, mesesPago } = normalizarMeses(nuevoServicio.mesesGratis, nuevoServicio.mesesPago)
       const nuevoServ: Servicio = {
         id: Date.now().toString(),
-        nombre: nuevoServicio.nombre,
+        nombre: nuevoServicio.nombre.trim(),
         precio: nuevoServicio.precio,
-        mesesGratis: nuevoServicio.mesesGratis,
-        mesesPago: nuevoServicio.mesesPago,
+        mesesGratis,
+        mesesPago,
       }
-      setServicios([...servicios, nuevoServ])
+      setServiciosOpcionales(prev => {
+        const existente = prev.find(s => s.nombre.toLowerCase() === nuevoServ.nombre.toLowerCase())
+        if (existente) return prev.map(s => s.id === existente.id ? { ...nuevoServ, id: existente.id } : s)
+        return [...prev, nuevoServ]
+      })
       setNuevoServicio({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
     }
   }
 
-  const abrirEditarServicio = (servicio: Servicio) => {
+  const abrirEditarServicioOpcional = (servicio: Servicio) => {
     setServicioEditando({ ...servicio })
     setEditandoServicioId(servicio.id)
   }
 
-  const guardarEditarServicio = () => {
-    if (servicioEditando && servicioEditando.nombre && servicioEditando.precio > 0) {
-      setServicios(servicios.map(s => s.id === servicioEditando.id ? servicioEditando : s))
+  const guardarEditarServicioOpcional = () => {
+    if (servicioEditando && servicioEditando.nombre.trim() && servicioEditando.precio > 0) {
+      const nm = normalizarMeses(servicioEditando.mesesGratis, servicioEditando.mesesPago)
+      const actualizado: Servicio = { ...servicioEditando, ...nm, nombre: servicioEditando.nombre.trim() }
+      setServiciosOpcionales(prev => prev.map(s => s.id === actualizado.id ? actualizado : s))
       setEditandoServicioId(null)
       setServicioEditando(null)
     }
   }
 
-  const cancelarEditarServicio = () => {
+  const cancelarEditarServicioOpcional = () => {
     setEditandoServicioId(null)
     setServicioEditando(null)
   }
 
-  const eliminarServicio = (id: string) => {
-    setServicios(servicios.filter(s => s.id !== id))
+  const eliminarServicioOpcional = (id: string) => {
+    setServiciosOpcionales(prev => prev.filter(s => s.id !== id))
   }
 
   const crearPaqueteSnapshot = async () => {
@@ -300,8 +357,8 @@ export default function Administrador() {
     }
 
     try {
-      // Convertir servicios a otrosServicios para guardar en snapshot
-      const otrosServiciosConvertidos: OtroServicio[] = servicios.map(s => ({
+      // Conversión directa desde el estado unificado
+      const otrosServiciosUnificados: OtroServicio[] = serviciosOpcionales.map(s => ({
         nombre: s.nombre,
         precio: s.precio,
         mesesGratis: s.mesesGratis,
@@ -311,13 +368,7 @@ export default function Administrador() {
       const nuevoSnapshot: PackageSnapshot = {
         id: Date.now().toString(),
         nombre: paqueteActual.nombre,
-        servicios: {
-          hosting: precios.hosting,
-          mailbox: precios.mailbox,
-          dominio: precios.dominio,
-          mesesGratis,
-          mesesPago,
-        },
+        serviciosBase: serviciosBase.map(s => ({ ...s })),
         gestion: {
           precio: gestion.precio,
           mesesGratis: gestion.mesesGratis,
@@ -327,7 +378,7 @@ export default function Administrador() {
           desarrollo: paqueteActual.desarrollo,
           descuento: paqueteActual.descuento,
         },
-        otrosServicios: [...otrosServicios, ...otrosServiciosConvertidos],
+        otrosServicios: otrosServiciosUnificados,
         costos: {
           inicial: 0,
           año1: 0,
@@ -348,9 +399,9 @@ export default function Administrador() {
       
       // Limpiar campos
       setPaqueteActual({ nombre: '', desarrollo: 0, descuento: 0, activo: true })
-      setOtrosServicios([])
-      setServicios([])
-      setNuevoOtroServicio({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
+      // Limpiar estados legacy
+      // Legacy ya removido, solo limpiar serviciosOpcionales
+      setServiciosOpcionales([])
       setNuevoServicio({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
 
       alert('✅ Paquete creado y guardado correctamente')
@@ -363,6 +414,7 @@ export default function Administrador() {
   const abrirModalEditar = (snapshot: PackageSnapshot) => {
     setSnapshotEditando({ ...snapshot })
     setShowModalEditar(true)
+    setSnapshotOriginalJson(JSON.stringify(snapshot))
   }
 
   const guardarEdicion = async () => {
@@ -380,11 +432,46 @@ export default function Administrador() {
       setShowModalEditar(false)
       setSnapshotEditando(null)
       alert('✅ Paquete actualizado correctamente')
+      setSnapshotOriginalJson(JSON.stringify(snapshotActualizado))
     } catch (error) {
       console.error('Error al guardar edición:', error)
       alert('❌ Error al actualizar el paquete. Por favor intenta de nuevo.')
     }
   }
+
+  // Cerrar modal con validación de cambios sin guardar
+  const handleCerrarModalEditar = () => {
+    if (snapshotEditando && snapshotOriginalJson) {
+      const actual = JSON.stringify(snapshotEditando)
+      if (actual !== snapshotOriginalJson) {
+        const confirmar = confirm('Hay cambios sin guardar. ¿Deseas cerrar y descartar los cambios?')
+        if (!confirmar) return
+      }
+    }
+    setShowModalEditar(false)
+    setSnapshotEditando(null)
+    setSnapshotOriginalJson(null)
+  }
+
+  // Foco inicial al abrir modal
+  useEffect(() => {
+    if (showModalEditar && nombrePaqueteInputRef.current) {
+      nombrePaqueteInputRef.current.focus()
+    }
+  }, [showModalEditar])
+
+  // Manejo de tecla Escape dentro del modal
+  useEffect(() => {
+    if (!showModalEditar) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        handleCerrarModalEditar()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [showModalEditar, snapshotEditando, snapshotOriginalJson])
 
   const handleEliminarSnapshot = async (id: string) => {
     if (confirm('¿Estás seguro de que deseas eliminar este paquete?')) {
@@ -417,9 +504,11 @@ export default function Administrador() {
     const contentWidth = pageWidth - 2 * margin
     let yPos = margin
 
-    // Colores RGB
-    const colorPrimario = [51, 102, 204] as [number, number, number]
-    const colorSecundario = [240, 240, 240] as [number, number, number]
+    // Colores RGB (paleta corporativa: rojo, negro y dorado)
+    // Primario: Rojo (#DC2626)
+    const colorPrimario = [220, 38, 38] as [number, number, number]
+    // Secundario de sección: Dorado claro (#FCD34D) para resaltar encabezados
+    const colorSecundario = [252, 211, 77] as [number, number, number]
 
     // Encabezado
     doc.setFillColor(colorPrimario[0], colorPrimario[1], colorPrimario[2])
@@ -453,7 +542,8 @@ export default function Administrador() {
       doc.rect(margin - 2, yPos - 6, contentWidth + 4, 8, 'F')
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(11)
-      doc.setTextColor(51, 102, 204)
+      // Títulos de sección en rojo corporativo
+      doc.setTextColor(220, 38, 38)
       doc.text(titulo, margin + 2, yPos)
       yPos += 10
       
@@ -480,13 +570,9 @@ export default function Administrador() {
     crearSeccion('📦 PAQUETE', paqueteContent)
 
     // Sección Servicios Base
-    const serviciosContent = [
-      `• Hosting: $${snapshot.servicios.hosting.toFixed(2)}/mes`,
-      `• Mailbox: $${snapshot.servicios.mailbox.toFixed(2)}/mes`,
-      `• Dominio: $${snapshot.servicios.dominio.toFixed(2)}/mes`,
-      `• Período sin costo: ${snapshot.servicios.mesesGratis} meses`,
-      `• Período a pagar: ${snapshot.servicios.mesesPago} meses`,
-    ]
+    const serviciosContent = snapshot.serviciosBase.map(s => 
+      `• ${s.nombre}: $${s.precio.toFixed(2)}/mes (${s.mesesGratis} meses gratis, ${s.mesesPago} meses pago)`
+    )
     crearSeccion('🌐 SERVICIOS BASE', serviciosContent)
 
     // Sección Gestión (si aplica)
@@ -513,7 +599,8 @@ export default function Administrador() {
       yPos = margin
     }
     
-    doc.setFillColor(51, 153, 102)
+    // Resumen de costos en dorado (accent oscuro #D97706)
+    doc.setFillColor(217, 119, 6)
     doc.rect(margin - 2, yPos - 6, contentWidth + 4, 8, 'F')
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(12)
@@ -536,7 +623,8 @@ export default function Administrador() {
       doc.setFontSize(idx === 0 ? 11 : 10)
       doc.text(costo.label, margin + 5, yPos)
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(51, 102, 204)
+      // Valores destacados en rojo corporativo
+      doc.setTextColor(220, 38, 38)
       doc.setFontSize(11)
       doc.text(`$${costo.valor}`, pageWidth - margin - 25, yPos)
       doc.setTextColor(0, 0, 0)
@@ -555,13 +643,10 @@ export default function Administrador() {
 
   const guardarConfiguracionActual = () => {
     const configActual = {
-      precios,
+      serviciosBase,
       gestion,
-      mesesGratis,
-      mesesPago,
       paqueteActual,
-      otrosServicios,
-      servicios,
+      serviciosOpcionales,
       timestamp: new Date().toISOString(),
     }
     localStorage.setItem('configuracionAdministrador', JSON.stringify(configActual))
@@ -571,7 +656,14 @@ export default function Administrador() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary via-secondary-light to-neutral-900">
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-secondary via-secondary-light to-secondary-dark">
+      {/* Overlay dorado sutil para coherencia de marca */}
+      <div className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute -top-20 -right-20 w-[480px] h-[480px] rounded-full blur-3xl opacity-20"
+          style={{ background: 'radial-gradient(closest-side, rgba(245, 158, 11, 0.6), rgba(245, 158, 11, 0.0))' }}
+        />
+      </div>
       <Navigation />
       <div className="max-w-7xl mx-auto py-20 px-4 pt-32">
         <motion.div
@@ -579,7 +671,7 @@ export default function Administrador() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Header con botón volver */}
+          {/* Header con botones de acción */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
@@ -589,19 +681,37 @@ export default function Administrador() {
                 Calculadora de Presupuestos y Gestión de Servicios
               </p>
             </div>
-            <Link href="/">
+            <div className="flex flex-wrap gap-3 items-center">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all flex items-center gap-2 font-semibold border border-white/30 backdrop-blur"
+                onClick={handleDescargarPdf}
+                className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
               >
-                <FaArrowLeft /> Volver
+                <FaDownload /> Descargar PDF
               </motion.button>
-            </Link>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={guardarConfiguracionActual}
+                className="px-6 py-3 bg-gradient-to-r from-accent to-accent-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
+              >
+                💾 Guardar
+              </motion.button>
+              <Link href="/">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all flex items-center gap-2 font-semibold border border-white/30 backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
+                >
+                  <FaArrowLeft /> Volver
+                </motion.button>
+              </Link>
+            </div>
           </div>
 
           <div className="space-y-8">
-            {/* Sección 1: Definición de Precios */}
+            {/* Sección 1: Definición de Precios de Servicios Base */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -609,89 +719,225 @@ export default function Administrador() {
               className="bg-white rounded-2xl shadow-xl border-l-4 border-primary p-8"
             >
               <h2 className="text-2xl font-bold text-secondary mb-6 flex items-center gap-3">
-                <span className="text-3xl">💰</span>
-                1. Definición de Precios de Servicios
+                <span className="text-3xl">➡️</span>
+                1. Definición de Precios de Servicios Base
               </h2>
 
-              <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 rounded-xl border-2 border-primary/30">
-                <div className="grid md:grid-cols-5 gap-4">
-                  <div>
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      💾 Hosting
-                    </label>
-                    <div className="flex items-center gap-2 bg-white p-3 rounded-lg border-2 border-primary/20 hover:border-primary/40 transition-all">
-                      <input
-                        type="number"
-                        value={precios.hosting}
-                        onChange={(e) =>
-                          actualizarPrecio('hosting', parseFloat(e.target.value) || 0)
-                        }
-                        className="w-full px-2 py-1 bg-transparent border-0 focus:ring-0 focus:outline-none font-semibold text-sm"
-                      />
-                      <span className="text-xs font-bold text-primary whitespace-nowrap">USD</span>
+              {/* Lista de Servicios Base Existentes */}
+              {serviciosBase.length > 0 && (
+                <div className="mb-6 space-y-3">
+                  <div className="text-sm font-semibold text-secondary mb-3 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 px-2 text-left">
+                    <span>📝 Nombre</span>
+                    <span>💰 Precio (USD)</span>
+                    <span>🎁 Meses Gratis</span>
+                    <span>🗓️ Meses Pago</span>
+                    <span>💵 Subtotal</span>
+                    <span className="text-center">⚙️Acciones</span>
+                  </div>
+                  {serviciosBase.map((servicio) => (
+                    <div
+                      key={servicio.id}
+                      className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 items-center bg-gradient-to-r from-primary/5 to-primary/10 p-4 rounded-xl border-2 border-primary/20"
+                    >
+                      {editandoServicioBaseId === servicio.id ? (
+                        <>
+                          <input
+                            type="text"
+                            value={servicioBaseEditando?.nombre || ''}
+                            onChange={(e) =>
+                              setServicioBaseEditando({
+                                ...servicioBaseEditando!,
+                                nombre: e.target.value,
+                              })
+                            }
+                            className="px-3 py-2 border-2 border-primary/30 rounded-lg focus:border-primary focus:outline-none"
+                          />
+                          <input
+                            type="number"
+                            value={servicioBaseEditando?.precio || 0}
+                            onChange={(e) =>
+                              setServicioBaseEditando({
+                                ...servicioBaseEditando!,
+                                precio: parseFloat(e.target.value) || 0,
+                              })
+                            }
+                            className="px-3 py-2 border-2 border-primary/30 rounded-lg focus:border-primary focus:outline-none"
+                            min="0"
+                          />
+                          <input
+                            type="number"
+                            value={servicioBaseEditando?.mesesGratis || 0}
+                            onChange={(e) =>
+                              setServicioBaseEditando({
+                                ...servicioBaseEditando!,
+                                mesesGratis: parseInt(e.target.value) || 0,
+                              })
+                            }
+                            className="px-3 py-2 border-2 border-primary/30 rounded-lg focus:border-primary focus:outline-none"
+                            min="0"
+                            max="12"
+                          />
+                          <input
+                            type="number"
+                            value={servicioBaseEditando?.mesesPago || 0}
+                            onChange={(e) =>
+                              setServicioBaseEditando({
+                                ...servicioBaseEditando!,
+                                mesesPago: parseInt(e.target.value) || 0,
+                              })
+                            }
+                            className="px-3 py-2 border-2 border-primary/30 rounded-lg focus:border-primary focus:outline-none"
+                            min="1"
+                            max="12"
+                          />
+                          <span className="text-lg font-bold text-primary">
+                            ${((servicioBaseEditando?.precio || 0) * (servicioBaseEditando?.mesesPago || 0)).toFixed(2)}
+                          </span>
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              aria-label="Guardar servicio base"
+                              onClick={guardarEditarServicioBase}
+                              className="px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                            >
+                              <FaCheck />
+                            </button>
+                            <button
+                              aria-label="Cancelar edición servicio base"
+                              onClick={cancelarEditarServicioBase}
+                              className="px-3 py-2 bg-neutral-400 text-white rounded-lg hover:bg-neutral-500 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                            >
+                              <FaTimes />
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-semibold text-secondary">{servicio.nombre}</span>
+                          <span className="text-primary font-bold">${servicio.precio.toFixed(2)}</span>
+                          <span className="text-secondary">{servicio.mesesGratis}m</span>
+                          <span className="text-secondary">{servicio.mesesPago}m</span>
+                          <span className="text-lg font-bold text-primary">
+                            ${(servicio.precio * servicio.mesesPago).toFixed(2)}
+                          </span>
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              aria-label={`Editar servicio base ${servicio.nombre}`}
+                              onClick={() => abrirEditarServicioBase(servicio)}
+                              className="px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              aria-label={`Eliminar servicio base ${servicio.nombre}`}
+                              onClick={() => eliminarServicioBase(servicio.id)}
+                              className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Formulario para Agregar Nuevo Servicio Base */}
+              <div className="space-y-4 p-6 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border-2 border-dashed border-primary/40">
+                <h3 className="font-bold text-secondary mb-4">➕ Agregar Nuevo Servicio Base</h3>
+                <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-4 items-end">
+                  <div>
+                    <label htmlFor="nuevoServicioBaseNombre" className="block font-semibold text-secondary mb-2 text-sm">
+                      📝 Nombre del Servicio
+                    </label>
+                    <input
+                      id="nuevoServicioBaseNombre"
+                      type="text"
+                      placeholder="Ej: Hosting, SSL, etc."
+                      value={nuevoServicioBase.nombre}
+                      onChange={(e) =>
+                        setNuevoServicioBase({ ...nuevoServicioBase, nombre: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      ✉️ Mailbox
+                    <label htmlFor="nuevoServicioBasePrecio" className="block font-semibold text-secondary mb-2 text-sm">
+                      💵 Precio (USD)
                     </label>
-                    <div className="flex items-center gap-2 bg-white p-3 rounded-lg border-2 border-primary/20 hover:border-primary/40 transition-all">
-                      <input
-                        type="number"
-                        value={precios.mailbox}
-                        onChange={(e) =>
-                          actualizarPrecio('mailbox', parseFloat(e.target.value) || 0)
-                        }
-                        className="w-full px-2 py-1 bg-transparent border-0 focus:ring-0 focus:outline-none font-semibold text-sm"
-                      />
-                      <span className="text-xs font-bold text-primary whitespace-nowrap">USD</span>
-                    </div>
+                    <input
+                      id="nuevoServicioBasePrecio"
+                      type="number"
+                      placeholder="0"
+                      value={nuevoServicioBase.precio}
+                      onChange={(e) =>
+                        setNuevoServicioBase({
+                          ...nuevoServicioBase,
+                          precio: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
+                      min="0"
+                    />
                   </div>
                   <div>
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      🌍 Dominio
-                    </label>
-                    <div className="flex items-center gap-2 bg-white p-3 rounded-lg border-2 border-primary/20 hover:border-primary/40 transition-all">
-                      <input
-                        type="number"
-                        value={precios.dominio}
-                        onChange={(e) =>
-                          actualizarPrecio('dominio', parseFloat(e.target.value) || 0)
-                        }
-                        className="w-full px-2 py-1 bg-transparent border-0 focus:ring-0 focus:outline-none font-semibold text-sm"
-                      />
-                      <span className="text-xs font-bold text-primary whitespace-nowrap">USD</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
+                    <label htmlFor="nuevoServicioBaseMesesGratis" className="block font-semibold text-secondary mb-2 text-sm">
                       🎁 Meses Gratis
                     </label>
                     <input
+                      id="nuevoServicioBaseMesesGratis"
                       type="number"
-                      value={mesesGratis}
+                      placeholder="0"
+                      value={nuevoServicioBase.mesesGratis}
                       onChange={(e) => {
-                        const gratis = parseInt(e.target.value) || 0
-                        setMesesGratis(gratis)
-                        setMesesPago(Math.max(0, 12 - gratis))
+                        const gratis = parseInt(e.target.value) || 0;
+                        const pagoCalculado = Math.max(1, 12 - gratis);
+                        setNuevoServicioBase({
+                          ...nuevoServicioBase,
+                          mesesGratis: Math.min(gratis, 12),
+                          mesesPago: pagoCalculado,
+                        })
                       }}
-                      className="w-full px-3 py-3 border-2 border-primary/30 rounded-lg focus:border-primary focus:outline-none font-semibold focus:ring-2 focus:ring-primary/20"
+                      className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
                       min="0"
-                                          max="12"
+                      max="12"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      📅 Meses de Pago
+                    <label htmlFor="nuevoServicioBaseMesesPago" className="block font-semibold text-secondary mb-2 text-sm">
+                      💳 Meses Pago
                     </label>
                     <input
+                      id="nuevoServicioBaseMesesPago"
                       type="number"
-                      value={mesesPago}
-                      onChange={(e) => setMesesPago(parseInt(e.target.value) || 0)}
-                      className="w-full px-3 py-3 border-2 border-primary/30 rounded-lg focus:border-primary focus:outline-none font-semibold focus:ring-2 focus:ring-primary/20"
+                      placeholder="12"
+                      value={nuevoServicioBase.mesesPago}
+                      onChange={(e) => {
+                        const pago = parseInt(e.target.value) || 12;
+                        const pagoValidado = Math.max(1, Math.min(pago, 12));
+                        setNuevoServicioBase({
+                          ...nuevoServicioBase,
+                          mesesPago: pagoValidado,
+                        })
+                      }}
+                      className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
                       min="1"
+                      max="12"
                     />
                   </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={agregarServicioBase}
+                    disabled={!nuevoServicioBase.nombre || nuevoServicioBase.precio <= 0}
+                    className={`px-6 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                      nuevoServicioBase.nombre && nuevoServicioBase.precio > 0
+                        ? 'bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white'
+                        : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <FaPlus /> Agregar
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
@@ -711,10 +957,11 @@ export default function Administrador() {
               <div className="space-y-4 p-6 bg-gradient-to-r from-accent/5 to-primary/5 rounded-xl border-2 border-accent/20">
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block font-semibold text-secondary mb-2">
+                    <label htmlFor="paqueteNombre" className="block font-semibold text-secondary mb-2">
                       📦 Nombre del Paquete *
                     </label>
                     <input
+                      id="paqueteNombre"
                       type="text"
                       placeholder="Ej: Constructor"
                       value={paqueteActual.nombre}
@@ -725,10 +972,11 @@ export default function Administrador() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-secondary mb-2">
+                    <label htmlFor="paqueteDesarrollo" className="block font-semibold text-secondary mb-2">
                       💵 Desarrollo (USD) *
                     </label>
                     <input
+                      id="paqueteDesarrollo"
                       type="number"
                       placeholder="0"
                       value={paqueteActual.desarrollo}
@@ -743,10 +991,11 @@ export default function Administrador() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-secondary mb-2">
+                    <label htmlFor="paqueteDescuento" className="block font-semibold text-secondary mb-2">
                       🏷️ Descuento (%)
                     </label>
                     <input
+                      id="paqueteDescuento"
                       type="number"
                       placeholder="0"
                       value={paqueteActual.descuento}
@@ -780,10 +1029,11 @@ export default function Administrador() {
               <div className="space-y-4 p-6 bg-gradient-to-r from-accent/5 to-primary/5 rounded-xl border-2 border-accent/20">
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block font-semibold text-secondary mb-2">
+                    <label htmlFor="gestionPrecio" className="block font-semibold text-secondary mb-2">
                       💵 Precio (USD/mes) *
                     </label>
                     <input
+                      id="gestionPrecio"
                       type="number"
                       placeholder="0"
                       value={gestion.precio}
@@ -798,10 +1048,11 @@ export default function Administrador() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-secondary mb-2">
+                    <label htmlFor="gestionMesesGratis" className="block font-semibold text-secondary mb-2">
                       🎁 Meses Gratis
                     </label>
                     <input
+                      id="gestionMesesGratis"
                       type="number"
                       placeholder="0"
                       value={gestion.mesesGratis}
@@ -819,21 +1070,25 @@ export default function Administrador() {
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-secondary mb-2">
+                    <label htmlFor="gestionMesesPago" className="block font-semibold text-secondary mb-2">
                       📅 Meses de Pago *
                     </label>
                     <input
+                      id="gestionMesesPago"
                       type="number"
                       placeholder="12"
                       value={gestion.mesesPago}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const pago = parseInt(e.target.value) || 12;
+                        const pagoValidado = Math.max(1, Math.min(pago, 12));
                         setGestion({
                           ...gestion,
-                          mesesPago: parseInt(e.target.value) || 12,
+                          mesesPago: pagoValidado,
                         })
-                      }
+                      }}
                       className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
                       min="1"
+                      max="12"
                     />
                   </div>
                 </div>
@@ -847,124 +1102,199 @@ export default function Administrador() {
               viewport={{ once: true }}
               className="bg-white rounded-2xl shadow-xl border-l-4 border-accent p-8"
             >
-              <h2 className="text-2xl font-bold text-secondary mb-6">
-                4. Otros Servicios (Opcional)
-              </h2>
+              <h2 className="text-2xl font-bold text-secondary mb-6">4. Servicios Opcionales</h2>
 
-              {otrosServicios.length > 0 && (
+              {serviciosOpcionales.length > 0 && (
                 <div className="mb-6 space-y-3">
-                  <div className="text-sm font-semibold text-secondary mb-3 grid md:grid-cols-5 gap-3">
+                  <div className="text-sm font-semibold text-secondary mb-3 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,auto] gap-3 px-2 text-left">
                     <span>📝 Nombre</span>
-                    <span>💰 Precio (USD)</span>
-                    <span>🎁 Meses Gratis</span>
-                    <span>📅 Meses Pago</span>
-                    <span>🗑️ Acción</span>
+                    <span>💰 Precio</span>
+                    <span>🎁 Gratis</span>
+                    <span>📅 Pago</span>
+                    <span>💵 Subtotal Año 1</span>
+                    <span className="text-center">⚙️ Acciones</span>
                   </div>
-                  {otrosServicios.map((servicio, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-neutral-50 p-4 rounded-lg border-2 border-neutral-200 grid md:grid-cols-5 gap-3 items-center"
+                  {serviciosOpcionales.map(serv => (
+                    <div
+                      key={serv.id}
+                      className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,auto] gap-3 items-center bg-gradient-to-r from-accent/5 to-primary/5 p-4 rounded-xl border-2 border-accent/20"
                     >
-                      <p className="font-semibold text-secondary">{servicio.nombre}</p>
-                      <p className="text-primary font-bold">${servicio.precio.toFixed(2)} USD</p>
-                      <p className="text-secondary font-semibold">{servicio.mesesGratis}</p>
-                      <p className="text-secondary font-semibold">{servicio.mesesPago}</p>
-                      <div className="flex justify-center">
-                        <button
-                          onClick={() => eliminarOtroServicio(index)}
-                          className="w-8 h-8 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
-                        >
-                          <FaTrash size={14} />
-                        </button>
-                      </div>
-                    </motion.div>
+                      {editandoServicioId === serv.id ? (
+                        <>
+                          <input
+                            type="text"
+                            value={servicioEditando?.nombre || ''}
+                            aria-label="Nombre servicio opcional"
+                            onChange={(e) => setServicioEditando({ ...servicioEditando!, nombre: e.target.value })}
+                            className="px-3 py-2 border-2 border-accent/30 rounded-lg focus:border-accent focus:outline-none"
+                          />
+                          <input
+                            type="number"
+                            value={servicioEditando?.precio || 0}
+                            aria-label="Precio mensual servicio opcional"
+                            min={0}
+                            onChange={(e) => setServicioEditando({ ...servicioEditando!, precio: Number.parseFloat(e.target.value) || 0 })}
+                            className="px-3 py-2 border-2 border-accent/30 rounded-lg focus:border-accent focus:outline-none"
+                          />
+                          <input
+                            type="number"
+                            value={servicioEditando?.mesesGratis || 0}
+                            aria-label="Meses gratis servicio opcional"
+                            min={0}
+                            max={12}
+                            onChange={(e) => {
+                              const val = Number.parseInt(e.target.value) || 0
+                              const nm = normalizarMeses(val, servicioEditando?.mesesPago || 12)
+                              setServicioEditando({ ...servicioEditando!, ...nm })
+                            }}
+                            className="px-3 py-2 border-2 border-accent/30 rounded-lg focus:border-accent focus:outline-none"
+                          />
+                          <input
+                            type="number"
+                            value={servicioEditando?.mesesPago || 0}
+                            aria-label="Meses pago servicio opcional"
+                            min={0}
+                            max={12}
+                            onChange={(e) => {
+                              const val = Number.parseInt(e.target.value) || 0
+                              const nm = normalizarMeses(servicioEditando?.mesesGratis || 0, val)
+                              setServicioEditando({ ...servicioEditando!, ...nm })
+                            }}
+                            className="px-3 py-2 border-2 border-accent/30 rounded-lg focus:border-accent focus:outline-none"
+                          />
+                          <span className="text-primary font-bold">${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}</span>
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              aria-label="Guardar servicio opcional"
+                              onClick={guardarEditarServicioOpcional}
+                              className="px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                              disabled={!(servicioEditando?.nombre.trim() && (servicioEditando?.precio || 0) > 0)}
+                            >
+                              <FaCheck />
+                            </button>
+                            <button
+                              aria-label="Cancelar edición servicio opcional"
+                              onClick={cancelarEditarServicioOpcional}
+                              className="px-3 py-2 bg-neutral-400 text-white rounded-lg hover:bg-neutral-500 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                            >
+                              <FaTimes />
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-semibold text-secondary">{serv.nombre}</span>
+                          <span className="text-primary font-bold">${serv.precio.toFixed(2)}</span>
+                          <span className="text-secondary">{serv.mesesGratis}m</span>
+                          <span className="text-secondary">{serv.mesesPago}m</span>
+                          <span className="text-primary font-bold">${(serv.precio * serv.mesesPago).toFixed(2)}</span>
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              aria-label="Editar servicio opcional"
+                              onClick={() => abrirEditarServicioOpcional(serv)}
+                              className="px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              aria-label="Eliminar servicio opcional"
+                              onClick={() => eliminarServicioOpcional(serv.id)}
+                              className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
 
               <div className="space-y-4 p-6 bg-gradient-to-r from-accent/5 to-primary/10 rounded-xl border-2 border-dashed border-accent/40">
-                <div className="grid md:grid-cols-6 gap-4 items-end">
-                  <div className="md:col-span-3">
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      📝 Nombre
-                    </label>
+                <h3 className="font-bold text-secondary mb-4">➕ Agregar Servicio Opcional</h3>
+                <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-4 items-end">
+                  <div>
+                    <label htmlFor="servOpcNombre" className="block font-semibold text-secondary mb-2 text-sm">📝 Nombre</label>
                     <input
+                      id="servOpcNombre"
                       type="text"
                       placeholder="Ej: SEO Premium"
-                      value={nuevoOtroServicio.nombre}
-                      onChange={(e) =>
-                        setNuevoOtroServicio({ ...nuevoOtroServicio, nombre: e.target.value })
-                      }
-                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none text-sm"
+                      value={nuevoServicio.nombre}
+                      onChange={(e) => setNuevoServicio({ ...nuevoServicio, nombre: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
                     />
                   </div>
-                  <div className="md:col-span-1">
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      💰 Precio (USD)
-                    </label>
+                  <div>
+                    <label htmlFor="servOpcPrecio" className="block font-semibold text-secondary mb-2 text-sm">💰 Precio (USD)</label>
                     <input
+                      id="servOpcPrecio"
                       type="number"
+                      min={0}
+                      value={nuevoServicio.precio}
                       placeholder="0"
-                      value={nuevoOtroServicio.precio}
-                      onChange={(e) =>
-                        setNuevoOtroServicio({
-                          ...nuevoOtroServicio,
-                          precio: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none text-sm"
-                      min="0"
+                      onChange={(e) => setNuevoServicio({ ...nuevoServicio, precio: Number.parseFloat(e.target.value) || 0 })}
+                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
                     />
                   </div>
-                  <div className="md:col-span-1">
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      🎁 Meses Gratis
-                    </label>
+                  <div>
+                    <label htmlFor="servOpcGratis" className="block font-semibold text-secondary mb-2 text-sm">🎁 Gratis</label>
                     <input
+                      id="servOpcGratis"
                       type="number"
-                      placeholder="0"
-                      value={nuevoOtroServicio.mesesGratis}
-                      onChange={(e) =>
-                        setNuevoOtroServicio({
-                          ...nuevoOtroServicio,
-                          mesesGratis: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none text-sm"
-                      min="0"
+                      min={0}
+                      max={12}
+                      value={nuevoServicio.mesesGratis}
+                      onChange={(e) => {
+                        const val = Number.parseInt(e.target.value) || 0
+                        const nm = normalizarMeses(val, nuevoServicio.mesesPago)
+                        setNuevoServicio({ ...nuevoServicio, ...nm })
+                      }}
+                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
                     />
                   </div>
-                  <div className="md:col-span-1">
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      📅 Meses Pago
-                    </label>
+                  <div>
+                    <label htmlFor="servOpcPago" className="block font-semibold text-secondary mb-2 text-sm">📅 Pago</label>
                     <input
+                      id="servOpcPago"
                       type="number"
-                      placeholder="12"
-                      value={nuevoOtroServicio.mesesPago}
-                      onChange={(e) =>
-                        setNuevoOtroServicio({
-                          ...nuevoOtroServicio,
-                          mesesPago: parseInt(e.target.value) || 12,
-                        })
-                      }
-                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none text-sm"
-                      min="1"
+                      min={0}
+                      max={12}
+                      value={nuevoServicio.mesesPago}
+                      onChange={(e) => {
+                        const val = Number.parseInt(e.target.value) || 0
+                        const nm = normalizarMeses(nuevoServicio.mesesGratis, val)
+                        setNuevoServicio({ ...nuevoServicio, ...nm })
+                      }}
+                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
                     />
                   </div>
-                  <div className="flex items-end md:col-span-1">
-                    <button
-                      onClick={agregarOtroServicio}
-                      className="w-full px-4 py-2 bg-gradient-to-r from-accent to-accent-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 font-semibold"
-                    >
-                      <FaPlus /> Agregar
-                    </button>
-                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={agregarServicioOpcional}
+                    disabled={!(nuevoServicio.nombre.trim() && nuevoServicio.precio > 0)}
+                    className={`px-6 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
+                      nuevoServicio.nombre.trim() && nuevoServicio.precio > 0
+                        ? 'bg-gradient-to-r from-accent to-primary text-white hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white'
+                        : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <FaPlus /> Agregar
+                  </motion.button>
                 </div>
               </div>
+
+              <div className="mt-6 p-4 bg-accent/10 rounded-lg border border-accent/30 text-sm flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+                <span className="font-semibold text-secondary">Servicios opcionales: {serviciosOpcionales.length}</span>
+                <span className="text-secondary">Total Año 1: ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * s.mesesPago, 0).toFixed(2)}</span>
+                <span className="text-secondary">Total Anual (Año 2+): ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * 12, 0).toFixed(2)}</span>
+              </div>
+              {!serviciosOpcionalesValidos && serviciosOpcionales.length > 0 && (
+                <p className="mt-2 text-xs text-red-600 font-semibold">
+                  ⚠️ Revisa meses (Gratis + Pago deben sumar 12) y que todos tengan nombre y precio.
+                </p>
+              )}
 
               {/* Botón Crear Paquete */}
               <div className="mt-8 pt-6 border-t-2 border-accent/30">
@@ -975,7 +1305,7 @@ export default function Administrador() {
                   disabled={!todoEsValido}
                   className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
                     todoEsValido
-                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-lg'
+                      ? 'bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white'
                       : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
                   }`}
                 >
@@ -983,7 +1313,7 @@ export default function Administrador() {
                 </motion.button>
                 {!todoEsValido && (
                   <p className="text-sm text-primary mt-2 text-center">
-                    ⚠️ Completa: Nombre paquete, Desarrollo, Precios servicios y Meses válidos
+                    ⚠️ Completa: Nombre del paquete, Desarrollo, Precios servicios y Meses válidos
                   </p>
                 )}
               </div>
@@ -1027,7 +1357,7 @@ export default function Administrador() {
                   Paquetes Creados ({snapshots.length})
                 </h2>
 
-                <div className="space-y-6">
+                <div className="space-y-6 md:grid md:grid-cols-2 gap-10 md:space-y-0">
                   {snapshots.map((snapshot, idx) => (
                     <motion.div
                       key={snapshot.id}
@@ -1050,6 +1380,7 @@ export default function Administrador() {
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-2">
                               <input
+                                id={`snapshot-activo-${snapshot.id}`}
                                 type="checkbox"
                                 checked={snapshot.activo}
                                 onChange={(e) => {
@@ -1058,7 +1389,7 @@ export default function Administrador() {
                                 }}
                                 className="w-5 h-5 cursor-pointer"
                               />
-                              <label className="font-semibold text-secondary text-sm">Activo</label>
+                              <label htmlFor={`snapshot-activo-${snapshot.id}`} className="font-semibold text-secondary text-sm">Activo</label>
                             </div>
                             <motion.button
                               whileHover={{ scale: 1.05 }}
@@ -1069,6 +1400,7 @@ export default function Administrador() {
                               <FaEdit /> Editar
                             </motion.button>
                             <motion.button
+                              aria-label={`Eliminar paquete ${snapshot.nombre}`}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleEliminarSnapshot(snapshot.id)}
@@ -1085,12 +1417,12 @@ export default function Administrador() {
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="border-b-2 border-secondary bg-neutral-100">
-                                <th className="text-left p-2 font-bold text-secondary">📝 Concepto</th>
-                                <th className="text-center p-2 font-bold text-secondary">🎁 Meses Gratis</th>
-                                <th className="text-center p-2 font-bold text-secondary">📅 Meses Pago</th>
-                                <th className="text-right p-2 font-bold text-secondary bg-primary/5">💵 Mensual</th>
-                                <th className="text-right p-2 font-bold text-secondary bg-accent/5">💰 Anual</th>
+                              <tr className="border-b-2 border-secondary bg-neutral-100 text-pretty">
+                                <th className="text-left p-2 font-bold text-secondary w-1/5">Concepto</th>
+                                <th className="text-center p-2 font-bold text-secondary w-1/5">Meses Gratis</th>
+                                <th className="text-center p-2 font-bold text-secondary w-1/5">Meses Pago</th>
+                                <th className="text-right p-2 font-bold text-secondary bg-primary/5 w-1/5">Costo Mensual</th>
+                                <th className="text-right p-2 font-bold text-secondary bg-accent/5 w-1/5">Costo Anual</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1100,51 +1432,29 @@ export default function Administrador() {
                                   💰 Servicios Base
                                 </td>
                               </tr>
-                              <tr className="border-b border-secondary/20">
-                                <td className="p-2 text-secondary">Hosting</td>
-                                <td className="p-2 text-center font-semibold text-secondary">
-                                  {snapshot.servicios.mesesGratis}
-                                </td>
-                                <td className="p-2 text-center font-semibold text-secondary">
-                                  {snapshot.servicios.mesesPago}
-                                </td>
-                                <td className="p-2 text-right font-semibold text-primary bg-primary/5">
-                                  ${snapshot.servicios.hosting.toFixed(2)}/mes
-                                </td>
-                                <td className="p-2 text-right font-semibold text-accent bg-accent/5">
-                                  ${(snapshot.servicios.hosting * snapshot.servicios.mesesPago).toFixed(2)}
-                                </td>
-                              </tr>
-                              <tr className="border-b border-secondary/20">
-                                <td className="p-2 text-secondary">Mailbox</td>
-                                <td className="p-2 text-center font-semibold text-secondary">
-                                  {snapshot.servicios.mesesGratis}
-                                </td>
-                                <td className="p-2 text-center font-semibold text-secondary">
-                                  {snapshot.servicios.mesesPago}
-                                </td>
-                                <td className="p-2 text-right font-semibold text-primary bg-primary/5">
-                                  ${snapshot.servicios.mailbox.toFixed(2)}/mes
-                                </td>
-                                <td className="p-2 text-right font-semibold text-accent bg-accent/5">
-                                  ${(snapshot.servicios.mailbox * snapshot.servicios.mesesPago).toFixed(2)}
-                                </td>
-                              </tr>
-                              <tr className="border-b border-secondary/20">
-                                <td className="p-2 text-secondary">Dominio</td>
-                                <td className="p-2 text-center font-semibold text-secondary">
-                                  {snapshot.servicios.mesesGratis}
-                                </td>
-                                <td className="p-2 text-center font-semibold text-secondary">
-                                  {snapshot.servicios.mesesPago}
-                                </td>
-                                <td className="p-2 text-right font-semibold text-primary bg-primary/5">
-                                  ${snapshot.servicios.dominio.toFixed(2)}/mes
-                                </td>
-                                <td className="p-2 text-right font-semibold text-accent bg-accent/5">
-                                  ${(snapshot.servicios.dominio * snapshot.servicios.mesesPago).toFixed(2)}
-                                </td>
-                              </tr>
+                              {snapshot.serviciosBase?.map((servicio) => (
+                                <tr key={servicio.id} className="border-b border-secondary/20">
+                                  <td className="p-2 text-secondary w-2/5">{servicio.nombre}</td>
+                                  <td className="p-2 text-center font-semibold text-secondary w-1/5">
+                                    {servicio.mesesGratis}
+                                  </td>
+                                  <td className="p-2 text-center font-semibold text-secondary w-1/5">
+                                    {servicio.mesesPago}
+                                  </td>
+                                  <td className="p-2 text-right font-semibold text-primary bg-primary/5 w-1/5">
+                                    ${servicio.precio.toFixed(2)}/mes
+                                  </td>
+                                  <td className="p-2 text-right font-semibold text-accent bg-accent/5 w-1/5">
+                                    ${(servicio.precio * servicio.mesesPago).toFixed(2)}/año
+                                  </td>
+                                </tr>
+                              )) || (
+                                <tr className="border-b border-secondary/20">
+                                  <td colSpan={5} className="p-2 text-center text-neutral-400 italic">
+                                    No hay servicios base definidos
+                                  </td>
+                                </tr>
+                              )}
 
                               {/* Gestión */}
                               <tr className="border-b border-secondary/20">
@@ -1164,14 +1474,14 @@ export default function Administrador() {
                                   ${snapshot.gestion.precio.toFixed(2)}/mes
                                 </td>
                                 <td className="p-2 text-right font-semibold text-amber-700 bg-accent/5">
-                                  ${(snapshot.gestion.precio * snapshot.gestion.mesesPago).toFixed(2)}
+                                  ${(snapshot.gestion.precio * snapshot.gestion.mesesPago).toFixed(2)}/año
                                 </td>
                               </tr>
 
                               {/* Paquete */}
                               <tr className="border-b border-secondary/20">
                                 <td colSpan={5} className="p-2 font-bold bg-accent/10 text-accent">
-                                  📦 Paquete
+                                  📦 Costo del desarrollo
                                 </td>
                               </tr>
                               <tr className="border-b border-secondary/20">
@@ -1182,20 +1492,22 @@ export default function Administrador() {
                                   ${snapshot.paquete.desarrollo.toFixed(2)}
                                 </td>
                                 <td className="p-2 text-right font-semibold text-accent bg-accent/5">
-                                  ${snapshot.paquete.desarrollo.toFixed(2)} <span className="text-xs">(1 vez)</span>
+                                  ${snapshot.paquete.desarrollo.toFixed(2)}
                                 </td>
                               </tr>
-                              <tr className="border-b border-secondary/20">
-                                <td className="p-2 text-secondary">Descuento</td>
-                                <td className="p-2 text-center font-semibold text-secondary">-</td>
-                                <td className="p-2 text-center font-semibold text-secondary">-</td>
-                                <td className="p-2 text-right font-semibold text-accent bg-primary/5">
-                                  {snapshot.paquete.descuento}%
-                                </td>
-                                <td className="p-2 text-right font-semibold text-accent bg-accent/5">
-                                  {snapshot.paquete.descuento}%
-                                </td>
-                              </tr>
+                              {snapshot.paquete.descuento > 0 && (
+                                <tr className="border-b border-secondary/20">
+                                  <td className="p-2 text-secondary">Descuento</td>
+                                  <td className="p-2 text-center font-semibold text-secondary">-</td>
+                                  <td className="p-2 text-center font-semibold text-secondary">-</td>
+                                  <td className="p-2 text-right font-semibold text-accent bg-primary/5">
+                                    {snapshot.paquete.descuento}%
+                                  </td>
+                                  <td className="p-2 text-right font-semibold text-accent bg-accent/5">
+                                    {snapshot.paquete.descuento}%
+                                  </td>
+                                </tr>
+                              )}
 
                               {/* Otros Servicios */}
                               {snapshot.otrosServicios.length > 0 && (
@@ -1226,7 +1538,7 @@ export default function Administrador() {
                                         ${servicio.precio.toFixed(2)}/mes
                                       </td>
                                       <td className="p-2 text-right font-semibold text-amber-700 bg-accent/5">
-                                        ${(servicio.precio * servicio.mesesPago).toFixed(2)}
+                                        ${(servicio.precio * servicio.mesesPago).toFixed(2)}/año
                                       </td>
                                     </motion.tr>
                                   ))}
@@ -1236,7 +1548,7 @@ export default function Administrador() {
                               {/* Costos Finales */}
                               <tr className="border-b border-secondary/20">
                                 <td colSpan={5} className="p-2 font-bold bg-gradient-to-r from-primary/10 to-accent/10 text-primary">
-                                  💳 Costos Calculados
+                                  💳 Costos totales
                                 </td>
                               </tr>
                               <tr className="border-b border-secondary/20 bg-primary/5">
@@ -1282,26 +1594,6 @@ export default function Administrador() {
               </motion.div>
             )}
 
-            {/* Sección 6: Acciones */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex gap-4 justify-center"
-            >
-              <button 
-                onClick={handleDescargarPdf}
-                className="px-8 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold hover:scale-105 active:scale-95"
-              >
-                <FaDownload /> Descargar Presupuesto (PDF)
-              </button>
-              <button 
-                onClick={guardarConfiguracionActual}
-                className="px-8 py-3 bg-gradient-to-r from-accent to-accent-dark text-white rounded-lg hover:shadow-lg transition-all font-semibold hover:scale-105 active:scale-95"
-              >
-                💾 Guardar Configuración
-              </button>
-            </motion.div>
           </div>
         </motion.div>
       </div>
@@ -1314,7 +1606,7 @@ export default function Administrador() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur z-50 flex items-center justify-center p-4"
-            onClick={() => setShowModalEditar(false)}
+            onClick={handleCerrarModalEditar}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -1322,13 +1614,17 @@ export default function Administrador() {
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-editar-titulo"
             >
               <div className="sticky top-0 bg-gradient-to-r from-primary to-primary-dark text-white p-6 flex justify-between items-center border-b-4 border-accent">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
+                <h2 id="modal-editar-titulo" className="text-2xl font-bold flex items-center gap-2">
                   <FaEdit /> Editar Paquete: {snapshotEditando.nombre}
                 </h2>
                 <button
-                  onClick={() => setShowModalEditar(false)}
+                  aria-label="Cerrar modal edición"
+                  onClick={handleCerrarModalEditar}
                   className="text-2xl hover:scale-110 transition-transform"
                 >
                   <FaTimes />
@@ -1348,81 +1644,106 @@ export default function Administrador() {
                       setSnapshotEditando({ ...snapshotEditando, nombre: e.target.value })
                     }
                     className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
+                    ref={nombrePaqueteInputRef}
+                    aria-describedby="ayuda-nombre-paquete"
                   />
+                  <p id="ayuda-nombre-paquete" className="mt-1 text-xs text-neutral-500">Nombre visible en listado y PDF.</p>
                 </div>
 
                 {/* Servicios Base */}
                 <div className="bg-primary/5 p-6 rounded-xl border-2 border-primary/20">
-                  <h3 className="text-lg font-bold text-primary mb-4">💰 Servicios Base (USD/mes)</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {[
-                      { key: 'hosting', label: 'Hosting' },
-                      { key: 'mailbox', label: 'Mailbox' },
-                      { key: 'dominio', label: 'Dominio' },
-                    ].map(({ key, label }) => (
-                      <div key={key}>
-                        <label className="block font-semibold text-secondary mb-2 text-sm">
-                          {label}
-                        </label>
-                        <input
-                          type="number"
-                          value={snapshotEditando.servicios[key as keyof typeof snapshotEditando.servicios] || 0}
-                          onChange={(e) =>
-                            setSnapshotEditando({
-                              ...snapshotEditando,
-                              servicios: {
-                                ...snapshotEditando.servicios,
-                                [key]: parseFloat(e.target.value) || 0,
-                              },
-                            })
-                          }
-                          className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
-                          min="0"
-                        />
+                  <h3 className="text-lg font-bold text-primary mb-4">💰 Servicios Base</h3>
+                  <div className="space-y-3">
+                    {snapshotEditando.serviciosBase?.map((servicio, index) => (
+                      <div key={servicio.id} className="grid md:grid-cols-[2fr,1fr,1fr,1fr] gap-4 p-4 bg-white rounded-lg border border-primary/20">
+                        <div>
+                          <label className="block font-semibold text-secondary mb-2 text-xs">
+                            📝 Nombre
+                          </label>
+                            <input
+                            type="text"
+                            value={servicio.nombre}
+                            onChange={(e) => {
+                              const nuevosServicios = [...snapshotEditando.serviciosBase]
+                              nuevosServicios[index].nombre = e.target.value
+                              setSnapshotEditando({
+                                ...snapshotEditando,
+                                serviciosBase: nuevosServicios,
+                              })
+                            }}
+                            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                              aria-label={`Nombre servicio base ${index + 1}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-semibold text-secondary mb-2 text-xs">
+                            💵 Precio (USD)
+                          </label>
+                            <input
+                            type="number"
+                            value={servicio.precio}
+                            onChange={(e) => {
+                              const nuevosServicios = [...snapshotEditando.serviciosBase]
+                                nuevosServicios[index].precio = Number.parseFloat(e.target.value) || 0
+                              setSnapshotEditando({
+                                ...snapshotEditando,
+                                serviciosBase: nuevosServicios,
+                              })
+                            }}
+                            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                            min="0"
+                              aria-label={`Precio servicio base ${servicio.nombre || index + 1}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-semibold text-secondary mb-2 text-xs">
+                            🎁 Meses Gratis
+                          </label>
+                            <input
+                            type="number"
+                            value={servicio.mesesGratis}
+                            onChange={(e) => {
+                              const nuevosServicios = [...snapshotEditando.serviciosBase]
+                                const gratis = Number.parseInt(e.target.value) || 0;
+                              const pagoCalculado = Math.max(1, 12 - gratis);
+                              nuevosServicios[index].mesesGratis = Math.min(gratis, 12);
+                              nuevosServicios[index].mesesPago = pagoCalculado;
+                              setSnapshotEditando({
+                                ...snapshotEditando,
+                                serviciosBase: nuevosServicios,
+                              })
+                            }}
+                            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                            min="0"
+                            max="12"
+                              aria-label={`Meses gratis servicio base ${servicio.nombre || index + 1}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-semibold text-secondary mb-2 text-xs">
+                            💳 Meses Pago
+                          </label>
+                            <input
+                            type="number"
+                            value={servicio.mesesPago}
+                            onChange={(e) => {
+                              const nuevosServicios = [...snapshotEditando.serviciosBase]
+                                const pago = Number.parseInt(e.target.value) || 12;
+                              const pagoValidado = Math.max(1, Math.min(pago, 12));
+                              nuevosServicios[index].mesesPago = pagoValidado;
+                              setSnapshotEditando({
+                                ...snapshotEditando,
+                                serviciosBase: nuevosServicios,
+                              })
+                            }}
+                            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                            min="1"
+                            max="12"
+                              aria-label={`Meses pago servicio base ${servicio.nombre || index + 1}`}
+                          />
+                        </div>
                       </div>
                     ))}
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        🎁 Meses Gratis
-                      </label>
-                      <input
-                        type="number"
-                        value={snapshotEditando.servicios.mesesGratis}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            servicios: {
-                              ...snapshotEditando.servicios,
-                              mesesGratis: parseInt(e.target.value) || 0,
-                            },
-                          })
-                        }
-                        className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
-                        min="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        📅 Meses de Pago
-                      </label>
-                      <input
-                        type="number"
-                        value={snapshotEditando.servicios.mesesPago}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            servicios: {
-                              ...snapshotEditando.servicios,
-                              mesesPago: parseInt(e.target.value) || 1,
-                            },
-                          })
-                        }
-                        className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
-                        min="1"
-                      />
-                    </div>
                   </div>
                 </div>
 
@@ -1457,17 +1778,21 @@ export default function Administrador() {
                       <input
                         type="number"
                         value={snapshotEditando.gestion.mesesGratis}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const gratis = parseInt(e.target.value) || 0;
+                          const pagoCalculado = Math.max(1, 12 - gratis);
                           setSnapshotEditando({
                             ...snapshotEditando,
                             gestion: {
                               ...snapshotEditando.gestion,
-                              mesesGratis: parseInt(e.target.value) || 0,
+                              mesesGratis: Math.min(gratis, 12),
+                              mesesPago: pagoCalculado,
                             },
                           })
-                        }
+                        }}
                         className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:outline-none"
                         min="0"
+                        max="12"
                       />
                     </div>
                     <div>
@@ -1477,17 +1802,20 @@ export default function Administrador() {
                       <input
                         type="number"
                         value={snapshotEditando.gestion.mesesPago}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const pago = parseInt(e.target.value) || 12;
+                          const pagoValidado = Math.max(1, Math.min(pago, 12));
                           setSnapshotEditando({
                             ...snapshotEditando,
                             gestion: {
                               ...snapshotEditando.gestion,
-                              mesesPago: parseInt(e.target.value) || 12,
+                              mesesPago: pagoValidado,
                             },
                           })
-                        }
+                        }}
                         className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:outline-none"
                         min="1"
+                        max="12"
                       />
                     </div>
                   </div>
@@ -1495,11 +1823,11 @@ export default function Administrador() {
 
                 {/* Paquete */}
                 <div className="bg-accent/5 p-6 rounded-xl border-2 border-accent/20">
-                  <h3 className="text-lg font-bold text-accent mb-4">📦 Paquete</h3>
+                  <h3 className="text-lg font-bold text-accent mb-4">📦 Costo del Paquete (USD/mes)</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block font-semibold text-secondary mb-2 text-sm">
-                        Desarrollo (USD)
+                        🧑‍💻Desarrollo
                       </label>
                       <input
                         type="number"
@@ -1519,7 +1847,7 @@ export default function Administrador() {
                     </div>
                     <div>
                       <label className="block font-semibold text-secondary mb-2 text-sm">
-                        Descuento (%)
+                        💸 Descuento (%)
                       </label>
                       <input
                         type="number"
@@ -1549,7 +1877,7 @@ export default function Administrador() {
                       {snapshotEditando.otrosServicios.map((servicio, idx) => (
                         <div
                           key={idx}
-                          className="bg-white p-4 rounded-lg border-2 border-secondary/20 grid md:grid-cols-5 gap-3 items-end"
+                          className="bg-white p-4 rounded-lg border-2 border-secondary/20 grid md:grid-cols-[2.2fr,1fr,1fr,1fr,auto] gap-3 items-end"
                         >
                           <div>
                             <label className="block font-semibold text-secondary text-sm mb-1">
@@ -1566,7 +1894,7 @@ export default function Administrador() {
                                   otrosServicios: actualizado,
                                 })
                               }}
-                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                              className="w-full px-3 py-2 border-2 border-secondary/30 rounded-lg focus:border-secondary focus:outline-none text-sm"
                             />
                           </div>
                           <div>
@@ -1578,7 +1906,7 @@ export default function Administrador() {
                               value={servicio.precio}
                               onChange={(e) => {
                                 const actualizado = [...snapshotEditando.otrosServicios]
-                                actualizado[idx].precio = parseFloat(e.target.value) || 0
+                                actualizado[idx].precio = Number.parseFloat(e.target.value) || 0
                                 setSnapshotEditando({
                                   ...snapshotEditando,
                                   otrosServicios: actualizado,
@@ -1586,6 +1914,7 @@ export default function Administrador() {
                               }}
                               className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                               min="0"
+                              aria-label={`Precio servicio opcional ${servicio.nombre || idx + 1}`}
                             />
                           </div>
                           <div>
@@ -1597,7 +1926,10 @@ export default function Administrador() {
                               value={servicio.mesesGratis}
                               onChange={(e) => {
                                 const actualizado = [...snapshotEditando.otrosServicios]
-                                actualizado[idx].mesesGratis = parseInt(e.target.value) || 0
+                                const gratis = Number.parseInt(e.target.value) || 0;
+                                const pagoCalculado = Math.max(1, 12 - gratis);
+                                actualizado[idx].mesesGratis = Math.min(gratis, 12);
+                                actualizado[idx].mesesPago = pagoCalculado;
                                 setSnapshotEditando({
                                   ...snapshotEditando,
                                   otrosServicios: actualizado,
@@ -1605,6 +1937,8 @@ export default function Administrador() {
                               }}
                               className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                               min="0"
+                              max="12"
+                              aria-label={`Meses gratis servicio opcional ${servicio.nombre || idx + 1}`}
                             />
                           </div>
                           <div>
@@ -1616,7 +1950,9 @@ export default function Administrador() {
                               value={servicio.mesesPago}
                               onChange={(e) => {
                                 const actualizado = [...snapshotEditando.otrosServicios]
-                                actualizado[idx].mesesPago = parseInt(e.target.value) || 12
+                                const pago = Number.parseInt(e.target.value) || 12;
+                                const pagoValidado = Math.max(1, Math.min(pago, 12));
+                                actualizado[idx].mesesPago = pagoValidado;
                                 setSnapshotEditando({
                                   ...snapshotEditando,
                                   otrosServicios: actualizado,
@@ -1624,9 +1960,12 @@ export default function Administrador() {
                               }}
                               className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                               min="1"
+                              max="12"
+                              aria-label={`Meses pago servicio opcional ${servicio.nombre || idx + 1}`}
                             />
                           </div>
                           <button
+                            aria-label={`Eliminar otro servicio ${servicio.nombre || 'sin nombre'}`}
                             onClick={() => {
                               const actualizado = snapshotEditando.otrosServicios.filter(
                                 (_, i) => i !== idx
@@ -1680,7 +2019,7 @@ export default function Administrador() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowModalEditar(false)}
+                    onClick={handleCerrarModalEditar}
                     className="flex-1 py-3 bg-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-400 transition-all flex items-center justify-center gap-2 font-semibold"
                   >
                     <FaTimes /> Cancelar
@@ -1694,3 +2033,4 @@ export default function Administrador() {
     </div>
   )
 }
+

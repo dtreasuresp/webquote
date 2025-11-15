@@ -138,13 +138,7 @@ export default function ObraMaestraPage() {
                   <td className="px-6 py-4 font-semibold">Dominio (desde 4 meses)</td>
                   <td className="px-6 py-4 text-primary font-bold">$18 USD/mes</td>
                   <td className="px-6 py-4 text-primary font-bold">$162 USD/anual</td>
-                  <td className="px-6 py-4 text-gray-600">Renovación anual del dominio</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">SSL/HTTPS</td>
-                  <td className="px-6 py-4 text-accent font-bold">Gratis 🔒</td>
-                  <td className="px-6 py-4 text-accent font-bold">Gratis 🔒</td>
-                  <td className="px-6 py-4 text-gray-600">Certificado de seguridad incluido</td>
+                  <td className="px-6 py-4 text-gray-600">Renovación del dominio</td>
                 </tr>
               </tbody>
             </table>
@@ -170,6 +164,12 @@ export default function ObraMaestraPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
+                <tr className="hover:bg-gray-50">
+                  <td className="px-6 py-4 font-semibold">SSL/HTTPS</td>
+                  <td className="px-6 py-4 text-accent font-bold">Gratis 🔒</td>
+                  <td className="px-6 py-4 text-accent font-bold">Gratis 🔒</td>
+                  <td className="px-6 py-4 text-gray-600">Certificado de seguridad incluido</td>
+                </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-semibold">Almacenamiento</td>
                   <td className="px-6 py-4 font-bold">~50 GB (NVMe)</td>
@@ -275,7 +275,7 @@ export default function ObraMaestraPage() {
                 {
                   title: '💬 Comunicación',
                   items: [
-                    'Chat WhatsApp Business integrado',
+                    'Enlace a WhatsApp',
                     'Botones directos para llamadas',
                     'Formulario de contacto avanzado',
                     'Newsletter automático',

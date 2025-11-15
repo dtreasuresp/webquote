@@ -141,7 +141,7 @@ export default function ObservacionesYRecomendaciones() {
           >
             <h3 className="text-xl font-bold text-secondary mb-4">📌 Conclusión</h3>
             <p className="text-gray-800 leading-relaxed">
-              Urbanisima Constructora SRL representa una oportunidad de proyecto interesante con un cliente altamente comprometido. Sin embargo, es <strong>fundamental negociar correctamente los aspectos de presupuesto, cronograma y alcance</strong> antes de iniciar el desarrollo para garantizar el éxito del proyecto y la satisfacción del cliente. La empresa tiene claras sus necesidades comerciales y la presencia digital es estratégica para su crecimiento. Con la ejecución adecuada, este sitio web puede convertirse en una herramienta poderosa para captar nuevos clientes.
+              Urbanísima Constructora S.R.L representa una oportunidad de proyecto interesante con un cliente altamente comprometido. Sin embargo, es <strong>fundamental negociar correctamente los aspectos de presupuesto, cronograma y alcance</strong> antes de iniciar el desarrollo para garantizar el éxito del proyecto y la satisfacción del cliente. La empresa tiene claras sus necesidades comerciales y la presencia digital es estratégica para su crecimiento. Con la ejecución adecuada, este sitio web puede convertirse en una herramienta poderosa para captar nuevos clientes.
             </p>
           </motion.div>
         </motion.div>

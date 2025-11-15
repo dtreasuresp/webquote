@@ -139,7 +139,7 @@ export default function ResumenTecnicoRequisitos() {
                   ) : (
                     <>
                       <span className="text-xl">▼</span>
-                      <span className="hidden sm:inline">Ver Detalles Completos</span>
+                      <span className="hidden sm:inline">Ver Detalles</span>
                       <span className="sm:hidden">Ver Detalles</span>
                     </>
                   )}

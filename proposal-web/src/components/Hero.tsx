@@ -21,7 +21,7 @@ export default function Hero() {
               PÁGINA CATÁLOGO DINÁMICA
             </h2>
             <h3 className="text-xl md:text-2xl font-medium">
-              Urbanisima CONSTRUCTORA SRL
+              Urbanísima CONSTRUCTORA S.R.L
             </h3>
             <p className="text-lg mt-4 text-gray-200">
               VERSIÓN 1.0 - 2025
@@ -45,8 +45,8 @@ export default function Hero() {
               <div>
                 <h4 className="text-xl font-bold mb-4 text-white drop-shadow-lg">👤 PARA:</h4>
                 <div className="space-y-2 text-sm text-gray-50 drop-shadow-lg">
-                  <p><strong>Empresa:</strong> Urbanisima Constructora SRL</p>
-                  <p><strong>Sector:</strong> Construcción, Servicios y Comercialización de Materiales</p>
+                  <p><strong>Empresa:</strong> Urbanísima Constructora S.R.L</p>
+                  <p><strong>Sector:</strong> Construcción y montaje</p>
                   <p><strong>Ubicación:</strong> Calle 12/2da y 3ra, No 36, Ampliación de Marbella, Habana del Este, La Habana, CUBA</p>
                 </div>
               </div>

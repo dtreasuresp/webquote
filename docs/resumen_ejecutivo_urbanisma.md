@@ -1,10 +1,10 @@
-# Resumen Ejecutivo - Proyecto Web Urbanisima Constructora SRL
+# Resumen Ejecutivo - Proyecto Web Urbanísima Constructora S.R.L
 
 ## 📋 Información General del Cliente
 
 | Campo | Detalle |
 |-------|---------|
-| **Empresa** | Urbanisima Constructora SRL |
+| **Empresa** | Urbanísima Constructora S.R.L |
 | **Sector** | Construcción |
 | **Ubicación** | Calle 12/2da y 3ra, No 36, Ampliación de Marbella, Habana del Este, La Habana, Cuba |
 | **Trayectoria** | 15 años en el mercado |
@@ -263,9 +263,9 @@ Múltiples redes sociales requieren coordinación y mantenimiento continuo.
 
 ## 💬 Observación Final
 
-Urbanisima Constructora SRL representa una oportunidad de proyecto interesante con un cliente comprometido y motivado. Sin embargo, es **fundamental negociar los aspectos de presupuesto, cronograma y alcance** antes de iniciar el desarrollo para garantizar el éxito del proyecto y la satisfacción del cliente.
+Urbanísima Constructora S.R.L representa una oportunidad de proyecto interesante con un cliente comprometido y motivado. Sin embargo, es **fundamental negociar los aspectos de presupuesto, cronograma y alcance** antes de iniciar el desarrollo para garantizar el éxito del proyecto y la satisfacción del cliente.
 
-La empresa tiene claras sus necesidades comerciales y la presencia digital es estratégica para su crecimiento. Con la ejecución adecuada, este sitio web puede convertirse en una herramienta poderosa para captar nuevos clientes y consolidar la posición de mercado de Urbanisima.
+La empresa tiene claras sus necesidades comerciales y la presencia digital es estratégica para su crecimiento. Con la ejecución adecuada, este sitio web puede convertirse en una herramienta poderosa para captar nuevos clientes y consolidar la posición de mercado de Urbanísima.
 
 ---
 

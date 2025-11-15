@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import styles from '../styles/Navigation.module.css'
 
 const navItems = [
@@ -34,6 +35,9 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeSectionStyle, setActiveSectionStyle] = useState(sectionStyles.resumen)
   const navRef = useRef<HTMLElement>(null)
+  const router = useRouter()
+  const pathname = usePathname()
+  const isAdminPage = pathname === '/administrador'
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,10 +75,16 @@ export default function Navigation() {
   }, [])
 
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      setIsMobileMenuOpen(false)
+    if (isAdminPage) {
+      // Si estamos en /administrador, navega a la página principal primero
+      router.push(`/?scrollTo=${id}`)
+    } else {
+      // Si estamos en la página principal, desplázate a la sección
+      const element = document.getElementById(id)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        setIsMobileMenuOpen(false)
+      }
     }
   }
 
@@ -100,7 +110,7 @@ export default function Navigation() {
                   : 'text-white text-base md:text-lg lg:text-xl'
               }`}
             >
-              Urbanisima CONSTRUCTORA S.R.L
+              Urbanísima CONSTRUCTORA S.R.L
             </motion.div>
 
             {/* Desktop Navigation - xl y mayores */}

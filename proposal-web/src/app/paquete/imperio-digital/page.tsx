@@ -216,7 +216,7 @@ export default function ImperioDigitalPage() {
           <h3 className="text-3xl font-bold mb-8 text-gray-900">📄 Páginas y Estructura Ilimitada</h3>
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="grid md:grid-cols-2 gap-6">
             {[
-              'Todas las del Profesional, más:',
+              '✓ Además del Profesional (Obra Maestra), más:',
               '✓ Página de inicio mega optimizada',
               '✓ Página de servicios con comparativa',
               '✓ Testimonios y casos de éxito',
@@ -262,8 +262,8 @@ export default function ImperioDigitalPage() {
                   items: ['WhatsApp', 'Formularios dinámicos', 'Newsletter automatizado', 'Email marketing integrado'],
                 },
                 {
-                  title: '🛒 e‑Commerce de Cotización',
-                  items: ['Reserva/compras online', 'Formulario de presupuesto', 'Carrito de compras', 'Integración con pagos'],
+                  title: '🛒 Reservas',
+                  items: ['Reserva/compras online', 'Formulario de presupuesto'],
                 },
                 {
                   title: '📣 Social Proof',
@@ -275,15 +275,15 @@ export default function ImperioDigitalPage() {
                 },
                 {
                   title: '🎯 Marketing Integrado',
-                  items: ['Meta Pixel + conversión', 'Pixel de Google', 'Seguimiento de leads', 'CRM básico', 'Automatización de email', 'Recuperación de carritos'],
+                  items: ['Facebook', 'Google', 'Seguimiento de seguidores', 'Control de clientes básico', 'Automatización de correos'],
                 },
                 {
-                  title: '🔍 SEO Avanzado',
-                  items: ['Schema markup completo', 'Sitemap XML dinámico', 'Robots.txt optimizado', 'Breadcrumbs', 'URLs amigables', 'Estructura estratégica'],
+                  title: '🔍 Gestión de Contenido Avanzado',
+                  items: ['Marcado estructurado completo', 'Ruta de archivos', 'Direcciones web amigables', 'Estructura estratégica'],
                 },
                 {
                   title: '🌐 Integración Social Completa',
-                  items: ['Facebook eventos', 'Instagram Feed', 'YouTube galería', 'TikTok embed', 'Telegram botón', 'LinkedIn integrado'],
+                  items: ['Facebook', 'Instagram', 'YouTube', 'TikTok', 'Telegram', 'LinkedIn'],
                 },
               ].map((section, index) => (
                 <motion.div
@@ -349,15 +349,15 @@ export default function ImperioDigitalPage() {
             <div className="bg-gradient-to-br from-secondary/10 to-neutral-200 p-8 rounded-xl border-2 border-secondary">
               <h4 className="text-2xl font-bold text-secondary mb-4">📚 Capacitación</h4>
               <ul className="space-y-3">
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800"><strong>6 horas</strong> de capacitación completa</span></li>
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Sesión para <strong>equipo completo</strong></span></li>
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Práctica interactiva</span></li>
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Manual de usuario + videos tutoriales</span></li>
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Documentación técnica y guías</span></li>
+                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800"><strong>6 horas</strong> de capacitación</span></li>
+                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Sesión para <strong>tu equipo</strong></span></li>
+                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Prácticas interactivas</span></li>
+                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Manual de usuario</span></li>
+                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Documentación técnica</span></li>
               </ul>
             </div>
             <div className="bg-gradient-to-br from-primary/10 to-primary/20 p-8 rounded-xl border-2 border-primary">
-              <h4 className="text-2xl font-bold text-secondary mb-4">🛠️ Soporte Premium</h4>
+              <h4 className="text-2xl font-bold text-secondary mb-4">🛠️ Soporte Técnico</h4>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2"><span className="text-primary font-bold">✓</span><span className="text-gray-800"><strong>90 días</strong> de garantía técnica</span></li>
                 <li className="flex items-start gap-2"><span className="text-primary font-bold">✓</span><span className="text-gray-800">Soporte <strong>24/7</strong> por WhatsApp</span></li>
@@ -367,24 +367,22 @@ export default function ImperioDigitalPage() {
               </ul>
             </div>
             <div className="bg-gradient-to-br from-accent/10 to-accent/20 p-8 rounded-xl border-2 border-accent">
-              <h4 className="text-2xl font-bold text-secondary mb-4">📝 Gestión Mensual - MÁXIMA</h4>
+              <h4 className="text-2xl font-bold text-secondary mb-4">📝 Gestión Mensual</h4>
               <ul className="space-y-3">
                 {[
-                  'Actualizaciones DIARIAS si es necesario',
+                  'Actualizaciones diarias si es necesario',
                   'Gestión completa de contenidos multimedia',
-                  'Agregar/editar productos SIN límite',
+                  'Agregar/editar productos sin límite',
                   'Publicación de artículos de blog',
                   'Campaña de marketing mensual propuesta',
-                  'Optimización SEO avanzada',
                   'Análisis competitivo mensual',
                   'Reporte mensual ejecutivo con recomendaciones',
                   'Consultoría estratégica (1 hora/mes)',
-                  'Soporte 24/7 por WhatsApp',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">{item}</span></li>
                 ))}
               </ul>
-              <p className="text-center mt-6 text-secondary font-bold text-lg">Cambios incluidos: ILIMITADOS (respuesta en máx 1 hora)</p>
+              <p>Cambios extras incluidos:</p><p className="text-center mt-6 text-secondary font-bold text-lg"> ILIMITADOS </p><p>durante el horario laboral</p>
             </div>
           </motion.div>
         </div>

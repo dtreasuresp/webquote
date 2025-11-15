@@ -2,7 +2,7 @@
 
 ═══════════════════════════════════════════════════════════════════════════════
                           PROPUESTA DE DISEÑO WEB
-                   PÁGINA CATÁLOGO DINÁMICA - Urbanisima CONSTRUCTORA SRL
+                   PÁGINA CATÁLOGO DINÁMICA - Urbanísima CONSTRUCTORA S.R.L
                     VERSIÓN FINAL 3.1 - CON GESTIÓN INCLUIDA
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -16,7 +16,7 @@ el sitio web. NO tendrá acceso al panel administrativo.
 ───────────────────────────────────────────────────────────────────────────────
 
 👤 PARA:
-   Empresa: Urbanisima Constructora SRL
+   Empresa: Urbanísima Constructora S.R.L
    Sector: Construcción, Servicios y Comercialización de Materiales
    Ubicación: Calle 12/2da y 3ra, No 36, Ampliación de Marbella
               Habana del Este, La Habana, CUBA

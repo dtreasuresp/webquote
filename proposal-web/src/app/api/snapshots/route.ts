@@ -10,32 +10,30 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(snapshots)
   } catch (error) {
     console.error('Error en GET /api/snapshots:', error)
-    return NextResponse.json({ error: 'Error al obtener snapshots' }, { status: 500 })
+    console.error('Stack:', error instanceof Error ? error.stack : 'N/A')
+    console.error('Message:', error instanceof Error ? error.message : String(error))
+    return NextResponse.json({ error: 'Error al obtener snapshots', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
-
+    // Nuevo esquema: serviciosBase (JSON) + gestion* + desarrollo/ descuento + costos
     const snapshot = await prisma.packageSnapshot.create({
       data: {
-        nombre: data.nombre,
-        hostingPrice: data.hostingPrice,
-        mailboxPrice: data.mailboxPrice,
-        dominioPrice: data.dominioPrice,
-        mesesGratis: data.mesesGratis,
-        mesesPago: data.mesesPago,
-        gestionPrecio: data.gestionPrecio,
-        gestionMesesGratis: data.gestionMesesGratis,
-        gestionMesesPago: data.gestionMesesPago,
-        desarrollo: data.desarrollo,
-        descuento: data.descuento,
+        nombre: data.nombre || '',
+        serviciosBase: data.serviciosBase || [],
+        gestionPrecio: data.gestionPrecio || 0,
+        gestionMesesGratis: data.gestionMesesGratis || 0,
+        gestionMesesPago: data.gestionMesesPago || 0,
+        desarrollo: data.desarrollo || 0,
+        descuento: data.descuento || 0,
         otrosServicios: data.otrosServicios || [],
-        costoInicial: data.costoInicial,
-        costoAño1: data.costoAño1,
-        costoAño2: data.costoAño2,
-        activo: true,
+        costoInicial: data.costoInicial || 0,
+        costoAño1: data.costoAño1 || data.costoAnio1 || 0,
+        costoAño2: data.costoAño2 || data.costoAnio2 || 0,
+        activo: data.activo !== false,
       },
     })
 
@@ -60,21 +58,17 @@ export async function PUT(request: NextRequest) {
     const snapshot = await prisma.packageSnapshot.update({
       where: { id },
       data: {
-        nombre: data.nombre,
-        hostingPrice: data.hostingPrice,
-        mailboxPrice: data.mailboxPrice,
-        dominioPrice: data.dominioPrice,
-        mesesGratis: data.mesesGratis,
-        mesesPago: data.mesesPago,
-        gestionPrecio: data.gestionPrecio,
-        gestionMesesGratis: data.gestionMesesGratis,
-        gestionMesesPago: data.gestionMesesPago,
-        desarrollo: data.desarrollo,
-        descuento: data.descuento,
+        nombre: data.nombre || '',
+        serviciosBase: data.serviciosBase || [],
+        gestionPrecio: data.gestionPrecio || 0,
+        gestionMesesGratis: data.gestionMesesGratis || 0,
+        gestionMesesPago: data.gestionMesesPago || 0,
+        desarrollo: data.desarrollo || 0,
+        descuento: data.descuento || 0,
         otrosServicios: data.otrosServicios || [],
-        costoInicial: data.costoInicial,
-        costoAño1: data.costoAño1,
-        costoAño2: data.costoAño2,
+        costoInicial: data.costoInicial || 0,
+        costoAño1: data.costoAño1 || data.costoAnio1 || 0,
+        costoAño2: data.costoAño2 || data.costoAnio2 || 0,
       },
     })
 

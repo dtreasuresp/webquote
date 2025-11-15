@@ -35,7 +35,7 @@ export default function Paquetes() {
               features={[
                 { category: 'Hosting (luego del 4to mes)', items: ['$28 USD/mes ($252 USD/9 meses)'] },
                 { category: 'Mailbox (luego del 4to mes)', items: ['$4 USD/mes ($36 USD/9 meses)'] },
-                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($162 USD/9 meses)'] },
+                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($108 USD/6 meses)'] },
               ]}
               pages={8}
               timelineWeeks={4}
@@ -53,7 +53,7 @@ export default function Paquetes() {
               features={[
                 { category: 'Hosting (luego del 4to mes)', items: ['$35 USD/mes ($315/9 meses)'] },
                 { category: 'Mailbox (luego del 4to mes)', items: ['$4 USD/mes ($36/9 meses)'] },
-                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($162/9 meses)'] },
+                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($108 USD/6 meses)'] },
               ]}
               pages={'8+'}
               timelineWeeks={6}
@@ -71,7 +71,7 @@ export default function Paquetes() {
               features={[
                 { category: 'Hosting (luego del 4to mes)', items: ['$40 USD/mes ($360 USD/9 meses)'] },
                 { category: 'Mailbox (luego del 4to mes)', items: ['$4 USD/mes ($36 USD/9 meses)'] },
-                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($162 USD/9 meses)'] },
+                { category: 'Dominio (luego del 4to mes)', items: ['$18 USD/mes ($108 USD/6 meses)'] },
               ]}
               pages={'8+'}
               timelineWeeks={8}
@@ -211,11 +211,14 @@ function PaqueteCard({
   const styles = getCardStyles()
 
   // Etiqueta profesional según el nombre del paquete
-  const nivelProfesional = nombre === 'CONSTRUCTOR'
-    ? 'BÁSICO'
-    : nombre === 'OBRA MAESTRA'
-      ? 'PROFESIONAL'
-      : 'PREMIUM'
+  let nivelProfesional: string
+  if (nombre === 'CONSTRUCTOR') {
+    nivelProfesional = 'BÁSICO'
+  } else if (nombre === 'OBRA MAESTRA') {
+    nivelProfesional = 'PROFESIONAL'
+  } else {
+    nivelProfesional = 'PREMIUM'
+  }
 
   return (
     <motion.div

@@ -1,15 +1,13 @@
 /**
  * Utilidades para gestionar snapshots a través de la API
  */
+import type { ServicioBase } from '@/lib/types'
+
 
 export interface SnapshotFromDB {
   id: string
   nombre: string
-  hostingPrice: number
-  mailboxPrice: number
-  dominioPrice: number
-  mesesGratis: number
-  mesesPago: number
+  serviciosBase: ServicioBase[]
   gestionPrecio: number
   gestionMesesGratis: number
   gestionMesesPago: number
@@ -24,15 +22,52 @@ export interface SnapshotFromDB {
   updatedAt: string
 }
 
+// Migrar datos antiguos al nuevo formato
+function migrarServiciosLegacy(snapshot: any): ServicioBase[] {
+  // Si ya tiene serviciosBase, retornar tal cual
+  if (snapshot.serviciosBase && Array.isArray(snapshot.serviciosBase)) {
+    return snapshot.serviciosBase
+  }
+  
+  // Si tiene el formato antiguo con servicios objeto
+  if (snapshot.servicios) {
+    const mesesGratis = snapshot.servicios.mesesGratis || 0
+    const mesesPago = snapshot.servicios.mesesPago || 12
+    
+    return [
+      {
+        id: '1',
+        nombre: 'Hosting',
+        precio: snapshot.servicios.hosting || 0,
+        mesesGratis,
+        mesesPago,
+      },
+      {
+        id: '2',
+        nombre: 'Mailbox',
+        precio: snapshot.servicios.mailbox || 0,
+        mesesGratis,
+        mesesPago,
+      },
+      {
+        id: '3',
+        nombre: 'Dominio',
+        precio: snapshot.servicios.dominio || 0,
+        mesesGratis,
+        mesesPago,
+      },
+    ]
+  }
+  
+  // Default vacío
+  return []
+}
+
 // Convertir de formato frontend (PackageSnapshot) a formato DB (SnapshotFromDB)
 export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 'createdAt' | 'updatedAt'> {
   return {
     nombre: snapshot.nombre || '',
-    hostingPrice: snapshot.servicios?.hosting || 0,
-    mailboxPrice: snapshot.servicios?.mailbox || 0,
-    dominioPrice: snapshot.servicios?.dominio || 0,
-    mesesGratis: snapshot.servicios?.mesesGratis || 0,
-    mesesPago: snapshot.servicios?.mesesPago || 0,
+    serviciosBase: migrarServiciosLegacy(snapshot),
     gestionPrecio: snapshot.gestion?.precio || 0,
     gestionMesesGratis: snapshot.gestion?.mesesGratis || 0,
     gestionMesesPago: snapshot.gestion?.mesesPago || 0,
@@ -51,13 +86,7 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
   return {
     id: dbSnapshot.id,
     nombre: dbSnapshot.nombre,
-    servicios: {
-      hosting: dbSnapshot.hostingPrice,
-      mailbox: dbSnapshot.mailboxPrice,
-      dominio: dbSnapshot.dominioPrice,
-      mesesGratis: dbSnapshot.mesesGratis,
-      mesesPago: dbSnapshot.mesesPago,
-    },
+    serviciosBase: dbSnapshot.serviciosBase || [],
     gestion: {
       precio: dbSnapshot.gestionPrecio,
       mesesGratis: dbSnapshot.gestionMesesGratis,

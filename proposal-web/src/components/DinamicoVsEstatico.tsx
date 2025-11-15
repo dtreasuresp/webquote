@@ -369,7 +369,7 @@ export default function DinamicoVsEstatico() {
           >
             <h3 className="text-3xl font-bold mb-6 flex items-center gap-3">
               <FaLightbulb className="text-accent" />
-              ¿CUÁL RECOMENDAMOS PARA Urbanisima Constructora SRL?
+              ¿CUÁL RECOMENDAMOS PARA Urbanísima Constructora S.R.L?
             </h3>
             <p className="text-xl mb-6 font-semibold">
               NUESTRA RECOMENDACIÓN: <span className="text-2xl text-accent">SITIO DINÁMICO</span>

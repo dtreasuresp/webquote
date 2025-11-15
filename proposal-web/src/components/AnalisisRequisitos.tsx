@@ -13,15 +13,15 @@ export default function AnalisisRequisitos() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900">
-            Requerimientos del cliente
+            Requerimientos solicitados por ti
           </h2>
 
           <div className="space-y-12">
             {/* Información General */}
-            <InfoCard title="📋 Información general">
+            <InfoCard title="📋 Información general del cliente">
               <table className="w-full text-sm md:text-base">
                 <tbody className="space-y-4">
-                  <TableRow label="Empresa" value="Urbanisima Constructora SRL" />
+                  <TableRow label="Empresa" value="Urbanísima Constructora S.R.L" />
                   <TableRow label="Sector" value="Construcción" />
                   <TableRow label="Ubicación" value="Calle 12/2da y 3ra, No 36, Ampliación de Marbella, Habana del Este, La Habana, Cuba" />
                   <TableRow label="Trayectoria" value="15 años en el mercado" />
@@ -37,20 +37,20 @@ export default function AnalisisRequisitos() {
                   <ul className="list-disc list-inside space-y-2 text-gray-700">
                     <li>Servicios constructivos y de mantenimiento de áreas verdes</li>
                     <li>Comercialización de materiales de construcción y carpintería</li>
-                    <li>Enfoque en excelencia, mejores precios y calidad garantizada</li>
+                    <li>Empresa enfocada en la excelencia</li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg text-primary mb-2">Misión de Urbanisima Constructora SRL</h4>
+                  <h4 className="font-bold text-lg text-primary mb-2">Misión de Urbanísima Constructora S.R.L</h4>
                   <p className="text-gray-700">Brindar servicios generales de la construcción y satisfacer las necesidades del cliente.</p>
                 </div>
                 <div>
                   <h4 className="font-bold text-lg text-primary mb-2">Público objetivo</h4>
                   <ul className="list-disc list-inside space-y-2 text-gray-700">
-                    <li>Edad: 18 a 70 años</li>
-                    <li>Género: Ambos acceden por igual</li>
-                    <li>Nivel Socioeconómico: Todos tienen oportunidades en Urbanísima Constructora SRL</li>
-                    <li>Ubicación: Marbella, Habana del Este, La Habana, Cuba</li>
+                    <li>Personas de 18 a 70 años</li>
+                    <li>Ningún género tiene preferencia, ambos acceden por igual</li>
+                    <li>Todos sus clientes tienen oportunidades en Urbanísima Constructora S.R.L</li>
+                    <li>Están ubicados en Marbella, Habana del Este, La Habana, Cuba</li>
                   </ul>
                 </div>
               </div>
@@ -77,14 +77,14 @@ export default function AnalisisRequisitos() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-bold mb-2">Elementos</h4>
+                  <h4 className="font-bold mb-2">Elementos que dispones</h4>
                   <ul className="space-y-2 text-gray-700">
                     <li>✅ Logo: Diseñado</li>
-                    <li>❌ Manual de Marca: No disponible. Se acuerda crear uno próximamente</li>
+                    <li>❌ Manual de Marca o Identidad Visual: No disponible</li>
                     <li className="text-lg mt-4">
-                      <strong className="text-primary">Colores a Evitar:</strong> Rosado
+                      <strong className="text-primary">❌ Colores a Evitar:</strong> Rosado
                     </li>
-                    <li>Estilo visual solicitado: Corporativo y profesional</li>
+                    <li>✅ Estilo visual preferido: Corporativo y profesional</li>
                   </ul>
                 </div>
               </div>
@@ -96,19 +96,20 @@ export default function AnalisisRequisitos() {
                 <div>
                   <h4 className="font-bold text-lg text-primary mb-3">Metas Principales</h4>
                   <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                    <li>Mostrar catálogo de productos/servicios</li>
-                    <li>Educar sobre productos/servicios</li>
-                    <li>Establecer credibilidad</li>
+                    <li>Mostrar el catálogo de productos/servicios que ofreces</li>
+                    <li>Educar a tus clientes sobre el correcto uso de los productos/servicios que ofertas</li>
+                    <li>Informar sobre las novedades de los productos/servicios que ofertas</li>
+                    <li>Establecer credibilidad sobre tu negocio</li>
                   </ol>
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg text-primary mb-3">Acciones Esperadas del Visitante</h4>
+                  <h4 className="font-bold text-lg text-primary mb-3">Acciones Esperadas de los visitantes del Sitio Web</h4>
                   <ul className="list-disc list-inside space-y-2 text-gray-700">
-                    <li>✅ Contactar por WhatsApp</li>
-                    <li>✅ Llamar por teléfono</li>
-                    <li>✅ Visitar tienda física</li>
-                    <li>✅ Seguir en redes sociales</li>
-                    <li>✅ Suscribirse a newsletter</li>
+                    <li>✅ Contactarte por WhatsApp</li>
+                    <li>✅ Llamarte por teléfono</li>
+                    <li>✅ Visitar tu establecimiento o negocio</li>
+                    <li>✅ Seguirte a ti y a tu negocio en redes sociales</li>
+                    <li>✅ Suscribirse a noticias por correo</li>
                   </ul>
                 </div>
               </div>
@@ -118,12 +119,12 @@ export default function AnalisisRequisitos() {
             <InfoCard title="📄 Estructura y contenido del Sitio Web">
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h4 className="font-bold text-lg text-primary mb-3">Páginas/Secciones Requeridas</h4>
+                  <h4 className="font-bold text-lg text-primary mb-3">Páginas/Secciones requeridas</h4>
                   <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                    <li>Catálogo de Productos/Servicios</li>
-                    <li>Galería de Proyectos/Trabajos</li>
+                    <li>Catálogo de Productos/Servicios que ofreces</li>
+                    <li>Galería de Proyectos/Trabajos realizados por tu negocio</li>
                     <li>Página de Contacto</li>
-                    <li>Ubicación/Cómo Llegar (Google Maps)</li>
+                    <li>Ubicación/Cómo Llegar a tu negocio (Google Maps)</li>
                     <li>Nosotros/Quiénes Somos</li>
                     <li>Blog/Noticias</li>
                     <li>Enlaces a Redes Sociales (Facebook, Instagram, YouTube, TikTok, Telegram)</li>
@@ -131,11 +132,11 @@ export default function AnalisisRequisitos() {
                 </div>
 
                 <div>
-                  <h4 className="font-bold text-lg text-primary mb-3">Especificaciones del Catálogo</h4>
+                  <h4 className="font-bold text-lg text-primary mb-3">Especificaciones a mostrar en el Catálogo</h4>
                   <table className="w-full text-sm">
                     <tbody>
                       <TableRow label="Cantidad de Productos" value="~10 productos" />
-                      <TableRow label="Categorías Principales" value="1 categoría" />
+                      <TableRow label="Categorías Principales" value="1 categoría principal" />
                       <TableRow label="Fotos por Producto" value="4 fotografías" />
                     </tbody>
                   </table>
@@ -189,7 +190,7 @@ export default function AnalisisRequisitos() {
                   <h4 className="font-bold text-lg text-primary mb-3">Integraciones Digitales</h4>
                   <ul className="space-y-2 text-gray-700">
                     {[
-                      'Facebook (con Pixel para rastreo)',
+                      'Facebook (enlace/referencias)',
                       'Instagram (enlace/referencias)',
                       'YouTube (enlace/referencias)',
                       'TikTok (enlace/referencias)',
@@ -210,9 +211,9 @@ export default function AnalisisRequisitos() {
               <div className="space-y-3">
                 {[
                   { item: 'Logo', status: '✅ Disponible', note: 'Listo para implementar' },
-                  { item: 'Videos Promocionales', status: '✅ Disponible', note: 'El cliente cuenta con el material' },
-                  { item: 'Textos/Contenidos', status: '❌ Requiere Creación', note: 'A ser desarrollados por el proveedor' },
-                  { item: 'Manual de Marca', status: '❌ No Disponible', note: 'Será creado una versión básica durante desarrollo, cuya propiedad será del Proveedor' },
+                  { item: 'Videos', status: '✅ Disponible', note: 'El cliente cuenta con el material' },
+                  { item: 'Textos/Contenidos', status: '❌ No Disponible', note: 'Será desarrollados por el nosotros' },
+                  { item: 'Manual de identidad visual', status: '❌ No Disponible', note: 'Será creado una versión básica durante desarrollo del Sitio Web para documentar todo el estilo empleado, cuya propiedad será nuestra. Puedes adquirir la versión profesional con un costo adicional' },
                 ].map((item, index) => (
                   <div key={index} className="flex justify-between items-start p-4 border-l-4 border-primary bg-primary/5 rounded">
                     <div>
