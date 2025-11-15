@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css'
+import '../styles/globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Propuesta de Diseño Web - Urbanisima Constructora SRL',
-  description: 'Página Catálogo Dinámica - Urbanisima Constructora SRL. Propuesta profesional de desarrollo web con 3 opciones de inversión.',
+  title: 'Propuesta de Diseño Web - Urbanisima Constructora S.R.L',
+  description: 'Página Catálogo Dinámica - Urbanisima Constructora S.R.L. Propuesta profesional de desarrollo web con 3 opciones de inversión.',
   keywords: 'diseño web, construcción, Urbanisima, página web, catálogo dinámico',
 }
 

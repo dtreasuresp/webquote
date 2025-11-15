@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import Link from 'next/link'
-import styles from './Navigation.module.css'
+import styles from '../styles/Navigation.module.css'
 
 const navItems = [
   { id: 'resumen', label: 'Inicio' },
@@ -100,7 +100,7 @@ export default function Navigation() {
                   : 'text-white text-base md:text-lg lg:text-xl'
               }`}
             >
-              Urbanisima CONSTRUCTORA SRL
+              Urbanisima CONSTRUCTORA S.R.L
             </motion.div>
 
             {/* Desktop Navigation - xl y mayores */}

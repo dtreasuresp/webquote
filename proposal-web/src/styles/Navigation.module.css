@@ -4,6 +4,7 @@
 }
 
 .navBackdropActive {
+  -webkit-backdrop-filter: blur(14px) brightness(0.95);
   backdrop-filter: blur(14px) brightness(0.95);
 }
 
@@ -46,7 +47,7 @@
 }
 
 .navTextAnalisis {
-  color: #fca5a5;
+  color: #ffffff;
 }
 
 .navTextDinamico {
@@ -54,7 +55,7 @@
 }
 
 .navTextPaquetes {
-  color: #fef2f2;
+  color: #ffffff;
 }
 
 .navTextComparativa {
@@ -62,7 +63,7 @@
 }
 
 .navTextGarantias {
-  color: #fee2e2;
+  color: #ffffff;
 }
 
 .navTextFaq {
@@ -70,7 +71,7 @@
 }
 
 .navTextContacto {
-  color: #fca5a5;
+  color: #ffffff;
 }
 
 /* Text shadow for legibility */
