@@ -23,7 +23,9 @@ export interface Package {
   descripcion?: string
   emoji?: string
   tagline?: string
-  costoInfra?: number
+  precioHosting?: number
+  precioMailbox?: number
+  precioDominio?: number
   tiempoEntrega?: string
 }
 
@@ -60,7 +62,9 @@ export interface PackageSnapshot {
     descripcion?: string
     emoji?: string
     tagline?: string
-    costoInfra?: number
+    precioHosting?: number
+    precioMailbox?: number
+    precioDominio?: number
     tiempoEntrega?: string
   }
   otrosServicios: OtroServicioSnapshot[]

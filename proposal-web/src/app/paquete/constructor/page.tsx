@@ -38,7 +38,9 @@ interface PackageSnapshot {
     descripcion?: string
     emoji?: string
     tagline?: string
-    costoInfra?: number
+    precioHosting?: number
+    precioMailbox?: number
+    precioDominio?: number
     tiempoEntrega?: string
   }
   otrosServicios: OtroServicio[]
@@ -403,7 +405,16 @@ export default function ConstructorPage() {
                 </div>
                 <p className="text-center text-gray-700">El pago único adelantado sólo es para el desarrollo del sitio</p>
                 <p className="text-center font-bold text-gray-900">El costo de la infraestructura y la gestión se facturan aparte</p>
-                <p className="text-center font-bold text-gray-900">Al iniciar (+ ${snapshotConstructor?.paquete.costoInfra || 57} hosting, mailbox, dominio) = ${snapshotConstructor ? ((snapshotConstructor.paquete.desarrollo || 0) + (snapshotConstructor.paquete.costoInfra || 57)) : 207} USD</p>
+                <p className="text-center font-bold text-gray-900">
+                  Al iniciar (+ ${snapshotConstructor?.paquete.precioHosting || 0} hosting, ${snapshotConstructor?.paquete.precioMailbox || 0} mailbox, ${snapshotConstructor?.paquete.precioDominio || 0} dominio) = $
+                  {snapshotConstructor 
+                    ? ((snapshotConstructor.paquete.desarrollo || 0) + 
+                       (snapshotConstructor.paquete.precioHosting || 0) + 
+                       (snapshotConstructor.paquete.precioMailbox || 0) + 
+                       (snapshotConstructor.paquete.precioDominio || 0)).toFixed(2)
+                    : 207
+                  } USD
+                </p>
               </div>
             </div>
           </motion.div>

@@ -65,7 +65,9 @@ interface PackageSnapshot {
     descripcion?: string
     emoji?: string
     tagline?: string
-    costoInfra?: number
+    precioHosting?: number
+    precioMailbox?: number
+    precioDominio?: number
     tiempoEntrega?: string
   }
   otrosServicios: OtroServicioSnapshot[]
@@ -2040,27 +2042,69 @@ export default function Administrador() {
                   </div>
 
                   {/* Costo Infraestructura */}
-                  <div className="grid md:grid-cols-1 gap-4">
+                  <div className="grid md:grid-cols-3 gap-4">
                     <div>
                       <label className="block font-semibold text-secondary mb-2 text-sm">
-                        💰 Costo de Infraestructura (USD)
+                        🏢 Precio Hosting (USD)
                       </label>
                       <input
                         type="number"
-                        value={snapshotEditando.paquete.costoInfra || 0}
+                        value={snapshotEditando.paquete.precioHosting || 0}
                         onChange={(e) =>
                           setSnapshotEditando({
                             ...snapshotEditando,
                             paquete: {
                               ...snapshotEditando.paquete,
-                              costoInfra: parseFloat(e.target.value) || 0,
+                              precioHosting: parseFloat(e.target.value) || 0,
                             },
                           })
                         }
                         className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                         min="0"
                       />
-                      <p className="mt-1 text-xs text-neutral-500">Suma total: hosting + mailbox + dominio. Ej: 57 USD</p>
+                      <p className="mt-1 text-xs text-neutral-500">Ej: 28 USD</p>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        📧 Precio Mailbox (USD)
+                      </label>
+                      <input
+                        type="number"
+                        value={snapshotEditando.paquete.precioMailbox || 0}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              precioMailbox: parseFloat(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                        min="0"
+                      />
+                      <p className="mt-1 text-xs text-neutral-500">Ej: 4 USD</p>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        🌐 Precio Dominio (USD)
+                      </label>
+                      <input
+                        type="number"
+                        value={snapshotEditando.paquete.precioDominio || 0}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              precioDominio: parseFloat(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                        min="0"
+                      />
+                      <p className="mt-1 text-xs text-neutral-500">Ej: 18 USD</p>
                     </div>
                   </div>
                 </div>

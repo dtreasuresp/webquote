@@ -29,7 +29,9 @@ model PackageSnapshot {
   descripcion     String?
   emoji           String?
   tagline         String?
-  costoInfra      Float?
+  precioHosting   Float?
+  precioMailbox   Float?
+  precioDominio   Float?
   tiempoEntrega   String?
   
   // Otros Servicios (JSON)
