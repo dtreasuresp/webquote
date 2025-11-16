@@ -33,8 +33,10 @@ export async function POST(request: NextRequest) {
     const results = []
 
     for (const [nombre, config] of Object.entries(opcionesPagoConfiguracion)) {
+      // Buscar el snapshot ACTIVO más reciente para este paquete
       const snapshot = await prisma.packageSnapshot.findFirst({
-        where: { nombre },
+        where: { nombre, activo: true },
+        orderBy: { createdAt: 'desc' },
       })
 
       if (snapshot) {
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
         })
         results.push({ paquete: nombre, status: 'actualizado', id: updated.id })
       } else {
-        results.push({ paquete: nombre, status: 'no encontrado' })
+        results.push({ paquete: nombre, status: 'no encontrado_activo' })
       }
     }
 

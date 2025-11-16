@@ -2,11 +2,12 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { FaArrowLeft, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
+import { FaArrowLeft, FaCheckCircle, FaCalendar } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/PackageCostSummary'
 import PaymentOptions from '@/components/PaymentOptions'
 import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
+import SECTION_STYLES from '@/lib/styleConstants'
 
 interface ServicioBase {
   id: string
@@ -80,26 +81,18 @@ export default function ImperioDigitalPage() {
           const posicion = ordenados.findIndex(s => s.nombre.toLowerCase() === 'imperio digital')
           const iconos = ['🥉', '🥈', '🥇']
           
-          if (ordenados.length <= 3) {
-            // Solo medallas: 🥉, 🥈, 🥇
+          const asignarMedalla = () => {
             if (posicion >= 0 && posicion < iconos.length) {
-              setMedallaEmoji(iconos[posicion])
+              return iconos[posicion]
             }
-          } else {
-            // Con estrella para el de mayor inversión
-            if (posicion === ordenados.length - 1) {
-              setMedallaEmoji('⭐')
-            } else if (posicion >= 0 && posicion < iconos.length) {
-              setMedallaEmoji(iconos[posicion])
-            } else {
-              setMedallaEmoji('🥇')
+            if (ordenados.length > 3 && posicion === ordenados.length - 1) {
+              return '⭐'
             }
+            return '🥇'
           }
           
-          // Validar si es recomendado (segundo paquete - posición 1)
-          if (posicion === 1) {
-            setEsRecomendado(true)
-          }
+          setMedallaEmoji(asignarMedalla())
+          setEsRecomendado(posicion === 1)
         }
       } catch (error) {
         console.error('Error cargando snapshot Imperio Digital:', error)
@@ -127,7 +120,7 @@ export default function ImperioDigitalPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 px-4 bg-gradient-to-r from-primary to-primary-dark text-white">
+      <section className="py-8 px-4 bg-gradient-to-r from-primary to-primary-dark text-white">
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -159,254 +152,92 @@ export default function ImperioDigitalPage() {
         </div>
       </section>
 
-      {/* ¿Para quién? */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-            <h3 className="text-3xl font-bold mb-8 text-gray-900">¿Para quién es este paquete?</h3>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-secondary/10 to-neutral-200 p-8 rounded-xl border-2 border-secondary">
-                <h4 className="text-xl font-bold text-secondary mb-3">🏆 Excelencia</h4>
-                <p className="text-gray-700">Empresas establecidas que buscan excelencia y diferenciación.</p>
-              </div>
-              <div className="bg-gradient-to-br from-accent/10 to-accent/20 p-8 rounded-xl border-2 border-accent">
-                <h4 className="text-xl font-bold text-secondary mb-3">💹 ROI</h4>
-                <p className="text-gray-700">Máximo retorno de inversión con estrategia y marketing integrado.</p>
-              </div>
-              <div className="bg-gradient-to-br from-primary/10 to-primary/20 p-8 rounded-xl border-2 border-primary">
-                <h4 className="text-xl font-bold text-secondary mb-3">🚀 Escala</h4>
-                <p className="text-gray-700">Crecimiento sin limitaciones y presencia global.</p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Infraestructura profesional */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-3xl font-bold mb-8 text-gray-900">⚙️ Infraestructura y Hosting Profesional</h3>
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="overflow-x-auto">
-            <table className="w-full bg-white rounded-lg shadow-md overflow-hidden">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th className="px-6 py-3 text-left">Característica</th>
-                  <th className="px-6 py-3 text-left">Costo mensual</th>
-                  <th className="px-6 py-3 text-left">Costo anual</th>
-                  <th className="px-6 py-3 text-left">Detalles</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Hosting (0-3 meses)</td>
-                  <td className="px-6 py-4 text-accent font-bold">$0 USD (Gratis)</td>
-                  <td className="px-6 py-4 text-accent font-bold">$0 USD (Gratis)</td>
-                  <td className="px-6 py-4 text-gray-600">Incluido en el plan inicial</td>
-                </tr>
-                <tr className="hover:bg-gray-50 bg-accent/5">
-                  <td className="px-6 py-4 font-semibold">Hosting (desde 4 meses)</td>
-                  <td className="px-6 py-4 text-primary font-bold">$40 USD/mes</td>
-                  <td className="px-6 py-4 text-primary font-bold">$360 USD/anual</td>
-                  <td className="px-6 py-4 text-gray-600">Servidor premium de alto rendimiento</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Mailbox (0-3 meses)</td>
-                  <td className="px-6 py-4 text-accent font-bold">$0 USD (Gratis)</td>
-                  <td className="px-6 py-4 text-accent font-bold">$0 USD (Gratis)</td>
-                  <td className="px-6 py-4 text-gray-600">Cuentas corporativas incluidas</td>
-                </tr>
-                <tr className="hover:bg-gray-50 bg-accent/5">
-                  <td className="px-6 py-4 font-semibold">Mailbox (desde 4 meses)</td>
-                  <td className="px-6 py-4 text-primary font-bold">$4 USD/mes</td>
-                  <td className="px-6 py-4 text-primary font-bold">$36 USD/anual</td>
-                  <td className="px-6 py-4 text-gray-600">Por buzón @tudominio.com</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Dominio (0-3 meses)</td>
-                  <td className="px-6 py-4 text-accent font-bold">$0 USD (Gratis)</td>
-                  <td className="px-6 py-4 text-accent font-bold">$0 USD (Gratis)</td>
-                  <td className="px-6 py-4 text-gray-600">Dirección web personalizada</td>
-                </tr>
-                <tr className="hover:bg-gray-50 bg-accent/5">
-                  <td className="px-6 py-4 font-semibold">Dominio (desde 4 meses)</td>
-                  <td className="px-6 py-4 text-primary font-bold">$18 USD/mes</td>
-                  <td className="px-6 py-4 text-primary font-bold">$162 USD/anual</td>
-                  <td className="px-6 py-4 text-gray-600">Renovación anual</td>
-                </tr>
-              </tbody>
-            </table>
-          </motion.div>
-        </div>
-      </section>
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-3xl font-bold mb-8 text-gray-900">⚙️ Detalles de la Infraestructura</h3>
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="overflow-x-auto"
-          >
-            <table className="w-full bg-white rounded-lg shadow-md overflow-hidden">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th className="px-6 py-3 text-left">Característica</th>
-                  <th className="px-6 py-3 text-left">Costo mensual</th>
-                  <th className="px-6 py-3 text-left">Costo anual</th>
-                  <th className="px-6 py-3 text-left">Detalles</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">SSL/HTTPS</td>
-                  <td className="px-6 py-4 text-accent font-bold">Gratis 🔒</td>
-                  <td className="px-6 py-4 text-accent font-bold">Gratis 🔒</td>
-                  <td className="px-6 py-4 text-gray-600">Certificado de seguridad incluido</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Almacenamiento</td>
-                  <td className="px-6 py-4 font-bold">100 GB (NVMe)</td>
-                                    <td className="px-6 py-4 text-accent font-bold">Gratis</td>
-                  <td className="px-6 py-4 text-gray-600">Espacio amplio y veloz</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Ancho de banda</td>
-
-                  <td className="px-6 py-4 font-bold text-accent">Ilimitado ∞</td>
-                  <td className="px-6 py-4 font-bold text-accent">Gratis</td>
-                  <td className="px-6 py-4 text-gray-600">Tráfico sin restricciones</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Uptime</td>
-                  <td className="px-6 py-4 font-bold text-accent">99.9%</td>
-                  <td className="px-6 py-4 font-bold text-accent">Gratis</td>
-                  <td className="px-6 py-4 text-gray-600">Disponibilidad garantizada</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Backup automático</td>
-                  <td className="px-6 py-4 font-bold">Diario + manual</td>
-                  <td className="px-6 py-4 font-bold">Gratis</td>
-                  <td className="px-6 py-4 text-gray-600">Protección de datos</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Sitios múltiples</td>
-                  <td className="px-6 py-4 font-bold">Hasta 100</td>
-                  <td className="px-6 py-4 text-accent font-bold">Gratis</td>
-                  <td className="px-6 py-4 text-gray-600">Posibilidad de alojar múltiples sitios web</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Soporte hosting</td>
-                  <td className="px-6 py-4 font-bold">24/7</td>
-                  <td className="px-6 py-4 text-accent font-bold">Gratis</td>
-                  <td className="px-6 py-4 text-gray-600">Siempre disponible. Resolución en 30 minutos como máximo</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">CDN Global</td>
-                  <td className="px-6 py-4 font-bold text-accent">Incluido ⚡</td>
-                  <td className="px-6 py-4 font-bold text-accent">Gratis</td>
-                  <td className="px-6 py-4 text-gray-600">Velocidad mundial</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Rendimiento</td>
-                  <td className="px-6 py-4 font-bold">Superior (optimizado)</td>
-                  <td className="px-6 py-4 font-bold">Gratis</td>
-                  <td className="px-6 py-4 text-gray-600">Carga ultra rápida</td>
-                </tr>
-              </tbody>
-            </table>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Páginas y Estructura Ilimitada */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-3xl font-bold mb-8 text-gray-900">📄 Páginas y Estructura Ilimitada</h3>
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="grid md:grid-cols-2 gap-6">
+      <section className={SECTION_STYLES.section}>
+        <div className={SECTION_STYLES.container}>
+          <h3 className={SECTION_STYLES.title}>📄 Páginas y Estructura Ilimitada</h3>
+          <p className="text-xl text-gray-600 mb-6">Igual que el paquete Obra Maestra incluyendo:</p>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className={SECTION_STYLES.gridCols3}>
             {[
-              '✓ Además del Profesional (Obra Maestra), más:',
-              '✓ Página de inicio mega optimizada',
-              '✓ Página de servicios con comparativa',
-              '✓ Testimonios y casos de éxito',
-              '✓ Equipo (con perfiles de empleados)',
-              '✓ Certificaciones y acreditaciones',
-              '✓ Área de recursos (descargas)',
-              '✓ Blog completo con categorías',
-              '✓ Políticas legales',
-              '✓ Página de presupuestos/cotizaciones',
+              'Página de servicios con comparativa',
+              'Testimonios y casos de éxito',
+              'Equipo (con perfiles de empleados)',
+              'Certificaciones y acreditaciones',
+              'Área de recursos (descargas)',
+              'Blog completo con categorías',
+              'Políticas legales',
+              'Página de presupuestos/cotizaciones',
+              'Preguntas frecuentes (FAQ)',
             ].map((item, index) => (
               <motion.div
-                key={index}
+                key={`pages-${item}`}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
-                className="flex items-start gap-3 bg-gradient-to-r from-secondary/10 to-neutral-200 p-4 rounded-lg border border-secondary/30"
+                className={`${SECTION_STYLES.card} ${SECTION_STYLES.itemGap}`}
               >
-                <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
-                <span className="text-gray-800">{item}</span>
+                <FaCheckCircle className="text-primary mt-1 flex-shrink-0" />
+                <span className={SECTION_STYLES.textGray800}>{item}</span>
               </motion.div>
             ))}
           </motion.div>
-          <p className="text-center mt-8 text-lg text-gray-600 font-semibold">
+          <p className="text-center mt-6 text-lg text-gray-600 font-semibold">
             <strong>Total: 8+ páginas principales + ilimitadas expandibles</strong>
           </p>
         </div>
       </section>
 
       {/* Funcionalidades Premium Avanzadas */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-3xl font-bold mb-8 text-gray-900">⚙️ Funcionalidades Premium Avanzadas</h3>
+      <section className={SECTION_STYLES.sectionBg}>
+        <div className={SECTION_STYLES.container}>
+          <h3 className={SECTION_STYLES.title}>⚙️ Funcionalidades Premium Avanzadas</h3>
+          <p className="text-xl text-gray-600 mb-6">Igual que el paquete Obra Maestra incluyendo:</p>
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className={SECTION_STYLES.gridCols3}>
               {[
                 {
-                  title: '🔎 Buscador y Filtrado',
-                  items: ['Búsqueda inteligente con IA básica', 'Filtros múltiples avanzados', 'Búsqueda por voz', 'Sugerencias automáticas'],
+                  title: '🔎 Búsaqueda inteligente',
+                  items: ['Búsqueda mejor estructurada', 'Filtros múltiples', 'Sugerencias automáticas'],
                 },
                 {
                   title: '💬 Comunicación Avanzada',
-                  items: ['WhatsApp', 'Formularios dinámicos', 'Newsletter automatizado', 'Email marketing integrado'],
+                  items: ['Formularios dinámicos'],
                 },
                 {
                   title: '🛒 Reservas',
-                  items: ['Reserva/compras online', 'Formulario de presupuesto'],
+                  items: ['Reservas online', 'Formulario de presupuesto'],
                 },
                 {
-                  title: '📣 Social Proof',
-                  items: ['Calificaciones y reviews', 'Testimonios automatizados', 'Casos de éxito', 'Carrusel de testimonios', 'Contador de clientes'],
+                  title: '📣 Ingeniería Social',
+                  items: ['Calificaciones y reviews', 'Carrusel de testimonios', 'Contador de clientes'],
                 },
                 {
-                  title: '📈 Analytics y Optimización',
-                  items: ['Heatmaps', 'Seguimiento de comportamiento', 'A/B testing', 'Reporte mensual', 'Dashboard personalizado'],
+                  title: '📈 Analítica y Optimización',
+                  items: ['Mapa de calor', 'Reporte mensual', 'Dashboard personalizado'],
                 },
                 {
                   title: '🎯 Marketing Integrado',
-                  items: ['Facebook', 'Google', 'Seguimiento de seguidores', 'Control de clientes básico', 'Automatización de correos'],
+                  items: ['Facebook', 'Google', 'Control de clientes básico', 'Automatización de correos'],
                 },
                 {
                   title: '🔍 Gestión de Contenido Avanzado',
-                  items: ['Marcado estructurado completo', 'Ruta de archivos', 'Direcciones web amigables', 'Estructura estratégica'],
-                },
-                {
-                  title: '🌐 Integración Social Completa',
-                  items: ['Facebook', 'Instagram', 'YouTube', 'TikTok', 'Telegram', 'LinkedIn'],
+                  items: ['Ruta de archivos', 'Direcciones web amigables', 'Estructura estratégica'],
                 },
               ].map((section, index) => (
                 <motion.div
-                  key={index}
+                  key={`func-${section.title}`}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow"
+                  className={SECTION_STYLES.cardHover}
                 >
                   <h4 className="text-xl font-bold text-primary mb-4">{section.title}</h4>
-                  <ul className="space-y-2">
-                    {section.items.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-gray-700">
-                        <span className="text-accent font-bold">✓</span>
+                  <ul className={SECTION_STYLES.itemSpacing}>
+                    {section.items.map((item) => (
+                      <li key={`item-${item}`} className={`${SECTION_STYLES.itemGap} ${SECTION_STYLES.textGray800}`}>
+                        <span className="text-primary font-bold">✓</span>
                         <span>{item}</span>
                       </li>
                     ))}
@@ -419,13 +250,13 @@ export default function ImperioDigitalPage() {
       </section>
 
       {/* Contenidos audiovisuales profesionales */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-3xl font-bold mb-8 text-gray-900">🎬 Contenidos Audiovisuales Profesionales</h3>
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="grid md:grid-cols-2 gap-6">
+      <section className={SECTION_STYLES.section}>
+        <div className={SECTION_STYLES.container}>
+          <h3 className={SECTION_STYLES.title}>📝 Contenidos y Materiales Premium</h3>
+          <p className="text-xl text-gray-600 mb-6">Igual que el paquete Obra Maestra incluyendo:</p>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className={SECTION_STYLES.gridCols3}>
             {[
               'Producción de video corporativo (máx 2 minutos)',
-              'Guionista profesional y edición',
               'Fotografía profesional de productos (sesión hasta 4 horas)',
               'Edición profesional y optimización para web',
               'Infografías personalizadas (2-3) con animación básica',
@@ -434,15 +265,15 @@ export default function ImperioDigitalPage() {
               'Estructuración de contenido para marketing',
             ].map((item, index) => (
               <motion.div
-                key={index}
+                key={`content-${item}`}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
-                className="flex items-start gap-3 p-4 bg-gradient-to-r from-primary/10 to-primary/20 rounded-lg border border-primary/30"
+                className={`${SECTION_STYLES.card} ${SECTION_STYLES.itemGap}`}
               >
                 <span className="text-primary font-bold text-lg">✓</span>
-                <span className="text-gray-800">{item}</span>
+                <span className={SECTION_STYLES.textGray800}>{item}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -450,56 +281,65 @@ export default function ImperioDigitalPage() {
       </section>
 
       {/* Capacitación, Soporte y Gestión */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-3xl font-bold mb-8 text-gray-900">🎓 Capacitación Integral y Consultoría</h3>
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gradient-to-br from-secondary/10 to-neutral-200 p-8 rounded-xl border-2 border-secondary">
-              <h4 className="text-2xl font-bold text-secondary mb-4">📚 Capacitación</h4>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800"><strong>6 horas</strong> de capacitación</span></li>
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Sesión para <strong>tu equipo</strong></span></li>
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Prácticas interactivas</span></li>
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Manual de usuario</span></li>
-                <li className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">Documentación técnica</span></li>
+      <section className={SECTION_STYLES.sectionBg}>
+        <div className={SECTION_STYLES.container}>
+          <h3 className={SECTION_STYLES.title}>🎓 Capacitación Integral y Consultoría</h3>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className={SECTION_STYLES.gridCols2}>
+            <div className={SECTION_STYLES.card}>
+              <h4 className="text-2xl font-bold text-primary mb-4">📚 Capacitación</h4>
+              <ul className={SECTION_STYLES.itemSpacing}>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}><strong>6 horas</strong> de capacitación</span></li>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}>Sesión para <strong>tu equipo</strong></span></li>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}>Prácticas interactivas</span></li>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}>Manual de usuario</span></li>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}>Documentación técnica</span></li>
               </ul>
             </div>
-            <div className="bg-gradient-to-br from-primary/10 to-primary/20 p-8 rounded-xl border-2 border-primary">
-              <h4 className="text-2xl font-bold text-secondary mb-4">🛠️ Soporte Técnico</h4>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-2"><span className="text-primary font-bold">✓</span><span className="text-gray-800"><strong>90 días</strong> de garantía técnica</span></li>
-                <li className="flex items-start gap-2"><span className="text-primary font-bold">✓</span><span className="text-gray-800">Soporte <strong>24/7</strong> por WhatsApp</span></li>
-                <li className="flex items-start gap-2"><span className="text-primary font-bold">✓</span><span className="text-gray-800">Respuesta en <strong>máx 6 horas</strong></span></li>
-                <li className="flex items-start gap-2"><span className="text-primary font-bold">✓</span><span className="text-gray-800">Actualizaciones de seguridad automáticas</span></li>
-                <li className="flex items-start gap-2"><span className="text-primary font-bold">✓</span><span className="text-gray-800">Monitoreo proactivo</span></li>
+
+            <div className={SECTION_STYLES.card}>
+              <h4 className="text-2xl font-bold text-primary mb-4">🛠️ Soporte Técnico</h4>
+              <ul className={SECTION_STYLES.itemSpacing}>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}><strong>90 días</strong> de garantía técnica</span></li>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}>Soporte <strong>24/7</strong> por WhatsApp</span></li>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}>Respuesta en <strong>máx 6 horas</strong></span></li>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}>Actualizaciones de seguridad automáticas</span></li>
+                <li className={SECTION_STYLES.itemGap}><span className="text-primary font-bold">✓</span><span className={SECTION_STYLES.textGray800}>Monitoreo proactivo</span></li>
               </ul>
             </div>
-            <div className="bg-gradient-to-br from-accent/10 to-accent/20 p-8 rounded-xl border-2 border-accent">
-              <h4 className="text-2xl font-bold text-secondary mb-4">📝 Gestión Mensual</h4>
-              <ul className="space-y-3">
-                {[
-                  'Actualizaciones diarias si es necesario',
-                  'Gestión completa de contenidos multimedia',
-                  'Agregar/editar productos sin límite',
-                  'Publicación de artículos de blog',
-                  'Campaña de marketing mensual propuesta',
-                  'Análisis competitivo mensual',
-                  'Reporte mensual ejecutivo con recomendaciones',
-                  'Consultoría estratégica (1 hora/mes)',
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2"><span className="text-accent font-bold">✓</span><span className="text-gray-800">{item}</span></li>
-                ))}
-              </ul>
-              <p>Cambios extras incluidos:</p><p className="text-center mt-6 text-secondary font-bold text-lg"> ILIMITADOS </p><p>durante el horario laboral</p>
-            </div>
+
           </motion.div>
+
+          {/* Gestión Mensual */}
+          <div className={`mt-6 ${SECTION_STYLES.card}`}>
+            <h4 className="text-2xl font-bold text-primary mb-4">📝 Gestión Mensual - ILIMITADA</h4>
+            <div className={SECTION_STYLES.gridCols3}>
+              {[
+                'Actualizaciones diarias si es necesario',
+                'Gestión completa de contenidos multimedia',
+                'Agregar/editar productos sin límite',
+                'Publicación de artículos de blog',
+                'Campaña de marketing mensual propuesta',
+                'Análisis competitivo mensual',
+                'Reporte mensual ejecutivo con recomendaciones',
+                'Consultoría estratégica (1 hora/mes)',
+              ].map((item, index) => (
+                <div key={`mgmt-${item}`} className={SECTION_STYLES.itemGap}>
+                  <span className="text-primary font-bold">✓</span>
+                  <span className={SECTION_STYLES.textGray800}>{item}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-center mt-6 text-primary font-bold text-lg">
+              Cambios incluidos: ILIMITADOS (durante horario laboral 9am-6pm)
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Inversión y Tabla de Costos */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-3xl font-bold mb-8 text-gray-900">💰 Inversión</h3>
+      <section className={SECTION_STYLES.section}>
+        <div className={SECTION_STYLES.container}>
+          <h3 className={SECTION_STYLES.title}>💰 Inversión Anual</h3>
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -509,73 +349,86 @@ export default function ImperioDigitalPage() {
               <div className="text-center py-12">
                 <p className="text-gray-600">Cargando información de precios...</p>
               </div>
-            ) : snapshotImperio ? (
-              <PackageCostSummary snapshot={snapshotImperio} />
             ) : (
-              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
-                <p className="text-yellow-800">
-                  No se encontró la configuración del paquete Imperio Digital. Utiliza el panel administrativo para configurarlo.
-                </p>
-              </div>
+              <>
+                {snapshotImperio ? (
+                  <PackageCostSummary snapshot={snapshotImperio} />
+                ) : (
+                  <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center">
+                    <p className="text-red-800 font-semibold">
+                      No se encontró la configuración del paquete Imperio Digital. Utiliza el panel administrativo para configurarlo.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
-          </motion.div>
-          {/* Opciones de Pago */}
-          <div className="mt-10">
-            <h4 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2"><FaCreditCard /> Opciones de Pago</h4>
-            <PaymentOptions snapshot={snapshotImperio} />
-          </div>
-
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="mt-8 bg-accent/10 p-6 rounded-lg border-l-4 border-accent">
-            <p className="text-gray-800"><strong>💳 Gestión mensual:</strong> $15/mes (se descuenta automáticamente o se factura)</p>
-            <p className="text-gray-700 mt-2 text-sm">A las opciones de pago anterior se suman los costos iniciales de hosting, mailbox y dominio, excepto la gestión del sitio web, el cual se cobra por separado a partir del primer mes de despliegue en la web, con pagos mensuales.</p>
           </motion.div>
         </div>
       </section>
 
-      {/* Bonus Exclusivo */}
-      <section className="py-16 px-4 bg-gradient-to-r from-accent/10 to-accent/20">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-gradient-to-r from-accent to-accent-dark rounded-2xl p-8 text-center">
-            <h3 className="text-3xl md:text-4xl font-bold text-white mb-6">🎁 BONUS EXCLUSIVO</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-white rounded-lg p-6 shadow-md"><div className="text-4xl mb-3">🎨</div><p className="font-bold text-lg text-gray-900">Rediseño de marca simple</p><p className="text-gray-700">Logo adaptado</p></div>
-              <div className="bg-white rounded-lg p-6 shadow-md"><div className="text-4xl mb-3">📣</div><p className="font-bold text-lg text-gray-900">5 Banners para Redes</p><p className="text-gray-700">Para campañas y anuncios</p></div>
-              <div className="bg-white rounded-lg p-6 shadow-md"><div className="text-4xl mb-3">📘</div><p className="font-bold text-lg text-gray-900">Guía de marketing digital</p><p className="text-gray-700">PDF profesional</p></div>
-              <div className="bg-white rounded-lg p-6 shadow-md"><div className="text-4xl mb-3">🎓</div><p className="font-bold text-lg text-gray-900">Acceso a curso online</p><p className="text-gray-700">Gestión web</p></div>
-              <div className="bg-white rounded-lg p-6 shadow-md"><div className="text-4xl mb-3">💰</div><p className="font-bold text-lg text-gray-900">Descuento 10%</p><p className="text-gray-700">En futuros servicios</p></div>
-            </div>
+      {/* Opciones de Pago */}
+      <section className={SECTION_STYLES.sectionBg}>
+        <div className={SECTION_STYLES.container}>
+          <PaymentOptions snapshot={snapshotImperio} />
+
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="bg-gradient-to-br from-accent/10 to-accent/20 p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow border-2 border-accent mt-6">
+            <p className="text-gray-800">
+              <strong>💳 Gestión mensual:</strong> ${snapshotImperio?.gestion.precio || 12}/mes desde el mes {snapshotImperio?.gestion.mesesGratis ? snapshotImperio.gestion.mesesGratis + 1 : 2} (facturación separada). El primer mes de despliegue en internet es gratis
+            </p>
+            <p className="text-gray-800 mt-4">
+              <strong>💳 Pago inicial: </strong>El costo total del pago inicial es la suma del desarrollo inicial (restando los descuentos si procede) y la infraestructura.
+            </p>
+            <p className="text-gray-800 mt-4">
+              <strong>💳 Pago de la infraestructura:</strong> La infraestructura se paga en el pago inicial y los primeros 3 meses es gratis. En el cuarto mes comienza a pagar una cotización mensual.
+            </p> 
+            <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+              <p className="text-center font-bold text-gray-900">El costo de la infraestructura y la gestión se facturan aparte</p>
+              <p className="text-center font-bold text-gray-900">
+                  Al iniciar (+ ${snapshotImperio?.serviciosBase.find(s => s.nombre === 'Hosting')?.precio || 0} hosting, ${snapshotImperio?.serviciosBase.find(s => s.nombre === 'Mailbox')?.precio || 0} mailbox, ${snapshotImperio?.serviciosBase.find(s => s.nombre === 'Dominio')?.precio || 0} dominio) = $
+                  {snapshotImperio 
+                    ? ((snapshotImperio.paquete.desarrollo || 0) + 
+                       (snapshotImperio.serviciosBase.find(s => s.nombre === 'Hosting')?.precio || 0) + 
+                       (snapshotImperio.serviciosBase.find(s => s.nombre === 'Mailbox')?.precio || 0) + 
+                       (snapshotImperio.serviciosBase.find(s => s.nombre === 'Dominio')?.precio || 0)).toFixed(2)
+                    : 207
+                  } USD
+                </p>
+              </div>
+            <p className="text-gray-800 mt-4">
+              <strong>💳 Gestión de cambios:</strong> Este paquete incluye <strong>cambios ilimitados en el mes</strong>, tales como actualizaciones de precios, cambios de fotos. El horario de atención es de lunes a viernes, 9am-6pm.
+            </p>
           </motion.div>
         </div>
       </section>
 
       {/* Timeline */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-3xl font-bold mb-8 text-gray-900 flex items-center gap-2">
+      <section className={SECTION_STYLES.section}>
+        <div className={SECTION_STYLES.container}>
+          <h3 className={`${SECTION_STYLES.title} flex items-center gap-2`}>
             <FaCalendar /> Tiempo de Entrega: 7-8 Semanas
           </h3>
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
             <div className="space-y-4">
               {[
-                { week: 1, title: 'Workshop estratégico', description: 'Discovery (3 horas) y planificación', color: 'from-secondary via-secondary-light to-neutral-800' },
-                { week: 2, title: 'Identidad visual', description: 'Rediseño de marca', color: 'from-primary via-primary-dark to-secondary' },
-                { week: '3-4', title: 'Producción audiovisual', description: 'Fotos, video e infografías', color: 'from-accent via-accent-dark to-primary' },
-                { week: '5-6', title: 'Desarrollo personalizado', description: 'Funcionalidades premium', color: 'from-primary to-primary-dark' },
-                { week: 7, title: 'Marketing y capacitación', description: 'Estrategia y formación', color: 'from-accent to-accent-dark' },
-                { week: 8, title: 'Lanzamiento', description: 'Coordinado y monitoreo inicial', color: 'from-secondary to-neutral-900' },
+                { week: 1, title: 'Descubrimiento estratégico', description: 'Objetivos y planificación' },
+                { week: 2, title: 'Identidad visual', description: 'Rediseño de marca' },
+                { week: '3-4', title: 'Producción audiovisual', description: 'Fotos, video e infografías' },
+                { week: '5-6', title: 'Desarrollo personalizado', description: 'Funcionalidades premium' },
+                { week: 7, title: 'Testing', description: 'Pruebas de funcionalidades' },
+                { week: 8, title: 'Lanzamiento', description: 'Capacitación, pruebas y publicación' },
               ].map((item, index) => (
                 <motion.div
-                  key={index}
+                  key={`week-${item.week}`}
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.05 }}
-                  className={`flex gap-6 items-start p-6 bg-gradient-to-r ${item.color} text-white rounded-lg hover:shadow-lg transition-shadow`}
+                  className={`${SECTION_STYLES.card} border-l-4 flex gap-6 items-start`}
                 >
-                  <div className="text-4xl font-bold min-w-fit">Sem {item.week}</div>
+                  <div className="text-2xl font-bold text-primary min-w-fit">Sem {item.week}</div>
                   <div className="flex-1">
-                    <h4 className="text-xl font-bold mb-2">{item.title}</h4>
-                    <p className="text-white/90">{item.description}</p>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h4>
+                    <p className={SECTION_STYLES.textGray600}>{item.description}</p>
                   </div>
                 </motion.div>
               ))}
@@ -584,12 +437,25 @@ export default function ImperioDigitalPage() {
         </div>
       </section>
 
+      {/* Bonus Exclusivo */}
+      <section className={SECTION_STYLES.sectionBg}>
+        <div className={SECTION_STYLES.container}>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-lg border-l-4 border-primary p-4">
+            <h3 className="text-3xl md:text-4xl font-bold text-primary mb-6 text-center">🎁 BONUS EXCLUSIVO</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
+              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200"><div className="text-4xl mb-3">🎨</div><p className="font-bold text-lg text-gray-900">4 Banners para Redes</p><p className="text-gray-600">Diseñados profesionalmente para tus campañas en redes sociales</p></div>
+              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200"><div className="text-4xl mb-3">💰</div><p className="font-bold text-lg text-gray-900">Descuento 5%</p><p className="text-gray-600">En futuros servicios</p></div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="py-16 px-4">
+      <section className={SECTION_STYLES.section}>
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="text-4xl font-bold text-gray-900 mb-6">¿Listo para dominar tu mercado?</h2>
-            <p className="text-xl text-gray-600 mb-8">IMPERIO DIGITAL es la opción para liderazgo y expansión.</p>
+            <p className="text-xl text-gray-600 mb-6">IMPERIO DIGITAL es la opción para liderazgo y expansión.</p>
             <Link href="/#contacto" className="inline-block bg-primary text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-primary-dark transition-all transform hover:scale-105">
               Solicitar Presupuesto
             </Link>

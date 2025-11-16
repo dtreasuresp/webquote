@@ -15,6 +15,9 @@ export interface SnapshotFromDB {
   descuento: number
   tipo?: string
   descripcion?: string
+  // Nuevos campos en BD para opciones de pago
+  opcionesPago?: any
+  descuentoPagoUnico?: number
   otrosServicios: any[]
   costoInicial: number
   costoAño1: number
@@ -77,6 +80,9 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
     descuento: snapshot.paquete?.descuento || 0,
     tipo: snapshot.paquete?.tipo || '',
     descripcion: snapshot.paquete?.descripcion || '',
+    // Mapear opciones de pago desde el objeto paquete del frontend a columnas de BD
+    opcionesPago: snapshot.paquete?.opcionesPago || [],
+    descuentoPagoUnico: snapshot.paquete?.descuentoPagoUnico ?? 0,
     otrosServicios: snapshot.otrosServicios || [],
     costoInicial: snapshot.costos?.inicial || 0,
     costoAño1: snapshot.costos?.año1 || 0,
@@ -101,6 +107,9 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
       descuento: dbSnapshot.descuento,
       tipo: dbSnapshot.tipo || '',
       descripcion: dbSnapshot.descripcion || '',
+      // Incluir opciones de pago en el objeto paquete para el frontend
+      opcionesPago: (dbSnapshot.opcionesPago as any[]) || [],
+      descuentoPagoUnico: dbSnapshot.descuentoPagoUnico ?? 0,
     },
     otrosServicios: dbSnapshot.otrosServicios,
     costos: {

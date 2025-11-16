@@ -38,8 +38,8 @@ export default function Garantias() {
                   'Protección de datos y privacidad',
                   'Soporte post-lanzamiento',
                   'Período de garantía definido (30 a 90 días según paquete)',
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-3 text-gray-800">
+                ].map((item) => (
+                  <li key={`garantia-${item}`} className="flex items-start gap-3 text-gray-800">
                     <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
@@ -66,8 +66,8 @@ export default function Garantias() {
                   'Cumplir con las políticas de uso',
                   'Respetar los términos de servicio',
                   'Seguir las recomendaciones de seguridad',
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-3 text-gray-800">
+                ].map((item) => (
+                  <li key={`responsable-${item}`} className="flex items-start gap-3 text-gray-800">
                     <FaTimesCircle className="text-primary mt-1 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
@@ -81,22 +81,38 @@ export default function Garantias() {
             <h3 className="text-2xl font-bold mb-6 text-red-900">
               📋 POLÍTICAS DE CANCELACIÓN
             </h3>
-            <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-6">
               {[
                 {
-                  title: 'Si el cliente cancela después del lanzamiento',
-                  detail: 'Se devuelve hasta el 50% de la inversión inicial (solo desarrollo)',
+                  title: 'Si el cliente cancela los servicios de gestión después del lanzamiento',
+                  detail: 'El proveedor puede ofrecer soporte y mantenimiento según lo acordado.',
                 },
                 {
-                  title: 'Luego del segundo mes de lanzamiento',
-                  detail: 'Reembolso de 30% de la inversión inicial (solo desarrollo)',
+                  title: 'Si el cliente cancela antes del lanzamiento',
+                  detail: 'Se aplicarán cargos proporcionales según el trabajo realizado hasta la fecha.',
+                },
+                {                  
+                  title: 'Si el proveedor cancela el contrato antes del lanzamiento',
+                  detail: 'El cliente recibirá un reembolso proporcional por los servicios no prestados.',
+                }, 
+                {
+                  title: 'Si hay incumplimiento de términos por cualquiera de las partes',
+                  detail: 'Se seguirán los procedimientos acordados.',
                 },
                 {
-                  title: 'Después del período de garantía',
-                  detail: 'Sin derecho a reembolso',
+                  title: 'Notificación de cancelación',
+                  detail: 'Debe hacerse con al menos 15 días de anticipación.',
                 },
-              ].map((policy, index) => (
-                <div key={index} className="border-l-4 border-red-500 pl-4">
+                {
+                  title: 'Devolución de materiales',
+                  detail: 'El cliente debe devolver cualquier material proporcionado por el proveedor y viceversa.',
+                },
+                {
+                  title: 'Si el cliente cancela todos los servicios después del lanzamiento',
+                  detail: 'El proveedor puede ofrecer un plan de transición para asegurar la continuidad del sitio.',
+                }
+              ].map((policy) => (
+                <div key={`policy-${policy.title}`} className="border-l-4 border-red-500 pl-4">
                   <p className="font-bold text-gray-900">{policy.title}</p>
                   <p className="text-gray-700 text-sm">{policy.detail}</p>
                 </div>
@@ -122,8 +138,8 @@ export default function Garantias() {
                 'Informe detallado de acciones correctivas',
                 'Garantía extendida en caso de fallos recurrentes',
                 'Suspensión temporal del servicio si es necesario',
-              ].map((item, index) => (
-                <div key={index} className="flex items-start gap-3 text-gray-800">
+              ].map((item) => (
+                <div key={`accion-${item}`} className="flex items-start gap-3 text-gray-800">
                   <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
                   <span>{item}</span>
                 </div>

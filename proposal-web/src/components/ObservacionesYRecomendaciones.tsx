@@ -27,7 +27,7 @@ export default function ObservacionesYRecomendaciones() {
             >
               <div className="flex items-center gap-3 mb-6">
                 <FaExclamationTriangle className="text-red-500 text-2xl" />
-                <h3 className="text-2xl font-bold text-gray-900">🚨 Puntos de Atención Prioritaria</h3>
+                <h3 className="text-2xl font-bold text-gray-900">Puntos de Atención Prioritaria</h3>
               </div>
 
               <div className="space-y-6">
@@ -35,9 +35,9 @@ export default function ObservacionesYRecomendaciones() {
                   <h4 className="font-bold text-secondary mb-2">1. Presupuesto Limitado</h4>
                   <p className="text-sm text-gray-700 mb-3">Presupuesto menor de $300 USD es considerado adecuado para servicios desde básicos hasta medios.</p>
                   <div className="space-y-2 text-xs text-gray-600">
-                    <p><strong>✓ Acción:</strong> Priorizar funcionalidades críticas (MVP)</p>
-                    <p><strong>✓ Acción:</strong> Considerar enfoque faseado</p>
-                    <p><strong>✓ Acción:</strong> Definir claramente alcance por paquete</p>
+                    <p><strong>✓ Acción:</strong> Priorizar funcionalidades críticas que mejor impacten el negocio</p>
+                    <p><strong>✓ Acción:</strong> Considerar enfoque por fases</p>
+                    <p><strong>✓ Acción:</strong> Definir claramente alcance según el paquete contratado</p>
                   </div>
                 </div>
 
@@ -46,8 +46,8 @@ export default function ObservacionesYRecomendaciones() {
                   <p className="text-sm text-gray-700 mb-3">Los textos deben crearse desde cero con fotos y especificaciones.</p>
                   <div className="space-y-2 text-xs text-gray-600">
                     <p><strong>✓ Acción:</strong> Solicitar materiales al cliente</p>
-                    <p><strong>✓ Acción:</strong> Crear contenidos estratégicos</p>
-                    <p><strong>✓ Acción:</strong> Desarrollar guía de estilo visual</p>
+                    <p><strong>✓ Acción:</strong> Crear los contenidos necesarios</p>
+                    <p><strong>✓ Acción:</strong> Desarrollar una guía de estilo visual</p>
                   </div>
                 </div>
 
@@ -65,9 +65,9 @@ export default function ObservacionesYRecomendaciones() {
                   <h4 className="font-bold text-secondary mb-2">4. Integración de Plataformas</h4>
                   <p className="text-sm text-gray-700 mb-3">Múltiples redes sociales requieren coordinación continua.</p>
                   <div className="space-y-2 text-xs text-gray-600">
-                    <p><strong>✓ Acción:</strong> Automatizar publicaciones</p>
-                    <p><strong>✓ Acción:</strong> Crear calendario editorial</p>
-                    <p><strong>✓ Acción:</strong> Integrar Meta Pixel</p>
+                    <p><strong>✓ Acción:</strong> Automatizar publicaciones siempre que sea posible</p>
+                    <p><strong>✓ Acción:</strong> Crear calendario de publicaciones</p>
+                    <p><strong>✓ Acción:</strong> Integrar Meta Pixel en su proyecto</p>
                   </div>
                 </div>
               </div>
@@ -82,34 +82,34 @@ export default function ObservacionesYRecomendaciones() {
             >
               <div className="flex items-center gap-3 mb-6">
                 <FaLightbulb className="text-primary text-2xl" />
-                <h3 className="text-2xl font-bold text-gray-900">💡 Recomendaciones Estratégicas</h3>
+                <h3 className="text-2xl font-bold text-gray-900">Recomendaciones Estratégicas</h3>
               </div>
 
               <div className="space-y-4">
                 {[
                   {
-                    title: 'Elegir Paquete Obra Maestra',
+                    title: 'Elegir un paquete adecuado',
                     desc: 'Mejor relación calidad-precio con máximo impacto profesional',
                   },
                   {
-                    title: 'Priorizar Catálogo',
+                    title: 'Priorizar Catálogo de Productos y Servicios',
                     desc: 'Enfocarse primero en presentar tus 10 servicios de forma profesional',
                   },
                   {
                     title: 'Invertir en Contenido',
-                    desc: 'Fotograf\u00edas de proyectos y descripciones claras son cruciales',
+                    desc: 'Fotografías de proyectos y descripciones claras son cruciales',
                   },
                   {
-                    title: 'Optimizar SEO',
-                    desc: 'Fundamental para posicionarte en Google y captar clientes locales',
+                    title: 'Optimizar el contenido para posicionamiento en internet (SEO)',
+                    desc: 'Fundamental para posicionarte en Google y captar clientes',
                   },
                   {
-                    title: 'Integrar WhatsApp',
+                    title: 'WhatsApp',
                     desc: 'Canal principal de comunicación con tus clientes potenciales',
                   },
                   {
                     title: 'Analizar Métricas',
-                    desc: 'Monitorear tráfico y conversiones mensualmente',
+                    desc: 'Monitorear tráfico y conversiones para ajustar estrategias',
                   },
                   {
                     title: 'Actualizar Regularmente',
@@ -117,10 +117,10 @@ export default function ObservacionesYRecomendaciones() {
                   },
                   {
                     title: 'Crear Blog',
-                    desc: 'Artículos sobre construcción mejoran visibilidad y confianza',
+                    desc: 'Artículos sobre construcción mejoran tu visibilidad y confianza',
                   },
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-gradient-to-r from-primary/10 to-transparent rounded-lg p-3 flex gap-3">
+                ].map((item) => (
+                  <div key={`rec-${item.title}`} className="bg-gradient-to-r from-primary/10 to-transparent rounded-lg p-3 flex gap-3">
                     <div className="text-primary font-bold text-lg">✓</div>
                     <div>
                       <p className="font-semibold text-gray-900">{item.title}</p>

@@ -35,6 +35,10 @@ export interface Package {
   tiempoEntrega?: string
   opcionesPago?: OpcionPago[]
   descuentoPagoUnico?: number
+  gestionMensual?: {
+    precio: number
+    descripcion: string
+  }
 }
 
 export interface Servicio {
@@ -76,6 +80,10 @@ export interface PackageSnapshot {
     tiempoEntrega?: string
     opcionesPago?: OpcionPago[]
     descuentoPagoUnico?: number
+    gestionMensual?: {
+      precio: number
+      descripcion: string
+    }
   }
   otrosServicios: OtroServicioSnapshot[]
   costos: {

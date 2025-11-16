@@ -22,7 +22,7 @@ export default function FAQ() {
           <div className="space-y-4">
             {faqData.map((faq, index) => (
               <FAQItem
-                key={index}
+                key={`faq-${faq.question}`}
                 question={faq.question}
                 answer={faq.answer}
                 isOpen={openFAQ === index}
@@ -42,10 +42,10 @@ function FAQItem({
   isOpen,
   onToggle,
 }: {
-  question: string
-  answer: string | string[]
-  isOpen: boolean
-  onToggle: () => void
+  readonly question: string
+  readonly answer: string | string[]
+  readonly isOpen: boolean
+  readonly onToggle: () => void
 }) {
   return (
     <motion.div
@@ -78,8 +78,8 @@ function FAQItem({
           >
             <div className="px-6 py-4 bg-white/5 text-gray-100 space-y-2">
               {Array.isArray(answer) ? (
-                answer.map((line, index) => (
-                  <p key={index}>{line}</p>
+                answer.map((line) => (
+                  <p key={`answer-${line}`}>{line}</p>
                 ))
               ) : (
                 <p>{answer}</p>
@@ -93,6 +93,15 @@ function FAQItem({
 }
 
 const faqData = [
+  {
+    question: '¿Qué es SEO?',
+    answer: 'SEO (Search Engine Optimization) es el proceso de optimizar un sitio web para mejorar su visibilidad en los motores de búsqueda como Google. Esto incluye aspectos técnicos, de contenido y de experiencia del usuario para atraer tráfico orgánico de calidad.',
+  },  
+  {
+    question: '¿Qué es Meta Pixel?',
+    answer: 'Meta Pixel es una herramienta de análisis proporcionada por Meta (antes Facebook) que permite rastrear las interacciones de los usuarios en un sitio web. Ayuda a medir la efectividad de las campañas publicitarias y a optimizar la orientación de anuncios en plataformas de Meta.',
+  },  
+  
   {
     question: '¿Puedo tener acceso al panel administrativo?',
     answer: 'No. Solo el proveedor (DGTecnova) tiene acceso. El cliente ve el sitio público. No obstante, puedes acceder con permisos limitados si lo acuerdas.',
