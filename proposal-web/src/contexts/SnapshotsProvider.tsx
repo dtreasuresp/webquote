@@ -64,8 +64,13 @@ export const SnapshotsProvider = ({
         const loadedSnapshots: Record<string, PackageSnapshot | null> = {}
 
         for (const paqueteName of paquetes) {
-          const snapshot = await fetchPackageSnapshot(paqueteName)
-          loadedSnapshots[paqueteName] = snapshot
+          try {
+            const snapshot = await fetchPackageSnapshot(paqueteName)
+            loadedSnapshots[paqueteName] = snapshot || null
+          } catch (err) {
+            console.warn(`Error cargando snapshot para ${paqueteName}:`, err)
+            loadedSnapshots[paqueteName] = null
+          }
         }
 
         setSnapshots(loadedSnapshots)
