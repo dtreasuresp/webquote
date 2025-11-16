@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaArrowLeft, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
+import PackageCostSummary from '@/components/PackageCostSummary'
 import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 
 interface ServicioBase {
@@ -498,61 +499,24 @@ export default function ImperioDigitalPage() {
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-3xl font-bold mb-8 text-gray-900">💰 Inversión</h3>
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="overflow-x-auto">
-            <table className="w-full bg-white rounded-lg shadow-md overflow-hidden">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th className="px-6 py-3 text-left">Periodo</th>
-                  <th className="px-6 py-3 text-center">Desarrollo</th>
-                  <th className="px-6 py-3 text-center">Hosting</th>
-                  <th className="px-6 py-3 text-center">Mailbox</th>
-                  <th className="px-6 py-3 text-center">Dominio</th>
-                  <th className="px-6 py-3 text-center">Gestión</th>
-                  <th className="px-6 py-3 text-center">Costo</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                <tr className="bg-accent/10 font-bold hover:bg-accent/20">
-                  <td className="px-6 py-4">Pago Inicial</td>
-                  <td className="px-6 py-4 text-center">$238</td>
-                  <td className="px-6 py-4 text-center">$40</td>
-                  <td className="px-6 py-4 text-center">$4</td>
-                  <td className="px-6 py-4 text-center">$18</td>
-                  <td className="px-6 py-4 text-center">$0</td>
-                  <td className="px-6 py-4 text-center text-primary font-bold">$300 USD</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">3 Meses (Gracia)</td>
-                  <td className="px-6 py-4 text-center text-accent">N/A</td>
-                  <td className="px-6 py-4 text-center text-accent">$0</td>
-                  <td className="px-6 py-4 text-center text-accent">$0</td>
-                  <td className="px-6 py-4 text-center text-accent">$0</td>
-                  <td className="px-6 py-4 text-center text-accent">$30</td>
-                  <td className="px-6 py-4 text-center text-gray-600 font-bold">$30 USD</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Año 1</td>
-                  <td className="px-6 py-4 text-center">$0</td>
-                  <td className="px-6 py-4 text-center">$360</td>
-                  <td className="px-6 py-4 text-center">$36</td>
-                  <td className="px-6 py-4 text-center">$162</td>
-                  <td className="px-6 py-4 text-center">$30</td>
-                  <td className="px-6 py-4 text-center font-bold">$796 USD</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Año 2+</td>
-                  <td className="px-6 py-4 text-center text-accent">N/A</td>
-                  <td className="px-6 py-4 text-center">$360</td>
-                  <td className="px-6 py-4 text-center">$36</td>
-                  <td className="px-6 py-4 text-center">$162</td>
-                  <td className="px-6 py-4 text-center">$180</td>
-                  <td className="px-6 py-4 text-center font-bold">$558 USD</td>
-                </tr>
-              </tbody>
-            </table>
-            <p className="text-sm text-gray-600 mt-3">
-              ➡️ Nota: La <strong>gestión mensual ($15/mes)</strong> inicia desde el mes 2 (1 mes gratis).
-            </p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            {cargando ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Cargando información de precios...</p>
+              </div>
+            ) : snapshotImperio ? (
+              <PackageCostSummary snapshot={snapshotImperio} />
+            ) : (
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
+                <p className="text-yellow-800">
+                  No se encontró la configuración del paquete Imperio Digital. Utiliza el panel administrativo para configurarlo.
+                </p>
+              </div>
+            )}
           </motion.div>
           {/* Opciones de Pago */}
           <div className="mt-10">

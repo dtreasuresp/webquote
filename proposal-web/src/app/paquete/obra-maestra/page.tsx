@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaArrowLeft, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
+import PackageCostSummary from '@/components/PackageCostSummary'
 import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 
 interface ServicioBase {
@@ -581,62 +582,20 @@ export default function ObraMaestraPage() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="overflow-x-auto"
           >
-            <table className="w-full bg-white rounded-lg shadow-md overflow-hidden">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th className="px-6 py-3 text-left">Periodo</th>
-                  <th className="px-6 py-3 text-center">Desarrollo</th>
-                  <th className="px-6 py-3 text-center">Hosting</th>
-                  <th className="px-6 py-3 text-center">Mailbox</th>
-                  <th className="px-6 py-3 text-center">Dominio</th>
-                  <th className="px-6 py-3 text-center">Gestión</th>
-                  <th className="px-6 py-3 text-center">Costo</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                <tr className="bg-accent/10 font-bold hover:bg-accent/20">
-                  <td className="px-6 py-4">Pago Inicial</td>
-                  <td className="px-6 py-4 text-center">$200</td>
-                  <td className="px-6 py-4 text-center">$35</td>
-                  <td className="px-6 py-4 text-center">$4</td>
-                  <td className="px-6 py-4 text-center">$18</td>
-                  <td className="px-6 py-4 text-center">$0</td>
-                  <td className="px-6 py-4 text-center text-primary">$257 USD</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">3 Meses (Gracia)</td>
-                  <td className="px-6 py-4 text-center text-gray-600">N/A</td>
-                  <td className="px-6 py-4 text-center text-accent">$0</td>
-                  <td className="px-6 py-4 text-center text-accent">$0</td>
-                  <td className="px-6 py-4 text-center text-accent">$0</td>
-                  <td className="px-6 py-4 text-center">$24</td>
-                  <td className="px-6 py-4 text-center font-bold">$24 USD</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Año 1 (9 meses)</td>
-                  <td className="px-6 py-4 text-center text-gray-600">N/A</td>
-                  <td className="px-6 py-4 text-center">$315</td>
-                  <td className="px-6 py-4 text-center">$36</td>
-                  <td className="px-6 py-4 text-center">$162</td>
-                  <td className="px-6 py-4 text-center">$96</td>
-                  <td className="px-6 py-4 text-center font-bold">$809 USD</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-semibold">Año 2+</td>
-                  <td className="px-6 py-4 text-center text-gray-600">N/A</td>
-                  <td className="px-6 py-4 text-center">$315</td>
-                  <td className="px-6 py-4 text-center">$36</td>
-                  <td className="px-6 py-4 text-center">$162</td>
-                  <td className="px-6 py-4 text-center">$132</td>
-                  <td className="px-6 py-4 text-center font-bold">$645 USD</td>
-                </tr>
-              </tbody>
-            </table>
-            <p className="text-sm text-gray-600 mt-3">
-              ➡️ Nota: La <strong>gestión mensual ($12/mes)</strong> inicia desde el mes 2 (1 mes gratis).
-            </p>
+            {cargando ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Cargando información de precios...</p>
+              </div>
+            ) : snapshotObraMaestra ? (
+              <PackageCostSummary snapshot={snapshotObraMaestra} />
+            ) : (
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 text-center">
+                <p className="text-yellow-800">
+                  No se encontró la configuración del paquete Obra Maestra. Utiliza el panel administrativo para configurarlo.
+                </p>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
