@@ -5,12 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "npm run prisma:generate && next build",
-    "postbuild": "npm run prisma:migrate:ci",
+    "postbuild": "npm run prisma:migrate:ci || true",
     "start": "next start",
     "lint": "echo 'Linting disabled for production build'",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
-    "prisma:migrate:ci": "prisma migrate deploy --skip-generate || true"
+    "prisma:migrate:ci": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
