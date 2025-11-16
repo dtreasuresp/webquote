@@ -24,19 +24,18 @@ export default function GarantiasYFAQ() {
 
           <div className="grid md:grid-cols-2 gap-8 mb-16">
             {/* Proveedor Responsable */}
-            <div className="bg-accent/10 p-8 rounded-2xl border-2 border-accent">
+            <div className="bg-accent/10 p-8 rounded-2xl border-0 border-accent">
               <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
                 <FaCheckCircle className="text-accent" />
                 EL PROVEEDOR GARANTIZA:
               </h3>
               <ul className="space-y-3">
                 {[
-                  'Uptime 99.9%',
-                  'SSL/HTTPS gratis',
-                  'Backups diarios (automáticos)',
+                  'Mantener el 99.9% de tiempo activo',
+                  'Seguridad SSL/HTTPS garantizada y gratis',
+                  'Backups automáticos',
                   'Actualizaciones de seguridad',
                   'Soporte técnico',
-                  'Acceso administrativo seguro',
                   'Cambios realizados puntualmente',
                   'Diseño profesional de tu sitio',
                   'Hosting, dominio y correo funcionando',
@@ -54,7 +53,7 @@ export default function GarantiasYFAQ() {
             </div>
 
             {/* Cliente Responsable */}
-            <div className="bg-neutral-50 p-8 rounded-2xl border-2 border-neutral-300">
+            <div className="bg-neutral-50 p-8 rounded-2xl border-0 border-neutral-300">
               <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
                 <FaTimesCircle className="text-primary" />
                 EL CLIENTE ES RESPONSABLE DE:
@@ -62,24 +61,19 @@ export default function GarantiasYFAQ() {
               <ul className="space-y-3">
                 {[
                   'Pagar las inversiones acordadas a tiempo',
-                  'Proporcionar contenidos/fotos cuando se solicita',
-                  'Aprobar diseños y funcionalidades puntualmente',
+                  'Proporcionar contenidos/fotos necesarios',
+                  'Aprobar diseños y funcionalidades',
                   'Usar el sitio legalmente',
                   'Notificar si hay problemas',
                   'Solicitar cambios dentro del alcance acordado',
                   'Mantener la confidencialidad de accesos',
-                  'No transferir el sitio sin consentimiento', 
+                  'No transferir el sitio sin nuestro consentimiento', 
                   'Cumplir con las políticas de uso',
                   'Respetar los términos de servicio',
-                  'No realizar modificaciones no autorizadas',
-                  'Proporcionar feedback constructivo',
-                  'Colaborar en pruebas y revisiones',
-                  'Mantener comunicación abierta',
                   'Seguir las recomendaciones de seguridad',
-                  'Respetar los plazos acordados',
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3 text-gray-800">
-                    <FaCheckCircle className="text-primary mt-1 flex-shrink-0" />
+                    <FaTimesCircle className="text-primary mt-1 flex-shrink-0" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -88,7 +82,7 @@ export default function GarantiasYFAQ() {
           </div>
 
           {/* Políticas de Cancelación */}
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-8 rounded-2xl border-2 border-red-300 mb-16">
+          <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-8 rounded-2xl border-0 border-red-300 mb-16">
             <h3 className="text-2xl font-bold mb-6 text-red-900">
               📋 POLÍTICAS DE CANCELACIÓN
             </h3>
@@ -116,7 +110,7 @@ export default function GarantiasYFAQ() {
           </div>
 
           {/* Si Incumple el Proveedor */}
-          <div className="bg-gradient-to-r from-secondary/10 to-neutral-100 p-8 rounded-2xl border-2 border-secondary mb-16">
+          <div className="bg-gradient-to-r from-secondary/10 to-neutral-100 p-8 rounded-2xl border-0 border-secondary mb-16">
             <h3 className="text-2xl font-bold mb-6 text-secondary">
               ⚖️ SI EL PROVEEDOR INCUMPLE
             </h3>
@@ -154,7 +148,7 @@ export default function GarantiasYFAQ() {
             Preguntas Frecuentes
           </h2>
 
-          <div className="space-y-4 max-w-3xl mx-auto">
+          <div className="space-y-4">
             {faqData.map((faq, index) => (
               <FAQItem
                 key={index}
@@ -211,7 +205,7 @@ function FAQItem({
             transition={{ duration: 0.3 }}
             className="border-t-2 border-gray-200"
           >
-            <div className="px-6 py-4 bg-white text-gray-700 space-y-2">
+            <div className="px-6 py-4 bg-white text-gray-800 space-y-2">
               {Array.isArray(answer) ? (
                 answer.map((line, index) => (
                   <p key={index}>{line}</p>

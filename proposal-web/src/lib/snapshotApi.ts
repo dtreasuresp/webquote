@@ -113,7 +113,7 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
   }
 }
 
-// Obtener todos los snapshots
+// Obtener snapshots activos (para la página principal)
 export async function obtenerSnapshots() {
   try {
     const response = await fetch('/api/snapshots', {
@@ -127,6 +127,24 @@ export async function obtenerSnapshots() {
     return snapshots.map(convertDBToSnapshot)
   } catch (error) {
     console.error('Error en obtenerSnapshots:', error)
+    return []
+  }
+}
+
+// Obtener todos los snapshots (activos e inactivos) - para administrador
+export async function obtenerSnapshotsCompleto() {
+  try {
+    const response = await fetch('/api/snapshots/all', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    if (!response.ok) throw new Error('Error al obtener snapshots completo')
+
+    const snapshots: SnapshotFromDB[] = await response.json()
+    return snapshots.map(convertDBToSnapshot)
+  } catch (error) {
+    console.error('Error en obtenerSnapshotsCompleto:', error)
     return []
   }
 }

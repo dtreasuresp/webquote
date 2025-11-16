@@ -27,6 +27,10 @@ model PackageSnapshot {
   descuento       Int
   tipo            String?
   descripcion     String?
+  emoji           String?
+  tagline         String?
+  costoInfra      Float?
+  tiempoEntrega   String?
   
   // Otros Servicios (JSON)
   otrosServicios  Json

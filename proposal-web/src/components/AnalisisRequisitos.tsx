@@ -60,86 +60,84 @@ export default function AnalisisRequisitos() {
 
             {/* Identidad Visual */}
             <InfoCard title="🎨 Identidad Visual">
-              <div className="grid md:grid-cols-4 gap-[40px]">
+              <div className="grid md:grid-cols-4 gap-6 mb-8">
+                {/* Columna 1: Colores Corporativos */}
                 <div>
-                  <h4 className="font-bold mb-2">Colores Corporativos</h4>
-                  <p className="text-sm mb-2 text-gray-700">Deseados por ti</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 bg-primary rounded-lg shadow-md border-4 border-primary"></div>
-                    <div>
-                      <p className="font-semibold">Rojo</p>
-                      <p className="text-gray-600">#DC2626</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 mt-4">
-                    <div className="w-16 h-16 bg-black rounded-lg shadow-md border-4 border-black"></div>
-                    <div>
-                      <p className="font-semibold">Negro</p>
-                      <p className="text-gray-600">#000000</p>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-bold mb-2">Colores a evitar</h4>
-                  <p className="text-sm mb-2 text-gray-700">Evitar su uso en todo el sitio</p>
-                  <ul className="space-y-2 text-gray-700">
-                  <div className="flex items-center gap-3 mt-4">
-                    <div className="w-16 h-16 bg-pink-500 rounded-lg shadow-md border-4 border-pink-500"></div>
-                    <div>
-                      <p className="font-semibold">Rosado</p>
-                      <p className="text-gray-600">#FFC0CB</p>
-                    </div>
-                  </div>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-bold mb-2">Estilo visual</h4>
-                  <p className="text-sm mb-2 text-gray-700">Profesional y Corporativo</p>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-16 bg-primary rounded-lg shadow-md border-4 border-primary"></div>
+                  <h4 className="font-bold text-lg mb-4 text-primary">Colores Corporativos</h4>
+                  <p className="text-sm mb-4 text-gray-700">Deseados por ti</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-primary rounded-lg shadow-md border-4 border-primary flex-shrink-0"></div>
                       <div>
-                        <p className="font-semibold text-sm">Rojo</p>
-                        <p className="text-gray-600 text-xs">#DC2626</p>
+                        <p className="font-semibold text-gray-900">Rojo</p>
+                        <p className="text-sm text-gray-600">#DC2626</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-16 bg-black rounded-lg shadow-md border-4 border-black"></div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-black rounded-lg shadow-md border-4 border-black flex-shrink-0"></div>
                       <div>
-                        <p className="font-semibold text-sm">Negro</p>
-                        <p className="text-gray-600 text-xs">#000000</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-16 bg-gradient-to-br from-primary to-black rounded-lg shadow-md border-gray-300"></div>
-                      <div>
-                        <p className="font-semibold text-sm">Mixto</p>
-                        <p className="text-gray-600 text-xs">Rojo-Negro</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-16 bg-accent rounded-lg shadow-md border-4 border-accent"></div>
-                      <div>
-                        <p className="font-semibold text-sm">Dorado</p>
-                        <p className="text-gray-600 text-xs">#F59E0B</p>
+                        <p className="font-semibold text-gray-900">Negro</p>
+                        <p className="text-sm text-gray-600">#000000</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Columna 2: Colores a evitar */}
                 <div>
-                  <h4 className="font-bold mb-2 text-left">Logo de tu negocio</h4>
-                  <div className="flex items-left justify-left">
-                      <Image
-                        src={Logo}
-                        alt="Logo de Urbanísima Constructora S.R.L"
-                        width={Math.max(64, Math.round(Logo.width * 0.5))}
-                        height={Math.round(Logo.height * (Math.max(64, Math.round(Logo.width * 0.5)) / Logo.width))}
-                        className="rounded-lg shadow-md border-4 border-accent/0 bg-white"
-                        placeholder="empty"
-                        sizes="(max-width: 768px) 160px, 224px"
-                        priority
-                      />
+                  <h4 className="font-bold text-lg mb-4 text-primary">Colores a evitar</h4>
+                  <p className="text-sm mb-4 text-gray-700">Evitar su uso en todo el sitio</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-pink-500 rounded-lg shadow-md border-4 border-pink-500 flex-shrink-0"></div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Rosado</p>
+                      <p className="text-sm text-gray-600">#FFC0CB</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Columna 3: Estilo visual */}
+                <div>
+                  <h4 className="font-bold text-lg mb-4 text-primary">Estilo visual</h4>
+                  <p className="text-sm mb-4 text-gray-700">Profesional y Corporativo</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-10 h-10 bg-primary rounded-lg shadow-md border-4 border-primary mb-2"></div>
+                      <p className="font-semibold text-xs text-gray-900">Rojo</p>
+                      <p className="text-xs text-gray-600">#DC2626</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-10 h-10 bg-black rounded-lg shadow-md border-4 border-black mb-2"></div>
+                      <p className="font-semibold text-xs text-gray-900">Negro</p>
+                      <p className="text-xs text-gray-600">#000000</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary to-black rounded-lg shadow-md mb-2"></div>
+                      <p className="font-semibold text-xs text-gray-900">Mixto</p>
+                      <p className="text-xs text-gray-600">Rojo-Negro</p>
+                    </div>
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-10 h-10 bg-accent rounded-lg shadow-md border-4 border-accent mb-2"></div>
+                      <p className="font-semibold text-xs text-gray-900">Dorado</p>
+                      <p className="text-xs text-gray-600">#F59E0B</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Columna 4: Logo de tu negocio */}
+                <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border-2 border-gray-200">
+                  <h4 className="font-bold text-lg mb-6 text-primary">Logo</h4>
+                  <div className="flex items-center justify-center p-4 bg-white rounded-lg shadow-md">
+                    <Image
+                      src={Logo}
+                      alt="Logo de Urbanísima Constructora S.R.L"
+                      width={Math.max(80, Math.round(Logo.width * 0.4))}
+                      height={Math.round(Logo.height * (Math.max(80, Math.round(Logo.width * 0.4)) / Logo.width))}
+                      className="rounded-lg"
+                      placeholder="empty"
+                      sizes="(max-width: 768px) 150px, 200px"
+                      priority
+                    />
                   </div>
                 </div>
               </div>

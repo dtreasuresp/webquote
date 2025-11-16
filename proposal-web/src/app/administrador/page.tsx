@@ -6,7 +6,8 @@ import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import { jsPDF } from 'jspdf'
-import { obtenerSnapshots, crearSnapshot, actualizarSnapshot, eliminarSnapshot } from '@/lib/snapshotApi'
+import { obtenerSnapshots, crearSnapshot, actualizarSnapshot, eliminarSnapshot, obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
+import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
 
 interface ServicioBase {
   id: string
@@ -62,6 +63,10 @@ interface PackageSnapshot {
     descuento: number
     tipo?: string
     descripcion?: string
+    emoji?: string
+    tagline?: string
+    costoInfra?: number
+    tiempoEntrega?: string
   }
   otrosServicios: OtroServicioSnapshot[]
   costos: {
@@ -74,6 +79,9 @@ interface PackageSnapshot {
 }
 
 export default function Administrador() {
+  // Obtener función de refresh global
+  const refreshSnapshots = useSnapshotsRefresh()
+
   // Estados principales
   const [serviciosBase, setServiciosBase] = useState<ServicioBase[]>([
     { id: '1', nombre: 'Hosting', precio: 28, mesesGratis: 3, mesesPago: 9 },
@@ -143,8 +151,8 @@ export default function Administrador() {
         setCargandoSnapshots(true)
         setErrorSnapshots(null)
         
-        // Cargar snapshots desde la API
-        const snapshotsDelServidor = await obtenerSnapshots()
+        // Cargar snapshots desde la API (activos e inactivos)
+        const snapshotsDelServidor = await obtenerSnapshotsCompleto()
         setSnapshots(snapshotsDelServidor)
       } catch (error) {
         console.error('Error cargando snapshots:', error)
@@ -420,6 +428,9 @@ export default function Administrador() {
       setServiciosOpcionales([])
       setNuevoServicio({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
 
+      // Llamar refresh global para notificar a todos los componentes
+      await refreshSnapshots()
+
       alert('✅ Paquete creado y guardado correctamente')
     } catch (error) {
       console.error('Error al crear paquete:', error)
@@ -445,6 +456,10 @@ export default function Administrador() {
       // Actualizar en la API
       const snapshotActualizado = await actualizarSnapshot(actualizado.id, actualizado)
       setSnapshots(snapshots.map(s => s.id === actualizado.id ? snapshotActualizado : s))
+      
+      // Llamar refresh global para notificar a todos los componentes
+      await refreshSnapshots()
+      
       setShowModalEditar(false)
       setSnapshotEditando(null)
       alert('✅ Paquete actualizado correctamente')
@@ -494,6 +509,10 @@ export default function Administrador() {
         actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
         const snapshotActualizado = await actualizarSnapshot(actualizado.id, actualizado)
         setSnapshots(prev => prev.map(s => s.id === actualizado.id ? snapshotActualizado : s))
+        
+        // Llamar refresh global para notificar a otros componentes
+        await refreshSnapshots()
+        
         const savedJson = JSON.stringify({
           id: snapshotActualizado.id,
           nombre: snapshotActualizado.nombre,
@@ -577,6 +596,10 @@ export default function Administrador() {
       try {
         await eliminarSnapshot(id)
         setSnapshots(snapshots.filter(s => s.id !== id))
+        
+        // Llamar refresh global para notificar a todos los componentes
+        await refreshSnapshots()
+        
         alert('✅ Paquete eliminado correctamente')
       } catch (error) {
         console.error('Error al eliminar snapshot:', error)
@@ -740,7 +763,7 @@ export default function Administrador() {
     doc.save(`presupuesto-${snapshot.nombre.replace(/\s+/g, '-')}.pdf`)
   }
 
-  const guardarConfiguracionActual = () => {
+  const guardarConfiguracionActual = async () => {
     const configActual = {
       serviciosBase,
       gestion,
@@ -751,55 +774,16 @@ export default function Administrador() {
     localStorage.setItem('configuracionAdministrador', JSON.stringify(configActual))
     // Guardar también los snapshots creados
     localStorage.setItem('paquetesSnapshots', JSON.stringify(snapshots))
-    alert('✅ Configuración y paquetes guardados correctamente en localStorage')
+    
+    // Disparar refresh global para sincronizar todos los componentes
+    console.log('🔄 Refresh global disparado desde botón Guardar')
+    await refreshSnapshots()
+    
+    alert('✅ Configuración y paquetes guardados correctamente')
   }
 
   // ---- Autoguardado de configuración general fuera del modal ----
-  const [configAutoSaveStatus, setConfigAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
-  const [lastConfigJson, setLastConfigJson] = useState<string | null>(null)
-  const configAutoSaveDelay = 1000 // ms
-  const configAutoSaveRef = useRef<NodeJS.Timeout | null>(null)
-
-  const buildConfigJson = () => JSON.stringify({
-    serviciosBase,
-    gestion,
-    paqueteActual,
-    serviciosOpcionales,
-  })
-
-  useEffect(() => {
-    // Evitar autoguardado antes de que carguen snapshots por primera vez
-    if (snapshots.length === 0) return
-
-    const current = buildConfigJson()
-    if (lastConfigJson && current === lastConfigJson) return
-
-    if (configAutoSaveRef.current) clearTimeout(configAutoSaveRef.current)
-    configAutoSaveRef.current = setTimeout(() => {
-      try {
-        setConfigAutoSaveStatus('saving')
-        const configActual = {
-          serviciosBase,
-          gestion,
-          paqueteActual,
-          serviciosOpcionales,
-          timestamp: new Date().toISOString(),
-        }
-        localStorage.setItem('configuracionAdministrador', JSON.stringify(configActual))
-        localStorage.setItem('paquetesSnapshots', JSON.stringify(snapshots))
-        setLastConfigJson(current)
-        setConfigAutoSaveStatus('saved')
-        setTimeout(() => setConfigAutoSaveStatus('idle'), 1500)
-      } catch (e) {
-        console.error('Error autoguardando configuración:', e)
-        setConfigAutoSaveStatus('error')
-        setTimeout(() => setConfigAutoSaveStatus('idle'), 4000)
-      }
-    }, configAutoSaveDelay)
-    return () => {
-      if (configAutoSaveRef.current) clearTimeout(configAutoSaveRef.current)
-    }
-  }, [serviciosBase, gestion, paqueteActual, serviciosOpcionales, snapshots])
+  // Autoguardado general fuera del modal eliminado: solo se mantiene autoguardado dentro del modal de edición
 
   return (
     <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-secondary via-secondary-light to-secondary-dark">
@@ -826,13 +810,6 @@ export default function Administrador() {
               <p className="text-xl text-neutral-200">
                 Calculadora de Presupuestos y Gestión de Servicios
               </p>
-              {configAutoSaveStatus !== 'idle' && (
-                <p className="text-sm mt-2">
-                  {configAutoSaveStatus === 'saving' && <span className="text-accent animate-pulse">Guardando configuración...</span>}
-                  {configAutoSaveStatus === 'saved' && <span className="text-green-400">✓ Configuración guardada</span>}
-                  {configAutoSaveStatus === 'error' && <span className="text-red-400">❌ Error al guardar configuración</span>}
-                </p>
-              )}
             </div>
             <div className="flex flex-wrap gap-3 items-center">
               <motion.button
@@ -1539,11 +1516,11 @@ export default function Administrador() {
                 className="bg-white rounded-2xl shadow-xl border-l-4 border-secondary p-8"
               >
                 <h2 className="text-2xl font-bold text-secondary mb-6">
-                  Paquetes Creados ({snapshots.length})
+                  Paquetes Creados ({snapshots.filter(s => s.activo).length})
                 </h2>
 
                 <div className="space-y-6 md:grid md:grid-cols-2 gap-10 md:space-y-0">
-                  {snapshots.map((snapshot, idx) => (
+                  {snapshots.filter(s => s.activo).map((snapshot, idx) => (
                     <motion.div
                       key={snapshot.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -1591,6 +1568,9 @@ export default function Administrador() {
                                     actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
                                     const guardado = await actualizarSnapshot(actualizado.id, actualizado)
                                     setSnapshots(prev => prev.map(s => s.id === snapshot.id ? guardado : s))
+                                    console.log(`✅ Estado Activo actualizado para ${snapshot.nombre}: ${marcado}`)
+                                    // Disparar refresh global inmediatamente
+                                    await refreshSnapshots()
                                   } catch (err) {
                                     console.error('Error al autoguardar estado activo:', err)
                                     // Revertir si falla
@@ -1807,6 +1787,90 @@ export default function Administrador() {
               </motion.div>
             )}
 
+            {/* Sección 5: Paquetes Inactivos */}
+            {snapshots.filter(s => !s.activo).length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-2xl shadow-xl border-l-4 border-neutral-400 p-8"
+              >
+                <h2 className="text-2xl font-bold text-neutral-500 mb-6">
+                  🗂️ Paquetes Inactivos ({snapshots.filter(s => !s.activo).length})
+                </h2>
+
+                <div className="space-y-4">
+                  {snapshots.filter(s => !s.activo).map((snapshot, idx) => (
+                    <motion.div
+                      key={snapshot.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="bg-neutral-50 rounded-lg border-2 border-dashed border-neutral-300 p-4 opacity-60 hover:opacity-100 transition-opacity"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-neutral-600 text-lg">{snapshot.nombre}</h3>
+                          {snapshot.paquete.tipo && (
+                            <p className="text-xs font-semibold tracking-wide text-neutral-400 uppercase mt-1">
+                              🏆 {snapshot.paquete.tipo}
+                            </p>
+                          )}
+                          {snapshot.paquete.descripcion && (
+                            <p className="text-sm text-neutral-500 italic mt-1">
+                              {snapshot.paquete.descripcion}
+                            </p>
+                          )}
+                          <p className="text-sm text-neutral-400 mt-2">
+                            {new Date(snapshot.createdAt).toLocaleDateString('es-ES')}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 relative">
+                            <input
+                              id={`snapshot-inactivo-${snapshot.id}`}
+                              type="checkbox"
+                              checked={snapshot.activo}
+                              onChange={async (e) => {
+                                const marcado = e.target.checked
+                                const provisional = { ...snapshot, activo: marcado }
+                                setSnapshots(prev => prev.map(s => s.id === snapshot.id ? provisional : s))
+                                try {
+                                  const actualizado = { ...provisional }
+                                  actualizado.costos.inicial = calcularCostoInicialSnapshot(actualizado)
+                                  actualizado.costos.año1 = calcularCostoAño1Snapshot(actualizado)
+                                  actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
+                                  const guardado = await actualizarSnapshot(actualizado.id, actualizado)
+                                  setSnapshots(prev => prev.map(s => s.id === snapshot.id ? guardado : s))
+                                  console.log(`✅ Estado Activo actualizado para ${snapshot.nombre}: ${marcado}`)
+                                  // Disparar refresh global inmediatamente
+                                  await refreshSnapshots()
+                                } catch (err) {
+                                  console.error('Error al actualizar estado activo:', err)
+                                  setSnapshots(prev => prev.map(s => s.id === snapshot.id ? { ...s, activo: !marcado } : s))
+                                  alert('❌ No se pudo actualizar el estado. Intenta nuevamente.')
+                                }
+                              }}
+                              className="w-5 h-5 cursor-pointer"
+                            />
+                            <label htmlFor={`snapshot-inactivo-${snapshot.id}`} className="font-semibold text-neutral-500 text-sm">Activar</label>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleEliminarSnapshot(snapshot.id)}
+                            className="w-9 h-9 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
+                          >
+                            <FaTrash size={14} />
+                          </motion.button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
           </div>
         </motion.div>
       </div>
@@ -1867,8 +1931,8 @@ export default function Administrador() {
                     <p id="ayuda-nombre-paquete" className="mt-1 text-xs text-neutral-500">Nombre visible en listado y PDF.</p>
                   </div>
 
-                  {/* Tipo y Descripción */}
-                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  {/* Tipo, Descripción, Emoji y Tagline */}
+                  <div className="grid md:grid-cols-4 gap-4 mb-4">
                     <div>
                       <label className="block font-semibold text-secondary mb-2 text-sm">
                         🏆 Tipo de Paquete
@@ -1886,6 +1950,26 @@ export default function Administrador() {
                           })
                         }
                         placeholder="Ej: Básico"
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        😊 Emoji del Paquete
+                      </label>
+                      <input
+                        type="text"
+                        value={snapshotEditando.paquete.emoji || ''}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              emoji: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Ej: 🥉"
                         className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                       />
                     </div>
@@ -1908,6 +1992,75 @@ export default function Administrador() {
                         placeholder="Ej: Paquete personalizado para empresas..."
                         className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                       />
+                    </div>
+                  </div>
+
+                  {/* Tagline, CostoInfra y TiempoEntrega */}
+                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    <div className="md:col-span-2">
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        ✨ Tagline (Subtítulo Hero)
+                      </label>
+                      <input
+                        type="text"
+                        value={snapshotEditando.paquete.tagline || ''}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              tagline: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Ej: Presencia digital confiable, simple pero efectiva"
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        ⏱️ Tiempo de Entrega
+                      </label>
+                      <input
+                        type="text"
+                        value={snapshotEditando.paquete.tiempoEntrega || ''}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              tiempoEntrega: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="Ej: 4 Semanas"
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Costo Infraestructura */}
+                  <div className="grid md:grid-cols-1 gap-4">
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        💰 Costo de Infraestructura (USD)
+                      </label>
+                      <input
+                        type="number"
+                        value={snapshotEditando.paquete.costoInfra || 0}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              costoInfra: parseFloat(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                        min="0"
+                      />
+                      <p className="mt-1 text-xs text-neutral-500">Suma total: hosting + mailbox + dominio. Ej: 57 USD</p>
                     </div>
                   </div>
                 </div>

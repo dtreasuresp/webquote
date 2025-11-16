@@ -21,6 +21,10 @@ export interface Package {
   activo: boolean
   tipo?: string
   descripcion?: string
+  emoji?: string
+  tagline?: string
+  costoInfra?: number
+  tiempoEntrega?: string
 }
 
 export interface Servicio {
@@ -54,6 +58,10 @@ export interface PackageSnapshot {
     descuento: number
     tipo?: string
     descripcion?: string
+    emoji?: string
+    tagline?: string
+    costoInfra?: number
+    tiempoEntrega?: string
   }
   otrosServicios: OtroServicioSnapshot[]
   costos: {

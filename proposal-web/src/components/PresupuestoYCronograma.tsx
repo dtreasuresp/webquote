@@ -8,7 +8,8 @@ import {
   getHostingRange, 
   getDomainRange, 
   getMailboxRange, 
-  getManagementRange 
+  getManagementRange,
+  getOtherServicesInfo 
 } from '@/lib/utils/priceRangeCalculator'
 
 export default function PresupuestoYCronograma() {
@@ -61,6 +62,24 @@ export default function PresupuestoYCronograma() {
                       <BudgetItem label="Dominio" value={getDomainRange(snapshots)} />
                       <BudgetItem label="Correo" value={getMailboxRange(snapshots)} />
                       <BudgetItem label="Gestión" value={getManagementRange(snapshots)} />
+                      {getOtherServicesInfo(snapshots).length > 0 && (
+                        <>
+                          <div className="border-t-2 border-gray-300 pt-3 mt-3">
+                            <p className="font-semibold text-gray-900 text-sm mb-3">Servicios Adicionales</p>
+                          </div>
+                          {getOtherServicesInfo(snapshots).map((servicio) => (
+                            <BudgetItem
+                              key={servicio.nombre}
+                              label={servicio.nombre}
+                              value={
+                                servicio.precioMin === servicio.precioMax
+                                  ? `$${servicio.precioMin}`
+                                  : `$${servicio.precioMin} - $${servicio.precioMax}`
+                              }
+                            />
+                          ))}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -149,33 +168,7 @@ export default function PresupuestoYCronograma() {
             </div>
           </div>
 
-          {/* Hitos del Proyecto */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary via-primary-dark to-secondary text-white p-12 rounded-2xl border-2 border-accent"
-          >
-            <h3 className="text-3xl font-bold mb-8"> Hitos Principales del Proyecto</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              {[
-                { icon: '📋', title: 'Aprobación', desc: 'Firma de contrato y pago inicial' },
-                { icon: '🎨', title: 'Diseño', desc: 'Aprobación de mockups y wireframes' },
-                { icon: '⚙️', title: 'Desarrollo', desc: 'Implementación técnica completada' },
-                { icon: '✅', title: 'Testing', desc: 'QA y correcciones finales' },
-                { icon: '🚀', title: 'Lanzamiento', desc: 'Publicación en producción' },
-                { icon: '📊', title: 'Reporte', desc: 'Capacitación y documentación' },
-              ].map((item) => (
-                <div key={item.title} className="flex gap-4">
-                  <div className="text-4xl">{item.icon}</div>
-                  <div>
-                    <h4 className="font-bold text-lg">{item.title}</h4>
-                    <p className="text-sm text-gray-200">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+          
         </motion.div>
       </div>
     </section>

@@ -5,7 +5,7 @@ import { FaWhatsapp, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCheckCircle } from '
 
 export default function Contacto() {
   return (
-    <section id="contacto" className="py-20 px-4 bg-gradient-to-br from-primary to-primary-dark text-white">
+    <section id="contacto" className="py-12 px-4 bg-gradient-to-br from-secondary via-secondary-light to-secondary-dark text-white">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -13,128 +13,115 @@ export default function Contacto() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4">
-            Próximos Pasos
-          </h2>
-          <p className="text-center text-xl mb-12 text-gray-100">
-            Ya sabes qué necesitas. Ya sabes qué cuesta. Ya sabes qué obtienes.
-          </p>
+          {/* Call to Action Principal + Canales de Comunicación Integrados */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="bg-white/10 backdrop-blur-sm text-white p-8 rounded-xl shadow-lg border border-white/20 mb-8"
+          >
+            <h3 className="text-3xl md:text-4xl font-bold mb-3 text-white text-center">
+              ¿Listo para Transformar tu Presencia Digital?
+            </h3>
+            <p className="text-sm mb-6 text-gray-100 max-w-3xl mx-auto text-center">
+              Tienes toda la información necesaria para tomar una decisión informada. 
+              Nuestro equipo está preparado para comenzar tu proyecto.
+            </p>
 
-          {/* Pasos */}
-          <div className="grid md:grid-cols-5 gap-4 mb-16">
-            {[
-              { num: 1, label: 'REVISIÓN', desc: 'Lee esta propuesta detenidamente' },
-              { num: 2, label: 'DECISIÓN', desc: 'Elige el paquete que más se ajuste a tus necesidades' },
-              { num: 3, label: 'COMUNICACIÓN', desc: 'Contactanos para aclaraciones sobre cualquier aspecto que necesites' },
-              { num: 4, label: 'APROBACIÓN', desc: 'Confirma tu aceptación. Puedes usar el sitio para hacerlo o podemos efectuar una reunión' },
-              { num: 5, label: '¡COMENZAMOS!', desc: 'Inicio del proyecto' },
-            ].map((step, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white/10 backdrop-blur-sm p-6 rounded-xl text-center hover:bg-white/20 transition-all"
+            {/* Canales de Comunicación Integrados */}
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <motion.a
+                whileHover={{ y: -3 }}
+                href="https://wa.me/5358569291?text=Hola,%20estoy%20interesado%20en%20la%20propuesta"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/10 backdrop-blur-sm text-white p-5 rounded-lg shadow-md hover:shadow-lg hover:bg-white/20 transition-all group border border-white/20"
               >
-                <div className="text-4xl font-bold mb-2 text-accent">{step.num}</div>
-                <div className="font-bold mb-2">{step.label}</div>
-                <div className="text-sm text-gray-200">{step.desc}</div>
-                {index < 4 && (
-                  <div className="hidden md:block absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2">
-                    <div className="text-2xl">→</div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
+                <h4 className="text-sm font-bold mb-1 text-white">WhatsApp</h4>
+                <p className="text-gray-200 mb-1 text-xs">Respuesta inmediata</p>
+                <p className="font-semibold text-xs text-gray-100">+535 856 9291</p>
+                <div className="mt-3 pt-3 border-t border-white/20">
+                  <span className="inline-block bg-primary text-white px-3 py-1.5 rounded text-xs font-medium group-hover:bg-primary/90 transition-colors">
+                    Iniciar Chat →
+                  </span>
+                </div>
+              </motion.a>
 
-          {/* Opciones de contacto */}
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              href="https://wa.me/5358569291"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-accent/30 transition-all"
-            >
-              <FaWhatsapp className="text-4xl mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">WhatsApp</h3>
-              <p className="text-gray-200 mb-4">Mensaje directo y rápido</p>
-              <p className="font-bold">+535 856 9291</p>
-            </motion.a>
+              <motion.a
+                whileHover={{ y: -3 }}
+                href="mailto:dgtecnova@gmail.com?subject=Consulta sobre Propuesta&body=Hola, me interesa conocer más detalles sobre..."
+                className="bg-white/10 backdrop-blur-sm text-white p-5 rounded-lg shadow-md hover:shadow-lg hover:bg-white/20 transition-all group border border-white/20"
+              >
+                <h4 className="text-sm font-bold mb-1 text-white">Correo Electrónico</h4>
+                <p className="text-gray-200 mb-1 text-xs">Comunicación formal</p>
+                <p className="font-semibold text-xs break-all text-gray-100">dgtecnova@gmail.com</p>
+                <div className="mt-3 pt-3 border-t border-white/20">
+                  <span className="inline-block bg-primary text-white px-3 py-1.5 rounded text-xs font-medium group-hover:bg-primary/90 transition-colors">
+                    Enviar Email →
+                  </span>
+                </div>
+              </motion.a>
 
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              href="mailto:dgtecnova@gmail.com"
-              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-primary/30 transition-all"
-            >
-              <FaEnvelope className="text-4xl mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">Email</h3>
-              <p className="text-gray-200 mb-4">Detallado y profesional</p>
-              <p className="font-bold break-all">dgtecnova@gmail.com</p>
-            </motion.a>
+              <motion.a
+                whileHover={{ y: -3 }}
+                href="tel:+5358569291"
+                className="bg-white/10 backdrop-blur-sm text-white p-5 rounded-lg shadow-md hover:shadow-lg hover:bg-white/20 transition-all group border border-white/20"
+              >
+                <h4 className="text-sm font-bold mb-1 text-white">Línea Directa</h4>
+                <p className="text-gray-200 mb-1 text-xs">Atención personalizada</p>
+                <p className="font-semibold text-xs text-gray-100">+535 856 9291</p>
+                <div className="mt-3 pt-3 border-t border-white/20">
+                  <span className="inline-block bg-primary text-white px-3 py-1.5 rounded text-xs font-medium group-hover:bg-primary/90 transition-colors">
+                    Llamar Ahora →
+                  </span>
+                </div>
+              </motion.a>
+            </div>
 
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              href="tel:+5358569291"
-              className="bg-white/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:bg-secondary/30 transition-all"
-            >
-              <FaPhone className="text-4xl mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">Llamada</h3>
-              <p className="text-gray-200 mb-4">Conversación directa</p>
-              <p className="font-bold">+535 856 9291</p>
-            </motion.a>
-          </div>
+            <p className="text-center text-gray-200 text-xs">
+              Elige el canal que prefieras. Estamos disponibles para responder tus consultas.
+            </p>
+          </motion.div>
 
           {/* Información de Ubicación */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl text-center mb-12"
+            className="bg-white/10 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-white/20"
           >
-            {/* Mapa de Google */}
-            <div className="order-2 md:order-1">
-              <div className="bg-white/5 backdrop-blur-sm p-3 md:p-1 rounded-2xl shadow-xl grid md:grid-cols-1 gap-5 mb-16">
-                <div className="aspect-[6/2] w-full overflow-hidden rounded-xl">
-                  <iframe
-                    className="w-full h-full border-0"
-                    loading="lazy"
-                    allowFullScreen
-                    referrerPolicy="no-referrer-when-downgrade"
-                    src={`https://www.google.com/maps?q=${encodeURIComponent('Arroyo & Lindero, Centro Habana, La Habana, Cuba')}&output=embed`}
-                    title="Ubicación DGTECNOVA"
-                  />
-                </div>
+            <h3 className="text-lg font-bold text-center mb-4 text-white">Nuestra oficina está aquí</h3>
+            
+            <div className="bg-white rounded-lg overflow-hidden shadow-xl mb-4">
+              <div className="aspect-[6/2] w-full">
+                <iframe
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  src={`https://www.google.com/maps?q=${encodeURIComponent('Arroyo & Lindero, Centro Habana, La Habana, Cuba')}&output=embed`}
+                  title="Ubicación DGTECNOVA"
+                />
               </div>
-                <div className="mt-1 flex items-start gap-3 text-center justify-center">
-                  <FaMapMarkerAlt className="text-2xl mt-1" />
-                  <div className="text-sm">
-                    <p>
-                      <strong className="font-semibold">Arroyo 203</strong>{' '}
-                      <span className="text-gray-200">e/ Lindero y Nueva del Pilar</span>{' '}
-                      <span className="text-gray-200">Centro Habana, La Habana, CUBA</span>
-                    </p>
-                    <p className="text-gray-300 mt-1">(Con cita previa)</p>
+            </div>
+
+            <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+              <div className="flex items-start gap-3 justify-center">
+                <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <FaMapMarkerAlt className="text-white text-sm" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm mb-1">
+                    <strong className="font-bold text-primary">Arroyo 203</strong>{' '}
+                    <span className="text-gray-200">entre Lindero y Nueva del Pilar</span>
+                  </p>
+                  <p className="text-gray-300 mb-1.5 text-xs">Centro Habana, La Habana, CUBA</p>
+                  <div className="inline-block bg-primary/20 px-2 py-1 rounded border border-primary">
+                    <p className="text-xs font-medium text-primary">⏰ Cita previa</p>
                   </div>
                 </div>
+              </div>
             </div>
-          </motion.div>
-
-          {/* Call to Action Principal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="bg-white text-primary p-12 rounded-2xl text-center shadow-2xl"
-          >
-            <h3 className="text-3xl font-bold mb-4">
-              ¿Qué falta?
-            </h3>
-            <p className="text-xl mb-1 text-gray-700">
-              Solo tu decisión de transformar tu presencia digital
-            </p>
           </motion.div>
 
           {/* Footer */}
@@ -142,15 +129,15 @@ export default function Contacto() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="mt-16 text-center text-gray-300 border-t border-white/20 pt-8"
+            className="mt-8 text-center text-gray-300 border-t border-white/10 pt-4"
           >
-            <p className="text-sm mb-2">
+            <p className="text-xs mb-1 text-gray-100">
               Daniel Treasure Espinosa | CEO DGTECNOVA
             </p>
-            <p className="text-sm mb-4">
-              Propuesta actualizada: 11 de noviembre de 2025 | Versión: 1.0
+            <p className="text-xs text-gray-300">
+              Propuesta actualizada: 15 de noviembre de 2025 | Versión: 1.0
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-xs text-gray-500">
               © 2025 DGTECNOVA. Todos los derechos reservados.
             </p>
           </motion.div>

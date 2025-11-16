@@ -50,27 +50,8 @@ export default function Paquetes() {
 
   // Calcular inversión año 1 y datos por paquete
   const paquetesData: PackageData[] = activos.map((snap) => {
-    const getPagoInicial = () => snap.costos.inicial || 0
-    const getServiciosPorAño = () => {
-      let total = 0
-      for (const srv of snap.serviciosBase) {
-        if (srv.nombre.toLowerCase() !== 'gestión') {
-          const mesesActivos = Math.max(0, 12 - (srv.mesesGratis || 0))
-          total += (srv.precio || 0) * mesesActivos
-        }
-      }
-      return total
-    }
-    const getGestionAnual = () => {
-      if (snap.gestion) {
-        const mesesActivos = Math.max(0, 12 - (snap.gestion.mesesGratis || 0))
-        return (snap.gestion.precio || 0) * mesesActivos
-      }
-      return 0
-    }
-
-    const pagoInicial = getPagoInicial()
-    const inversionAnio1 = pagoInicial + getServiciosPorAño() + getGestionAnual()
+    const pagoInicial = snap.costos.inicial || 0
+    const inversionAnio1 = snap.costos.año1 || 0
 
     // Construcción de features
     const features: Array<{ category: string; items: string[] }> = []
@@ -130,7 +111,7 @@ export default function Paquetes() {
       icon: '🎁',
       nivelProfesional,
       tipo: snap.paquete.tipo || '',
-      subtitulo: `INVERSIÓN: $${inversionAnio1} USD`,
+      subtitulo: `INVERSIÓN ANUAL: $${inversionAnio1} USD`,
       pagoInicial,
       inversionAnio1,
       description: snap.paquete.descripcion || `Paquete personalizado para empresas.`,
@@ -149,12 +130,26 @@ export default function Paquetes() {
     // Sort por inversión (año1)
     paquetesData.sort((a, b) => a.inversionAnio1 - b.inversionAnio1)
 
-    // Asignar emojis: 🥉 (3er), 🥈 (2do), ⭐ (VIP/3er si hay 4+), 🥇 (1er)
-    const iconos = ['🥉', '🥈', '⭐', '🥇']
-    for (let idx = 0; idx < paquetesData.length; idx += 1) {
-      if (idx < iconos.length) {
+    // Asignar emojis según cantidad de paquetes
+    if (paquetesData.length <= 3) {
+      // Solo medallas: 🥉, 🥈, 🥇
+      const iconos = ['🥉', '🥈', '🥇']
+      for (let idx = 0; idx < paquetesData.length; idx += 1) {
         paquetesData[idx].icon = iconos[idx]
       }
+    } else {
+      // Con estrella para el de mayor inversión: 🥉, 🥈, ..., ⭐
+      // Todos empiezan como 🥉, 🥈, ..., 🥇
+      const iconos = ['🥉', '🥈', '🥇']
+      for (let idx = 0; idx < paquetesData.length - 1; idx += 1) {
+        if (idx < iconos.length) {
+          paquetesData[idx].icon = iconos[idx]
+        } else {
+          paquetesData[idx].icon = '🥇' // Medalla de oro para los intermedios si hay más de 4
+        }
+      }
+      // El último (mayor inversión) recibe la estrella
+      paquetesData[paquetesData.length - 1].icon = '⭐'
     }
 
     // Asignar colores
@@ -227,7 +222,7 @@ export default function Paquetes() {
           >
             <h3 className="text-3xl font-bold mb-8">🎁 ¿QUÉ ESTÁ INCLUIDO SIEMPRE?</h3>
             <p className="text-xl mb-8">
-              Independientemente del paquete que elijas, todos incluyen 3 meses gratis de Hosting, Mailbox y Dominio, 1 mes gratis de gestión de contenidos y también ofrecemos actualizaciones planificadas libres de costo. Además de lo anterior SIEMPRE recibes:
+              Independientemente del paquete que elijas, todos incluyen 3 meses gratis de Hosting y Mailbox, 6 meses de Dominio y 1 mes gratis de gestión de contenidos. También ofrecemos actualizaciones planificadas libres de costo en dependencia del paquete contratado. Además de lo anterior siempre recibes:
             </p>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -237,8 +232,8 @@ export default function Paquetes() {
                   items: [
                     'Certificado SSL (candado 🔒 en el navegador)',
                     'Protección contra ataques',
-                    'Backups automáticos diarios',
-                    'Actualización de seguridad automática',
+                    'Backups automáticos periódicos',
+                    'Actualización de seguridad',
                   ]
                 },
                 {
@@ -247,25 +242,23 @@ export default function Paquetes() {
                     'Velocidad de carga optimizada',
                     'Funciona perfectamente en móvil',
                     'Servidor rápido y confiable',
-                    'Disponibilidad 99.9%',
+                    'Disponibilidad del 99.9% de tu sitio web en internet',
                   ]
                 },
                 {
                   title: '📈 POSICIONAMIENTO',
                   items: [
                     'Optimizado para aparecer en Google',
-                    'Google Analytics configurado',
-                    'Reportes de tráfico mensuales',
+                    'Reportes de tráfico',
                     'Sugerencias de mejora continua',
                   ]
                 },
                 {
                   title: '🎓 CAPACITACIÓN',
                   items: [
-                    '2-6 horas según paquete',
-                    'Manual paso a paso',
-                    'Videos tutoriales',
-                    'Soporte vía email/WhatsApp',
+                    '2-6 horas según paquete contratado',
+                    'Manual de usuario',
+                    'Soporte',
                   ]
                 },
               ].map((section) => (
@@ -351,8 +344,11 @@ function PaqueteCard({
       <div className={`p-8 ${data.recomendado ? 'pt-16' : 'pt-8'} h-full flex flex-col`}>
         <div className="text-center mb-6">
           <span className="text-4xl">{data.icon}</span>
-          {data.tipo && <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{data.tipo}</p>}
-          <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500">{data.nivelProfesional}</p>
+          {data.tipo ? (
+            <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{data.tipo}</p>
+          ) : (
+            <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500">{data.nivelProfesional}</p>
+          )}
           <h3 className="text-2xl font-bold text-secondary mt-2">{data.nombre}</h3>
           <p className={`${styles.priceText} font-bold text-lg`}>{data.subtitulo}</p>
         </div>

@@ -12,9 +12,9 @@ import TablaComparativa from '@/components/TablaComparativa'
 import PresupuestoYCronograma from '@/components/PresupuestoYCronograma'
 import FortalezasDelProyecto from '@/components/FortalezasDelProyecto'
 import ObservacionesYRecomendaciones from '@/components/ObservacionesYRecomendaciones'
-import ResumenTecnicoRequisitos from '@/components/ResumenTecnicoRequisitos'
-import MatrizPrioridades from '@/components/MatrizPrioridades'
-import GarantiasYFAQ from '@/components/GarantiasYFAQ'
+import Conclusion from '@/components/Conclusion'
+import Garantias from '@/components/Garantias'
+import FAQ from '@/components/FAQ'
 import Contacto from '@/components/Contacto'
 
 function HomeContent() {
@@ -39,15 +39,15 @@ function HomeContent() {
       <Hero />
       <ResumenEjecutivo />
       <AnalisisRequisitos />
-      <DinamicoVsEstatico />
-      <Paquetes />
-      <PresupuestoYCronograma />
       <FortalezasDelProyecto />
+      <DinamicoVsEstatico />
+      <PresupuestoYCronograma />
+      <Paquetes />
       <TablaComparativa />
-      <ResumenTecnicoRequisitos />
       <ObservacionesYRecomendaciones />
-      <MatrizPrioridades />
-      <GarantiasYFAQ />
+      <Garantias />
+      <Conclusion />
+      <FAQ />
       <Contacto />
     </main>
   )

@@ -20,24 +20,28 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
     // Nuevo esquema: serviciosBase (JSON) + gestion* + desarrollo/ descuento + costos
-    const snapshot = await prisma.packageSnapshot.create({
-      data: {
-        nombre: data.nombre || '',
-        serviciosBase: data.serviciosBase || [],
-        gestionPrecio: data.gestionPrecio || 0,
-        gestionMesesGratis: data.gestionMesesGratis || 0,
-        gestionMesesPago: data.gestionMesesPago || 0,
-        desarrollo: data.desarrollo || 0,
-        descuento: data.descuento || 0,
-        tipo: data.tipo || '',
-        descripcion: data.descripcion || '',
-        otrosServicios: data.otrosServicios || [],
-        costoInicial: data.costoInicial || 0,
-        costoAño1: data.costoAño1 || data.costoAnio1 || 0,
-        costoAño2: data.costoAño2 || data.costoAnio2 || 0,
-        activo: data.activo !== false,
-      },
-    })
+      const snapshot = await prisma.packageSnapshot.create({
+        data: {
+          nombre: data.nombre || '',
+          serviciosBase: data.serviciosBase || [],
+          gestionPrecio: data.gestionPrecio || 0,
+          gestionMesesGratis: data.gestionMesesGratis || 0,
+          gestionMesesPago: data.gestionMesesPago || 0,
+          desarrollo: data.desarrollo || 0,
+          descuento: data.descuento || 0,
+          tipo: data.tipo || '',
+          descripcion: data.descripcion || '',
+          emoji: data.emoji || '',
+          tagline: data.tagline || '',
+          costoInfra: data.costoInfra || 0,
+          tiempoEntrega: data.tiempoEntrega || '',
+          otrosServicios: data.otrosServicios || [],
+          costoInicial: data.costoInicial || 0,
+          costoAño1: data.costoAño1 || data.costoAnio1 || 0,
+          costoAño2: data.costoAño2 || data.costoAnio2 || 0,
+          activo: data.activo !== false,
+        },
+      })
 
     return NextResponse.json(snapshot, { status: 201 })
   } catch (error) {
@@ -69,10 +73,15 @@ export async function PUT(request: NextRequest) {
         descuento: data.descuento || 0,
         tipo: data.tipo || '',
         descripcion: data.descripcion || '',
+        emoji: data.emoji || '',
+        tagline: data.tagline || '',
+        costoInfra: data.costoInfra || 0,
+        tiempoEntrega: data.tiempoEntrega || '',
         otrosServicios: data.otrosServicios || [],
         costoInicial: data.costoInicial || 0,
         costoAño1: data.costoAño1 || data.costoAnio1 || 0,
         costoAño2: data.costoAño2 || data.costoAnio2 || 0,
+        activo: data.activo !== false,
       },
     })
 

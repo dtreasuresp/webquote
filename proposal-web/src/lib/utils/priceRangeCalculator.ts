@@ -160,3 +160,58 @@ export function getInitialInvestmentRange(snapshots: PackageSnapshot[]): string 
   
   return formatPriceRange(min, max)
 }
+
+/**
+ * Calcula el rango de precios de otros servicios (servicios agregados)
+ * Retorna información estructurada de cada servicio
+ */
+export function getOtherServicesInfo(snapshots: PackageSnapshot[]): Array<{
+  nombre: string
+  precioMin: number
+  precioMax: number
+}> {
+  const active = getActiveSnapshots(snapshots)
+  
+  if (active.length === 0) return []
+  
+  // Recolectar todos los otros servicios únicos
+  const serviciosMap = new Map<string, number[]>()
+  
+  for (const snapshot of active) {
+    if (snapshot.otrosServicios && snapshot.otrosServicios.length > 0) {
+      for (const servicio of snapshot.otrosServicios) {
+        if (!serviciosMap.has(servicio.nombre)) {
+          serviciosMap.set(servicio.nombre, [])
+        }
+        serviciosMap.get(servicio.nombre)!.push(servicio.precio || 0)
+      }
+    }
+  }
+  
+  // Convertir a array de objetos con min/max
+  return Array.from(serviciosMap.entries())
+    .map(([nombre, precios]) => ({
+      nombre,
+      precioMin: Math.min(...precios),
+      precioMax: Math.max(...precios),
+    }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+}
+
+/**
+ * Retorna string formateado de otros servicios con rangos
+ */
+export function getOtherServicesRange(snapshots: PackageSnapshot[]): string {
+  const servicios = getOtherServicesInfo(snapshots)
+  
+  if (servicios.length === 0) return 'Sin servicios adicionales'
+  
+  return servicios
+    .map(s => {
+      const rango = s.precioMin === s.precioMax 
+        ? `$${s.precioMin}` 
+        : `$${s.precioMin} - $${s.precioMax}`
+      return `${s.nombre}: ${rango}`
+    })
+    .join(' | ')
+}
