@@ -2,7 +2,7 @@
   base = "proposal-web"
   command = "npm run build"
   functions = "netlify/functions"
-  publish = ".next"
+  publish = ".next/standalone"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
