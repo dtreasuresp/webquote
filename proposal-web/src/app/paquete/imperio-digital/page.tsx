@@ -2,9 +2,112 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { FaArrowLeft, FaStar, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
+import { FaArrowLeft, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
+import { useEffect, useState } from 'react'
+import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
+
+interface ServicioBase {
+  id: string
+  nombre: string
+  precio: number
+  mesesGratis: number
+  mesesPago: number
+}
+
+interface OtroServicio {
+  nombre: string
+  precio: number
+  mesesGratis: number
+  mesesPago: number
+}
+
+interface PackageSnapshot {
+  id: string
+  nombre: string
+  serviciosBase: ServicioBase[]
+  gestion: {
+    precio: number
+    mesesGratis: number
+    mesesPago: number
+  }
+  paquete: {
+    desarrollo: number
+    descuento: number
+    tipo?: string
+    descripcion?: string
+    emoji?: string
+    tagline?: string
+    precioHosting?: number
+    precioMailbox?: number
+    precioDominio?: number
+    tiempoEntrega?: string
+  }
+  otrosServicios: OtroServicio[]
+  costos: {
+    inicial: number
+    año1: number
+    año2: number
+  }
+  activo: boolean
+  createdAt: string
+}
 
 export default function ImperioDigitalPage() {
+  const [snapshotImperio, setSnapshotImperio] = useState<PackageSnapshot | null>(null)
+  const [cargando, setCargando] = useState(true)
+  const [medallaEmoji, setMedallaEmoji] = useState('📦')
+  const [esRecomendado, setEsRecomendado] = useState(false)
+
+  useEffect(() => {
+    const cargarSnapshot = async () => {
+      try {
+        const snapshots = await obtenerSnapshotsCompleto()
+        const activos = snapshots.filter(s => s.activo)
+        
+        // Ordenar por inversión anual (año1)
+        const ordenados = [...activos].sort((a, b) => a.costos.año1 - b.costos.año1)
+        
+        const imperio = snapshots.find(
+          s => s.nombre.toLowerCase() === 'imperio digital' && s.activo
+        )
+        
+        if (imperio) {
+          setSnapshotImperio(imperio)
+          
+          // Asignar medalla según posición
+          const posicion = ordenados.findIndex(s => s.nombre.toLowerCase() === 'imperio digital')
+          const iconos = ['🥉', '🥈', '🥇']
+          
+          if (ordenados.length <= 3) {
+            // Solo medallas: 🥉, 🥈, 🥇
+            if (posicion >= 0 && posicion < iconos.length) {
+              setMedallaEmoji(iconos[posicion])
+            }
+          } else {
+            // Con estrella para el de mayor inversión
+            if (posicion === ordenados.length - 1) {
+              setMedallaEmoji('⭐')
+            } else if (posicion >= 0 && posicion < iconos.length) {
+              setMedallaEmoji(iconos[posicion])
+            } else {
+              setMedallaEmoji('🥇')
+            }
+          }
+          
+          // Validar si es recomendado (segundo paquete - posición 1)
+          if (posicion === 1) {
+            setEsRecomendado(true)
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando snapshot Imperio Digital:', error)
+      } finally {
+        setCargando(false)
+      }
+    }
+
+    cargarSnapshot()
+  }, [])
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header con navegación */}
@@ -30,21 +133,24 @@ export default function ImperioDigitalPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center justify-center gap-3 mb-4">
-              <FaStar className="text-accent" />
-              <span className="text-lg font-bold">PREMIUM</span>
-              <FaStar className="text-accent" />
+              <span className="text-5xl">{medallaEmoji}</span>
             </div>
+            {esRecomendado && (
+              <div className="inline-block bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full font-bold text-sm mb-4">
+                ⭐ RECOMENDADO
+              </div>
+            )}
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Paquete Premium
+              Paquete {snapshotImperio?.paquete.tipo || 'Paquete'}
             </h2>
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              IMPERIO DIGITAL
+              {snapshotImperio?.nombre || 'IMPERIO DIGITAL'}
             </h2>
             <p className="text-xl md:text-2xl mb-6 text-white">
-              Presencia digital de clase mundial y crecimiento sin límites
+              {snapshotImperio?.paquete.tagline || 'Presencia digital de clase mundial'}
             </p>
             <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 max-w-2xl mx-auto">
-              <div className="text-5xl font-bold mb-2">$300 USD</div>
+              <div className="text-5xl font-bold mb-2">${snapshotImperio?.costos.inicial || 300} USD</div>
               <p className="text-lg">Inversión inicial</p>
             </div>
           </motion.div>

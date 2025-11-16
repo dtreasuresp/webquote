@@ -56,16 +56,49 @@ interface PackageSnapshot {
 export default function ConstructorPage() {
   const [snapshotConstructor, setSnapshotConstructor] = useState<PackageSnapshot | null>(null)
   const [cargando, setCargando] = useState(true)
+  const [medallaEmoji, setMedallaEmoji] = useState('📦')
+  const [esRecomendado, setEsRecomendado] = useState(false)
 
   useEffect(() => {
     const cargarSnapshot = async () => {
       try {
         const snapshots = await obtenerSnapshotsCompleto()
+        const activos = snapshots.filter(s => s.activo)
+        
+        // Ordenar por inversión anual (año1)
+        const ordenados = [...activos].sort((a, b) => a.costos.año1 - b.costos.año1)
+        
         const constructor = snapshots.find(
           s => s.nombre.toLowerCase() === 'constructor' && s.activo
         )
+        
         if (constructor) {
           setSnapshotConstructor(constructor)
+          
+          // Asignar medalla según posición
+          const posicion = ordenados.findIndex(s => s.nombre.toLowerCase() === 'constructor')
+          const iconos = ['🥉', '🥈', '🥇']
+          
+          if (ordenados.length <= 3) {
+            // Solo medallas: 🥉, 🥈, 🥇
+            if (posicion >= 0 && posicion < iconos.length) {
+              setMedallaEmoji(iconos[posicion])
+            }
+          } else {
+            // Con estrella para el de mayor inversión
+            if (posicion === ordenados.length - 1) {
+              setMedallaEmoji('⭐')
+            } else if (posicion >= 0 && posicion < iconos.length) {
+              setMedallaEmoji(iconos[posicion])
+            } else {
+              setMedallaEmoji('🥇')
+            }
+          }
+          
+          // Validar si es recomendado (segundo paquete - posición 1)
+          if (posicion === 1) {
+            setEsRecomendado(true)
+          }
         }
       } catch (error) {
         console.error('Error cargando snapshot Constructor:', error)
@@ -102,8 +135,13 @@ export default function ConstructorPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center justify-center gap-3 mb-4">
-              <span className="text-5xl">{snapshotConstructor?.paquete.emoji || '📦'}</span>
+              <span className="text-5xl">{medallaEmoji}</span>
             </div>
+            {esRecomendado && (
+              <div className="inline-block bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full font-bold text-sm mb-4">
+                ⭐ RECOMENDADO
+              </div>
+            )}
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
               Paquete {snapshotConstructor?.paquete.tipo || 'Paquete'}
             </h2>
