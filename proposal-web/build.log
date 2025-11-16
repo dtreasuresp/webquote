@@ -1,0 +1,115 @@
+
+> Urban├¡sima-propuesta-web@0.1.0 prebuild
+> npm run prisma:generate
+
+
+> Urban├¡sima-propuesta-web@0.1.0 prisma:generate
+> prisma generate
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+Ô£ö Generated Prisma Client (v6.19.0) to .\node_modules\@prisma\client in 94ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+
+> Urban├¡sima-propuesta-web@0.1.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.33
+  - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/11) ...
+Error en GET /api/snapshots/all: PrismaClientInitializationError: 
+Invalid `prisma.packageSnapshot.findMany()` invocation:
+
+
+error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+  -->  schema.prisma:10
+   | 
+ 9 |   provider = "postgresql"
+10 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (D:\Urbanisima_Constructora\proposal-web\node_modules\@prisma\client\runtime\library.js:121:7568)
+    at ei.handleAndLogRequestError (D:\Urbanisima_Constructora\proposal-web\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (D:\Urbanisima_Constructora\proposal-web\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (D:\Urbanisima_Constructora\proposal-web\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async l (D:\Urbanisima_Constructora\proposal-web\.next\server\app\api\snapshots\all\route.js:1:517)
+    at async D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:38411
+    at async e_.execute (D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:27880)
+    at async e_.handle (D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:39943)
+    at async exportAppRoute (D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\export\routes\app-route.js:77:26)
+    at async exportPageImpl (D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\export\worker.js:175:20) {
+  clientVersion: '6.19.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+Stack: PrismaClientInitializationError: 
+Invalid `prisma.packageSnapshot.findMany()` invocation:
+
+
+error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+  -->  schema.prisma:10
+   | 
+ 9 |   provider = "postgresql"
+10 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at ei.handleRequestError (D:\Urbanisima_Constructora\proposal-web\node_modules\@prisma\client\runtime\library.js:121:7568)
+    at ei.handleAndLogRequestError (D:\Urbanisima_Constructora\proposal-web\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (D:\Urbanisima_Constructora\proposal-web\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (D:\Urbanisima_Constructora\proposal-web\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async l (D:\Urbanisima_Constructora\proposal-web\.next\server\app\api\snapshots\all\route.js:1:517)
+    at async D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:38411
+    at async e_.execute (D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:27880)
+    at async e_.handle (D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:39943)
+    at async exportAppRoute (D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\export\routes\app-route.js:77:26)
+    at async exportPageImpl (D:\Urbanisima_Constructora\proposal-web\node_modules\next\dist\export\worker.js:175:20)
+Message: 
+Invalid `prisma.packageSnapshot.findMany()` invocation:
+
+
+error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+  -->  schema.prisma:10
+   | 
+ 9 |   provider = "postgresql"
+10 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+   Generating static pages (2/11) 
+   Generating static pages (5/11) 
+   Generating static pages (8/11) 
+ Ô£ô Generating static pages (11/11)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                               Size     First Load JS
+Ôöî Ôùï /                                     27.5 kB         168 kB
+Ôö£ Ôùï /_not-found                           873 B          88.4 kB
+Ôö£ Ôùï /administrador                        140 kB          281 kB
+Ôö£ ãÆ /api/snapshots                        0 B                0 B
+Ôö£ ãÆ /api/snapshots/all                    0 B                0 B
+Ôö£ ãÆ /api/snapshots/setup-payment-options  0 B                0 B
+Ôö£ Ôùï /paquete/constructor                  4.05 kB         144 kB
+Ôö£ Ôùï /paquete/imperio-digital              4.55 kB         145 kB
+Ôöö Ôùï /paquete/obra-maestra                 4.58 kB         145 kB
++ First Load JS shared by all             87.5 kB
+  Ôö£ chunks/117-d9571c8e28c7f4c9.js        31.8 kB
+  Ôö£ chunks/fd9d1056-ea949d58b73d551c.js   53.6 kB
+  Ôöö other shared chunks (total)           2.09 kB
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+
