@@ -3,13 +3,79 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaArrowLeft, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
+import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/PackageCostSummary'
-import { useGlobalSnapshots } from '@/lib/hooks/useGlobalSnapshots'
+import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
+
+interface ServicioBase {
+  id: string
+  nombre: string
+  precio: number
+  mesesGratis: number
+  mesesPago: number
+}
+
+interface OtroServicio {
+  nombre: string
+  precio: number
+  mesesGratis: number
+  mesesPago: number
+}
+
+interface PackageSnapshot {
+  id: string
+  nombre: string
+  serviciosBase: ServicioBase[]
+  gestion: {
+    precio: number
+    mesesGratis: number
+    mesesPago: number
+  }
+  paquete: {
+    desarrollo: number
+    descuento: number
+    tipo?: string
+    descripcion?: string
+    emoji?: string
+    tagline?: string
+    precioHosting?: number
+    precioMailbox?: number
+    precioDominio?: number
+    tiempoEntrega?: string
+  }
+  otrosServicios: OtroServicio[]
+  costos: {
+    inicial: number
+    año1: number
+    año2: number
+  }
+  activo: boolean
+  createdAt: string
+}
 
 export default function ConstructorPage() {
-  const { getSnapshot, isLoading } = useGlobalSnapshots()
-  const snapshotConstructor = getSnapshot('Constructor')
-  const cargando = isLoading
+  const [snapshotConstructor, setSnapshotConstructor] = useState<PackageSnapshot | null>(null)
+  const [cargando, setCargando] = useState(true)
+
+  useEffect(() => {
+    const cargarSnapshot = async () => {
+      try {
+        const snapshots = await obtenerSnapshotsCompleto()
+        const constructor = snapshots.find(
+          s => s.nombre.toLowerCase() === 'constructor' && s.activo
+        )
+        if (constructor) {
+          setSnapshotConstructor(constructor)
+        }
+      } catch (error) {
+        console.error('Error cargando snapshot Constructor:', error)
+      } finally {
+        setCargando(false)
+      }
+    }
+
+    cargarSnapshot()
+  }, [])
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -340,12 +406,12 @@ export default function ConstructorPage() {
                 <p className="text-center text-gray-700">El pago único adelantado sólo es para el desarrollo del sitio</p>
                 <p className="text-center font-bold text-gray-900">El costo de la infraestructura y la gestión se facturan aparte</p>
                 <p className="text-center font-bold text-gray-900">
-                  Al iniciar (+ ${snapshotConstructor?.paquete.precioHosting || 0} hosting, ${snapshotConstructor?.paquete.precioMailbox || 0} mailbox, ${snapshotConstructor?.paquete.precioDominio || 0} dominio) = $
+                  Al iniciar (+ ${snapshotConstructor?.serviciosBase.find(s => s.nombre === 'Hosting')?.precio || 0} hosting, ${snapshotConstructor?.serviciosBase.find(s => s.nombre === 'Mailbox')?.precio || 0} mailbox, ${snapshotConstructor?.serviciosBase.find(s => s.nombre === 'Dominio')?.precio || 0} dominio) = $
                   {snapshotConstructor 
                     ? ((snapshotConstructor.paquete.desarrollo || 0) + 
-                       (snapshotConstructor.paquete.precioHosting || 0) + 
-                       (snapshotConstructor.paquete.precioMailbox || 0) + 
-                       (snapshotConstructor.paquete.precioDominio || 0)).toFixed(2)
+                       (snapshotConstructor.serviciosBase.find(s => s.nombre === 'Hosting')?.precio || 0) + 
+                       (snapshotConstructor.serviciosBase.find(s => s.nombre === 'Mailbox')?.precio || 0) + 
+                       (snapshotConstructor.serviciosBase.find(s => s.nombre === 'Dominio')?.precio || 0)).toFixed(2)
                     : 207
                   } USD
                 </p>

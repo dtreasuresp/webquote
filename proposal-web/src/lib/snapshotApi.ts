@@ -113,27 +113,6 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
   }
 }
 
-// Obtener snapshot por nombre de paquete
-export async function fetchPackageSnapshot(paqueteName: string) {
-  try {
-    const response = await fetch(`/api/snapshots?nombre=${encodeURIComponent(paqueteName)}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    if (!response.ok) {
-      if (response.status === 404) return null
-      throw new Error(`Error al obtener snapshot: ${response.status}`)
-    }
-
-    const dbSnapshot: SnapshotFromDB = await response.json()
-    return convertDBToSnapshot(dbSnapshot)
-  } catch (error) {
-    console.error(`Error en fetchPackageSnapshot(${paqueteName}):`, error)
-    return null
-  }
-}
-
 // Obtener snapshots activos (para la página principal)
 export async function obtenerSnapshots() {
   try {

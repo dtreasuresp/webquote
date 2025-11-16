@@ -65,7 +65,7 @@ export function normalizeSnapshot(snapshot: PackageSnapshot): NormalizedPackageV
     tiempoEntrega: snapshot.paquete.tiempoEntrega || '',
     activo: snapshot.activo,
 
-    serviciosBase: (snapshot.serviciosBase || []).map(s => ({
+    serviciosBase: snapshot.serviciosBase.map(s => ({
       id: s.id,
       nombre: s.nombre,
       precio: s.precio,
@@ -73,19 +73,19 @@ export function normalizeSnapshot(snapshot: PackageSnapshot): NormalizedPackageV
       mesesPago: s.mesesPago,
     })),
 
-    gestionPrecio: snapshot.gestion?.precio || 0,
-    gestionMesesGratis: snapshot.gestion?.mesesGratis || 0,
-    gestionMesesPago: snapshot.gestion?.mesesPago || 0,
+    gestionPrecio: snapshot.gestion.precio,
+    gestionMesesGratis: snapshot.gestion.mesesGratis,
+    gestionMesesPago: snapshot.gestion.mesesPago,
 
     precioHosting: snapshot.paquete.precioHosting || 0,
     precioMailbox: snapshot.paquete.precioMailbox || 0,
     precioDominio: snapshot.paquete.precioDominio || 0,
 
-    serviciosOpcionales: snapshot.otrosServicios || [],
+    serviciosOpcionales: snapshot.otrosServicios,
 
-    costoInicial: snapshot.costos?.inicial || 0,
-    costoAño1: snapshot.costos?.año1 || 0,
-    costoAño2: snapshot.costos?.año2 || 0,
+    costoInicial: snapshot.costos.inicial,
+    costoAño1: snapshot.costos.año1,
+    costoAño2: snapshot.costos.año2,
   }
 }
 
@@ -116,15 +116,13 @@ export function createNominatedVariables(
   variables[`${prefix}ServiciosBase`] = normalized.serviciosBase
 
   // Variables individuales de servicios base por nombre
-  if (normalized.serviciosBase && Array.isArray(normalized.serviciosBase)) {
-    normalized.serviciosBase.forEach(servicio => {
-      const servicioSuffix = servicio.nombre.toLowerCase()
-      variables[`${prefix}ServicioBase${servicio.nombre}Nombre`] = servicio.nombre
-      variables[`${prefix}ServicioBase${servicio.nombre}Precio`] = servicio.precio
-      variables[`${prefix}ServicioBase${servicio.nombre}MesesGratis`] = servicio.mesesGratis
-      variables[`${prefix}ServicioBase${servicio.nombre}MesesPago`] = servicio.mesesPago
-    })
-  }
+  normalized.serviciosBase.forEach(servicio => {
+    const servicioSuffix = servicio.nombre.toLowerCase()
+    variables[`${prefix}ServicioBase${servicio.nombre}Nombre`] = servicio.nombre
+    variables[`${prefix}ServicioBase${servicio.nombre}Precio`] = servicio.precio
+    variables[`${prefix}ServicioBase${servicio.nombre}MesesGratis`] = servicio.mesesGratis
+    variables[`${prefix}ServicioBase${servicio.nombre}MesesPago`] = servicio.mesesPago
+  })
 
   // Variables de gestión
   variables[`${prefix}GestionPrecio`] = normalized.gestionPrecio
@@ -140,15 +138,13 @@ export function createNominatedVariables(
   variables[`${prefix}ServiciosOpcionales`] = normalized.serviciosOpcionales
 
   // Variables individuales de servicios opcionales
-  if (normalized.serviciosOpcionales && Array.isArray(normalized.serviciosOpcionales)) {
-    normalized.serviciosOpcionales.forEach((servicio, index) => {
-      const servicioName = servicio.nombre.replace(/\s+/g, '')
-      variables[`${prefix}ServicioOpcional${servicioName}Nombre`] = servicio.nombre
-      variables[`${prefix}ServicioOpcional${servicioName}Precio`] = servicio.precio
-      variables[`${prefix}ServicioOpcional${servicioName}MesesGratis`] = servicio.mesesGratis
-      variables[`${prefix}ServicioOpcional${servicioName}MesesPago`] = servicio.mesesPago
-    })
-  }
+  normalized.serviciosOpcionales.forEach((servicio, index) => {
+    const servicioName = servicio.nombre.replace(/\s+/g, '')
+    variables[`${prefix}ServicioOpcional${servicioName}Nombre`] = servicio.nombre
+    variables[`${prefix}ServicioOpcional${servicioName}Precio`] = servicio.precio
+    variables[`${prefix}ServicioOpcional${servicioName}MesesGratis`] = servicio.mesesGratis
+    variables[`${prefix}ServicioOpcional${servicioName}MesesPago`] = servicio.mesesPago
+  })
 
   // Variables de costos
   variables[`${prefix}CostoInicial`] = normalized.costoInicial

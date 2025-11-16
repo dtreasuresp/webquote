@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { SnapshotsProvider } from '@/contexts'
 import '../styles/globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -18,11 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className="scroll-smooth">
-      <body className={inter.className}>
-        <SnapshotsProvider>
-          {children}
-        </SnapshotsProvider>
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
