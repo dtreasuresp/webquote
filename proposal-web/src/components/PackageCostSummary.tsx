@@ -108,13 +108,13 @@ export default function PackageCostSummary({ snapshot }: PackageCostSummaryProps
             <td className="px-6 py-4 font-semibold">Año 1 (meses 4–12)</td>
             <td className="px-6 py-4 text-center text-accent">N/A</td>
             <td className="px-6 py-4 text-center">
-              ${((snapshot.serviciosBase.find(s => s.nombre === 'Hosting')?.precio || 0) * 9).toFixed(0)}
+              ${((snapshot.serviciosBase.find(s => s.nombre === 'Hosting')?.precio || 0) * (snapshot.serviciosBase.find(s => s.nombre === 'Hosting')?.mesesPago || 12)).toFixed(0)}
             </td>
             <td className="px-6 py-4 text-center">
-              ${((snapshot.serviciosBase.find(s => s.nombre === 'Mailbox')?.precio || 0) * 9).toFixed(0)}
+              ${((snapshot.serviciosBase.find(s => s.nombre === 'Mailbox')?.precio || 0) * (snapshot.serviciosBase.find(s => s.nombre === 'Mailbox')?.mesesPago || 12)).toFixed(0)}
             </td>
             <td className="px-6 py-4 text-center">
-              ${((snapshot.serviciosBase.find(s => s.nombre === 'Dominio')?.precio || 0) * 9).toFixed(0)}
+              ${((snapshot.serviciosBase.find(s => s.nombre === 'Dominio')?.precio || 0) * (snapshot.serviciosBase.find(s => s.nombre === 'Dominio')?.mesesPago || 12)).toFixed(0)}
             </td>
             <td className="px-6 py-4 text-center">
               ${(snapshot.gestion.precio * snapshot.gestion.mesesPago).toFixed(0)}
