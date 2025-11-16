@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { FaArrowLeft, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/PackageCostSummary'
+import PaymentOptions from '@/components/PaymentOptions'
 import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 
 interface ServicioBase {
@@ -606,59 +607,7 @@ export default function ObraMaestraPage() {
           <h3 className="text-3xl font-bold mb-8 text-gray-900 flex items-center gap-2">
             <FaCreditCard /> Opciones de Pago
           </h3>
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="grid md:grid-cols-2 gap-8"
-          >
-            <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <h4 className="text-2xl font-bold text-gray-900 mb-4">📊 Opción 1: Estándar</h4>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="font-semibold">Pago 1 (40%)</span>
-                  <span className="text-lg font-bold text-gray-800">$80 USD</span>
-                </div>
-                <p className="text-center text-gray-600">Al iniciar</p>
-
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="font-semibold">Pago 2 (40%)</span>
-                  <span className="text-lg font-bold text-gray-800">$80 USD</span>
-                </div>
-                <p className="text-center text-gray-600">Al diseño</p>
-
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="font-semibold">Pago 3 (20%)</span>
-                  <span className="text-lg font-bold text-gray-800">$40 USD</span>
-                </div>
-                <p className="text-center text-gray-600">Al publicar</p>
-
-                <div className="border-t-2 border-gray-300 pt-4">
-                  <p className="text-center font-bold text-gray-900">Total: $200 USD</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-accent/10 to-accent/20 p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow border-2 border-accent">
-              <div className="flex items-center gap-2 mb-4">
-                <h4 className="text-2xl font-bold text-secondary">🎁 Opción 2: Descuento</h4>
-                <span className="bg-accent text-white px-3 py-1 rounded-full text-sm font-bold">-10%</span>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                  <span className="font-semibold text-gray-900">Pago único adelantado</span>
-                  <span className="text-lg font-bold text-neutral-400 line-through">$200 USD</span>
-                </div>
-                <p className="text-center text-gray-700 font-bold">CON DESCUENTO 10%</p>
-
-                <div className="flex justify-between items-center p-4 bg-white rounded-lg border-2 border-accent">
-                  <span className="font-bold text-lg text-gray-900">Total a Pagar</span>
-                  <span className="text-2xl font-bold text-accent">$180 USD</span>
-                </div>
-                <p className="text-center text-gray-700">Al iniciar (+ $35+$4+$18 hosting, mailbox, dominio) = <strong>$237 USD</strong></p>
-              </div>
-            </div>
-          </motion.div>
+          <PaymentOptions snapshot={snapshotObraMaestra} />
 
           <motion.div
             initial={{ opacity: 0 }}

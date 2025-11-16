@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { FaArrowLeft, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/PackageCostSummary'
+import PaymentOptions from '@/components/PaymentOptions'
 import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 
 interface ServicioBase {
@@ -407,55 +408,8 @@ export default function ConstructorPage() {
           <h3 className="text-3xl font-bold mb-8 text-gray-900 flex items-center gap-2">
             <FaCreditCard /> Sobre el pago
           </h3>
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="grid md:grid-cols-2 gap-8"
-          >
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <h4 className="text-2xl font-bold text-gray-900 mb-4">📊 Opción 1: 2 pagos</h4>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="font-semibold">Pago 1 (50%)</span>
-                  <span className="text-lg font-bold text-gray-900">${snapshotConstructor ? (snapshotConstructor.paquete.desarrollo / 2).toFixed(2) : '75'} USD</span>
-                </div>
-                <p className="text-center text-gray-600">Al iniciar</p>
-
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="font-semibold">Pago 2 (50%)</span>
-                  <span className="text-lg font-bold text-gray-900">${snapshotConstructor ? (snapshotConstructor.paquete.desarrollo / 2).toFixed(2) : '75'} USD</span>
-                </div>
-                <p className="text-center text-gray-600">Al publicar</p>
-
-                <div className="border-t-2 border-gray-300 pt-4">
-                  <p className="text-center font-bold text-gray-900">Total desarrollo: ${snapshotConstructor?.paquete.desarrollo || 150} USD</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-accent/10 to-accent/20 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow border-2 border-accent">
-              <h4 className="text-2xl font-bold text-accent-dark mb-4">🎁 Opción 2: Pago único</h4>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                  <span className="font-semibold text-gray-900">Pago adelantado</span>
-                  <span className="text-lg font-bold text-accent">${snapshotConstructor?.paquete.desarrollo || 150} USD</span>
-                </div>
-                <p className="text-center text-gray-700">El pago único adelantado sólo es para el desarrollo del sitio</p>
-                <p className="text-center font-bold text-gray-900">El costo de la infraestructura y la gestión se facturan aparte</p>
-                <p className="text-center font-bold text-gray-900">
-                  Al iniciar (+ ${snapshotConstructor?.serviciosBase.find(s => s.nombre === 'Hosting')?.precio || 0} hosting, ${snapshotConstructor?.serviciosBase.find(s => s.nombre === 'Mailbox')?.precio || 0} mailbox, ${snapshotConstructor?.serviciosBase.find(s => s.nombre === 'Dominio')?.precio || 0} dominio) = $
-                  {snapshotConstructor 
-                    ? ((snapshotConstructor.paquete.desarrollo || 0) + 
-                       (snapshotConstructor.serviciosBase.find(s => s.nombre === 'Hosting')?.precio || 0) + 
-                       (snapshotConstructor.serviciosBase.find(s => s.nombre === 'Mailbox')?.precio || 0) + 
-                       (snapshotConstructor.serviciosBase.find(s => s.nombre === 'Dominio')?.precio || 0)).toFixed(2)
-                    : 207
-                  } USD
-                </p>
-              </div>
-            </div>
-          </motion.div>
+          
+          <PaymentOptions snapshot={snapshotConstructor} />
 
           <motion.div
             initial={{ opacity: 0 }}

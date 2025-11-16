@@ -33,6 +33,8 @@ model PackageSnapshot {
   precioMailbox   Float?
   precioDominio   Float?
   tiempoEntrega   String?
+  opcionesPago    Json?     // Array de { nombre, porcentaje, descripcion }
+  descuentoPagoUnico Int?    // Porcentaje de descuento por pago único
   
   // Otros Servicios (JSON)
   otrosServicios  Json

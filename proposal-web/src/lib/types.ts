@@ -14,6 +14,12 @@ export interface GestionConfig {
   mesesPago: number
 }
 
+export interface OpcionPago {
+  nombre: string
+  porcentaje: number
+  descripcion: string
+}
+
 export interface Package {
   nombre: string
   desarrollo: number
@@ -27,6 +33,8 @@ export interface Package {
   precioMailbox?: number
   precioDominio?: number
   tiempoEntrega?: string
+  opcionesPago?: OpcionPago[]
+  descuentoPagoUnico?: number
 }
 
 export interface Servicio {
@@ -66,6 +74,8 @@ export interface PackageSnapshot {
     precioMailbox?: number
     precioDominio?: number
     tiempoEntrega?: string
+    opcionesPago?: OpcionPago[]
+    descuentoPagoUnico?: number
   }
   otrosServicios: OtroServicioSnapshot[]
   costos: {
