@@ -8,77 +8,16 @@ import Navigation from '@/components/Navigation'
 import { jsPDF } from 'jspdf'
 import { obtenerSnapshots, crearSnapshot, actualizarSnapshot, eliminarSnapshot, obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
-
-interface ServicioBase {
-  id: string
-  nombre: string
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface GestionConfig {
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface Package {
-  nombre: string
-  desarrollo: number
-  descuento: number
-  activo: boolean
-  tipo?: string
-  descripcion?: string
-}
-
-interface Servicio {
-  id: string
-  nombre: string
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface OtroServicio {
-  nombre: string
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface OtroServicioSnapshot extends OtroServicio {}
-
-interface PackageSnapshot {
-  id: string
-  nombre: string
-  serviciosBase: ServicioBase[]
-  gestion: {
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-  }
-  paquete: {
-    desarrollo: number
-    descuento: number
-    tipo?: string
-    descripcion?: string
-    emoji?: string
-    tagline?: string
-    precioHosting?: number
-    precioMailbox?: number
-    precioDominio?: number
-    tiempoEntrega?: string
-  }
-  otrosServicios: OtroServicioSnapshot[]
-  costos: {
-    inicial: number
-    año1: number
-    año2: number
-  }
-  activo: boolean
-  createdAt: string
-}
+import { useGlobalSnapshots } from '@/lib/hooks/useGlobalSnapshots'
+import type { 
+  PackageSnapshot, 
+  ServicioBase, 
+  GestionConfig, 
+  Package, 
+  Servicio, 
+  OtroServicio, 
+  OtroServicioSnapshot 
+} from '@/lib/types'
 
 export default function Administrador() {
   // Obtener función de refresh global

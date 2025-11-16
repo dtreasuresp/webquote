@@ -3,8 +3,12 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaArrowLeft, FaStar, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
+import { useGlobalSnapshots } from '@/lib/hooks/useGlobalSnapshots'
 
 export default function ImperioDigitalPage() {
+  const { getSnapshot } = useGlobalSnapshots()
+  const snapshotImperioDigital = getSnapshot('Imperio Digital')
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header con navegación */}
@@ -41,10 +45,10 @@ export default function ImperioDigitalPage() {
               IMPERIO DIGITAL
             </h2>
             <p className="text-xl md:text-2xl mb-6 text-white">
-              Presencia digital de clase mundial y crecimiento sin límites
+              {snapshotImperioDigital?.paquete.tagline || 'Presencia digital de clase mundial y crecimiento sin límites'}
             </p>
             <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 max-w-2xl mx-auto">
-              <div className="text-5xl font-bold mb-2">$300 USD</div>
+              <div className="text-5xl font-bold mb-2">${snapshotImperioDigital?.costos.inicial || 300} USD</div>
               <p className="text-lg">Inversión inicial</p>
             </div>
           </motion.div>
@@ -413,7 +417,7 @@ export default function ImperioDigitalPage() {
                   <td className="px-6 py-4 text-center">$4</td>
                   <td className="px-6 py-4 text-center">$18</td>
                   <td className="px-6 py-4 text-center">$0</td>
-                  <td className="px-6 py-4 text-center text-primary font-bold">$300 USD</td>
+                  <td className="px-6 py-4 text-center text-primary font-bold">${snapshotImperioDigital?.costos.inicial || 300} USD</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-semibold">3 Meses (Gracia)</td>

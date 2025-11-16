@@ -3,8 +3,12 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaArrowLeft, FaStar, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
+import { useGlobalSnapshots } from '@/lib/hooks/useGlobalSnapshots'
 
 export default function ObraMaestraPage() {
+  const { getSnapshot } = useGlobalSnapshots()
+  const snapshotObraMaestra = getSnapshot('Obra Maestra')
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header con navegación */}
@@ -41,10 +45,10 @@ export default function ObraMaestraPage() {
               OBRA MAESTRA
             </h2>
             <p className="text-xl md:text-2xl mb-6 text-white">
-              Máximo impacto digital, profesionalismo y captación de clientes desde el primer día
+              {snapshotObraMaestra?.paquete.tagline || 'Máximo impacto digital, profesionalismo y captación de clientes desde el primer día'}
             </p>
             <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 max-w-2xl mx-auto">
-              <div className="text-5xl font-bold mb-2">$257 USD</div>
+              <div className="text-5xl font-bold mb-2">${snapshotObraMaestra?.costos.inicial || 257} USD</div>
               <p className="text-lg">Inversión inicial</p>
             </div>
           </motion.div>
@@ -497,7 +501,7 @@ export default function ObraMaestraPage() {
                   <td className="px-6 py-4 text-center">$4</td>
                   <td className="px-6 py-4 text-center">$18</td>
                   <td className="px-6 py-4 text-center">$0</td>
-                  <td className="px-6 py-4 text-center text-primary">$257 USD</td>
+                  <td className="px-6 py-4 text-center text-primary">${snapshotObraMaestra?.costos.inicial || 257} USD</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-semibold">3 Meses (Gracia)</td>

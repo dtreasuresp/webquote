@@ -3,79 +3,13 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { FaArrowLeft, FaCheckCircle, FaCalendar, FaCreditCard } from 'react-icons/fa'
-import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/PackageCostSummary'
-import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
-
-interface ServicioBase {
-  id: string
-  nombre: string
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface OtroServicio {
-  nombre: string
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface PackageSnapshot {
-  id: string
-  nombre: string
-  serviciosBase: ServicioBase[]
-  gestion: {
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-  }
-  paquete: {
-    desarrollo: number
-    descuento: number
-    tipo?: string
-    descripcion?: string
-    emoji?: string
-    tagline?: string
-    precioHosting?: number
-    precioMailbox?: number
-    precioDominio?: number
-    tiempoEntrega?: string
-  }
-  otrosServicios: OtroServicio[]
-  costos: {
-    inicial: number
-    año1: number
-    año2: number
-  }
-  activo: boolean
-  createdAt: string
-}
+import { useGlobalSnapshots } from '@/lib/hooks/useGlobalSnapshots'
 
 export default function ConstructorPage() {
-  const [snapshotConstructor, setSnapshotConstructor] = useState<PackageSnapshot | null>(null)
-  const [cargando, setCargando] = useState(true)
-
-  useEffect(() => {
-    const cargarSnapshot = async () => {
-      try {
-        const snapshots = await obtenerSnapshotsCompleto()
-        const constructor = snapshots.find(
-          s => s.nombre.toLowerCase() === 'constructor' && s.activo
-        )
-        if (constructor) {
-          setSnapshotConstructor(constructor)
-        }
-      } catch (error) {
-        console.error('Error cargando snapshot Constructor:', error)
-      } finally {
-        setCargando(false)
-      }
-    }
-
-    cargarSnapshot()
-  }, [])
+  const { getSnapshot, isLoading } = useGlobalSnapshots()
+  const snapshotConstructor = getSnapshot('Constructor')
+  const cargando = isLoading
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
