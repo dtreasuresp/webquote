@@ -25,10 +25,10 @@ export default function TablaComparativa() {
     <section id="comparativa" className="py-20 px-4 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.3 }}
         >
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-gray-900">
             Tabla Comparativa de Paquetes
@@ -192,9 +192,10 @@ export default function TablaComparativa() {
 
           {/* Nota importante */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.3 }}
             className="mt-8 bg-accent/10 border-l-4 border-accent p-6 rounded"
           >
             <p className="text-gray-900">

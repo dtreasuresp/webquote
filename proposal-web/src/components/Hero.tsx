@@ -8,9 +8,9 @@ export default function Hero() {
     <section className="relative bg-gradient-to-br from-primary via-primary-dark to-black text-white py-20 px-4">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
           className="text-center"
         >
           <div className="mb-6">

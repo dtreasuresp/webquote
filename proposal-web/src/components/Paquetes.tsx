@@ -178,13 +178,13 @@ export default function Paquetes() {
   }
 
   return (
-    <section id="paquetes" className="py-20 px-4 bg-gradient-to-br from-secondary via-secondary-light to-neutral-900">
+    <section id="paquetes" className="py-20 px-4 bg-gradient-to-br from-secondary via-secondary-light to-neutral-900 min-h-[900px]">
       <div className="max-w-7xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
         >
           <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
             ¿Qué ofrecemos?
@@ -215,9 +215,10 @@ export default function Paquetes() {
 
           {/* Lo que siempre está incluido */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.3 }}
             className="mt-16 bg-gradient-to-r from-primary via-primary-dark to-secondary text-white p-12 rounded-2xl shadow-2xl border-2 border-accent"
           >
             <h3 className="text-3xl font-bold mb-8">🎁 ¿QUÉ ESTÁ INCLUIDO SIEMPRE?</h3>
@@ -329,10 +330,11 @@ function PaqueteCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       whileHover={{ y: -10 }}
+      transition={{ duration: 0.3 }}
       className={`relative rounded-2xl overflow-hidden transition-all ${styles.container}`}
     >
       {data.recomendado && (
