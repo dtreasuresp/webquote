@@ -13,7 +13,18 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
   }
 
   const desarrollo = snapshot.paquete.desarrollo || 0
-  const opcionesPago = snapshot.paquete.opcionesPago || []
+  
+  // Opciones por defecto si no hay configuradas (compatibilidad con datos existentes)
+  const opcionesPagoPorDefecto = [
+    { nombre: 'Inicial', porcentaje: 30, descripcion: 'Al firmar contrato' },
+    { nombre: 'Avance', porcentaje: 40, descripcion: 'A mitad del proyecto' },
+    { nombre: 'Final', porcentaje: 30, descripcion: 'Al entregar proyecto' },
+  ]
+  
+  const opcionesPago = snapshot.paquete.opcionesPago && snapshot.paquete.opcionesPago.length > 0 
+    ? snapshot.paquete.opcionesPago 
+    : opcionesPagoPorDefecto
+    
   const descuentoPagoUnico = snapshot.paquete.descuentoPagoUnico || 0
 
   const totalDesarrollo = desarrollo
@@ -27,7 +38,7 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
       <div className="grid md:grid-cols-2 gap-8">
         {/* Opción 1: Pagos en cuotas (si existen) */}
         {opcionesPago.length > 0 && (
-          <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+          <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
             <h5 className="text-xl font-bold text-gray-900 mb-4">📊 Opción 1: Estándar</h5>
             <div className="space-y-3">
               {opcionesPago.map((opcion, index) => {
@@ -42,7 +53,7 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
                         ${monto.toFixed(2)} USD
                       </span>
                     </div>
-                    <div className="text-center text-gray-600 -mt-2 text-sm">
+                    <div className="text-center text-gray-600 -mt-10 text-sm p-2">
                       {opcion.descripcion}
                     </div>
                   </div>
@@ -90,7 +101,7 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
               </span>
             </div>
             <p className="text-center text-gray-700 text-sm">
-              Al iniciar (+ infraestructura y servicios)
+              <strong>Desarrollo</strong> + <strong>infraestructura</strong> y <strong>servicios</strong>
             </p>
           </div>
         </div>

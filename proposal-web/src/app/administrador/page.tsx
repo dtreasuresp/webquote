@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck } from 'react-icons/fa'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
+import TabsModal from '@/components/TabsModal'
 import { jsPDF } from 'jspdf'
 import { obtenerSnapshots, crearSnapshot, actualizarSnapshot, eliminarSnapshot, obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
@@ -138,6 +139,7 @@ export default function Administrador() {
   const [snapshots, setSnapshots] = useState<PackageSnapshot[]>([])
   const [editingSnapshotId, setEditingSnapshotId] = useState<string | null>(null)
   const [showModalEditar, setShowModalEditar] = useState(false)
+  const [activeModalTab, setActiveModalTab] = useState<string>('general')
   const [snapshotEditando, setSnapshotEditando] = useState<PackageSnapshot | null>(null)
   // Estado para comparar cambios en el modal (versión original serializada)
   const [snapshotOriginalJson, setSnapshotOriginalJson] = useState<string | null>(null)
@@ -570,6 +572,7 @@ export default function Administrador() {
     }
     setShowModalEditar(false)
     setSnapshotEditando(null)
+    setActiveModalTab('general')
     setSnapshotOriginalJson(null)
   }
 
@@ -1910,10 +1913,20 @@ export default function Administrador() {
                 </button>
               </div>
 
-              <div className="p-6 space-y-6">
-                {/* Información General del Paquete */}
-                <div className="bg-gradient-to-r from-secondary/5 to-accent/5 p-6 rounded-xl border-2 border-secondary/20">
-                  <h3 className="text-lg font-bold text-secondary mb-4">📦 Información General del Paquete</h3>
+              {/* Contenido del Modal con Tabs */}
+              <div className="flex flex-col flex-1 overflow-hidden h-full">
+                {/* TabsModal Component */}
+                <TabsModal
+                  tabs={[
+                    {
+                      id: 'general',
+                      label: 'General',
+                      icon: '📦',
+                      content: (
+                        <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
+                          {/* Información General del Paquete */}
+                          <div className="bg-gradient-to-r from-secondary/5 to-accent/5 p-6 rounded-xl border-2 border-secondary/20">
+                            <h3 className="text-lg font-bold text-secondary mb-4">📦 Información General del Paquete</h3>
                   
                   {/* Nombre - Full width */}
                   <div className="mb-4">
@@ -2042,8 +2055,16 @@ export default function Administrador() {
                   </div>
 
                 </div>
-
-                {/* Servicios Base */}
+                          </div>
+                        ),
+                      },
+                      {
+                        id: 'servicios',
+                        label: 'Servicios Base',
+                        icon: '🌐',
+                        content: (
+                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
+                          {/* Servicios Base */}
                 <div className="bg-primary/5 p-6 rounded-xl border-2 border-primary/20">
                   <h3 className="text-lg font-bold text-primary mb-4">💰 Servicios Base</h3>
                   <div className="space-y-3">
@@ -2139,7 +2160,15 @@ export default function Administrador() {
                     ))}
                   </div>
                 </div>
-
+                          </div>
+                        ),
+                      },
+                      {
+                        id: 'gestion',
+                        label: 'Gestión',
+                        icon: '🛠️',
+                        content: (
+                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
                 {/* Gestión */}
                 <div className="bg-amber-50 p-6 rounded-xl border-2 border-amber-200">
                   <h3 className="text-lg font-bold text-amber-900 mb-4">🛠️ Gestión (USD/mes)</h3>
@@ -2213,7 +2242,15 @@ export default function Administrador() {
                     </div>
                   </div>
                 </div>
-
+                          </div>
+                        ),
+                      },
+                      {
+                        id: 'costos',
+                        label: 'Costos',
+                        icon: '💰',
+                        content: (
+                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
                 {/* Paquete */}
                 <div className="bg-accent/5 p-6 rounded-xl border-2 border-accent/20">
                   <h3 className="text-lg font-bold text-accent mb-4">📦 Costo del Paquete (USD/mes)</h3>
@@ -2261,7 +2298,15 @@ export default function Administrador() {
                     </div>
                   </div>
                 </div>
-
+                          </div>
+                        ),
+                      },
+                      {
+                        id: 'otros',
+                        label: 'Otros Servicios',
+                        icon: '🎁',
+                        content: (
+                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
                 {/* Otros Servicios */}
                 <div className="bg-secondary/5 p-6 rounded-xl border-2 border-secondary/20">
                   <h3 className="text-lg font-bold text-secondary mb-4">🎁 Otros Servicios</h3>
@@ -2398,34 +2443,44 @@ export default function Administrador() {
                     <FaPlus /> Agregar Servicio
                   </button>
                 </div>
+                          </div>
+                        ),
+                      },
+                    ]}
+                    activeTab={activeModalTab}
+                    onTabChange={setActiveModalTab}
+                  />
+              </div>
 
-                {/* Botones de Acción */}
-                <div className="flex gap-4 pt-4 border-t-2 border-neutral-200">
-                  {/* Indicador de autoguardado */}
-                  <div className="flex-1 flex items-center gap-3">
-                    {autoSaveStatus === 'saving' && (
-                      <span className="text-sm text-accent animate-pulse">Guardando cambios...</span>
-                    )}
-                    {autoSaveStatus === 'saved' && (
-                      <span className="text-sm text-green-600">✓ Cambios guardados</span>
-                    )}
-                    {autoSaveStatus === 'error' && (
-                      <span className="text-sm text-red-600">❌ Error al guardar. Reintentando...</span>
-                    )}
-                  </div>
+              {/* Footer */}
+              <div className="sticky bottom-0 bg-secondary-light border-t-2 border-neutral-200 px-6 py-4 flex justify-between items-center">
+                {/* Indicador de autoguardado a la izquierda */}
+                <div className="flex items-center gap-3">
+                  {autoSaveStatus === 'saving' && (
+                    <span className="text-sm text-accent animate-pulse">Guardando cambios...</span>
+                  )}
+                  {autoSaveStatus === 'saved' && (
+                    <span className="text-sm text-green-600">✓ Cambios guardados</span>
+                  )}
+                  {autoSaveStatus === 'error' && (
+                    <span className="text-sm text-red-600">❌ Error al guardar. Reintentando...</span>
+                  )}
+                </div>
+                {/* Botones a la derecha */}
+                <div className="flex gap-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={guardarEdicion}
-                    className="flex-1 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 font-semibold"
+                    className="py-2 px-6 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2 font-semibold"
                   >
-                    <FaCheck /> Guardar Cambios
+                    <FaCheck /> Guardar
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleCerrarModalEditar}
-                    className="flex-1 py-3 bg-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-400 transition-all flex items-center justify-center gap-2 font-semibold"
+                    className="py-2 px-6 bg-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-400 transition-all flex items-center justify-center gap-2 font-semibold"
                   >
                     <FaTimes /> Cancelar
                   </motion.button>
