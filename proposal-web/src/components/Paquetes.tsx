@@ -304,7 +304,7 @@ function PaqueteCard({
         badge: '',
         priceBox: 'bg-gradient-to-br from-red-500/10 to-red-500/5 border-l-4 border-red-500',
         priceText: 'text-red-600',
-        button: 'bg-red-500 text-white hover:bg-red-600',
+        button: 'bg-red-600 text-white hover:bg-red-700',
       }
     }
     if (data.colorScheme === 'negro') {
@@ -337,14 +337,17 @@ function PaqueteCard({
       transition={{ duration: 0.3 }}
       className={`relative rounded-2xl overflow-hidden transition-all ${styles.container}`}
     >
-      {data.recomendado && (
-        <div className={`absolute top-0 left-0 right-0 ${styles.badge} text-white py-2 text-center font-bold flex items-center justify-center gap-2 z-10`}>
-          <FaStar /> ⭐ RECOMENDADO
-        </div>
-      )}
+      {/* Reservar espacio para badge (10px height) */}
+      <div className="h-[44px] relative">
+        {data.recomendado && (
+          <div className={`absolute top-0 left-0 right-0 ${styles.badge} text-white py-2 text-center font-bold flex items-center justify-center gap-2 z-10`}>
+            <FaStar /> ⭐ RECOMENDADO
+          </div>
+        )}
+      </div>
 
-      <div className={`p-8 ${data.recomendado ? 'pt-16' : 'pt-8'} h-full flex flex-col`}>
-        <div className="text-center mb-6">
+      <div className="p-8 h-full flex flex-col">
+        <div className="text-center mb-6 min-h-[140px] flex flex-col justify-center">
           <span className="text-4xl">{data.icon}</span>
           {data.tipo ? (
             <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{data.tipo}</p>
@@ -355,7 +358,7 @@ function PaqueteCard({
           <p className={`${styles.priceText} font-bold text-lg`}>{data.subtitulo}</p>
         </div>
 
-        <p className="text-neutral-700 text-center mb-6 flex-grow">{data.description}</p>
+        <p className="text-neutral-700 text-center mb-6 flex-grow min-h-[60px]">{data.description}</p>
 
         <div className={`${styles.priceBox} p-4 rounded-lg mb-6`}>
           <p className="text-sm text-neutral-600">Pago Inicial</p>

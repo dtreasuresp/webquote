@@ -39,9 +39,9 @@ export default function TablaComparativa() {
 
           {/* Controles de Expansión */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <div className="bg-accent/10 border-2 border-accent rounded-lg px-4 py-2">
-              <p className="text-sm text-gray-800">
-                <span className="font-bold text-accent-dark">💡 Tip:</span> Haz clic en cada categoría para expandir
+            <div className="bg-amber-50 border-2 border-amber-500 rounded-lg px-4 py-2">
+              <p className="text-sm text-gray-900">
+                <span className="font-bold text-amber-900">💡 Tip:</span> Haz clic en cada categoría para expandir
               </p>
             </div>
             <div className="flex gap-2">
