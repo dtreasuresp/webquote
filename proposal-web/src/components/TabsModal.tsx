@@ -30,7 +30,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange }: TabsModalPro
             className={`flex-1 min-w-max px-6 py-4 text-sm font-semibold transition-all duration-200 flex items-center gap-2 whitespace-nowrap ${
               activeTab === tab.id
                 ? 'text-primary border-b-3 border-accent bg-white shadow-sm'
-                : 'text-secondary-light border-b-3 border-transparent bg-neutral-50 hover:bg-neutral-100'
+                : 'text-secondary border-b-3 border-transparent bg-neutral-50 hover:bg-neutral-100'
             }`}
             aria-selected={activeTab === tab.id}
             role="tab"

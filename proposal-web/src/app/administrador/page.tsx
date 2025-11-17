@@ -843,7 +843,7 @@ export default function Administrador() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-all flex items-center gap-2 font-semibold border border-white/30 backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
+                  className="px-6 py-3 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-all flex items-center gap-2 font-semibold border border-white/50 backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
                 >
                   <FaArrowLeft /> Volver
                 </motion.button>

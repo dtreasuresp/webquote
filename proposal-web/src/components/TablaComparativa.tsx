@@ -40,8 +40,8 @@ export default function TablaComparativa() {
           {/* Controles de Expansión */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
             <div className="bg-accent/10 border-2 border-accent rounded-lg px-4 py-2">
-              <p className="text-sm text-gray-700">
-                <span className="font-bold text-accent">💡 Tip:</span> Haz clic en cada categoría para expandir
+              <p className="text-sm text-gray-800">
+                <span className="font-bold text-accent-dark">💡 Tip:</span> Haz clic en cada categoría para expandir
               </p>
             </div>
             <div className="flex gap-2">
@@ -98,18 +98,18 @@ export default function TablaComparativa() {
                     >
                       {row.items.map((item, idx) => (
                         <div key={idx}>
-                          <p className="font-semibold text-gray-700 mb-1">{item.feature}</p>
+                          <p className="font-semibold text-gray-900 mb-1">{item.feature}</p>
                           <div className="grid grid-cols-3 gap-2 text-sm">
                             <div className="text-center">
-                              <p className="text-xs text-gray-600 mb-1">Constructor</p>
+                              <p className="text-xs text-gray-700 mb-1">Constructor</p>
                               <p className="text-primary font-bold">{item.constructor}</p>
                             </div>
                             <div className="text-center border-l-2 border-r-2 border-primary px-2">
-                              <p className="text-xs text-gray-600 mb-1">Obra Maestra</p>
+                              <p className="text-xs text-gray-700 mb-1">Obra Maestra</p>
                               <p className="text-primary font-bold">{item.maestra}</p>
                             </div>
                             <div className="text-center">
-                              <p className="text-xs text-gray-600 mb-1">Imperio</p>
+                              <p className="text-xs text-gray-700 mb-1">Imperio</p>
                               <p className="text-primary font-bold">{item.imperio}</p>
                             </div>
                           </div>
@@ -176,9 +176,9 @@ export default function TablaComparativa() {
                               className="border-b border-gray-100 hover:bg-neutral-50/50"
                             >
                               <td className="p-4 font-semibold text-gray-900">{item.feature}</td>
-                              <td className="p-4 text-center text-gray-700">{item.constructor}</td>
-                              <td className="p-4 text-center text-gray-700 bg-primary/5">{item.maestra}</td>
-                              <td className="p-4 text-center text-gray-700">{item.imperio}</td>
+                              <td className="p-4 text-center text-gray-800">{item.constructor}</td>
+                              <td className="p-4 text-center text-gray-800 bg-primary/5">{item.maestra}</td>
+                              <td className="p-4 text-center text-gray-800">{item.imperio}</td>
                             </motion.tr>
                           ))}
                         </>

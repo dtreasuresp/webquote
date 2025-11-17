@@ -16,7 +16,7 @@ module.exports = {
         secondary: {
           DEFAULT: '#0F1419', // Negro corporativo - Elegancia y solidez
           dark: '#000000',    // Negro puro - Máximo contraste
-          light: '#1F2937',   // Gris carbón - Elementos secundarios
+          light: '#374151',   // Gris carbón - Elementos secundarios (WCAG AA compliant)
         },
         accent: {
           DEFAULT: '#F59E0B', // Dorado - Destacar ofertas y CTAs especiales
