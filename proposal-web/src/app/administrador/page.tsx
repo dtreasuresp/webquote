@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
-import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck } from 'react-icons/fa'
+import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard } from 'react-icons/fa'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import TabsModal from '@/components/TabsModal'
@@ -70,6 +70,12 @@ interface PackageSnapshot {
     precioMailbox?: number
     precioDominio?: number
     tiempoEntrega?: string
+    opcionesPago?: Array<{
+      nombre: string
+      porcentaje: number
+      descripcion: string
+    }>
+    descuentoPagoUnico?: number
   }
   otrosServicios: OtroServicioSnapshot[]
   costos: {
@@ -2297,6 +2303,218 @@ export default function Administrador() {
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* Opciones de Pago */}
+                <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 rounded-xl border-2 border-primary/20">
+                  <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <FaCreditCard /> Opciones de Pago
+                  </h3>
+                  
+                  {/* Descuento por Pago Único */}
+                  <div className="mb-6 p-4 bg-white rounded-lg border-2 border-accent/30">
+                    <label className="block font-semibold text-secondary mb-2 text-sm">
+                      🎁 Descuento por Pago Adelantado (%)
+                    </label>
+                    <input
+                      type="number"
+                      value={snapshotEditando.paquete.descuentoPagoUnico || 0}
+                      onChange={(e) =>
+                        setSnapshotEditando({
+                          ...snapshotEditando,
+                          paquete: {
+                            ...snapshotEditando.paquete,
+                            descuentoPagoUnico: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                          },
+                        })
+                      }
+                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
+                      min="0"
+                      max="100"
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Descuento aplicado cuando el cliente paga el desarrollo completo por adelantado
+                    </p>
+                  </div>
+
+                  {/* Lista de Opciones de Pago */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="block font-semibold text-secondary text-sm">
+                        📊 Opciones de Pago Estándar (en cuotas)
+                      </label>
+                      {(() => {
+                        const opcionesPago = snapshotEditando.paquete.opcionesPago || []
+                        const totalPorcentaje = opcionesPago.reduce((sum, op) => sum + (op.porcentaje || 0), 0)
+                        const esValido = totalPorcentaje === 100
+                        return (
+                          <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                            esValido 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            Total: {totalPorcentaje}% {esValido ? '✓' : '⚠️ Debe ser 100%'}
+                          </span>
+                        )
+                      })()}
+                    </div>
+
+                    {(snapshotEditando.paquete.opcionesPago || []).length > 0 ? (
+                      <div className="space-y-3 mb-4">
+                        {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white p-4 rounded-lg border-2 border-primary/20 grid md:grid-cols-[2fr,1fr,3fr,auto] gap-3 items-end"
+                          >
+                            <div>
+                              <label className="block font-semibold text-secondary text-sm mb-1">
+                                📝 Nombre
+                              </label>
+                              <input
+                                type="text"
+                                value={opcion.nombre || ''}
+                                onChange={(e) => {
+                                  const actualizado = [...(snapshotEditando.paquete.opcionesPago || [])]
+                                  actualizado[idx] = { ...actualizado[idx], nombre: e.target.value }
+                                  setSnapshotEditando({
+                                    ...snapshotEditando,
+                                    paquete: {
+                                      ...snapshotEditando.paquete,
+                                      opcionesPago: actualizado,
+                                    },
+                                  })
+                                }}
+                                className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                placeholder="Ej: Inicial"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-semibold text-secondary text-sm mb-1">
+                                📊 Porcentaje
+                              </label>
+                              <input
+                                type="number"
+                                value={opcion.porcentaje || 0}
+                                onChange={(e) => {
+                                  const actualizado = [...(snapshotEditando.paquete.opcionesPago || [])]
+                                  actualizado[idx] = { 
+                                    ...actualizado[idx], 
+                                    porcentaje: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
+                                  }
+                                  setSnapshotEditando({
+                                    ...snapshotEditando,
+                                    paquete: {
+                                      ...snapshotEditando.paquete,
+                                      opcionesPago: actualizado,
+                                    },
+                                  })
+                                }}
+                                className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                min="0"
+                                max="100"
+                                placeholder="30"
+                              />
+                            </div>
+                            <div>
+                              <label className="block font-semibold text-secondary text-sm mb-1">
+                                📋 Descripción
+                              </label>
+                              <input
+                                type="text"
+                                value={opcion.descripcion || ''}
+                                onChange={(e) => {
+                                  const actualizado = [...(snapshotEditando.paquete.opcionesPago || [])]
+                                  actualizado[idx] = { ...actualizado[idx], descripcion: e.target.value }
+                                  setSnapshotEditando({
+                                    ...snapshotEditando,
+                                    paquete: {
+                                      ...snapshotEditando.paquete,
+                                      opcionesPago: actualizado,
+                                    },
+                                  })
+                                }}
+                                className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                placeholder="Ej: Al firmar contrato"
+                              />
+                            </div>
+                            <button
+                              aria-label={`Eliminar opción de pago ${opcion.nombre || idx + 1}`}
+                              onClick={() => {
+                                const actualizado = (snapshotEditando.paquete.opcionesPago || []).filter(
+                                  (_, i) => i !== idx
+                                )
+                                setSnapshotEditando({
+                                  ...snapshotEditando,
+                                  paquete: {
+                                    ...snapshotEditando.paquete,
+                                    opcionesPago: actualizado,
+                                  },
+                                })
+                              }}
+                              className="w-8 h-8 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
+                            >
+                              <FaTrash size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-neutral-500 text-sm mb-4 italic">
+                        Sin opciones de pago configuradas. Se usará el esquema por defecto (30-40-30).
+                      </p>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        setSnapshotEditando({
+                          ...snapshotEditando,
+                          paquete: {
+                            ...snapshotEditando.paquete,
+                            opcionesPago: [
+                              ...(snapshotEditando.paquete.opcionesPago || []),
+                              {
+                                nombre: '',
+                                porcentaje: 0,
+                                descripcion: '',
+                              },
+                            ],
+                          },
+                        })
+                      }}
+                      className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold text-sm"
+                    >
+                      <FaPlus /> Agregar Opción de Pago
+                    </button>
+                  </div>
+
+                  {/* Preview de montos */}
+                  {(snapshotEditando.paquete.opcionesPago || []).length > 0 && snapshotEditando.paquete.desarrollo > 0 && (
+                    <div className="mt-4 p-4 bg-white rounded-lg border-2 border-primary/30">
+                      <h4 className="font-semibold text-secondary text-sm mb-3">💰 Vista Previa de Montos</h4>
+                      <div className="space-y-2">
+                        {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => {
+                          const monto = (snapshotEditando.paquete.desarrollo * (opcion.porcentaje || 0)) / 100
+                          return (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <span className="text-neutral-700">
+                                {opcion.nombre || `Pago ${idx + 1}`} ({opcion.porcentaje}%)
+                              </span>
+                              <span className="font-bold text-primary">
+                                ${monto.toFixed(2)} USD
+                              </span>
+                            </div>
+                          )
+                        })}
+                        <div className="border-t-2 border-primary/20 pt-2 mt-2 flex justify-between font-bold">
+                          <span className="text-secondary">Total:</span>
+                          <span className="text-primary">
+                            ${snapshotEditando.paquete.desarrollo.toFixed(2)} USD
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                           </div>
                         ),
