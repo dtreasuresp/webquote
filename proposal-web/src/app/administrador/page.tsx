@@ -2603,38 +2603,48 @@ export default function Administrador() {
                               {/* Servicios Base con Tree Expandible */}
                               {snapshotEditando.paquete.descuentosPorServicio?.aplicarAServiciosBase && (
                                 <div className="mb-5">
-                                  <button
+                                  <motion.button
                                     onClick={() => setExpandidosDescuentos({
                                       ...expandidosDescuentos,
                                       serviciosBase: !expandidosDescuentos.serviciosBase
                                     })}
-                                    className="w-full flex items-center justify-between p-3 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors mb-3"
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-red-100/50 hover:from-red-100 hover:to-red-100 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-all duration-200 mb-3 group"
                                   >
-                                    <div className="flex items-center gap-2 text-left">
-                                      <span className="text-sm font-bold text-red-600">📦 Servicios Base</span>
+                                    <div className="flex items-center gap-3 text-left">
+                                      <motion.div
+                                        animate={{ scale: expandidosDescuentos.serviciosBase ? 1.2 : 1 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="text-lg"
+                                      >
+                                        📦
+                                      </motion.div>
+                                      <span className="text-sm font-bold text-red-600 group-hover:text-red-700">Servicios Base</span>
                                     </div>
                                     <motion.div
                                       animate={{ rotate: expandidosDescuentos.serviciosBase ? 180 : 0 }}
-                                      transition={{ duration: 0.2 }}
+                                      transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
+                                      className="flex-shrink-0"
                                     >
-                                      <FaChevronDown size={14} className="text-red-600" />
+                                      <FaChevronDown size={16} className="text-red-600 group-hover:text-red-700" />
                                     </motion.div>
-                                  </button>
+                                  </motion.button>
                                   
                                   <AnimatePresence>
                                     {expandidosDescuentos.serviciosBase && (
                                       <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.2 }}
+                                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                        animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+                                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                        transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
                                         className="overflow-hidden"
                                       >
-                                        <div className="space-y-3 bg-white p-4 rounded-lg border border-red-200/30">
+                                        <div className="space-y-3 bg-gradient-to-br from-white to-red-50/30 p-4 rounded-lg border border-red-100 shadow-sm">
                                           {snapshotEditando.serviciosBase.map((servicio) => {
                                             const descuento = snapshotEditando.paquete.descuentosPorServicio?.serviciosBase.find(d => d.servicioId === servicio.id)
                                             return (
-                                              <div key={servicio.id} className="flex gap-3 items-end pb-3 border-b border-red-100/50 last:border-b-0 last:pb-0">
+                                              <div key={servicio.id} className="flex gap-3 items-end pb-3 border-b border-red-50 last:border-b-0 last:pb-0 hover:bg-red-50/30 px-2 -mx-2 rounded transition-colors">
                                                 <div className="flex-1">
                                                   <label className="flex items-center gap-2 cursor-pointer mb-2">
                                                     <input
@@ -2648,9 +2658,9 @@ export default function Administrador() {
                                                         }
                                                         setSnapshotEditando(updated)
                                                       }}
-                                                      className="w-4 h-4 accent-red-500 cursor-pointer"
+                                                      className="w-4 h-4 accent-red-500 cursor-pointer transition-transform hover:scale-110"
                                                     />
-                                                    <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
+                                                    <span className="text-sm font-medium text-secondary hover:text-red-600 transition-colors">{servicio.nombre}</span>
                                                   </label>
                                                 </div>
                                                 {descuento?.aplicarDescuento && (
@@ -2665,7 +2675,7 @@ export default function Administrador() {
                                                       }
                                                       setSnapshotEditando(updated)
                                                     }}
-                                                    className="w-20 px-3 py-2 border border-red-300/20 rounded-lg focus:border-red-500 focus:outline-none text-sm"
+                                                    className="w-20 px-3 py-2 border border-red-300/30 rounded-md focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 text-sm font-medium bg-white hover:bg-red-50/50 transition-all"
                                                     min="0"
                                                     max="100"
                                                     placeholder="0%"
@@ -2684,38 +2694,48 @@ export default function Administrador() {
                               {/* Otros Servicios con Tree Expandible */}
                               {snapshotEditando.paquete.descuentosPorServicio?.aplicarAOtrosServicios && (
                                 <div>
-                                  <button
+                                  <motion.button
                                     onClick={() => setExpandidosDescuentos({
                                       ...expandidosDescuentos,
                                       otrosServicios: !expandidosDescuentos.otrosServicios
                                     })}
-                                    className="w-full flex items-center justify-between p-3 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors mb-3"
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-red-100/50 hover:from-red-100 hover:to-red-100 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-all duration-200 mb-3 group"
                                   >
-                                    <div className="flex items-center gap-2 text-left">
-                                      <span className="text-sm font-bold text-red-600">🎁 Otros Servicios</span>
+                                    <div className="flex items-center gap-3 text-left">
+                                      <motion.div
+                                        animate={{ scale: expandidosDescuentos.otrosServicios ? 1.2 : 1 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="text-lg"
+                                      >
+                                        🎁
+                                      </motion.div>
+                                      <span className="text-sm font-bold text-red-600 group-hover:text-red-700">Otros Servicios</span>
                                     </div>
                                     <motion.div
                                       animate={{ rotate: expandidosDescuentos.otrosServicios ? 180 : 0 }}
-                                      transition={{ duration: 0.2 }}
+                                      transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
+                                      className="flex-shrink-0"
                                     >
-                                      <FaChevronDown size={14} className="text-red-600" />
+                                      <FaChevronDown size={16} className="text-red-600 group-hover:text-red-700" />
                                     </motion.div>
-                                  </button>
+                                  </motion.button>
                                   
                                   <AnimatePresence>
                                     {expandidosDescuentos.otrosServicios && (
                                       <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        transition={{ duration: 0.2 }}
+                                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                        animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+                                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                        transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
                                         className="overflow-hidden"
                                       >
-                                        <div className="space-y-3 bg-white p-4 rounded-lg border border-red-200/30">
+                                        <div className="space-y-3 bg-gradient-to-br from-white to-red-50/30 p-4 rounded-lg border border-red-100 shadow-sm">
                                           {snapshotEditando.otrosServicios.map((servicio, idx) => {
                                             const descuento = snapshotEditando.paquete.descuentosPorServicio?.otrosServicios[idx]
                                             return (
-                                              <div key={idx} className="flex gap-3 items-end pb-3 border-b border-red-100/50 last:border-b-0 last:pb-0">
+                                              <div key={idx} className="flex gap-3 items-end pb-3 border-b border-red-50 last:border-b-0 last:pb-0 hover:bg-red-50/30 px-2 -mx-2 rounded transition-colors">
                                                 <div className="flex-1">
                                                   <label className="flex items-center gap-2 cursor-pointer mb-2">
                                                     <input
@@ -2726,9 +2746,9 @@ export default function Administrador() {
                                                         updated.paquete.descuentosPorServicio.otrosServicios[idx].aplicarDescuento = e.target.checked
                                                         setSnapshotEditando(updated)
                                                       }}
-                                                      className="w-4 h-4 accent-red-500 cursor-pointer"
+                                                      className="w-4 h-4 accent-red-500 cursor-pointer transition-transform hover:scale-110"
                                                     />
-                                                    <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
+                                                    <span className="text-sm font-medium text-secondary hover:text-red-600 transition-colors">{servicio.nombre}</span>
                                                   </label>
                                                 </div>
                                                 {descuento?.aplicarDescuento && (
@@ -2740,7 +2760,7 @@ export default function Administrador() {
                                                       updated.paquete.descuentosPorServicio.otrosServicios[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
                                                       setSnapshotEditando(updated)
                                                     }}
-                                                    className="w-20 px-3 py-2 border border-red-300/20 rounded-lg focus:border-red-500 focus:outline-none text-sm"
+                                                    className="w-20 px-3 py-2 border border-red-300/30 rounded-md focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 text-sm font-medium bg-white hover:bg-red-50/50 transition-all"
                                                     min="0"
                                                     max="100"
                                                     placeholder="0%"
