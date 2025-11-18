@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
-import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard } from 'react-icons/fa'
+import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown } from 'react-icons/fa'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import TabsModal from '@/components/TabsModal'
@@ -2515,7 +2515,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-full px-4 py-2 border-2 border-purple-300/20 rounded-lg focus:border-purple-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border border-purple-300/20 rounded-lg focus:border-purple-500 focus:outline-none"
                                     min="0"
                                     max="100"
                                     placeholder="0"
@@ -2537,7 +2537,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-full px-4 py-2 border-2 border-purple-300/20 rounded-lg focus:border-purple-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border border-purple-300/20 rounded-lg focus:border-purple-500 focus:outline-none"
                                     min="0"
                                     max="100"
                                     placeholder="0"
@@ -2600,101 +2600,159 @@ export default function Administrador() {
                                 </label>
                               </div>
 
-                              {/* Servicios Base */}
+                              {/* Servicios Base con Tree Expandible */}
                               {snapshotEditando.paquete.descuentosPorServicio?.aplicarAServiciosBase && (
                                 <div className="mb-5">
-                                  <h4 className="font-bold text-blue-600 mb-3 text-sm">📦 Servicios Base</h4>
-                                  <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
-                                    {snapshotEditando.serviciosBase.map((servicio) => {
-                                      const descuento = snapshotEditando.paquete.descuentosPorServicio?.serviciosBase.find(d => d.servicioId === servicio.id)
-                                      return (
-                                        <div key={servicio.id} className="flex gap-3 items-end pb-3 border-b border-blue-100/50 last:border-b-0 last:pb-0">
-                                          <div className="flex-1">
-                                            <label className="flex items-center gap-2 cursor-pointer mb-2">
-                                              <input
-                                                type="checkbox"
-                                                checked={descuento?.aplicarDescuento || false}
-                                                onChange={(e) => {
-                                                  const updated = { ...snapshotEditando }
-                                                  const idx = updated.paquete.descuentosPorServicio.serviciosBase.findIndex(d => d.servicioId === servicio.id)
-                                                  if (idx >= 0) {
-                                                    updated.paquete.descuentosPorServicio.serviciosBase[idx].aplicarDescuento = e.target.checked
-                                                  }
-                                                  setSnapshotEditando(updated)
-                                                }}
-                                                className="w-4 h-4 accent-blue-500 cursor-pointer"
-                                              />
-                                              <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
-                                            </label>
-                                          </div>
-                                          {descuento?.aplicarDescuento && (
-                                            <input
-                                              type="number"
-                                              value={descuento.porcentajeDescuento}
-                                              onChange={(e) => {
-                                                const updated = { ...snapshotEditando }
-                                                const idx = updated.paquete.descuentosPorServicio.serviciosBase.findIndex(d => d.servicioId === servicio.id)
-                                                if (idx >= 0) {
-                                                  updated.paquete.descuentosPorServicio.serviciosBase[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
-                                                }
-                                                setSnapshotEditando(updated)
-                                              }}
-                                              className="w-20 px-3 py-2 border border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
-                                              min="0"
-                                              max="100"
-                                              placeholder="0%"
-                                            />
-                                          )}
-                                        </div>
-                                      )
+                                  <button
+                                    onClick={() => setExpandidosDescuentos({
+                                      ...expandidosDescuentos,
+                                      serviciosBase: !expandidosDescuentos.serviciosBase
                                     })}
-                                  </div>
+                                    className="w-full flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors mb-3"
+                                  >
+                                    <div className="flex items-center gap-2 text-left">
+                                      <span className="text-sm font-bold text-blue-600">📦 Servicios Base</span>
+                                    </div>
+                                    <motion.div
+                                      animate={{ rotate: expandidosDescuentos.serviciosBase ? 180 : 0 }}
+                                      transition={{ duration: 0.2 }}
+                                    >
+                                      <FaChevronDown size={14} className="text-blue-600" />
+                                    </motion.div>
+                                  </button>
+                                  
+                                  <AnimatePresence>
+                                    {expandidosDescuentos.serviciosBase && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
+                                          {snapshotEditando.serviciosBase.map((servicio) => {
+                                            const descuento = snapshotEditando.paquete.descuentosPorServicio?.serviciosBase.find(d => d.servicioId === servicio.id)
+                                            return (
+                                              <div key={servicio.id} className="flex gap-3 items-end pb-3 border-b border-blue-100/50 last:border-b-0 last:pb-0">
+                                                <div className="flex-1">
+                                                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={descuento?.aplicarDescuento || false}
+                                                      onChange={(e) => {
+                                                        const updated = { ...snapshotEditando }
+                                                        const idx = updated.paquete.descuentosPorServicio.serviciosBase.findIndex(d => d.servicioId === servicio.id)
+                                                        if (idx >= 0) {
+                                                          updated.paquete.descuentosPorServicio.serviciosBase[idx].aplicarDescuento = e.target.checked
+                                                        }
+                                                        setSnapshotEditando(updated)
+                                                      }}
+                                                      className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                                    />
+                                                    <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
+                                                  </label>
+                                                </div>
+                                                {descuento?.aplicarDescuento && (
+                                                  <input
+                                                    type="number"
+                                                    value={descuento.porcentajeDescuento}
+                                                    onChange={(e) => {
+                                                      const updated = { ...snapshotEditando }
+                                                      const idx = updated.paquete.descuentosPorServicio.serviciosBase.findIndex(d => d.servicioId === servicio.id)
+                                                      if (idx >= 0) {
+                                                        updated.paquete.descuentosPorServicio.serviciosBase[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
+                                                      }
+                                                      setSnapshotEditando(updated)
+                                                    }}
+                                                    className="w-20 px-3 py-2 border border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                                    min="0"
+                                                    max="100"
+                                                    placeholder="0%"
+                                                  />
+                                                )}
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
                                 </div>
                               )}
 
-                              {/* Otros Servicios */}
+                              {/* Otros Servicios con Tree Expandible */}
                               {snapshotEditando.paquete.descuentosPorServicio?.aplicarAOtrosServicios && (
                                 <div>
-                                  <h4 className="font-bold text-blue-600 mb-3 text-sm">🎁 Otros Servicios</h4>
-                                  <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
-                                    {snapshotEditando.otrosServicios.map((servicio, idx) => {
-                                      const descuento = snapshotEditando.paquete.descuentosPorServicio?.otrosServicios[idx]
-                                      return (
-                                        <div key={idx} className="flex gap-3 items-end pb-3 border-b border-blue-100/50 last:border-b-0 last:pb-0">
-                                          <div className="flex-1">
-                                            <label className="flex items-center gap-2 cursor-pointer mb-2">
-                                              <input
-                                                type="checkbox"
-                                                checked={descuento?.aplicarDescuento || false}
-                                                onChange={(e) => {
-                                                  const updated = { ...snapshotEditando }
-                                                  updated.paquete.descuentosPorServicio.otrosServicios[idx].aplicarDescuento = e.target.checked
-                                                  setSnapshotEditando(updated)
-                                                }}
-                                                className="w-4 h-4 accent-blue-500 cursor-pointer"
-                                              />
-                                              <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
-                                            </label>
-                                          </div>
-                                          {descuento?.aplicarDescuento && (
-                                            <input
-                                              type="number"
-                                              value={descuento.porcentajeDescuento}
-                                              onChange={(e) => {
-                                                const updated = { ...snapshotEditando }
-                                                updated.paquete.descuentosPorServicio.otrosServicios[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
-                                                setSnapshotEditando(updated)
-                                              }}
-                                              className="w-20 px-3 py-2 border border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
-                                              min="0"
-                                              max="100"
-                                              placeholder="0%"
-                                            />
-                                          )}
-                                        </div>
-                                      )
+                                  <button
+                                    onClick={() => setExpandidosDescuentos({
+                                      ...expandidosDescuentos,
+                                      otrosServicios: !expandidosDescuentos.otrosServicios
                                     })}
-                                  </div>
+                                    className="w-full flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors mb-3"
+                                  >
+                                    <div className="flex items-center gap-2 text-left">
+                                      <span className="text-sm font-bold text-blue-600">🎁 Otros Servicios</span>
+                                    </div>
+                                    <motion.div
+                                      animate={{ rotate: expandidosDescuentos.otrosServicios ? 180 : 0 }}
+                                      transition={{ duration: 0.2 }}
+                                    >
+                                      <FaChevronDown size={14} className="text-blue-600" />
+                                    </motion.div>
+                                  </button>
+                                  
+                                  <AnimatePresence>
+                                    {expandidosDescuentos.otrosServicios && (
+                                      <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
+                                          {snapshotEditando.otrosServicios.map((servicio, idx) => {
+                                            const descuento = snapshotEditando.paquete.descuentosPorServicio?.otrosServicios[idx]
+                                            return (
+                                              <div key={idx} className="flex gap-3 items-end pb-3 border-b border-blue-100/50 last:border-b-0 last:pb-0">
+                                                <div className="flex-1">
+                                                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={descuento?.aplicarDescuento || false}
+                                                      onChange={(e) => {
+                                                        const updated = { ...snapshotEditando }
+                                                        updated.paquete.descuentosPorServicio.otrosServicios[idx].aplicarDescuento = e.target.checked
+                                                        setSnapshotEditando(updated)
+                                                      }}
+                                                      className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                                    />
+                                                    <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
+                                                  </label>
+                                                </div>
+                                                {descuento?.aplicarDescuento && (
+                                                  <input
+                                                    type="number"
+                                                    value={descuento.porcentajeDescuento}
+                                                    onChange={(e) => {
+                                                      const updated = { ...snapshotEditando }
+                                                      updated.paquete.descuentosPorServicio.otrosServicios[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
+                                                      setSnapshotEditando(updated)
+                                                    }}
+                                                    className="w-20 px-3 py-2 border border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                                    min="0"
+                                                    max="100"
+                                                    placeholder="0%"
+                                                  />
+                                                )}
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
                                 </div>
                               )}
                             </div>
