@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useRef, RefObject } from 'react'
 import { motion } from 'framer-motion'
 
 export interface TabItem {
@@ -14,10 +14,22 @@ interface TabsModalProps {
   tabs: TabItem[]
   activeTab: string
   onTabChange: (tabId: string) => void
+  scrollContainerRef?: RefObject<HTMLDivElement>
 }
 
-export default function TabsModal({ tabs, activeTab, onTabChange }: TabsModalProps) {
+export default function TabsModal({ tabs, activeTab, onTabChange, scrollContainerRef }: TabsModalProps) {
   const activeTabItem = tabs.find(tab => tab.id === activeTab)
+
+  // Scroll automático hacia arriba al cambiar de pestaña
+  useEffect(() => {
+    if (scrollContainerRef?.current) {
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+      // Nota: CSS puede acelerar esto. Para control total, usa animación manual con requestAnimationFrame
+    }
+  }, [activeTab, scrollContainerRef])
 
   return (
     <>
@@ -42,22 +54,22 @@ export default function TabsModal({ tabs, activeTab, onTabChange }: TabsModalPro
       </div>
 
       {/* Content Area */}
-      <div className="relative w-full overflow-hidden">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className="w-full"
-        >
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -30 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative w-full overflow-hidden"
+      >
+        <div className="w-full">
           {activeTabItem && (
             <div className="p-8 bg-white">
               {activeTabItem.content}
             </div>
           )}
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </>
   )
 }

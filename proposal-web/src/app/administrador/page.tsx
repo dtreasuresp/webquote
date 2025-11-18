@@ -151,6 +151,8 @@ export default function Administrador() {
   const [snapshotOriginalJson, setSnapshotOriginalJson] = useState<string | null>(null)
   // Ref para foco inicial en modal
   const nombrePaqueteInputRef = useRef<HTMLInputElement | null>(null)
+  // Ref para scroll del contenedor modal
+  const modalScrollContainerRef = useRef<HTMLDivElement>(null)
   const [cargandoSnapshots, setCargandoSnapshots] = useState(true)
   const [errorSnapshots, setErrorSnapshots] = useState<string | null>(null)
 
@@ -1631,9 +1633,18 @@ export default function Administrador() {
                             </thead>
                             <tbody>
                               {/* Servicios Base */}
-                              <tr className="border-b border-secondary/20">
-                                <td colSpan={5} className="p-2 font-bold bg-primary/10 text-primary">
+                              <tr className="border-b border-secondary/20 bg-primary/10">
+                                {/* Título de sección */}
+                                <td className="p-2 font-bold text-primary" colSpan={3}>
                                   💰 Servicios Base
+                                </td>
+                                {/* Subtotal Mensual */}
+                                <td className="p-2 text-right font-bold text-primary bg-primary/5">
+                                  ${((snapshot.serviciosBase ?? []).reduce((sum, s) => sum + (s.precio ?? 0), 0)).toFixed(2)}/mes
+                                </td>
+                                {/* Subtotal Anual */}
+                                <td className="p-2 text-right font-bold text-accent bg-accent/5">
+                                  ${((snapshot.serviciosBase ?? []).reduce((sum, s) => sum + (s.precio ?? 0) * (s.mesesPago ?? 0), 0)).toFixed(2)}/año
                                 </td>
                               </tr>
                               {snapshot.serviciosBase?.map((servicio) => (
@@ -1893,20 +1904,21 @@ export default function Administrador() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur z-50 flex items-start justify-center pt-4 p-4"
             onClick={handleCerrarModalEditar}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
               aria-labelledby="modal-editar-titulo"
             >
-              <div className="sticky top-0 bg-gradient-to-r from-primary to-primary-dark text-white p-6 flex justify-between items-center border-b-4 border-accent">
+              {/* Header Fijo */}
+              <div className="flex-shrink-0 bg-gradient-to-r from-primary to-primary-dark text-white p-6 flex justify-between items-center border-b-4 border-accent">
                 <h2 id="modal-editar-titulo" className="text-2xl font-bold flex items-center gap-2">
                   <FaEdit /> Editar Paquete: {snapshotEditando.nombre}
                 </h2>
@@ -1919,8 +1931,8 @@ export default function Administrador() {
                 </button>
               </div>
 
-              {/* Contenido del Modal con Tabs */}
-              <div className="flex flex-col flex-1 overflow-hidden h-full">
+              {/* Contenido Scrollable */}
+              <div ref={modalScrollContainerRef} className="flex-1 overflow-y-auto modal-scroll-container">
                 {/* TabsModal Component */}
                 <TabsModal
                   tabs={[
@@ -2257,13 +2269,18 @@ export default function Administrador() {
                         icon: '💰',
                         content: (
                           <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
-                {/* Paquete */}
-                <div className="bg-accent/5 p-6 rounded-xl border-2 border-accent/20">
-                  <h3 className="text-lg font-bold text-accent mb-4">📦 Costo del Paquete (USD/mes)</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
+                
+                {/* Opciones de Pago */}
+                <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 rounded-xl border-2 border-primary/20">
+                  <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <FaCreditCard /> Opciones de Pago
+                  </h3>
+
+                  {/* Desarrollo, Descuento general y Descuento por Pago Adelantado en la misma sección */}
+                  <div className="grid md:grid-cols-3 gap-4 mb-6">
                     <div>
                       <label className="block font-semibold text-secondary mb-2 text-sm">
-                        🧑‍💻Desarrollo
+                        🧑‍💻Desarrollo del sistio web
                       </label>
                       <input
                         type="number"
@@ -2277,7 +2294,7 @@ export default function Administrador() {
                             },
                           })
                         }
-                        className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
                         min="0"
                       />
                     </div>
@@ -2287,6 +2304,7 @@ export default function Administrador() {
                       </label>
                       <input
                         type="number"
+                        
                         value={snapshotEditando.paquete.descuento}
                         onChange={(e) =>
                           setSnapshotEditando({
@@ -2297,45 +2315,36 @@ export default function Administrador() {
                             },
                           })
                         }
-                        className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
+                        className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
                         min="0"
                         max="100"
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Opciones de Pago */}
-                <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 rounded-xl border-2 border-primary/20">
-                  <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
-                    <FaCreditCard /> Opciones de Pago
-                  </h3>
-                  
-                  {/* Descuento por Pago Único */}
-                  <div className="mb-6 p-4 bg-white rounded-lg border-2 border-accent/30">
-                    <label className="block font-semibold text-secondary mb-2 text-sm">
-                      🎁 Descuento por Pago Adelantado (%)
-                    </label>
-                    <input
-                      type="number"
-                      value={snapshotEditando.paquete.descuentoPagoUnico || 0}
-                      onChange={(e) =>
-                        setSnapshotEditando({
-                          ...snapshotEditando,
-                          paquete: {
-                            ...snapshotEditando.paquete,
-                            descuentoPagoUnico: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
-                          },
-                        })
-                      }
-                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
-                      min="0"
-                      max="100"
-                      placeholder="0"
-                    />
-                    <p className="text-xs text-neutral-500 mt-1">
-                      Descuento aplicado cuando el cliente paga el desarrollo completo por adelantado
-                    </p>
+                    <div>
+                      <label className="block font-semibold text-secondary mb-2 text-sm">
+                        🎁 Descuento por Pay Full (%)
+                      </label>
+                      <input
+                        type="number"
+                        value={snapshotEditando.paquete.descuentoPagoUnico || 0}
+                        onChange={(e) =>
+                          setSnapshotEditando({
+                            ...snapshotEditando,
+                            paquete: {
+                              ...snapshotEditando.paquete,
+                              descuentoPagoUnico: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                            },
+                          })
+                        }
+                        className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
+                        min="0"
+                        max="100"
+                        placeholder="0"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Se aplica si el cliente paga el desarrollo completo por adelantado.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Lista de Opciones de Pago */}
@@ -2667,11 +2676,13 @@ export default function Administrador() {
                     ]}
                     activeTab={activeModalTab}
                     onTabChange={setActiveModalTab}
+                    scrollContainerRef={modalScrollContainerRef}
                   />
               </div>
+              {/* Fin Contenido Scrollable */}
 
-              {/* Footer */}
-              <div className="sticky bottom-0 bg-secondary-light border-t-2 border-neutral-200 px-6 py-4 flex justify-between items-center">
+              {/* Footer Fijo */}
+              <div className="flex-shrink-0 bg-secondary-light border-t-2 border-neutral-200 px-6 py-4 flex justify-between items-center">
                 {/* Indicador de autoguardado a la izquierda */}
                 <div className="flex items-center gap-3">
                   {autoSaveStatus === 'saving' && (

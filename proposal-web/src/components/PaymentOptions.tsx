@@ -47,7 +47,7 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
                   <div key={`pago-${opcion.nombre}`}>
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="font-semibold">
-                        Pago {index + 1} ({opcion.porcentaje}%)
+                        {opcion.nombre || `Pago ${index + 1}`} ({opcion.porcentaje}%)
                       </span>
                       <span className="text-lg font-bold text-primary">
                         ${monto.toFixed(2)} USD

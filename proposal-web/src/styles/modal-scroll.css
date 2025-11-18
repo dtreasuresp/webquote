@@ -1,0 +1,39 @@
+/* Contenedor scrollable del modal con animación suave personalizada */
+.modal-scroll-container {
+  scroll-behavior: smooth;
+  /* Animación suave al cambiar pestañas */
+  transition: scroll-position 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Efecto de deslizamiento suave hacia abajo del contenido */
+.tab-content-enter {
+  animation: slideDown 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animación para el contenedor scrollable (scroll suave y lento) */
+@supports (scroll-behavior: smooth) {
+  .modal-scroll-container {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Fallback para navegadores sin soporte smooth scroll */
+@keyframes smoothScroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

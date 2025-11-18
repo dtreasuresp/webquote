@@ -346,8 +346,8 @@ function PaqueteCard({
         )}
       </div>
 
-      <div className="p-8 h-full flex flex-col">
-        <div className="text-center mb-6 min-h-[140px] flex flex-col justify-center">
+      <div className="p-6 h-full flex flex-col">
+        <div className="text-center mb-4 min-h-[120px] flex flex-col justify-center">
           <span className="text-4xl">{data.icon}</span>
           {data.tipo ? (
             <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{data.tipo}</p>
@@ -358,14 +358,14 @@ function PaqueteCard({
           <p className={`${styles.priceText} font-bold text-lg`}>{data.subtitulo}</p>
         </div>
 
-        <p className="text-neutral-700 text-center mb-6 flex-grow min-h-[60px]">{data.description}</p>
+        <p className="text-neutral-700 text-center mb-4 flex-grow min-h-[48px]">{data.description}</p>
 
-        <div className={`${styles.priceBox} p-4 rounded-lg mb-6`}>
+        <div className={`${styles.priceBox} p-3 rounded-lg mb-4`}>
           <p className="text-sm text-neutral-600">Pago Inicial</p>
           <p className={`text-3xl font-bold ${styles.priceText}`}>${data.pagoInicial} USD</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 mb-6 flex-grow">
+        <div className="grid grid-cols-1 gap-3 mb-4 flex-grow">
           {data.features.map((feature) => (
             <div key={`feat-${feature.category}`} className="text-sm">
               <p className="font-semibold text-secondary text-xs leading-tight">{feature.category}</p>
@@ -392,7 +392,7 @@ function PaqueteCard({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-6 border-t border-neutral-200">
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-200">
           <div className="text-center">
             <p className={`text-2xl font-bold ${styles.priceText}`}>{data.pages}</p>
             <p className="text-xs text-neutral-600">Páginas</p>
@@ -405,7 +405,7 @@ function PaqueteCard({
 
         <a
           href={data.href}
-          className={`mt-6 py-3 px-4 rounded-lg font-bold text-center transition-all ${styles.button}`}
+          className={`mt-4 py-2.5 px-4 rounded-lg font-bold text-center transition-all ${styles.button}`}
         >
           Ver Detalles
         </a>
