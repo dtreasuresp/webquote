@@ -1189,88 +1189,7 @@ export default function Administrador() {
               </div>
             </motion.div>
 
-            {/* Sección 3: Gestión */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-2xl shadow-xl border-l-4 border-accent p-8"
-            >
-              <h2 className="text-2xl font-bold text-secondary mb-6 flex items-center gap-2">
-                <span className="text-3xl">🛠️</span>
-                3. Gestión (Opcional)
-              </h2>
-
-              <div className="space-y-4 p-6 bg-gradient-to-r from-accent/5 to-primary/5 rounded-xl border-2 border-accent/20">
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <label htmlFor="gestionPrecio" className="block font-semibold text-secondary mb-2">
-                      💵 Precio (USD/mes) *
-                    </label>
-                    <input
-                      id="gestionPrecio"
-                      type="number"
-                      placeholder="0"
-                      value={gestion.precio}
-                      onChange={(e) =>
-                        setGestion({
-                          ...gestion,
-                          precio: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="gestionMesesGratis" className="block font-semibold text-secondary mb-2">
-                      🎁 Meses Gratis
-                    </label>
-                    <input
-                      id="gestionMesesGratis"
-                      type="number"
-                      placeholder="0"
-                      value={gestion.mesesGratis}
-                      onChange={(e) => {
-                        const gratis = parseInt(e.target.value) || 0
-                        setGestion({
-                          ...gestion,
-                          mesesGratis: gratis,
-                          mesesPago: Math.max(0, 12 - gratis),
-                        })
-                      }}
-                                            max="12"
-                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="gestionMesesPago" className="block font-semibold text-secondary mb-2">
-                      📅 Meses de Pago *
-                    </label>
-                    <input
-                      id="gestionMesesPago"
-                      type="number"
-                      placeholder="12"
-                      value={gestion.mesesPago}
-                      onChange={(e) => {
-                        const pago = parseInt(e.target.value) || 12;
-                        const pagoValidado = Math.max(1, Math.min(pago, 12));
-                        setGestion({
-                          ...gestion,
-                          mesesPago: pagoValidado,
-                        })
-                      }}
-                      className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
-                      min="1"
-                      max="12"
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Sección 4: Otros Servicios */}
+            {/* Sección 3: Servicios Opcionales */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1670,28 +1589,6 @@ export default function Administrador() {
                                   </td>
                                 </tr>
                               )}
-
-                              {/* Gestión */}
-                              <tr className="border-b border-secondary/20">
-                                <td colSpan={5} className="p-2 font-bold bg-amber-50 text-amber-900">
-                                  🛠️ Gestión
-                                </td>
-                              </tr>
-                              <tr className="border-b border-secondary/20">
-                                <td className="p-2 text-secondary">Precio</td>
-                                <td className="p-2 text-center font-semibold text-secondary">
-                                  {snapshot.gestion.mesesGratis}
-                                </td>
-                                <td className="p-2 text-center font-semibold text-secondary">
-                                  {snapshot.gestion.mesesPago}
-                                </td>
-                                <td className="p-2 text-right font-semibold text-amber-700 bg-primary/5">
-                                  ${snapshot.gestion.precio.toFixed(2)}/mes
-                                </td>
-                                <td className="p-2 text-right font-semibold text-amber-700 bg-accent/5">
-                                  ${(snapshot.gestion.precio * snapshot.gestion.mesesPago).toFixed(2)}/año
-                                </td>
-                              </tr>
 
                               {/* Paquete */}
                               <tr className="border-b border-secondary/20">
@@ -2176,88 +2073,6 @@ export default function Administrador() {
                         </div>
                       </div>
                     ))}
-                  </div>
-                </div>
-                          </div>
-                        ),
-                      },
-                      {
-                        id: 'gestion',
-                        label: 'Gestión',
-                        icon: '🛠️',
-                        content: (
-                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
-                {/* Gestión */}
-                <div className="bg-amber-50 p-6 rounded-xl border-2 border-amber-200">
-                  <h3 className="text-lg font-bold text-amber-900 mb-4">🛠️ Gestión (USD/mes)</h3>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        Precio
-                      </label>
-                      <input
-                        type="number"
-                        value={snapshotEditando.gestion.precio}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            gestion: {
-                              ...snapshotEditando.gestion,
-                              precio: parseFloat(e.target.value) || 0,
-                            },
-                          })
-                        }
-                        className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:outline-none"
-                        min="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        🎁 Meses Gratis
-                      </label>
-                      <input
-                        type="number"
-                        value={snapshotEditando.gestion.mesesGratis}
-                        onChange={(e) => {
-                          const gratis = parseInt(e.target.value) || 0;
-                          const pagoCalculado = Math.max(1, 12 - gratis);
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            gestion: {
-                              ...snapshotEditando.gestion,
-                              mesesGratis: Math.min(gratis, 12),
-                              mesesPago: pagoCalculado,
-                            },
-                          })
-                        }}
-                        className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:outline-none"
-                        min="0"
-                        max="12"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        📅 Meses Pago
-                      </label>
-                      <input
-                        type="number"
-                        value={snapshotEditando.gestion.mesesPago}
-                        onChange={(e) => {
-                          const pago = parseInt(e.target.value) || 12;
-                          const pagoValidado = Math.max(1, Math.min(pago, 12));
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            gestion: {
-                              ...snapshotEditando.gestion,
-                              mesesPago: pagoValidado,
-                            },
-                          })
-                        }}
-                        className="w-full px-4 py-2 border-2 border-amber-200 rounded-lg focus:border-amber-400 focus:outline-none"
-                        min="1"
-                        max="12"
-                      />
-                    </div>
                   </div>
                 </div>
                           </div>
