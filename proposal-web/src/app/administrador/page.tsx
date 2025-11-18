@@ -70,7 +70,7 @@ export default function Administrador() {
   const [snapshots, setSnapshots] = useState<PackageSnapshot[]>([])
   const [editingSnapshotId, setEditingSnapshotId] = useState<string | null>(null)
   const [showModalEditar, setShowModalEditar] = useState(false)
-  const [activeModalTab, setActiveModalTab] = useState<string>('general')
+  const [activeModalTab, setActiveModalTab] = useState<string>('descripcion')
   const [snapshotEditando, setSnapshotEditando] = useState<PackageSnapshot | null>(null)
   // Estado para comparar cambios en el modal (versión original serializada)
   const [snapshotOriginalJson, setSnapshotOriginalJson] = useState<string | null>(null)
@@ -80,6 +80,11 @@ export default function Administrador() {
   const modalScrollContainerRef = useRef<HTMLDivElement>(null)
   const [cargandoSnapshots, setCargandoSnapshots] = useState(true)
   const [errorSnapshots, setErrorSnapshots] = useState<string | null>(null)
+  // Estado para expandibles en descuentos por servicio
+  const [expandidosDescuentos, setExpandidosDescuentos] = useState<{ [key: string]: boolean }>({
+    serviciosBase: false,
+    otrosServicios: false,
+  })
 
   // Cargar snapshots desde la API y configuración del localStorage al montar
   useEffect(() => {
@@ -1781,15 +1786,18 @@ export default function Administrador() {
               aria-modal="true"
               aria-labelledby="modal-editar-titulo"
             >
-              {/* Header Fijo */}
-              <div className="flex-shrink-0 bg-gradient-to-r from-primary to-primary-dark text-white p-6 flex justify-between items-center border-b-4 border-accent">
-                <h2 id="modal-editar-titulo" className="text-2xl font-bold flex items-center gap-2">
-                  <FaEdit /> Editar Paquete: {snapshotEditando.nombre}
-                </h2>
+              {/* Header Fijo - Diseño Profesional Corporativo */}
+              <div className="flex-shrink-0 bg-gradient-to-r from-primary via-primary/90 to-primary-dark text-white py-5 px-8 flex justify-between items-center border-b border-primary-dark/30">
+                <div>
+                  <h2 id="modal-editar-titulo" className="text-xl font-bold flex items-center gap-3">
+                    <FaEdit size={18} /> {snapshotEditando.nombre}
+                  </h2>
+                  <p className="text-sm text-primary-light/80 mt-1">Editar configuración del paquete</p>
+                </div>
                 <button
                   aria-label="Cerrar modal edición"
                   onClick={handleCerrarModalEditar}
-                  className="text-2xl hover:scale-110 transition-transform"
+                  className="text-white/70 hover:text-white text-2xl transition-all hover:scale-110"
                 >
                   <FaTimes />
                 </button>
@@ -1801,11 +1809,11 @@ export default function Administrador() {
                 <TabsModal
                   tabs={[
                     {
-                      id: 'general',
-                      label: 'General',
-                      icon: '📦',
+                      id: 'descripcion',
+                      label: '📋 Descripción',
+                      icon: '',
                       content: (
-                        <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
+                        <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                           {/* Información General del Paquete */}
                           <div className="bg-gradient-to-r from-secondary/5 to-accent/5 p-6 rounded-xl border-2 border-secondary/20">
                             <h3 className="text-lg font-bold text-secondary mb-4">📦 Información General del Paquete</h3>
@@ -1941,11 +1949,11 @@ export default function Administrador() {
                         ),
                       },
                       {
-                        id: 'servicios',
-                        label: 'Servicios Base',
-                        icon: '🌐',
+                        id: 'servicios-base',
+                        label: '🌐 Servicios Base',
+                        icon: '',
                         content: (
-                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
+                          <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                           {/* Servicios Base */}
                 <div className="bg-primary/5 p-6 rounded-xl border-2 border-primary/20">
                   <h3 className="text-lg font-bold text-primary mb-4">💰 Servicios Base</h3>
@@ -2046,11 +2054,156 @@ export default function Administrador() {
                         ),
                       },
                       {
-                        id: 'costos',
-                        label: 'Costos',
-                        icon: '💰',
+                        id: 'otros-servicios',
+                        label: '🎁 Otros Servicios',
+                        icon: '',
                         content: (
-                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
+                          <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
+                {/* Otros Servicios */}
+                <div className="bg-secondary/5 p-6 rounded-xl border-2 border-secondary/20">
+                  <h3 className="text-lg font-bold text-secondary mb-4">🎁 Otros Servicios</h3>
+                  {snapshotEditando.otrosServicios.length > 0 ? (
+                    <div className="space-y-3 mb-4">
+                      {snapshotEditando.otrosServicios.map((servicio, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-white p-4 rounded-lg border-2 border-secondary/20 grid md:grid-cols-[2.2fr,1fr,1fr,1fr,auto] gap-3 items-end"
+                        >
+                          <div>
+                            <label className="block font-semibold text-secondary text-sm mb-1">
+                              Nombre
+                            </label>
+                            <input
+                              type="text"
+                              value={servicio.nombre}
+                              onChange={(e) => {
+                                const actualizado = [...snapshotEditando.otrosServicios]
+                                actualizado[idx].nombre = e.target.value
+                                setSnapshotEditando({
+                                  ...snapshotEditando,
+                                  otrosServicios: actualizado,
+                                })
+                              }}
+                              className="w-full px-3 py-2 border-2 border-secondary/30 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-semibold text-secondary text-sm mb-1">
+                              Precio
+                            </label>
+                            <input
+                              type="number"
+                              value={servicio.precio}
+                              onChange={(e) => {
+                                const actualizado = [...snapshotEditando.otrosServicios]
+                                actualizado[idx].precio = Number.parseFloat(e.target.value) || 0
+                                setSnapshotEditando({
+                                  ...snapshotEditando,
+                                  otrosServicios: actualizado,
+                                })
+                              }}
+                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                              min="0"
+                              aria-label={`Precio servicio opcional ${servicio.nombre || idx + 1}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-semibold text-secondary text-sm mb-1">
+                              Gratis
+                            </label>
+                            <input
+                              type="number"
+                              value={servicio.mesesGratis}
+                              onChange={(e) => {
+                                const actualizado = [...snapshotEditando.otrosServicios]
+                                const gratis = Number.parseInt(e.target.value) || 0;
+                                const pagoCalculado = Math.max(1, 12 - gratis);
+                                actualizado[idx].mesesGratis = Math.min(gratis, 12);
+                                actualizado[idx].mesesPago = pagoCalculado;
+                                setSnapshotEditando({
+                                  ...snapshotEditando,
+                                  otrosServicios: actualizado,
+                                })
+                              }}
+                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                              min="0"
+                              max="12"
+                              aria-label={`Meses gratis servicio opcional ${servicio.nombre || idx + 1}`}
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-semibold text-secondary text-sm mb-1">
+                              Pago
+                            </label>
+                            <input
+                              type="number"
+                              value={servicio.mesesPago}
+                              onChange={(e) => {
+                                const actualizado = [...snapshotEditando.otrosServicios]
+                                const pago = Number.parseInt(e.target.value) || 12;
+                                const pagoValidado = Math.max(1, Math.min(pago, 12));
+                                actualizado[idx].mesesPago = pagoValidado;
+                                setSnapshotEditando({
+                                  ...snapshotEditando,
+                                  otrosServicios: actualizado,
+                                })
+                              }}
+                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                              min="1"
+                              max="12"
+                              aria-label={`Meses pago servicio opcional ${servicio.nombre || idx + 1}`}
+                            />
+                          </div>
+                          <button
+                            aria-label={`Eliminar otro servicio ${servicio.nombre || 'sin nombre'}`}
+                            onClick={() => {
+                              const actualizado = snapshotEditando.otrosServicios.filter(
+                                (_, i) => i !== idx
+                              )
+                              setSnapshotEditando({
+                                ...snapshotEditando,
+                                otrosServicios: actualizado,
+                              })
+                            }}
+                            className="w-8 h-8 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-neutral-500 text-sm mb-4">Sin otros servicios agregados</p>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSnapshotEditando({
+                        ...snapshotEditando,
+                        otrosServicios: [
+                          ...snapshotEditando.otrosServicios,
+                          {
+                            nombre: '',
+                            precio: 0,
+                            mesesGratis: 0,
+                            mesesPago: 12,
+                          },
+                        ],
+                      })
+                    }}
+                    className="px-4 py-2 bg-gradient-to-r from-accent to-accent-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold text-sm"
+                  >
+                    <FaPlus /> Agregar Servicio
+                  </button>
+                </div>
+                          </div>
+                        ),
+                      },
+                      {
+                        id: 'opciones-pago',
+                        label: '💳 Opciones de Pago',
+                        icon: '',
+                        content: (
+                          <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                 
                 {/* Opciones de Pago */}
                 <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 rounded-xl border-2 border-primary/20">
@@ -2264,11 +2417,11 @@ export default function Administrador() {
                         ),
                       },
                       {
-                        id: 'ajustes',
-                        label: 'Descuentos',
-                        icon: '💵',
+                        id: 'descuentos',
+                        label: '🎯 Descuentos',
+                        icon: '',
                         content: (
-                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
+                          <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                             {/* DESCUENTOS GENERALES */}
                             <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-6 rounded-xl border-2 border-purple-300/20">
                               <h3 className="text-lg font-bold text-purple-600 mb-6 flex items-center gap-2">
@@ -2564,10 +2717,12 @@ export default function Administrador() {
                                           <div className="flex justify-between items-center mb-2">
                                             <span className="text-sm font-medium text-secondary">🧑‍💻 Desarrollo</span>
                                             <div className="flex gap-2 items-center">
-                                              <span className="line-through text-neutral-400 text-sm">
-                                                ${preview.desarrollo.toFixed(2)}
-                                              </span>
-                                              <span className="font-bold text-emerald-600">
+                                              {preview.desarrollo !== preview.desarrolloConDescuento && (
+                                                <span className="line-through text-neutral-400 text-sm">
+                                                  ${preview.desarrollo.toFixed(2)}
+                                                </span>
+                                              )}
+                                              <span className={`font-bold ${preview.desarrollo !== preview.desarrolloConDescuento ? 'text-emerald-600' : 'text-secondary'}`}>
                                                 ${preview.desarrolloConDescuento.toFixed(2)}
                                               </span>
                                             </div>
@@ -2586,10 +2741,12 @@ export default function Administrador() {
                                           <div className="flex justify-between items-center mb-3">
                                             <span className="text-sm font-medium text-secondary">📦 Servicios Base</span>
                                             <div className="flex gap-2 items-center">
-                                              <span className="line-through text-neutral-400 text-sm">
-                                                ${preview.serviciosBase.total.toFixed(2)}
-                                              </span>
-                                              <span className="font-bold text-emerald-600">
+                                              {preview.serviciosBase.total !== preview.serviciosBase.conDescuento && (
+                                                <span className="line-through text-neutral-400 text-sm">
+                                                  ${preview.serviciosBase.total.toFixed(2)}
+                                                </span>
+                                              )}
+                                              <span className={`font-bold ${preview.serviciosBase.total !== preview.serviciosBase.conDescuento ? 'text-emerald-600' : 'text-secondary'}`}>
                                                 ${preview.serviciosBase.conDescuento.toFixed(2)}
                                               </span>
                                             </div>
@@ -2620,10 +2777,12 @@ export default function Administrador() {
                                           <div className="flex justify-between items-center mb-3">
                                             <span className="text-sm font-medium text-secondary">🎁 Otros Servicios</span>
                                             <div className="flex gap-2 items-center">
-                                              <span className="line-through text-neutral-400 text-sm">
-                                                ${preview.otrosServicios.total.toFixed(2)}
-                                              </span>
-                                              <span className="font-bold text-emerald-600">
+                                              {preview.otrosServicios.total !== preview.otrosServicios.conDescuento && (
+                                                <span className="line-through text-neutral-400 text-sm">
+                                                  ${preview.otrosServicios.total.toFixed(2)}
+                                                </span>
+                                              )}
+                                              <span className={`font-bold ${preview.otrosServicios.total !== preview.otrosServicios.conDescuento ? 'text-emerald-600' : 'text-secondary'}`}>
                                                 ${preview.otrosServicios.conDescuento.toFixed(2)}
                                               </span>
                                             </div>
@@ -2654,10 +2813,12 @@ export default function Administrador() {
                                           <span className="text-base font-bold text-emerald-700">Total General</span>
                                           <div className="flex gap-3 items-center">
                                             <div className="text-right">
-                                              <div className="line-through text-neutral-500 text-sm">
-                                                ${preview.totalOriginal.toFixed(2)}
-                                              </div>
-                                              <div className="font-bold text-2xl text-emerald-600">
+                                              {preview.totalOriginal !== preview.totalConDescuentos && (
+                                                <div className="line-through text-neutral-500 text-sm">
+                                                  ${preview.totalOriginal.toFixed(2)}
+                                                </div>
+                                              )}
+                                              <div className={`font-bold text-2xl ${preview.totalOriginal !== preview.totalConDescuentos ? 'text-emerald-600' : 'text-secondary'}`}>
                                                 ${preview.totalConDescuentos.toFixed(2)}
                                               </div>
                                             </div>
@@ -2680,153 +2841,7 @@ export default function Administrador() {
                           </div>
                         ),
                       },
-                      {
-                        id: 'otros',
-                        label: 'Otros Servicios',
-                        icon: '🎁',
-                        content: (
-                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
-                {/* Otros Servicios */}
-                <div className="bg-secondary/5 p-6 rounded-xl border-2 border-secondary/20">
-                  <h3 className="text-lg font-bold text-secondary mb-4">🎁 Otros Servicios</h3>
-                  {snapshotEditando.otrosServicios.length > 0 ? (
-                    <div className="space-y-3 mb-4">
-                      {snapshotEditando.otrosServicios.map((servicio, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-white p-4 rounded-lg border-2 border-secondary/20 grid md:grid-cols-[2.2fr,1fr,1fr,1fr,auto] gap-3 items-end"
-                        >
-                          <div>
-                            <label className="block font-semibold text-secondary text-sm mb-1">
-                              Nombre
-                            </label>
-                            <input
-                              type="text"
-                              value={servicio.nombre}
-                              onChange={(e) => {
-                                const actualizado = [...snapshotEditando.otrosServicios]
-                                actualizado[idx].nombre = e.target.value
-                                setSnapshotEditando({
-                                  ...snapshotEditando,
-                                  otrosServicios: actualizado,
-                                })
-                              }}
-                              className="w-full px-3 py-2 border-2 border-secondary/30 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block font-semibold text-secondary text-sm mb-1">
-                              Precio
-                            </label>
-                            <input
-                              type="number"
-                              value={servicio.precio}
-                              onChange={(e) => {
-                                const actualizado = [...snapshotEditando.otrosServicios]
-                                actualizado[idx].precio = Number.parseFloat(e.target.value) || 0
-                                setSnapshotEditando({
-                                  ...snapshotEditando,
-                                  otrosServicios: actualizado,
-                                })
-                              }}
-                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                              min="0"
-                              aria-label={`Precio servicio opcional ${servicio.nombre || idx + 1}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="block font-semibold text-secondary text-sm mb-1">
-                              Gratis
-                            </label>
-                            <input
-                              type="number"
-                              value={servicio.mesesGratis}
-                              onChange={(e) => {
-                                const actualizado = [...snapshotEditando.otrosServicios]
-                                const gratis = Number.parseInt(e.target.value) || 0;
-                                const pagoCalculado = Math.max(1, 12 - gratis);
-                                actualizado[idx].mesesGratis = Math.min(gratis, 12);
-                                actualizado[idx].mesesPago = pagoCalculado;
-                                setSnapshotEditando({
-                                  ...snapshotEditando,
-                                  otrosServicios: actualizado,
-                                })
-                              }}
-                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                              min="0"
-                              max="12"
-                              aria-label={`Meses gratis servicio opcional ${servicio.nombre || idx + 1}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="block font-semibold text-secondary text-sm mb-1">
-                              Pago
-                            </label>
-                            <input
-                              type="number"
-                              value={servicio.mesesPago}
-                              onChange={(e) => {
-                                const actualizado = [...snapshotEditando.otrosServicios]
-                                const pago = Number.parseInt(e.target.value) || 12;
-                                const pagoValidado = Math.max(1, Math.min(pago, 12));
-                                actualizado[idx].mesesPago = pagoValidado;
-                                setSnapshotEditando({
-                                  ...snapshotEditando,
-                                  otrosServicios: actualizado,
-                                })
-                              }}
-                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                              min="1"
-                              max="12"
-                              aria-label={`Meses pago servicio opcional ${servicio.nombre || idx + 1}`}
-                            />
-                          </div>
-                          <button
-                            aria-label={`Eliminar otro servicio ${servicio.nombre || 'sin nombre'}`}
-                            onClick={() => {
-                              const actualizado = snapshotEditando.otrosServicios.filter(
-                                (_, i) => i !== idx
-                              )
-                              setSnapshotEditando({
-                                ...snapshotEditando,
-                                otrosServicios: actualizado,
-                              })
-                            }}
-                            className="w-8 h-8 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
-                          >
-                            <FaTrash size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-neutral-500 text-sm mb-4">Sin otros servicios agregados</p>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSnapshotEditando({
-                        ...snapshotEditando,
-                        otrosServicios: [
-                          ...snapshotEditando.otrosServicios,
-                          {
-                            nombre: '',
-                            precio: 0,
-                            mesesGratis: 0,
-                            mesesPago: 12,
-                          },
-                        ],
-                      })
-                    }}
-                    className="px-4 py-2 bg-gradient-to-r from-accent to-accent-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold text-sm"
-                  >
-                    <FaPlus /> Agregar Servicio
-                  </button>
-                </div>
-                          </div>
-                        ),
-                      },
-                    ]}
-                    activeTab={activeModalTab}
+                    ]}                    activeTab={activeModalTab}
                     onTabChange={setActiveModalTab}
                     scrollContainerRef={modalScrollContainerRef}
                   />
