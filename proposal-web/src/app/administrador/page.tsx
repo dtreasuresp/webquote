@@ -1815,11 +1815,11 @@ export default function Administrador() {
                       content: (
                         <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                           {/* Información General del Paquete */}
-                          <div className="bg-gradient-to-r from-secondary/5 to-accent/5 p-6 rounded-xl border-2 border-secondary/20">
-                            <h3 className="text-lg font-bold text-secondary mb-4">📦 Información General del Paquete</h3>
+                          <div className="bg-gradient-to-r from-secondary/5 to-accent/5 p-5 rounded-xl border border-secondary/20">
+                            <h3 className="text-base font-bold text-secondary mb-3">📦 Información General del Paquete</h3>
                   
                   {/* Nombre - Full width */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <label className="block font-semibold text-secondary mb-2">
                     📦 Nombre del Paquete
                     </label>
@@ -1829,7 +1829,7 @@ export default function Administrador() {
                       onChange={(e) =>
                         setSnapshotEditando({ ...snapshotEditando, nombre: e.target.value })
                       }
-                      className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                      className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
                       ref={nombrePaqueteInputRef}
                       aria-describedby="ayuda-nombre-paquete"
                     />
@@ -1837,7 +1837,7 @@ export default function Administrador() {
                   </div>
 
                   {/* Tipo, Descripción, Emoji y Tagline */}
-                  <div className="grid md:grid-cols-4 gap-4 mb-4">
+                  <div className="grid md:grid-cols-4 gap-4 mb-3">
                     <div>
                       <label className="block font-semibold text-secondary mb-2 text-sm">
                         🏆 Tipo de Paquete
@@ -1855,7 +1855,7 @@ export default function Administrador() {
                           })
                         }
                         placeholder="Ej: Básico"
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                       />
                     </div>
                     <div>
@@ -1875,7 +1875,7 @@ export default function Administrador() {
                           })
                         }
                         placeholder="Ej: 🥉"
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -1895,13 +1895,13 @@ export default function Administrador() {
                           })
                         }
                         placeholder="Ej: Paquete personalizado para empresas..."
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                       />
                     </div>
                   </div>
 
                   {/* Tagline, CostoInfra y TiempoEntrega */}
-                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  <div className="grid md:grid-cols-3 gap-4 mb-3">
                     <div className="md:col-span-2">
                       <label className="block font-semibold text-secondary mb-2 text-sm">
                         ✨ Tagline (Subtítulo Hero)
@@ -1919,7 +1919,7 @@ export default function Administrador() {
                           })
                         }
                         placeholder="Ej: Presencia digital confiable, simple pero efectiva"
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                       />
                     </div>
                     <div>
@@ -1939,7 +1939,7 @@ export default function Administrador() {
                           })
                         }
                         placeholder="Ej: 4 Semanas"
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                       />
                     </div>
                   </div>
@@ -1955,8 +1955,8 @@ export default function Administrador() {
                         content: (
                           <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                           {/* Servicios Base */}
-                <div className="bg-primary/5 p-6 rounded-xl border-2 border-primary/20">
-                  <h3 className="text-lg font-bold text-primary mb-4">💰 Servicios Base</h3>
+                <div className="bg-primary/5 p-5 rounded-xl border border-primary/20">
+                  <h3 className="text-base font-bold text-primary mb-3">💰 Servicios Base</h3>
                   <div className="space-y-3">
                     {snapshotEditando.serviciosBase?.map((servicio, index) => (
                       <div key={servicio.id} className="grid md:grid-cols-[2fr,1fr,1fr,1fr] gap-4 p-4 bg-white rounded-lg border border-primary/20">
@@ -1975,7 +1975,7 @@ export default function Administrador() {
                                 serviciosBase: nuevosServicios,
                               })
                             }}
-                            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                            className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
                               aria-label={`Nombre servicio base ${index + 1}`}
                           />
                         </div>
@@ -1994,7 +1994,7 @@ export default function Administrador() {
                                 serviciosBase: nuevosServicios,
                               })
                             }}
-                            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                            className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
                             min="0"
                               aria-label={`Precio servicio base ${servicio.nombre || index + 1}`}
                           />
@@ -2017,7 +2017,7 @@ export default function Administrador() {
                                 serviciosBase: nuevosServicios,
                               })
                             }}
-                            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                            className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
                             min="0"
                             max="12"
                               aria-label={`Meses gratis servicio base ${servicio.nombre || index + 1}`}
@@ -2040,7 +2040,7 @@ export default function Administrador() {
                                 serviciosBase: nuevosServicios,
                               })
                             }}
-                            className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                            className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
                             min="1"
                             max="12"
                               aria-label={`Meses pago servicio base ${servicio.nombre || index + 1}`}
@@ -2060,14 +2060,14 @@ export default function Administrador() {
                         content: (
                           <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                 {/* Otros Servicios */}
-                <div className="bg-secondary/5 p-6 rounded-xl border-2 border-secondary/20">
-                  <h3 className="text-lg font-bold text-secondary mb-4">🎁 Otros Servicios</h3>
+                <div className="bg-secondary/5 p-5 rounded-xl border border-secondary/20">
+                  <h3 className="text-base font-bold text-secondary mb-3">🎁 Otros Servicios</h3>
                   {snapshotEditando.otrosServicios.length > 0 ? (
-                    <div className="space-y-3 mb-4">
+                    <div className="space-y-3 mb-3">
                       {snapshotEditando.otrosServicios.map((servicio, idx) => (
                         <div
                           key={idx}
-                          className="bg-white p-4 rounded-lg border-2 border-secondary/20 grid md:grid-cols-[2.2fr,1fr,1fr,1fr,auto] gap-3 items-end"
+                          className="bg-white p-4 rounded-lg border border-secondary/20 grid md:grid-cols-[2.2fr,1fr,1fr,1fr,auto] gap-3 items-end"
                         >
                           <div>
                             <label className="block font-semibold text-secondary text-sm mb-1">
@@ -2084,7 +2084,7 @@ export default function Administrador() {
                                   otrosServicios: actualizado,
                                 })
                               }}
-                              className="w-full px-3 py-2 border-2 border-secondary/30 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                              className="w-full px-3 py-2 border border-secondary/30 rounded-lg focus:border-secondary focus:outline-none text-sm"
                             />
                           </div>
                           <div>
@@ -2102,7 +2102,7 @@ export default function Administrador() {
                                   otrosServicios: actualizado,
                                 })
                               }}
-                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                              className="w-full px-3 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                               min="0"
                               aria-label={`Precio servicio opcional ${servicio.nombre || idx + 1}`}
                             />
@@ -2125,7 +2125,7 @@ export default function Administrador() {
                                   otrosServicios: actualizado,
                                 })
                               }}
-                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                              className="w-full px-3 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                               min="0"
                               max="12"
                               aria-label={`Meses gratis servicio opcional ${servicio.nombre || idx + 1}`}
@@ -2148,7 +2148,7 @@ export default function Administrador() {
                                   otrosServicios: actualizado,
                                 })
                               }}
-                              className="w-full px-3 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
+                              className="w-full px-3 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
                               min="1"
                               max="12"
                               aria-label={`Meses pago servicio opcional ${servicio.nombre || idx + 1}`}
@@ -2173,7 +2173,7 @@ export default function Administrador() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-neutral-500 text-sm mb-4">Sin otros servicios agregados</p>
+                    <p className="text-neutral-500 text-sm mb-3">Sin otros servicios agregados</p>
                   )}
                   <button
                     onClick={() => {
@@ -2206,13 +2206,13 @@ export default function Administrador() {
                           <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                 
                 {/* Opciones de Pago */}
-                <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-6 rounded-xl border-2 border-primary/20">
-                  <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/20">
+                  <h3 className="text-base font-bold text-primary mb-3 flex items-center gap-2">
                     <FaCreditCard /> Opciones de Pago
                   </h3>
 
                   {/* Desarrollo en la misma sección */}
-                  <div className="grid md:grid-cols-1 gap-4 mb-6">
+                  <div className="grid md:grid-cols-1 gap-4 mb-5">
                     <div>
                       <label className="block font-semibold text-secondary mb-2 text-sm">
                         🧑‍💻Desarrollo del sistio web
@@ -2229,14 +2229,14 @@ export default function Administrador() {
                             },
                           })
                         }
-                        className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
+                        className="w-full px-4 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none"
                         min="0"
                       />
                     </div>
                   </div>
 
                   {/* Lista de Opciones de Pago */}
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <div className="flex items-center justify-between mb-3">
                       <label className="block font-semibold text-secondary text-sm">
                         📊 Opciones de Pago Estándar (en cuotas)
@@ -2258,11 +2258,11 @@ export default function Administrador() {
                     </div>
 
                     {(snapshotEditando.paquete.opcionesPago || []).length > 0 ? (
-                      <div className="space-y-3 mb-4">
+                      <div className="space-y-3 mb-3">
                         {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => (
                           <div
                             key={idx}
-                            className="bg-white p-4 rounded-lg border-2 border-primary/20 grid md:grid-cols-[2fr,1fr,3fr,auto] gap-3 items-end"
+                            className="bg-white p-4 rounded-lg border border-primary/20 grid md:grid-cols-[2fr,1fr,3fr,auto] gap-3 items-end"
                           >
                             <div>
                               <label className="block font-semibold text-secondary text-sm mb-1">
@@ -2282,7 +2282,7 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
                                 placeholder="Ej: Inicial"
                               />
                             </div>
@@ -2307,7 +2307,7 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
                                 min="0"
                                 max="100"
                                 placeholder="30"
@@ -2331,7 +2331,7 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-3 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
                                 placeholder="Ej: Al firmar contrato"
                               />
                             </div>
@@ -2550,13 +2550,13 @@ export default function Administrador() {
                             </div>
 
                             {/* DESCUENTOS POR TIPO DE SERVICIO */}
-                            <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-6 rounded-xl border-2 border-blue-300/20">
-                              <h3 className="text-lg font-bold text-blue-600 mb-6 flex items-center gap-2">
+                            <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-5 rounded-xl border border-blue-300/20">
+                              <h3 className="text-base font-bold text-blue-600 mb-5 flex items-center gap-2">
                                 🎯 Descuentos por Tipo de Servicio
                               </h3>
 
                               {/* Checkboxes para habilitar descuentos por tipo */}
-                              <div className="space-y-3 mb-6 bg-white p-4 rounded-lg border border-blue-200/30">
+                              <div className="space-y-3 mb-5 bg-white p-4 rounded-lg border border-blue-200/30">
                                 <label className="flex items-center gap-3 cursor-pointer">
                                   <input
                                     type="checkbox"
@@ -2602,7 +2602,7 @@ export default function Administrador() {
 
                               {/* Servicios Base */}
                               {snapshotEditando.paquete.descuentosPorServicio?.aplicarAServiciosBase && (
-                                <div className="mb-6">
+                                <div className="mb-5">
                                   <h4 className="font-bold text-blue-600 mb-3 text-sm">📦 Servicios Base</h4>
                                   <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
                                     {snapshotEditando.serviciosBase.map((servicio) => {
@@ -2639,7 +2639,7 @@ export default function Administrador() {
                                                 }
                                                 setSnapshotEditando(updated)
                                               }}
-                                              className="w-20 px-3 py-2 border-2 border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                              className="w-20 px-3 py-2 border border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
                                               min="0"
                                               max="100"
                                               placeholder="0%"
@@ -2685,7 +2685,7 @@ export default function Administrador() {
                                                 updated.paquete.descuentosPorServicio.otrosServicios[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
                                                 setSnapshotEditando(updated)
                                               }}
-                                              className="w-20 px-3 py-2 border-2 border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                              className="w-20 px-3 py-2 border border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
                                               min="0"
                                               max="100"
                                               placeholder="0%"
