@@ -1501,7 +1501,7 @@ export default function Administrador() {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleEliminarSnapshot(snapshot.id)}
-                              className="w-9 h-9 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
+                              className="w-9 h-9 bg-red-100 text-red-700 hover:bg-red-200 transition-colors flex items-center justify-center"
                             >
                               <FaTrash size={14} />
                             </motion.button>
@@ -1750,7 +1750,7 @@ export default function Administrador() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleEliminarSnapshot(snapshot.id)}
-                            className="w-9 h-9 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
+                            className="w-9 h-9 bg-red-100 text-red-700 hover:bg-red-200 transition-colors flex items-center justify-center"
                           >
                             <FaTrash size={14} />
                           </motion.button>
@@ -1932,103 +1932,99 @@ export default function Administrador() {
                         label: '🌐 Servicios Base',
                         icon: '',
                         content: (
-                          <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
-                          {/* Servicios Base */}
-                <div className="bg-primary/5 p-5 rounded-xl border border-primary/20">
-                  <h3 className="text-base font-bold text-primary mb-3">💰 Servicios Base</h3>
-                  <div className="space-y-3">
-                    {snapshotEditando.serviciosBase?.map((servicio, index) => (
-                      <div key={servicio.id} className="grid md:grid-cols-[2fr,1fr,1fr,1fr] gap-4 p-4 bg-white rounded-lg border border-primary/20">
-                        <div>
-                          <label className="block font-semibold text-secondary mb-2 text-xs">
-                            📝 Nombre
-                          </label>
-                            <input
-                            type="text"
-                            value={servicio.nombre}
-                            onChange={(e) => {
-                              const nuevosServicios = [...snapshotEditando.serviciosBase]
-                              nuevosServicios[index].nombre = e.target.value
-                              setSnapshotEditando({
-                                ...snapshotEditando,
-                                serviciosBase: nuevosServicios,
-                              })
-                            }}
-                            className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
-                              aria-label={`Nombre servicio base ${index + 1}`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-semibold text-secondary mb-2 text-xs">
-                            💵 Precio (USD)
-                          </label>
-                            <input
-                            type="number"
-                            value={servicio.precio}
-                            onChange={(e) => {
-                              const nuevosServicios = [...snapshotEditando.serviciosBase]
-                                nuevosServicios[index].precio = Number.parseFloat(e.target.value) || 0
-                              setSnapshotEditando({
-                                ...snapshotEditando,
-                                serviciosBase: nuevosServicios,
-                              })
-                            }}
-                            className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
-                            min="0"
-                              aria-label={`Precio servicio base ${servicio.nombre || index + 1}`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-semibold text-secondary mb-2 text-xs">
-                            🎁 Meses Gratis
-                          </label>
-                            <input
-                            type="number"
-                            value={servicio.mesesGratis}
-                            onChange={(e) => {
-                              const nuevosServicios = [...snapshotEditando.serviciosBase]
-                                const gratis = Number.parseInt(e.target.value) || 0;
-                              const pagoCalculado = Math.max(1, 12 - gratis);
-                              nuevosServicios[index].mesesGratis = Math.min(gratis, 12);
-                              nuevosServicios[index].mesesPago = pagoCalculado;
-                              setSnapshotEditando({
-                                ...snapshotEditando,
-                                serviciosBase: nuevosServicios,
-                              })
-                            }}
-                            className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
-                            min="0"
-                            max="12"
-                              aria-label={`Meses gratis servicio base ${servicio.nombre || index + 1}`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-semibold text-secondary mb-2 text-xs">
-                            💳 Meses Pago
-                          </label>
-                            <input
-                            type="number"
-                            value={servicio.mesesPago}
-                            onChange={(e) => {
-                              const nuevosServicios = [...snapshotEditando.serviciosBase]
-                                const pago = Number.parseInt(e.target.value) || 12;
-                              const pagoValidado = Math.max(1, Math.min(pago, 12));
-                              nuevosServicios[index].mesesPago = pagoValidado;
-                              setSnapshotEditando({
-                                ...snapshotEditando,
-                                serviciosBase: nuevosServicios,
-                              })
-                            }}
-                            className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
-                            min="1"
-                            max="12"
-                              aria-label={`Meses pago servicio base ${servicio.nombre || index + 1}`}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                            {/* Servicios Base - Lista */}
+                            <div>
+                              <h3 className="text-sm font-bold text-black mb-3">🌐 Servicios Base</h3>
+                              <div className="space-y-2">
+                                {snapshotEditando.serviciosBase?.map((servicio, index) => (
+                                  <div key={servicio.id} className="grid md:grid-cols-[2fr,1fr,1fr,1fr] gap-3 p-3 bg-white">
+                                    <div>
+                                      <label className="block text-xs font-semibold text-black mb-1">📝 Nombre</label>
+                                      <input
+                                        type="text"
+                                        value={servicio.nombre}
+                                        onChange={(e) => {
+                                          const nuevosServicios = [...snapshotEditando.serviciosBase]
+                                          nuevosServicios[index].nombre = e.target.value
+                                          setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
+                                        }}
+                                        className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-semibold text-black mb-1">💵 Precio</label>
+                                      <input
+                                        type="number"
+                                        value={servicio.precio}
+                                        onChange={(e) => {
+                                          const nuevosServicios = [...snapshotEditando.serviciosBase]
+                                          nuevosServicios[index].precio = Number.parseFloat(e.target.value) || 0
+                                          setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
+                                        }}
+                                        className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                        min="0"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-semibold text-black mb-1">🎁 Gratis</label>
+                                      <input
+                                        type="number"
+                                        value={servicio.mesesGratis}
+                                        onChange={(e) => {
+                                          const nuevosServicios = [...snapshotEditando.serviciosBase]
+                                          const gratis = Number.parseInt(e.target.value) || 0
+                                          nuevosServicios[index].mesesGratis = Math.min(gratis, 12)
+                                          nuevosServicios[index].mesesPago = Math.max(1, 12 - gratis)
+                                          setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
+                                        }}
+                                        className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                        min="0"
+                                        max="12"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-semibold text-black mb-1">💳 Pago</label>
+                                      <input
+                                        type="number"
+                                        value={servicio.mesesPago}
+                                        onChange={(e) => {
+                                          const nuevosServicios = [...snapshotEditando.serviciosBase]
+                                          const pago = Number.parseInt(e.target.value) || 12
+                                          nuevosServicios[index].mesesPago = Math.max(1, Math.min(pago, 12))
+                                          setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
+                                        }}
+                                        className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                        min="1"
+                                        max="12"
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Vista Previa de Montos - Servicios Base */}
+                            <div className="bg-neutral-50 p-4">
+                              <h3 className="text-sm font-bold text-black mb-3">💰 Vista Previa de Montos</h3>
+                              <div className="space-y-2">
+                                {snapshotEditando.serviciosBase?.map((servicio) => {
+                                  const subtotal = servicio.precio * servicio.mesesPago
+                                  return (
+                                    <div key={servicio.id} className="flex justify-between text-sm">
+                                      <span>{servicio.nombre} (${servicio.precio} × {servicio.mesesPago} meses)</span>
+                                      <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                                    </div>
+                                  )
+                                })}
+                                <div className="border-t border-neutral-300 pt-2 mt-2 flex justify-between">
+                                  <span className="font-bold text-black">TOTAL AÑO 1</span>
+                                  <span className="font-bold text-red-600 text-lg">
+                                    ${snapshotEditando.serviciosBase?.reduce((sum, s) => sum + (s.precio * s.mesesPago), 0).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         ),
                       },
@@ -2037,143 +2033,128 @@ export default function Administrador() {
                         label: '🎁 Otros Servicios',
                         icon: '',
                         content: (
-                          <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
-                {/* Otros Servicios */}
-                <div className="bg-secondary/5 p-5 rounded-xl border border-secondary/20">
-                  <h3 className="text-base font-bold text-secondary mb-3">🎁 Otros Servicios</h3>
-                  {snapshotEditando.otrosServicios.length > 0 ? (
-                    <div className="space-y-3 mb-3">
-                      {snapshotEditando.otrosServicios.map((servicio, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-white p-4 rounded-lg border border-secondary/20 grid md:grid-cols-[2.2fr,1fr,1fr,1fr,auto] gap-3 items-end"
-                        >
-                          <div>
-                            <label className="block font-semibold text-secondary text-sm mb-1">
-                              Nombre
-                            </label>
-                            <input
-                              type="text"
-                              value={servicio.nombre}
-                              onChange={(e) => {
-                                const actualizado = [...snapshotEditando.otrosServicios]
-                                actualizado[idx].nombre = e.target.value
-                                setSnapshotEditando({
-                                  ...snapshotEditando,
-                                  otrosServicios: actualizado,
-                                })
-                              }}
-                              className="w-full px-3 py-2 border border-secondary/30 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block font-semibold text-secondary text-sm mb-1">
-                              Precio
-                            </label>
-                            <input
-                              type="number"
-                              value={servicio.precio}
-                              onChange={(e) => {
-                                const actualizado = [...snapshotEditando.otrosServicios]
-                                actualizado[idx].precio = Number.parseFloat(e.target.value) || 0
-                                setSnapshotEditando({
-                                  ...snapshotEditando,
-                                  otrosServicios: actualizado,
-                                })
-                              }}
-                              className="w-full px-3 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                              min="0"
-                              aria-label={`Precio servicio opcional ${servicio.nombre || idx + 1}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="block font-semibold text-secondary text-sm mb-1">
-                              Gratis
-                            </label>
-                            <input
-                              type="number"
-                              value={servicio.mesesGratis}
-                              onChange={(e) => {
-                                const actualizado = [...snapshotEditando.otrosServicios]
-                                const gratis = Number.parseInt(e.target.value) || 0;
-                                const pagoCalculado = Math.max(1, 12 - gratis);
-                                actualizado[idx].mesesGratis = Math.min(gratis, 12);
-                                actualizado[idx].mesesPago = pagoCalculado;
-                                setSnapshotEditando({
-                                  ...snapshotEditando,
-                                  otrosServicios: actualizado,
-                                })
-                              }}
-                              className="w-full px-3 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                              min="0"
-                              max="12"
-                              aria-label={`Meses gratis servicio opcional ${servicio.nombre || idx + 1}`}
-                            />
-                          </div>
-                          <div>
-                            <label className="block font-semibold text-secondary text-sm mb-1">
-                              Pago
-                            </label>
-                            <input
-                              type="number"
-                              value={servicio.mesesPago}
-                              onChange={(e) => {
-                                const actualizado = [...snapshotEditando.otrosServicios]
-                                const pago = Number.parseInt(e.target.value) || 12;
-                                const pagoValidado = Math.max(1, Math.min(pago, 12));
-                                actualizado[idx].mesesPago = pagoValidado;
-                                setSnapshotEditando({
-                                  ...snapshotEditando,
-                                  otrosServicios: actualizado,
-                                })
-                              }}
-                              className="w-full px-3 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                              min="1"
-                              max="12"
-                              aria-label={`Meses pago servicio opcional ${servicio.nombre || idx + 1}`}
-                            />
-                          </div>
-                          <button
-                            aria-label={`Eliminar otro servicio ${servicio.nombre || 'sin nombre'}`}
-                            onClick={() => {
-                              const actualizado = snapshotEditando.otrosServicios.filter(
-                                (_, i) => i !== idx
-                              )
-                              setSnapshotEditando({
-                                ...snapshotEditando,
-                                otrosServicios: actualizado,
-                              })
-                            }}
-                            className="w-8 h-8 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
-                          >
-                            <FaTrash size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-neutral-500 text-sm mb-3">Sin otros servicios agregados</p>
-                  )}
-                  <button
-                    onClick={() => {
-                      setSnapshotEditando({
-                        ...snapshotEditando,
-                        otrosServicios: [
-                          ...snapshotEditando.otrosServicios,
-                          {
-                            nombre: '',
-                            precio: 0,
-                            mesesGratis: 0,
-                            mesesPago: 12,
-                          },
-                        ],
-                      })
-                    }}
-                    className="px-4 py-2 bg-gradient-to-r from-accent to-accent-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold text-sm"
-                  >
-                    <FaPlus /> Agregar Servicio
-                  </button>
-                </div>
+                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                            {/* Otros Servicios - Lista */}
+                            <div>
+                              <h3 className="text-sm font-bold text-black mb-3">🎁 Otros Servicios</h3>
+                              {snapshotEditando.otrosServicios.length > 0 ? (
+                                <div className="space-y-2">
+                                  {snapshotEditando.otrosServicios.map((servicio, idx) => (
+                                    <div key={idx} className="grid md:grid-cols-[2.2fr,1fr,1fr,1fr,auto] gap-3 p-3 bg-white items-end">
+                                      <div>
+                                        <label className="block text-xs font-semibold text-black mb-1">📝 Nombre</label>
+                                        <input
+                                          type="text"
+                                          value={servicio.nombre}
+                                          onChange={(e) => {
+                                            const actualizado = [...snapshotEditando.otrosServicios]
+                                            actualizado[idx].nombre = e.target.value
+                                            setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
+                                          }}
+                                          className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs font-semibold text-black mb-1">💵 Precio</label>
+                                        <input
+                                          type="number"
+                                          value={servicio.precio}
+                                          onChange={(e) => {
+                                            const actualizado = [...snapshotEditando.otrosServicios]
+                                            actualizado[idx].precio = Number.parseFloat(e.target.value) || 0
+                                            setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
+                                          }}
+                                          className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                          min="0"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs font-semibold text-black mb-1">🎁 Gratis</label>
+                                        <input
+                                          type="number"
+                                          value={servicio.mesesGratis}
+                                          onChange={(e) => {
+                                            const actualizado = [...snapshotEditando.otrosServicios]
+                                            const gratis = Number.parseInt(e.target.value) || 0
+                                            actualizado[idx].mesesGratis = Math.min(gratis, 12)
+                                            actualizado[idx].mesesPago = Math.max(1, 12 - gratis)
+                                            setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
+                                          }}
+                                          className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                          min="0"
+                                          max="12"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs font-semibold text-black mb-1">💳 Pago</label>
+                                        <input
+                                          type="number"
+                                          value={servicio.mesesPago}
+                                          onChange={(e) => {
+                                            const actualizado = [...snapshotEditando.otrosServicios]
+                                            const pago = Number.parseInt(e.target.value) || 12
+                                            actualizado[idx].mesesPago = Math.max(1, Math.min(pago, 12))
+                                            setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
+                                          }}
+                                          className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                          min="1"
+                                          max="12"
+                                        />
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          const actualizado = snapshotEditando.otrosServicios.filter((_, i) => i !== idx)
+                                          setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
+                                        }}
+                                        className="w-8 h-8 bg-red-100 text-red-700 hover:bg-red-200 transition-colors flex items-center justify-center"
+                                      >
+                                        <FaTrash size={14} />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-neutral-500 text-sm mb-3">Sin otros servicios agregados</p>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setSnapshotEditando({
+                                    ...snapshotEditando,
+                                    otrosServicios: [
+                                      ...snapshotEditando.otrosServicios,
+                                      {nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12}
+                                    ]
+                                  })
+                                }}
+                                className="mt-3 px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2 font-semibold text-sm"
+                              >
+                                <FaPlus /> Agregar Servicio
+                              </button>
+                            </div>
+
+                            {/* Vista Previa de Montos - Otros Servicios */}
+                            {snapshotEditando.otrosServicios.length > 0 && (
+                              <div className="bg-neutral-50 p-4">
+                                <h3 className="text-sm font-bold text-black mb-3">💰 Vista Previa de Montos</h3>
+                                <div className="space-y-2">
+                                  {snapshotEditando.otrosServicios.map((servicio, idx) => {
+                                    const subtotal = servicio.precio * servicio.mesesPago
+                                    return (
+                                      <div key={idx} className="flex justify-between text-sm">
+                                        <span>{servicio.nombre || `Servicio ${idx + 1}`} (${servicio.precio} × {servicio.mesesPago} meses)</span>
+                                        <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                                      </div>
+                                    )
+                                  })}
+                                  <div className="border-t border-neutral-300 pt-2 mt-2 flex justify-between">
+                                    <span className="font-bold text-black">TOTAL AÑO 1</span>
+                                    <span className="font-bold text-red-600 text-lg">
+                                      ${snapshotEditando.otrosServicios.reduce((sum, s) => sum + (s.precio * s.mesesPago), 0).toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ),
                       },
@@ -2185,33 +2166,31 @@ export default function Administrador() {
                           <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                 
                 {/* Opciones de Pago */}
-                <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/20">
-                  <h3 className="text-base font-bold text-primary mb-3 flex items-center gap-2">
+                <div>
+                  <h3 className="text-sm font-bold text-black mb-3 flex items-center gap-2">
                     <FaCreditCard /> Opciones de Pago
                   </h3>
 
                   {/* Desarrollo en la misma sección */}
-                  <div className="grid md:grid-cols-1 gap-4 mb-5">
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        🧑‍💻Desarrollo del sistio web
-                      </label>
-                      <input
-                        type="number"
-                        value={snapshotEditando.paquete.desarrollo}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              desarrollo: parseFloat(e.target.value) || 0,
-                            },
-                          })
-                        }
-                        className="w-full px-4 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none"
-                        min="0"
-                      />
-                    </div>
+                  <div className="mb-4">
+                    <label className="block text-xs font-semibold text-black mb-1">
+                      🧑‍💻 Desarrollo del sitio web
+                    </label>
+                    <input
+                      type="number"
+                      value={snapshotEditando.paquete.desarrollo}
+                      onChange={(e) =>
+                        setSnapshotEditando({
+                          ...snapshotEditando,
+                          paquete: {
+                            ...snapshotEditando.paquete,
+                            desarrollo: parseFloat(e.target.value) || 0,
+                          },
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                      min="0"
+                    />
                   </div>
 
                   {/* Lista de Opciones de Pago */}
@@ -2237,14 +2216,14 @@ export default function Administrador() {
                     </div>
 
                     {(snapshotEditando.paquete.opcionesPago || []).length > 0 ? (
-                      <div className="space-y-3 mb-3">
+                      <div className="space-y-2 mb-3">
                         {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => (
                           <div
                             key={idx}
-                            className="bg-white p-4 rounded-lg border border-primary/20 grid md:grid-cols-[2fr,1fr,3fr,auto] gap-3 items-end"
+                            className="bg-white p-3 grid md:grid-cols-[2fr,1fr,3fr,auto] gap-3 items-end"
                           >
                             <div>
-                              <label className="block font-semibold text-secondary text-sm mb-1">
+                              <label className="block text-xs font-semibold text-black mb-1">
                                 📝 Nombre
                               </label>
                               <input
@@ -2261,12 +2240,12 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
                                 placeholder="Ej: Inicial"
                               />
                             </div>
                             <div>
-                              <label className="block font-semibold text-secondary text-sm mb-1">
+                              <label className="block text-xs font-semibold text-black mb-1">
                                 📊 Porcentaje
                               </label>
                               <input
@@ -2286,14 +2265,14 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
                                 min="0"
                                 max="100"
                                 placeholder="30"
                               />
                             </div>
                             <div>
-                              <label className="block font-semibold text-secondary text-sm mb-1">
+                              <label className="block text-xs font-semibold text-black mb-1">
                                 📋 Descripción
                               </label>
                               <input
@@ -2310,12 +2289,11 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-3 py-2 border border-primary/20 rounded-lg focus:border-primary focus:outline-none text-sm"
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
                                 placeholder="Ej: Al firmar contrato"
                               />
                             </div>
                             <button
-                              aria-label={`Eliminar opción de pago ${opcion.nombre || idx + 1}`}
                               onClick={() => {
                                 const actualizado = (snapshotEditando.paquete.opcionesPago || []).filter(
                                   (_, i) => i !== idx
@@ -2328,7 +2306,7 @@ export default function Administrador() {
                                   },
                                 })
                               }}
-                              className="w-8 h-8 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-all flex items-center justify-center"
+                              className="w-8 h-8 bg-red-100 text-red-700 hover:bg-red-200 transition-colors flex items-center justify-center"
                             >
                               <FaTrash size={14} />
                             </button>
@@ -2358,34 +2336,34 @@ export default function Administrador() {
                           },
                         })
                       }}
-                      className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold text-sm"
+                      className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2 font-semibold text-sm"
                     >
                       <FaPlus /> Agregar Opción de Pago
                     </button>
                   </div>
 
-                  {/* Preview de montos */}
+                  {/* Vista Previa de Montos */}
                   {(snapshotEditando.paquete.opcionesPago || []).length > 0 && snapshotEditando.paquete.desarrollo > 0 && (
-                    <div className="mt-4 p-4 bg-white rounded-lg border-2 border-primary/30">
-                      <h4 className="font-semibold text-secondary text-sm mb-3">💰 Vista Previa de Montos</h4>
+                    <div className="mt-6 p-4 bg-neutral-50">
+                      <h4 className="text-sm font-bold text-black mb-3">💰 Vista Previa de Montos</h4>
                       <div className="space-y-2">
                         {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => {
                           const monto = (snapshotEditando.paquete.desarrollo * (opcion.porcentaje || 0)) / 100
                           return (
                             <div key={idx} className="flex justify-between text-sm">
-                              <span className="text-neutral-700">
+                              <span>
                                 {opcion.nombre || `Pago ${idx + 1}`} ({opcion.porcentaje}%)
                               </span>
-                              <span className="font-bold text-primary">
-                                ${monto.toFixed(2)} USD
+                              <span className="font-semibold">
+                                ${monto.toFixed(2)}
                               </span>
                             </div>
                           )
                         })}
-                        <div className="border-t-2 border-primary/20 pt-2 mt-2 flex justify-between font-bold">
-                          <span className="text-secondary">Total:</span>
-                          <span className="text-primary">
-                            ${snapshotEditando.paquete.desarrollo.toFixed(2)} USD
+                        <div className="border-t border-neutral-300 pt-2 mt-2 flex justify-between">
+                          <span className="font-bold text-black">TOTAL</span>
+                          <span className="font-bold text-red-600 text-lg">
+                            ${snapshotEditando.paquete.desarrollo.toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -2400,15 +2378,15 @@ export default function Administrador() {
                         label: '🎯 Descuentos',
                         icon: '',
                         content: (
-                          <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
+                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
                             {/* DESCUENTOS GENERALES */}
-                            <div className="bg-gradient-to-r from-red-500/10 to-amber-500/10 p-5 rounded-xl border border-red-300/20">
-                              <h3 className="text-base font-bold text-red-600 mb-5 flex items-center gap-2">
+                            <div>
+                              <h3 className="text-sm font-bold text-black mb-3 flex items-center gap-2">
                                 💸 Descuentos Generales
                               </h3>
 
                               {/* Checkboxes para aplicar descuentos */}
-                              <div className="space-y-3 mb-5 bg-white p-4 rounded-lg border border-red-200/30">
+                              <div className="space-y-2 mb-4 bg-white p-3">
                                 <label className="flex items-center gap-3 cursor-pointer">
                                   <input
                                     type="checkbox"
@@ -2474,9 +2452,9 @@ export default function Administrador() {
                               </div>
 
                               {/* Campos de porcentaje */}
-                              <div className="grid md:grid-cols-2 gap-4">
+                              <div className="grid md:grid-cols-2 gap-3">
                                 <div>
-                                  <label className="block font-semibold text-secondary mb-2 text-sm">
+                                  <label className="block text-xs font-semibold text-black mb-1">
                                     💸 Descuento General (%)
                                   </label>
                                   <input
@@ -2494,14 +2472,14 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-full px-4 py-2 border border-red-300/20 rounded-lg focus:border-red-500 focus:outline-none"
+                                    className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
                                     min="0"
                                     max="100"
                                     placeholder="0"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block font-semibold text-secondary mb-2 text-sm">
+                                  <label className="block text-xs font-semibold text-black mb-1">
                                     🎁 Descuento por Pay Full (%)
                                   </label>
                                   <input
@@ -2516,7 +2494,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-full px-4 py-2 border border-red-300/20 rounded-lg focus:border-red-500 focus:outline-none"
+                                    className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
                                     min="0"
                                     max="100"
                                     placeholder="0"
@@ -2529,13 +2507,13 @@ export default function Administrador() {
                             </div>
 
                             {/* DESCUENTOS POR TIPO DE SERVICIO */}
-                            <div className="bg-gradient-to-r from-red-500/10 to-amber-500/10 p-5 rounded-xl border border-red-300/20">
-                              <h3 className="text-base font-bold text-red-600 mb-5 flex items-center gap-2">
+                            <div>
+                              <h3 className="text-sm font-bold text-black mb-3 flex items-center gap-2">
                                 🎯 Descuentos por Tipo de Servicio
                               </h3>
 
                               {/* Checkboxes para habilitar descuentos por tipo */}
-                              <div className="space-y-3 mb-5 bg-white p-4 rounded-lg border border-red-200/30">
+                              <div className="space-y-2 mb-4 bg-white p-3">
                                 <label className="flex items-center gap-3 cursor-pointer">
                                   <input
                                     type="checkbox"
@@ -2581,7 +2559,7 @@ export default function Administrador() {
 
                               {/* Servicios Base con Tree Expandible */}
                               {snapshotEditando.paquete.descuentosPorServicio?.aplicarAServiciosBase && (
-                                <div className="mb-5">
+                                <div className="mb-4">
                                   <motion.button
                                     onClick={() => setExpandidosDescuentos({
                                       ...expandidosDescuentos,
@@ -2589,7 +2567,7 @@ export default function Administrador() {
                                     })}
                                     whileHover={{ scale: 1.01 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-red-100/50 hover:from-red-100 hover:to-red-100 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-all duration-200 mb-3 group"
+                                    className="w-full flex items-center justify-between p-3 bg-white hover:bg-neutral-50 transition-colors mb-2 group"
                                   >
                                     <div className="flex items-center gap-3 text-left">
                                       <motion.div
@@ -2599,14 +2577,14 @@ export default function Administrador() {
                                       >
                                         📦
                                       </motion.div>
-                                      <span className="text-sm font-bold text-red-600 group-hover:text-red-700">Servicios Base</span>
+                                      <span className="text-sm font-bold text-black">Servicios Base</span>
                                     </div>
                                     <motion.div
                                       animate={{ rotate: expandidosDescuentos.serviciosBase ? 180 : 0 }}
                                       transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
                                       className="flex-shrink-0"
                                     >
-                                      <FaChevronDown size={16} className="text-red-600 group-hover:text-red-700" />
+                                      <FaChevronDown size={16} className="text-red-600" />
                                     </motion.div>
                                   </motion.button>
                                   
@@ -2619,13 +2597,13 @@ export default function Administrador() {
                                         transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
                                         className="overflow-hidden"
                                       >
-                                        <div className="space-y-3 bg-gradient-to-br from-white to-red-50/30 p-4 rounded-lg border border-red-100 shadow-sm">
+                                        <div className="space-y-2 bg-white p-3">
                                           {snapshotEditando.serviciosBase.map((servicio) => {
                                             const descuento = snapshotEditando.paquete.descuentosPorServicio?.serviciosBase.find(d => d.servicioId === servicio.id)
                                             return (
-                                              <div key={servicio.id} className="flex gap-3 items-end pb-3 border-b border-red-50 last:border-b-0 last:pb-0 hover:bg-red-50/30 px-2 -mx-2 rounded transition-colors">
+                                              <div key={servicio.id} className="flex gap-3 items-end pb-2 border-b border-neutral-100 last:border-b-0 last:pb-0">
                                                 <div className="flex-1">
-                                                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                                  <label className="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                       type="checkbox"
                                                       checked={descuento?.aplicarDescuento || false}
@@ -2637,9 +2615,9 @@ export default function Administrador() {
                                                         }
                                                         setSnapshotEditando(updated)
                                                       }}
-                                                      className="w-4 h-4 accent-red-500 cursor-pointer transition-transform hover:scale-110"
+                                                      className="w-4 h-4 accent-red-500 cursor-pointer"
                                                     />
-                                                    <span className="text-sm font-medium text-secondary hover:text-red-600 transition-colors">{servicio.nombre}</span>
+                                                    <span className="text-sm font-medium text-black">{servicio.nombre}</span>
                                                   </label>
                                                 </div>
                                                 {descuento?.aplicarDescuento && (
@@ -2654,7 +2632,7 @@ export default function Administrador() {
                                                       }
                                                       setSnapshotEditando(updated)
                                                     }}
-                                                    className="w-20 px-3 py-2 border border-red-300/30 rounded-md focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 text-sm font-medium bg-white hover:bg-red-50/50 transition-all"
+                                                    className="w-20 px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
                                                     min="0"
                                                     max="100"
                                                     placeholder="0%"
@@ -2680,7 +2658,7 @@ export default function Administrador() {
                                     })}
                                     whileHover={{ scale: 1.01 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-red-100/50 hover:from-red-100 hover:to-red-100 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-all duration-200 mb-3 group"
+                                    className="w-full flex items-center justify-between p-3 bg-white hover:bg-neutral-50 transition-colors mb-2 group"
                                   >
                                     <div className="flex items-center gap-3 text-left">
                                       <motion.div
@@ -2690,14 +2668,14 @@ export default function Administrador() {
                                       >
                                         🎁
                                       </motion.div>
-                                      <span className="text-sm font-bold text-red-600 group-hover:text-red-700">Otros Servicios</span>
+                                      <span className="text-sm font-bold text-black">Otros Servicios</span>
                                     </div>
                                     <motion.div
                                       animate={{ rotate: expandidosDescuentos.otrosServicios ? 180 : 0 }}
                                       transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
                                       className="flex-shrink-0"
                                     >
-                                      <FaChevronDown size={16} className="text-red-600 group-hover:text-red-700" />
+                                      <FaChevronDown size={16} className="text-red-600" />
                                     </motion.div>
                                   </motion.button>
                                   
@@ -2710,13 +2688,13 @@ export default function Administrador() {
                                         transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
                                         className="overflow-hidden"
                                       >
-                                        <div className="space-y-3 bg-gradient-to-br from-white to-red-50/30 p-4 rounded-lg border border-red-100 shadow-sm">
+                                        <div className="space-y-2 bg-white p-3">
                                           {snapshotEditando.otrosServicios.map((servicio, idx) => {
                                             const descuento = snapshotEditando.paquete.descuentosPorServicio?.otrosServicios[idx]
                                             return (
-                                              <div key={idx} className="flex gap-3 items-end pb-3 border-b border-red-50 last:border-b-0 last:pb-0 hover:bg-red-50/30 px-2 -mx-2 rounded transition-colors">
+                                              <div key={idx} className="flex gap-3 items-end pb-2 border-b border-neutral-100 last:border-b-0 last:pb-0">
                                                 <div className="flex-1">
-                                                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                                  <label className="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                       type="checkbox"
                                                       checked={descuento?.aplicarDescuento || false}
@@ -2725,9 +2703,9 @@ export default function Administrador() {
                                                         updated.paquete.descuentosPorServicio.otrosServicios[idx].aplicarDescuento = e.target.checked
                                                         setSnapshotEditando(updated)
                                                       }}
-                                                      className="w-4 h-4 accent-red-500 cursor-pointer transition-transform hover:scale-110"
+                                                      className="w-4 h-4 accent-red-500 cursor-pointer"
                                                     />
-                                                    <span className="text-sm font-medium text-secondary hover:text-red-600 transition-colors">{servicio.nombre}</span>
+                                                    <span className="text-sm font-medium text-black">{servicio.nombre}</span>
                                                   </label>
                                                 </div>
                                                 {descuento?.aplicarDescuento && (
@@ -2739,7 +2717,7 @@ export default function Administrador() {
                                                       updated.paquete.descuentosPorServicio.otrosServicios[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
                                                       setSnapshotEditando(updated)
                                                     }}
-                                                    className="w-20 px-3 py-2 border border-red-300/30 rounded-md focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200 text-sm font-medium bg-white hover:bg-red-50/50 transition-all"
+                                                    className="w-20 px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
                                                     min="0"
                                                     max="100"
                                                     placeholder="0%"
@@ -2758,8 +2736,8 @@ export default function Administrador() {
 
                             {/* VISTA PREVIA DE MONTOS COMPLETA */}
                             {snapshotEditando && (
-                              <div className="bg-gradient-to-r from-red-500/10 to-amber-500/10 p-5 rounded-xl border border-red-300/20">
-                                <h3 className="text-base font-bold text-red-600 mb-5 flex items-center gap-2">
+                              <div className="bg-neutral-50 p-4">
+                                <h3 className="text-sm font-bold text-black mb-3 flex items-center gap-2">
                                   💰 Vista Previa de Montos Completa
                                 </h3>
 
@@ -2767,19 +2745,19 @@ export default function Administrador() {
                                   const preview = calcularPreviewDescuentos(snapshotEditando)
 
                                   return (
-                                    <div className="space-y-4">
+                                    <div className="space-y-3">
                                       {/* Desarrollo */}
                                       {preview.desarrollo > 0 && (
-                                        <div className="bg-white p-4 rounded-lg border border-red-200/30">
-                                          <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm font-medium text-secondary">🧑‍💻 Desarrollo</span>
+                                        <div className="bg-white p-3">
+                                          <div className="flex justify-between items-center mb-1">
+                                            <span className="text-sm font-medium text-black">🧑‍💻 Desarrollo</span>
                                             <div className="flex gap-2 items-center">
                                               {preview.desarrollo !== preview.desarrolloConDescuento && (
                                                 <span className="line-through text-neutral-400 text-sm">
                                                   ${preview.desarrollo.toFixed(2)}
                                                 </span>
                                               )}
-                                              <span className={`font-bold ${preview.desarrollo !== preview.desarrolloConDescuento ? 'text-red-600' : 'text-secondary'}`}>
+                                              <span className={`font-bold ${preview.desarrollo !== preview.desarrolloConDescuento ? 'text-red-600' : 'text-black'}`}>
                                                 ${preview.desarrolloConDescuento.toFixed(2)}
                                               </span>
                                             </div>
@@ -2794,22 +2772,22 @@ export default function Administrador() {
 
                                       {/* Servicios Base */}
                                       {preview.serviciosBase.total > 0 && (
-                                        <div className="bg-white p-4 rounded-lg border border-red-200/30">
-                                          <div className="flex justify-between items-center mb-3">
-                                            <span className="text-sm font-medium text-secondary">📦 Servicios Base</span>
+                                        <div className="bg-white p-3">
+                                          <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm font-medium text-black">📦 Servicios Base</span>
                                             <div className="flex gap-2 items-center">
                                               {preview.serviciosBase.total !== preview.serviciosBase.conDescuento && (
                                                 <span className="line-through text-neutral-400 text-sm">
                                                   ${preview.serviciosBase.total.toFixed(2)}
                                                 </span>
                                               )}
-                                              <span className={`font-bold ${preview.serviciosBase.total !== preview.serviciosBase.conDescuento ? 'text-red-600' : 'text-secondary'}`}>
+                                              <span className={`font-bold ${preview.serviciosBase.total !== preview.serviciosBase.conDescuento ? 'text-red-600' : 'text-black'}`}>
                                                 ${preview.serviciosBase.conDescuento.toFixed(2)}
                                               </span>
                                             </div>
                                           </div>
                                           {preview.serviciosBase.desglose.length > 0 && (
-                                            <div className="space-y-1 text-xs text-neutral-600 mb-2 pl-2 border-l-2 border-red-200">
+                                            <div className="space-y-1 text-xs text-neutral-600 mb-1 pl-2 border-l-2 border-neutral-200">
                                               {preview.serviciosBase.desglose.map((item, idx) => (
                                                 <div key={idx} className="flex justify-between">
                                                   <span>{item.nombre}</span>
@@ -2830,22 +2808,22 @@ export default function Administrador() {
 
                                       {/* Otros Servicios */}
                                       {preview.otrosServicios.total > 0 && (
-                                        <div className="bg-white p-4 rounded-lg border border-red-200/30">
-                                          <div className="flex justify-between items-center mb-3">
-                                            <span className="text-sm font-medium text-secondary">🎁 Otros Servicios</span>
+                                        <div className="bg-white p-3">
+                                          <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm font-medium text-black">🎁 Otros Servicios</span>
                                             <div className="flex gap-2 items-center">
                                               {preview.otrosServicios.total !== preview.otrosServicios.conDescuento && (
                                                 <span className="line-through text-neutral-400 text-sm">
                                                   ${preview.otrosServicios.total.toFixed(2)}
                                                 </span>
                                               )}
-                                              <span className={`font-bold ${preview.otrosServicios.total !== preview.otrosServicios.conDescuento ? 'text-red-600' : 'text-secondary'}`}>
+                                              <span className={`font-bold ${preview.otrosServicios.total !== preview.otrosServicios.conDescuento ? 'text-red-600' : 'text-black'}`}>
                                                 ${preview.otrosServicios.conDescuento.toFixed(2)}
                                               </span>
                                             </div>
                                           </div>
                                           {preview.otrosServicios.desglose.length > 0 && (
-                                            <div className="space-y-1 text-xs text-neutral-600 mb-2 pl-2 border-l-2 border-red-200">
+                                            <div className="space-y-1 text-xs text-neutral-600 mb-1 pl-2 border-l-2 border-neutral-200">
                                               {preview.otrosServicios.desglose.map((item, idx) => (
                                                 <div key={idx} className="flex justify-between">
                                                   <span>{item.nombre}</span>
@@ -2865,25 +2843,25 @@ export default function Administrador() {
                                       )}
 
                                       {/* Total General */}
-                                      <div className="bg-gradient-to-r from-red-50 to-amber-50 p-4 rounded-lg border border-red-300/50 mt-4">
+                                      <div className="bg-white p-4 border-t-2 border-neutral-300">
                                         <div className="flex justify-between items-center">
-                                          <span className="text-base font-bold text-red-700">Total General</span>
+                                          <span className="text-base font-bold text-black">Total General</span>
                                           <div className="flex gap-3 items-center">
                                             <div className="text-right">
                                               {preview.totalOriginal !== preview.totalConDescuentos && (
-                                                <div className="line-through text-neutral-500 text-sm">
+                                                <div className="line-through text-neutral-400 text-sm">
                                                   ${preview.totalOriginal.toFixed(2)}
                                                 </div>
                                               )}
-                                              <div className={`font-bold text-2xl ${preview.totalOriginal !== preview.totalConDescuentos ? 'text-red-600' : 'text-secondary'}`}>
+                                              <div className={`font-bold text-2xl ${preview.totalOriginal !== preview.totalConDescuentos ? 'text-red-600' : 'text-black'}`}>
                                                 ${preview.totalConDescuentos.toFixed(2)}
                                               </div>
                                             </div>
                                           </div>
                                         </div>
                                         {preview.totalAhorro > 0 && (
-                                          <div className="mt-3 pt-3 border-t-2 border-red-200/50 flex justify-between items-center">
-                                            <span className="text-sm font-semibold text-red-700">🔴 Ahorro Total</span>
+                                          <div className="mt-3 pt-3 border-t border-neutral-200 flex justify-between items-center">
+                                            <span className="text-sm font-semibold text-black">🔴 Ahorro Total</span>
                                             <span className="text-lg font-bold text-red-600">
                                               ${preview.totalAhorro.toFixed(2)} ({preview.porcentajeAhorro.toFixed(1)}%)
                                             </span>
@@ -2910,7 +2888,7 @@ export default function Administrador() {
                 {/* Indicador de autoguardado a la izquierda */}
                 <div className="flex items-center gap-3">
                   {autoSaveStatus === 'saving' && (
-                    <span className="text-sm text-accent animate-pulse">Guardando cambios...</span>
+                    <span className="text-sm text-white animate-pulse">Guardando cambios...</span>
                   )}
                   {autoSaveStatus === 'saved' && (
                     <span className="text-sm text-green-600">✓ Cambios guardados</span>
