@@ -9,83 +9,8 @@ import TabsModal from '@/components/TabsModal'
 import { jsPDF } from 'jspdf'
 import { obtenerSnapshots, crearSnapshot, actualizarSnapshot, eliminarSnapshot, obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
-
-interface ServicioBase {
-  id: string
-  nombre: string
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface GestionConfig {
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface Package {
-  nombre: string
-  desarrollo: number
-  descuento: number
-  activo: boolean
-  tipo?: string
-  descripcion?: string
-}
-
-interface Servicio {
-  id: string
-  nombre: string
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface OtroServicio {
-  nombre: string
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
-interface OtroServicioSnapshot extends OtroServicio {}
-
-interface PackageSnapshot {
-  id: string
-  nombre: string
-  serviciosBase: ServicioBase[]
-  gestion: {
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-  }
-  paquete: {
-    desarrollo: number
-    descuento: number
-    tipo?: string
-    descripcion?: string
-    emoji?: string
-    tagline?: string
-    precioHosting?: number
-    precioMailbox?: number
-    precioDominio?: number
-    tiempoEntrega?: string
-    opcionesPago?: Array<{
-      nombre: string
-      porcentaje: number
-      descripcion: string
-    }>
-    descuentoPagoUnico?: number
-  }
-  otrosServicios: OtroServicioSnapshot[]
-  costos: {
-    inicial: number
-    año1: number
-    año2: number
-  }
-  activo: boolean
-  createdAt: string
-}
+import type { ServicioBase, GestionConfig, Package, Servicio, OtroServicio, OtroServicioSnapshot, PackageSnapshot } from '@/lib/types'
+import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
 export default function Administrador() {
   // Obtener función de refresh global
@@ -256,15 +181,12 @@ export default function Administrador() {
       return sum + (s.precio * s.mesesPago)
     }, 0)
 
-    const mesesPagoGestion = snapshot.gestion.mesesPago
-    const gestionCosto = snapshot.gestion.precio * mesesPagoGestion
-
     const otrosServiciosTotal = snapshot.otrosServicios.reduce((sum, s) => {
       const mesesServicio = s.mesesPago
       return sum + s.precio * mesesServicio
     }, 0)
 
-    return desarrolloConDescuento + serviciosBaseCosto + gestionCosto + otrosServiciosTotal
+    return desarrolloConDescuento + serviciosBaseCosto + otrosServiciosTotal
   }
 
   // Calcular costo año 2 para un snapshot
@@ -274,13 +196,11 @@ export default function Administrador() {
       return sum + (s.precio * 12)
     }, 0)
 
-    const gestionCosto = snapshot.gestion.precio * 12
-
     const otrosServiciosTotal = snapshot.otrosServicios.reduce((sum, s) => {
       return sum + s.precio * 12
     }, 0)
 
-    return serviciosBaseCosto + gestionCosto + otrosServiciosTotal
+    return serviciosBaseCosto + otrosServiciosTotal
   }
 
   // Funciones CRUD para Servicios Base
@@ -413,6 +333,26 @@ export default function Administrador() {
           descuento: paqueteActual.descuento,
           tipo: paqueteActual.tipo || '',
           descripcion: paqueteActual.descripcion || 'Paquete personalizado para empresas.',
+          descuentosGenerales: {
+            aplicarAlDesarrollo: false,
+            aplicarAServiciosBase: false,
+            aplicarAOtrosServicios: false,
+            porcentaje: 0,
+          },
+          descuentosPorServicio: {
+            aplicarAServiciosBase: false,
+            aplicarAOtrosServicios: false,
+            serviciosBase: serviciosBase.map(s => ({
+              servicioId: s.id,
+              aplicarDescuento: false,
+              porcentajeDescuento: 0,
+            })),
+            otrosServicios: otrosServiciosUnificados.map((s, idx) => ({
+              servicioId: `otro-${idx}`,
+              aplicarDescuento: false,
+              porcentajeDescuento: 0,
+            })),
+          },
         },
         otrosServicios: otrosServiciosUnificados,
         costos: {
@@ -451,7 +391,34 @@ export default function Administrador() {
   }
 
   const abrirModalEditar = (snapshot: PackageSnapshot) => {
-    setSnapshotEditando({ ...snapshot })
+    // Inicializar descuentos si no existen
+    const snapshotConDescuentos = {
+      ...snapshot,
+      paquete: {
+        ...snapshot.paquete,
+        descuentosGenerales: snapshot.paquete.descuentosGenerales || {
+          aplicarAlDesarrollo: false,
+          aplicarAServiciosBase: false,
+          aplicarAOtrosServicios: false,
+          porcentaje: 0,
+        },
+        descuentosPorServicio: snapshot.paquete.descuentosPorServicio || {
+          aplicarAServiciosBase: false,
+          aplicarAOtrosServicios: false,
+          serviciosBase: snapshot.serviciosBase.map(s => ({
+            servicioId: s.id,
+            aplicarDescuento: false,
+            porcentajeDescuento: 0,
+          })),
+          otrosServicios: snapshot.otrosServicios.map(s => ({
+            servicioId: s.id,
+            aplicarDescuento: false,
+            porcentajeDescuento: 0,
+          })),
+        },
+      },
+    }
+    setSnapshotEditando(snapshotConDescuentos)
     setShowModalEditar(true)
     setSnapshotOriginalJson(JSON.stringify(snapshot))
   }
@@ -1196,7 +1163,7 @@ export default function Administrador() {
               viewport={{ once: true }}
               className="bg-white rounded-2xl shadow-xl border-l-4 border-accent p-8"
             >
-              <h2 className="text-2xl font-bold text-secondary mb-6">4. Servicios Opcionales</h2>
+              <h2 className="text-2xl font-bold text-secondary mb-6">3. Servicios Opcionales</h2>
 
               {serviciosOpcionales.length > 0 && (
                 <div className="mb-6 space-y-3">
@@ -2091,8 +2058,8 @@ export default function Administrador() {
                     <FaCreditCard /> Opciones de Pago
                   </h3>
 
-                  {/* Desarrollo, Descuento general y Descuento por Pago Adelantado en la misma sección */}
-                  <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  {/* Desarrollo en la misma sección */}
+                  <div className="grid md:grid-cols-1 gap-4 mb-6">
                     <div>
                       <label className="block font-semibold text-secondary mb-2 text-sm">
                         🧑‍💻Desarrollo del sistio web
@@ -2112,53 +2079,6 @@ export default function Administrador() {
                         className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
                         min="0"
                       />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        💸 Descuento (%)
-                      </label>
-                      <input
-                        type="number"
-                        
-                        value={snapshotEditando.paquete.descuento}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              descuento: parseFloat(e.target.value) || 0,
-                            },
-                          })
-                        }
-                        className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
-                        min="0"
-                        max="100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        🎁 Descuento por Pay Full (%)
-                      </label>
-                      <input
-                        type="number"
-                        value={snapshotEditando.paquete.descuentoPagoUnico || 0}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              descuentoPagoUnico: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
-                            },
-                          })
-                        }
-                        className="w-full px-4 py-2 border-2 border-primary/20 rounded-lg focus:border-primary focus:outline-none"
-                        min="0"
-                        max="100"
-                        placeholder="0"
-                      />
-                      <p className="text-xs text-neutral-500 mt-1">
-                        Se aplica si el cliente paga el desarrollo completo por adelantado.
-                      </p>
                     </div>
                   </div>
 
@@ -2340,6 +2260,423 @@ export default function Administrador() {
                     </div>
                   )}
                 </div>
+                          </div>
+                        ),
+                      },
+                      {
+                        id: 'ajustes',
+                        label: 'Descuentos',
+                        icon: '💵',
+                        content: (
+                          <div className="space-y-6 p-6 overflow-y-auto max-h-[calc(90vh-250px)]">
+                            {/* DESCUENTOS GENERALES */}
+                            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-6 rounded-xl border-2 border-purple-300/20">
+                              <h3 className="text-lg font-bold text-purple-600 mb-6 flex items-center gap-2">
+                                💸 Descuentos Generales
+                              </h3>
+
+                              {/* Checkboxes para aplicar descuentos */}
+                              <div className="space-y-3 mb-6 bg-white p-4 rounded-lg border border-purple-200/30">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={snapshotEditando.paquete.descuentosGenerales?.aplicarAlDesarrollo || false}
+                                    onChange={(e) =>
+                                      setSnapshotEditando({
+                                        ...snapshotEditando,
+                                        paquete: {
+                                          ...snapshotEditando.paquete,
+                                          descuentosGenerales: {
+                                            ...snapshotEditando.paquete.descuentosGenerales,
+                                            aplicarAlDesarrollo: e.target.checked,
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-4 h-4 accent-purple-500 cursor-pointer"
+                                  />
+                                  <span className="text-sm font-medium text-secondary">Aplicar a Desarrollo</span>
+                                </label>
+
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={snapshotEditando.paquete.descuentosGenerales?.aplicarAServiciosBase || false}
+                                    onChange={(e) =>
+                                      setSnapshotEditando({
+                                        ...snapshotEditando,
+                                        paquete: {
+                                          ...snapshotEditando.paquete,
+                                          descuentosGenerales: {
+                                            ...snapshotEditando.paquete.descuentosGenerales,
+                                            aplicarAServiciosBase: e.target.checked,
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-4 h-4 accent-purple-500 cursor-pointer"
+                                  />
+                                  <span className="text-sm font-medium text-secondary">Aplicar a Servicios Base</span>
+                                </label>
+
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={snapshotEditando.paquete.descuentosGenerales?.aplicarAOtrosServicios || false}
+                                    onChange={(e) =>
+                                      setSnapshotEditando({
+                                        ...snapshotEditando,
+                                        paquete: {
+                                          ...snapshotEditando.paquete,
+                                          descuentosGenerales: {
+                                            ...snapshotEditando.paquete.descuentosGenerales,
+                                            aplicarAOtrosServicios: e.target.checked,
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-4 h-4 accent-purple-500 cursor-pointer"
+                                  />
+                                  <span className="text-sm font-medium text-secondary">Aplicar a Otros Servicios</span>
+                                </label>
+                              </div>
+
+                              {/* Campos de porcentaje */}
+                              <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block font-semibold text-secondary mb-2 text-sm">
+                                    💸 Descuento General (%)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={snapshotEditando.paquete.descuentosGenerales?.porcentaje || 0}
+                                    onChange={(e) =>
+                                      setSnapshotEditando({
+                                        ...snapshotEditando,
+                                        paquete: {
+                                          ...snapshotEditando.paquete,
+                                          descuentosGenerales: {
+                                            ...snapshotEditando.paquete.descuentosGenerales,
+                                            porcentaje: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-full px-4 py-2 border-2 border-purple-300/20 rounded-lg focus:border-purple-500 focus:outline-none"
+                                    min="0"
+                                    max="100"
+                                    placeholder="0"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block font-semibold text-secondary mb-2 text-sm">
+                                    🎁 Descuento por Pay Full (%)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={snapshotEditando.paquete.descuentoPagoUnico || 0}
+                                    onChange={(e) =>
+                                      setSnapshotEditando({
+                                        ...snapshotEditando,
+                                        paquete: {
+                                          ...snapshotEditando.paquete,
+                                          descuentoPagoUnico: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                        },
+                                      })
+                                    }
+                                    className="w-full px-4 py-2 border-2 border-purple-300/20 rounded-lg focus:border-purple-500 focus:outline-none"
+                                    min="0"
+                                    max="100"
+                                    placeholder="0"
+                                  />
+                                  <p className="text-xs text-neutral-500 mt-1">
+                                    Se aplica si el cliente paga el desarrollo completo por adelantado.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* DESCUENTOS POR TIPO DE SERVICIO */}
+                            <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-6 rounded-xl border-2 border-blue-300/20">
+                              <h3 className="text-lg font-bold text-blue-600 mb-6 flex items-center gap-2">
+                                🎯 Descuentos por Tipo de Servicio
+                              </h3>
+
+                              {/* Checkboxes para habilitar descuentos por tipo */}
+                              <div className="space-y-3 mb-6 bg-white p-4 rounded-lg border border-blue-200/30">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={snapshotEditando.paquete.descuentosPorServicio?.aplicarAServiciosBase || false}
+                                    onChange={(e) =>
+                                      setSnapshotEditando({
+                                        ...snapshotEditando,
+                                        paquete: {
+                                          ...snapshotEditando.paquete,
+                                          descuentosPorServicio: {
+                                            ...snapshotEditando.paquete.descuentosPorServicio,
+                                            aplicarAServiciosBase: e.target.checked,
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                  />
+                                  <span className="text-sm font-medium text-secondary">Aplicar Descuentos Independientes a Servicios Base</span>
+                                </label>
+
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={snapshotEditando.paquete.descuentosPorServicio?.aplicarAOtrosServicios || false}
+                                    onChange={(e) =>
+                                      setSnapshotEditando({
+                                        ...snapshotEditando,
+                                        paquete: {
+                                          ...snapshotEditando.paquete,
+                                          descuentosPorServicio: {
+                                            ...snapshotEditando.paquete.descuentosPorServicio,
+                                            aplicarAOtrosServicios: e.target.checked,
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                  />
+                                  <span className="text-sm font-medium text-secondary">Aplicar Descuentos Independientes a Otros Servicios</span>
+                                </label>
+                              </div>
+
+                              {/* Servicios Base */}
+                              {snapshotEditando.paquete.descuentosPorServicio?.aplicarAServiciosBase && (
+                                <div className="mb-6">
+                                  <h4 className="font-bold text-blue-600 mb-3 text-sm">📦 Servicios Base</h4>
+                                  <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
+                                    {snapshotEditando.serviciosBase.map((servicio) => {
+                                      const descuento = snapshotEditando.paquete.descuentosPorServicio?.serviciosBase.find(d => d.servicioId === servicio.id)
+                                      return (
+                                        <div key={servicio.id} className="flex gap-3 items-end pb-3 border-b border-blue-100/50 last:border-b-0 last:pb-0">
+                                          <div className="flex-1">
+                                            <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                              <input
+                                                type="checkbox"
+                                                checked={descuento?.aplicarDescuento || false}
+                                                onChange={(e) => {
+                                                  const updated = { ...snapshotEditando }
+                                                  const idx = updated.paquete.descuentosPorServicio.serviciosBase.findIndex(d => d.servicioId === servicio.id)
+                                                  if (idx >= 0) {
+                                                    updated.paquete.descuentosPorServicio.serviciosBase[idx].aplicarDescuento = e.target.checked
+                                                  }
+                                                  setSnapshotEditando(updated)
+                                                }}
+                                                className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                              />
+                                              <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
+                                            </label>
+                                          </div>
+                                          {descuento?.aplicarDescuento && (
+                                            <input
+                                              type="number"
+                                              value={descuento.porcentajeDescuento}
+                                              onChange={(e) => {
+                                                const updated = { ...snapshotEditando }
+                                                const idx = updated.paquete.descuentosPorServicio.serviciosBase.findIndex(d => d.servicioId === servicio.id)
+                                                if (idx >= 0) {
+                                                  updated.paquete.descuentosPorServicio.serviciosBase[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
+                                                }
+                                                setSnapshotEditando(updated)
+                                              }}
+                                              className="w-20 px-3 py-2 border-2 border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                              min="0"
+                                              max="100"
+                                              placeholder="0%"
+                                            />
+                                          )}
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Otros Servicios */}
+                              {snapshotEditando.paquete.descuentosPorServicio?.aplicarAOtrosServicios && (
+                                <div>
+                                  <h4 className="font-bold text-blue-600 mb-3 text-sm">🎁 Otros Servicios</h4>
+                                  <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
+                                    {snapshotEditando.otrosServicios.map((servicio, idx) => {
+                                      const descuento = snapshotEditando.paquete.descuentosPorServicio?.otrosServicios[idx]
+                                      return (
+                                        <div key={idx} className="flex gap-3 items-end pb-3 border-b border-blue-100/50 last:border-b-0 last:pb-0">
+                                          <div className="flex-1">
+                                            <label className="flex items-center gap-2 cursor-pointer mb-2">
+                                              <input
+                                                type="checkbox"
+                                                checked={descuento?.aplicarDescuento || false}
+                                                onChange={(e) => {
+                                                  const updated = { ...snapshotEditando }
+                                                  updated.paquete.descuentosPorServicio.otrosServicios[idx].aplicarDescuento = e.target.checked
+                                                  setSnapshotEditando(updated)
+                                                }}
+                                                className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                              />
+                                              <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
+                                            </label>
+                                          </div>
+                                          {descuento?.aplicarDescuento && (
+                                            <input
+                                              type="number"
+                                              value={descuento.porcentajeDescuento}
+                                              onChange={(e) => {
+                                                const updated = { ...snapshotEditando }
+                                                updated.paquete.descuentosPorServicio.otrosServicios[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
+                                                setSnapshotEditando(updated)
+                                              }}
+                                              className="w-20 px-3 py-2 border-2 border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                              min="0"
+                                              max="100"
+                                              placeholder="0%"
+                                            />
+                                          )}
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* VISTA PREVIA DE MONTOS COMPLETA */}
+                            {snapshotEditando && (
+                              <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 p-6 rounded-xl border-2 border-emerald-300/20">
+                                <h3 className="text-lg font-bold text-emerald-600 mb-6 flex items-center gap-2">
+                                  💰 Vista Previa de Montos Completa
+                                </h3>
+
+                                {(() => {
+                                  const preview = calcularPreviewDescuentos(snapshotEditando)
+
+                                  return (
+                                    <div className="space-y-4">
+                                      {/* Desarrollo */}
+                                      {preview.desarrollo > 0 && (
+                                        <div className="bg-white p-4 rounded-lg border border-emerald-200/30">
+                                          <div className="flex justify-between items-center mb-2">
+                                            <span className="text-sm font-medium text-secondary">🧑‍💻 Desarrollo</span>
+                                            <div className="flex gap-2 items-center">
+                                              <span className="line-through text-neutral-400 text-sm">
+                                                ${preview.desarrollo.toFixed(2)}
+                                              </span>
+                                              <span className="font-bold text-emerald-600">
+                                                ${preview.desarrolloConDescuento.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          {preview.desarrollo !== preview.desarrolloConDescuento && (
+                                            <div className="text-xs text-emerald-600 font-semibold">
+                                              Ahorro: ${(preview.desarrollo - preview.desarrolloConDescuento).toFixed(2)} ({(((preview.desarrollo - preview.desarrolloConDescuento) / preview.desarrollo) * 100).toFixed(1)}%)
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Servicios Base */}
+                                      {preview.serviciosBase.total > 0 && (
+                                        <div className="bg-white p-4 rounded-lg border border-emerald-200/30">
+                                          <div className="flex justify-between items-center mb-3">
+                                            <span className="text-sm font-medium text-secondary">📦 Servicios Base</span>
+                                            <div className="flex gap-2 items-center">
+                                              <span className="line-through text-neutral-400 text-sm">
+                                                ${preview.serviciosBase.total.toFixed(2)}
+                                              </span>
+                                              <span className="font-bold text-emerald-600">
+                                                ${preview.serviciosBase.conDescuento.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          {preview.serviciosBase.desglose.length > 0 && (
+                                            <div className="space-y-1 text-xs text-neutral-600 mb-2 pl-2 border-l-2 border-emerald-200">
+                                              {preview.serviciosBase.desglose.map((item, idx) => (
+                                                <div key={idx} className="flex justify-between">
+                                                  <span>{item.nombre}</span>
+                                                  <span className="font-medium">
+                                                    ${item.original.toFixed(2)} → ${item.conDescuento.toFixed(2)}
+                                                  </span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                          {preview.serviciosBase.total !== preview.serviciosBase.conDescuento && (
+                                            <div className="text-xs text-emerald-600 font-semibold">
+                                              Ahorro: ${(preview.serviciosBase.total - preview.serviciosBase.conDescuento).toFixed(2)} ({(((preview.serviciosBase.total - preview.serviciosBase.conDescuento) / preview.serviciosBase.total) * 100).toFixed(1)}%)
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Otros Servicios */}
+                                      {preview.otrosServicios.total > 0 && (
+                                        <div className="bg-white p-4 rounded-lg border border-emerald-200/30">
+                                          <div className="flex justify-between items-center mb-3">
+                                            <span className="text-sm font-medium text-secondary">🎁 Otros Servicios</span>
+                                            <div className="flex gap-2 items-center">
+                                              <span className="line-through text-neutral-400 text-sm">
+                                                ${preview.otrosServicios.total.toFixed(2)}
+                                              </span>
+                                              <span className="font-bold text-emerald-600">
+                                                ${preview.otrosServicios.conDescuento.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          {preview.otrosServicios.desglose.length > 0 && (
+                                            <div className="space-y-1 text-xs text-neutral-600 mb-2 pl-2 border-l-2 border-emerald-200">
+                                              {preview.otrosServicios.desglose.map((item, idx) => (
+                                                <div key={idx} className="flex justify-between">
+                                                  <span>{item.nombre}</span>
+                                                  <span className="font-medium">
+                                                    ${item.original.toFixed(2)} → ${item.conDescuento.toFixed(2)}
+                                                  </span>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                          {preview.otrosServicios.total !== preview.otrosServicios.conDescuento && (
+                                            <div className="text-xs text-emerald-600 font-semibold">
+                                              Ahorro: ${(preview.otrosServicios.total - preview.otrosServicios.conDescuento).toFixed(2)} ({(((preview.otrosServicios.total - preview.otrosServicios.conDescuento) / preview.otrosServicios.total) * 100).toFixed(1)}%)
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Total General */}
+                                      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg border-2 border-emerald-300/50 mt-4">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-base font-bold text-emerald-700">Total General</span>
+                                          <div className="flex gap-3 items-center">
+                                            <div className="text-right">
+                                              <div className="line-through text-neutral-500 text-sm">
+                                                ${preview.totalOriginal.toFixed(2)}
+                                              </div>
+                                              <div className="font-bold text-2xl text-emerald-600">
+                                                ${preview.totalConDescuentos.toFixed(2)}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        {preview.totalAhorro > 0 && (
+                                          <div className="mt-3 pt-3 border-t-2 border-emerald-200/50 flex justify-between items-center">
+                                            <span className="text-sm font-semibold text-emerald-700">💚 Ahorro Total</span>
+                                            <span className="text-lg font-bold text-emerald-600">
+                                              ${preview.totalAhorro.toFixed(2)} ({preview.porcentajeAhorro.toFixed(1)}%)
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )
+                                })()}
+                              </div>
+                            )}
                           </div>
                         ),
                       },

@@ -20,6 +20,26 @@ export interface OpcionPago {
   descripcion: string
 }
 
+export interface DescuentoServicio {
+  servicioId: string
+  aplicarDescuento: boolean
+  porcentajeDescuento: number
+}
+
+export interface DescuentosGenerales {
+  aplicarAlDesarrollo: boolean
+  aplicarAServiciosBase: boolean
+  aplicarAOtrosServicios: boolean
+  porcentaje: number
+}
+
+export interface DescuentosPorServicio {
+  aplicarAServiciosBase: boolean
+  aplicarAOtrosServicios: boolean
+  serviciosBase: DescuentoServicio[]
+  otrosServicios: DescuentoServicio[]
+}
+
 export interface Package {
   nombre: string
   desarrollo: number
@@ -35,6 +55,8 @@ export interface Package {
   tiempoEntrega?: string
   opcionesPago?: OpcionPago[]
   descuentoPagoUnico?: number
+  descuentosGenerales?: DescuentosGenerales
+  descuentosPorServicio?: DescuentosPorServicio
   gestionMensual?: {
     precio: number
     descripcion: string
@@ -80,6 +102,8 @@ export interface PackageSnapshot {
     tiempoEntrega?: string
     opcionesPago?: OpcionPago[]
     descuentoPagoUnico?: number
+    descuentosGenerales?: DescuentosGenerales
+    descuentosPorServicio?: DescuentosPorServicio
     gestionMensual?: {
       precio: number
       descripcion: string

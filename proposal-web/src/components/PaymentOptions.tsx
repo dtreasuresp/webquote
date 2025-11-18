@@ -22,13 +22,11 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
     0
   )
 
-  // Calcular servicios adicionales del paquete
-  const serviciosAdicionales = [
-    { nombre: 'Hosting Paquete', precio: snapshot.paquete.precioHosting || 0 },
-    { nombre: 'Dominio Paquete', precio: snapshot.paquete.precioMailbox || 0 },
-    { nombre: 'SSL', precio: snapshot.paquete.precioDominio || 0 },
-    { nombre: 'Gestión', precio: snapshot.gestion?.precio || 0 },
-  ].filter(s => s.precio > 0)
+  // Calcular servicios adicionales del paquete (desde otrosServicios)
+  const serviciosAdicionales = (snapshot.otrosServicios || []).map(s => ({
+    nombre: s.nombre,
+    precio: s.precio || 0,
+  })).filter(s => s.precio > 0)
 
   const costoAdicionalesTotal = serviciosAdicionales.reduce((sum, s) => sum + s.precio, 0)
   
@@ -199,7 +197,7 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
         <div className="bg-gradient-to-br from-accent/10 to-accent/20 p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow border-2 border-accent">
           <div className="flex items-center gap-2 mb-4">
             <h5 className="text-xl font-bold text-secondary">🎁 Opción 2: Pago único</h5>
-            {(descuentePagoUnico > 0 || descuentoGeneral > 0) && (
+            {(descuentoPagoUnico > 0 || descuentoGeneral > 0) && (
               <span className="bg-accent text-white px-3 py-1 rounded-full text-sm font-bold">
                 {descuentoGeneral > 0 && descuentoPagoUnico > 0 
                   ? `${((1 - (1 - descuentoGeneral/100) * (1 - descuentoPagoUnico/100)) * 100).toFixed(0)}%`

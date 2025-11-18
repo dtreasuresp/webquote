@@ -122,23 +122,12 @@ export function getMailboxRange(snapshots: PackageSnapshot[]): string {
 
 /**
  * Calcula el rango de precios de gestión mensual
- * Nota: Este retorna el precio mensual, no anual
+ * NOTA: La sección de Gestión ha sido eliminada del proyecto
+ * Esta función ahora retorna 'Por definir'
  */
 export function getManagementRange(snapshots: PackageSnapshot[]): string {
-  const active = getActiveSnapshots(snapshots)
-  
-  if (active.length === 0) return 'Por definir'
-  
-  const prices = active
-    .map(s => s.gestion.precio)
-    .filter(p => p > 0)
-  
-  if (prices.length === 0) return 'Por definir'
-  
-  const min = Math.min(...prices)
-  const max = Math.max(...prices)
-  
-  return formatPriceRange(min, max, '/mes')
+  // Gestión ha sido eliminada del cálculo de rangos
+  return 'Por definir'
 }
 
 /**
