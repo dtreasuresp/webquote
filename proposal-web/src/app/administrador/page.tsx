@@ -1653,8 +1653,8 @@ export default function Administrador() {
                                   ${snapshot.costos.año2.toFixed(2)}
                                 </td>
                               </tr>
-                              <tr className="bg-blue-50">
-                                <td colSpan={5} className="p-2 text-xs text-blue-600 italic text-center">
+                              <tr className="bg-red-50">
+                                <td colSpan={5} className="p-2 text-xs text-red-600 italic text-center">
                                   ℹ️ Año 2 no incluye desarrollo (pago único realizado en Año 1)
                                 </td>
                               </tr>
@@ -2550,13 +2550,13 @@ export default function Administrador() {
                             </div>
 
                             {/* DESCUENTOS POR TIPO DE SERVICIO */}
-                            <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-5 rounded-xl border border-blue-300/20">
-                              <h3 className="text-base font-bold text-blue-600 mb-5 flex items-center gap-2">
+                            <div className="bg-gradient-to-r from-red-500/10 to-amber-500/10 p-5 rounded-xl border border-red-300/20">
+                              <h3 className="text-base font-bold text-red-600 mb-5 flex items-center gap-2">
                                 🎯 Descuentos por Tipo de Servicio
                               </h3>
 
                               {/* Checkboxes para habilitar descuentos por tipo */}
-                              <div className="space-y-3 mb-5 bg-white p-4 rounded-lg border border-blue-200/30">
+                              <div className="space-y-3 mb-5 bg-white p-4 rounded-lg border border-red-200/30">
                                 <label className="flex items-center gap-3 cursor-pointer">
                                   <input
                                     type="checkbox"
@@ -2573,7 +2573,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                    className="w-4 h-4 accent-red-500 cursor-pointer"
                                   />
                                   <span className="text-sm font-medium text-secondary">Aplicar Descuentos Independientes a Servicios Base</span>
                                 </label>
@@ -2594,7 +2594,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                    className="w-4 h-4 accent-red-500 cursor-pointer"
                                   />
                                   <span className="text-sm font-medium text-secondary">Aplicar Descuentos Independientes a Otros Servicios</span>
                                 </label>
@@ -2608,16 +2608,16 @@ export default function Administrador() {
                                       ...expandidosDescuentos,
                                       serviciosBase: !expandidosDescuentos.serviciosBase
                                     })}
-                                    className="w-full flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors mb-3"
+                                    className="w-full flex items-center justify-between p-3 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors mb-3"
                                   >
                                     <div className="flex items-center gap-2 text-left">
-                                      <span className="text-sm font-bold text-blue-600">📦 Servicios Base</span>
+                                      <span className="text-sm font-bold text-red-600">📦 Servicios Base</span>
                                     </div>
                                     <motion.div
                                       animate={{ rotate: expandidosDescuentos.serviciosBase ? 180 : 0 }}
                                       transition={{ duration: 0.2 }}
                                     >
-                                      <FaChevronDown size={14} className="text-blue-600" />
+                                      <FaChevronDown size={14} className="text-red-600" />
                                     </motion.div>
                                   </button>
                                   
@@ -2630,11 +2630,11 @@ export default function Administrador() {
                                         transition={{ duration: 0.2 }}
                                         className="overflow-hidden"
                                       >
-                                        <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
+                                        <div className="space-y-3 bg-white p-4 rounded-lg border border-red-200/30">
                                           {snapshotEditando.serviciosBase.map((servicio) => {
                                             const descuento = snapshotEditando.paquete.descuentosPorServicio?.serviciosBase.find(d => d.servicioId === servicio.id)
                                             return (
-                                              <div key={servicio.id} className="flex gap-3 items-end pb-3 border-b border-blue-100/50 last:border-b-0 last:pb-0">
+                                              <div key={servicio.id} className="flex gap-3 items-end pb-3 border-b border-red-100/50 last:border-b-0 last:pb-0">
                                                 <div className="flex-1">
                                                   <label className="flex items-center gap-2 cursor-pointer mb-2">
                                                     <input
@@ -2648,7 +2648,7 @@ export default function Administrador() {
                                                         }
                                                         setSnapshotEditando(updated)
                                                       }}
-                                                      className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                                      className="w-4 h-4 accent-red-500 cursor-pointer"
                                                     />
                                                     <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
                                                   </label>
@@ -2665,7 +2665,7 @@ export default function Administrador() {
                                                       }
                                                       setSnapshotEditando(updated)
                                                     }}
-                                                    className="w-20 px-3 py-2 border border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                                    className="w-20 px-3 py-2 border border-red-300/20 rounded-lg focus:border-red-500 focus:outline-none text-sm"
                                                     min="0"
                                                     max="100"
                                                     placeholder="0%"
@@ -2689,16 +2689,16 @@ export default function Administrador() {
                                       ...expandidosDescuentos,
                                       otrosServicios: !expandidosDescuentos.otrosServicios
                                     })}
-                                    className="w-full flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors mb-3"
+                                    className="w-full flex items-center justify-between p-3 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors mb-3"
                                   >
                                     <div className="flex items-center gap-2 text-left">
-                                      <span className="text-sm font-bold text-blue-600">🎁 Otros Servicios</span>
+                                      <span className="text-sm font-bold text-red-600">🎁 Otros Servicios</span>
                                     </div>
                                     <motion.div
                                       animate={{ rotate: expandidosDescuentos.otrosServicios ? 180 : 0 }}
                                       transition={{ duration: 0.2 }}
                                     >
-                                      <FaChevronDown size={14} className="text-blue-600" />
+                                      <FaChevronDown size={14} className="text-red-600" />
                                     </motion.div>
                                   </button>
                                   
@@ -2711,11 +2711,11 @@ export default function Administrador() {
                                         transition={{ duration: 0.2 }}
                                         className="overflow-hidden"
                                       >
-                                        <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200/30">
+                                        <div className="space-y-3 bg-white p-4 rounded-lg border border-red-200/30">
                                           {snapshotEditando.otrosServicios.map((servicio, idx) => {
                                             const descuento = snapshotEditando.paquete.descuentosPorServicio?.otrosServicios[idx]
                                             return (
-                                              <div key={idx} className="flex gap-3 items-end pb-3 border-b border-blue-100/50 last:border-b-0 last:pb-0">
+                                              <div key={idx} className="flex gap-3 items-end pb-3 border-b border-red-100/50 last:border-b-0 last:pb-0">
                                                 <div className="flex-1">
                                                   <label className="flex items-center gap-2 cursor-pointer mb-2">
                                                     <input
@@ -2726,7 +2726,7 @@ export default function Administrador() {
                                                         updated.paquete.descuentosPorServicio.otrosServicios[idx].aplicarDescuento = e.target.checked
                                                         setSnapshotEditando(updated)
                                                       }}
-                                                      className="w-4 h-4 accent-blue-500 cursor-pointer"
+                                                      className="w-4 h-4 accent-red-500 cursor-pointer"
                                                     />
                                                     <span className="text-sm font-medium text-secondary">{servicio.nombre}</span>
                                                   </label>
@@ -2740,7 +2740,7 @@ export default function Administrador() {
                                                       updated.paquete.descuentosPorServicio.otrosServicios[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
                                                       setSnapshotEditando(updated)
                                                     }}
-                                                    className="w-20 px-3 py-2 border border-blue-300/20 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                                                    className="w-20 px-3 py-2 border border-red-300/20 rounded-lg focus:border-red-500 focus:outline-none text-sm"
                                                     min="0"
                                                     max="100"
                                                     placeholder="0%"
