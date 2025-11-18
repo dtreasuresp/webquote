@@ -1813,141 +1813,120 @@ export default function Administrador() {
                       label: '📋 Descripción',
                       icon: '',
                       content: (
-                        <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
-                          {/* Información General del Paquete */}
-                          <div className="bg-gradient-to-r from-secondary/5 to-accent/5 p-5 rounded-xl border border-secondary/20">
-                            <h3 className="text-base font-bold text-secondary mb-3">📦 Información General del Paquete</h3>
-                  
-                  {/* Nombre - Full width */}
-                  <div className="mb-3">
-                    <label className="block font-semibold text-secondary mb-2">
-                    📦 Nombre del Paquete
-                    </label>
-                    <input
-                      type="text"
-                      value={snapshotEditando.nombre}
-                      onChange={(e) =>
-                        setSnapshotEditando({ ...snapshotEditando, nombre: e.target.value })
-                      }
-                      className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
-                      ref={nombrePaqueteInputRef}
-                      aria-describedby="ayuda-nombre-paquete"
-                    />
-                    <p id="ayuda-nombre-paquete" className="mt-1 text-xs text-neutral-500">Nombre visible en listado y PDF.</p>
-                  </div>
-
-                  {/* Tipo, Descripción, Emoji y Tagline */}
-                  <div className="grid md:grid-cols-4 gap-4 mb-3">
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        🏆 Tipo de Paquete
-                      </label>
-                      <input
-                        type="text"
-                        value={snapshotEditando.paquete.tipo || ''}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              tipo: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="Ej: Básico"
-                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        😊 Emoji del Paquete
-                      </label>
-                      <input
-                        type="text"
-                        value={snapshotEditando.paquete.emoji || ''}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              emoji: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="Ej: 🥉"
-                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        📋 Descripción del Paquete
-                      </label>
-                      <input
-                        type="text"
-                        value={snapshotEditando.paquete.descripcion || ''}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              descripcion: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="Ej: Paquete personalizado para empresas..."
-                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tagline, CostoInfra y TiempoEntrega */}
-                  <div className="grid md:grid-cols-3 gap-4 mb-3">
-                    <div className="md:col-span-2">
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        ✨ Tagline (Subtítulo Hero)
-                      </label>
-                      <input
-                        type="text"
-                        value={snapshotEditando.paquete.tagline || ''}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              tagline: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="Ej: Presencia digital confiable, simple pero efectiva"
-                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold text-secondary mb-2 text-sm">
-                        ⏱️ Tiempo de Entrega
-                      </label>
-                      <input
-                        type="text"
-                        value={snapshotEditando.paquete.tiempoEntrega || ''}
-                        onChange={(e) =>
-                          setSnapshotEditando({
-                            ...snapshotEditando,
-                            paquete: {
-                              ...snapshotEditando.paquete,
-                              tiempoEntrega: e.target.value,
-                            },
-                          })
-                        }
-                        placeholder="Ej: 4 Semanas"
-                        className="w-full px-4 py-2 border border-secondary/20 rounded-lg focus:border-secondary focus:outline-none text-sm"
-                      />
-                    </div>
-                  </div>
-
-                </div>
+                        <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                          {/* Línea 1: 5 Campos Horizontales */}
+                          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                            <div>
+                              <label className="block text-xs font-semibold text-black mb-1">📦 Nombre</label>
+                              <input
+                                type="text"
+                                value={snapshotEditando.nombre}
+                                onChange={(e) => setSnapshotEditando({ ...snapshotEditando, nombre: e.target.value })}
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                ref={nombrePaqueteInputRef}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-black mb-1">🏆 Tipo</label>
+                              <input
+                                type="text"
+                                value={snapshotEditando.paquete.tipo || ''}
+                                onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tipo: e.target.value}})}
+                                placeholder="Básico"
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-black mb-1">😊 Emoji</label>
+                              <input
+                                type="text"
+                                value={snapshotEditando.paquete.emoji || ''}
+                                onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, emoji: e.target.value}})}
+                                placeholder="🥉"
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                              />
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-xs font-semibold text-black mb-1">✨ Tagline</label>
+                              <input
+                                type="text"
+                                value={snapshotEditando.paquete.tagline || ''}
+                                onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tagline: e.target.value}})}
+                                placeholder="Presencia digital confiable"
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                              />
+                            </div>
                           </div>
-                        ),
-                      },
+
+                          {/* Línea 1.5: Tiempo de Entrega */}
+                          <div>
+                            <label className="block text-xs font-semibold text-black mb-1">⏱️ Tiempo de Entrega</label>
+                            <input
+                              type="text"
+                              value={snapshotEditando.paquete.tiempoEntrega || ''}
+                              onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tiempoEntrega: e.target.value}})}
+                              placeholder="14 días"
+                              className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                            />
+                          </div>
+
+                          {/* Línea 2: Descripción Completa */}
+                          <div>
+                            <label className="block text-xs font-semibold text-black mb-1">📋 Descripción del Paquete</label>
+                            <textarea
+                              value={snapshotEditando.paquete.descripcion || ''}
+                              onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, descripcion: e.target.value}})}
+                              placeholder="Paquete personalizado para empresas..."
+                              className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                              rows={3}
+                            />
+                          </div>
+
+                          {/* Vista Previa del Hero */}
+                          <div className="bg-neutral-50 p-6">
+                            <h3 className="text-sm font-bold text-black mb-4">👁️ Vista Previa del Hero</h3>
+                            <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-8 rounded-lg text-center">
+                              <div className="text-5xl mb-3">{snapshotEditando.paquete.emoji || '📦'}</div>
+                              <div className="text-sm font-bold text-red-100 mb-2">{snapshotEditando.paquete.tipo || 'Tipo'}</div>
+                              <h2 className="text-3xl font-bold mb-3">{snapshotEditando.nombre || 'Nombre del Paquete'}</h2>
+                              <p className="text-lg text-white/90 mb-4">{snapshotEditando.paquete.tagline || 'Tagline descriptivo'}</p>
+                              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 inline-block">
+                                <div className="text-4xl font-bold">${snapshotEditando.costos?.inicial || 0} USD</div>
+                                <div className="text-sm">Inversión inicial</div>
+                              </div>
+                              {snapshotEditando.paquete.tiempoEntrega && (
+                                <div className="mt-4 text-sm text-white/80">⏱️ {snapshotEditando.paquete.tiempoEntrega}</div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Costo Desarrollo y Descuento */}
+                          <div className="grid md:grid-cols-2 gap-3 pt-4 border-t border-neutral-200">
+                            <div>
+                              <label className="block text-xs font-semibold text-black mb-1">💻 Costo Desarrollo</label>
+                              <input
+                                type="number"
+                                value={snapshotEditando.paquete.desarrollo}
+                                onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, desarrollo: Number.parseFloat(e.target.value) || 0}})}
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                min="0"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-black mb-1">🎁 Descuento Directo (%)</label>
+                              <input
+                                type="number"
+                                value={snapshotEditando.paquete.descuento}
+                                onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, descuento: Math.max(0, Math.min(100, Number.parseFloat(e.target.value) || 0))}})}
+                                className="w-full px-3 py-2 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none text-sm"
+                                min="0"
+                                max="100"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ),
+                    },
                       {
                         id: 'servicios-base',
                         label: '🌐 Servicios Base',
@@ -2248,7 +2227,7 @@ export default function Administrador() {
                         return (
                           <span className={`text-xs font-bold px-3 py-1 rounded-full ${
                             esValido 
-                              ? 'bg-green-100 text-green-700' 
+                              ? 'bg-amber-100 text-amber-700' 
                               : 'bg-red-100 text-red-700'
                           }`}>
                             Total: {totalPorcentaje}% {esValido ? '✓' : '⚠️ Debe ser 100%'}
@@ -2423,13 +2402,13 @@ export default function Administrador() {
                         content: (
                           <div className="space-y-4 p-5 overflow-y-auto max-h-[calc(90vh-250px)]">
                             {/* DESCUENTOS GENERALES */}
-                            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-6 rounded-xl border-2 border-purple-300/20">
-                              <h3 className="text-lg font-bold text-purple-600 mb-6 flex items-center gap-2">
+                            <div className="bg-gradient-to-r from-red-500/10 to-amber-500/10 p-5 rounded-xl border border-red-300/20">
+                              <h3 className="text-base font-bold text-red-600 mb-5 flex items-center gap-2">
                                 💸 Descuentos Generales
                               </h3>
 
                               {/* Checkboxes para aplicar descuentos */}
-                              <div className="space-y-3 mb-6 bg-white p-4 rounded-lg border border-purple-200/30">
+                              <div className="space-y-3 mb-5 bg-white p-4 rounded-lg border border-red-200/30">
                                 <label className="flex items-center gap-3 cursor-pointer">
                                   <input
                                     type="checkbox"
@@ -2446,7 +2425,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-4 h-4 accent-purple-500 cursor-pointer"
+                                    className="w-4 h-4 accent-red-500 cursor-pointer"
                                   />
                                   <span className="text-sm font-medium text-secondary">Aplicar a Desarrollo</span>
                                 </label>
@@ -2467,7 +2446,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-4 h-4 accent-purple-500 cursor-pointer"
+                                    className="w-4 h-4 accent-red-500 cursor-pointer"
                                   />
                                   <span className="text-sm font-medium text-secondary">Aplicar a Servicios Base</span>
                                 </label>
@@ -2488,7 +2467,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-4 h-4 accent-purple-500 cursor-pointer"
+                                    className="w-4 h-4 accent-red-500 cursor-pointer"
                                   />
                                   <span className="text-sm font-medium text-secondary">Aplicar a Otros Servicios</span>
                                 </label>
@@ -2515,7 +2494,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-full px-4 py-2 border border-purple-300/20 rounded-lg focus:border-purple-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border border-red-300/20 rounded-lg focus:border-red-500 focus:outline-none"
                                     min="0"
                                     max="100"
                                     placeholder="0"
@@ -2537,7 +2516,7 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-full px-4 py-2 border border-purple-300/20 rounded-lg focus:border-purple-500 focus:outline-none"
+                                    className="w-full px-4 py-2 border border-red-300/20 rounded-lg focus:border-red-500 focus:outline-none"
                                     min="0"
                                     max="100"
                                     placeholder="0"
@@ -2779,8 +2758,8 @@ export default function Administrador() {
 
                             {/* VISTA PREVIA DE MONTOS COMPLETA */}
                             {snapshotEditando && (
-                              <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 p-6 rounded-xl border-2 border-emerald-300/20">
-                                <h3 className="text-lg font-bold text-emerald-600 mb-6 flex items-center gap-2">
+                              <div className="bg-gradient-to-r from-red-500/10 to-amber-500/10 p-5 rounded-xl border border-red-300/20">
+                                <h3 className="text-base font-bold text-red-600 mb-5 flex items-center gap-2">
                                   💰 Vista Previa de Montos Completa
                                 </h3>
 
@@ -2791,7 +2770,7 @@ export default function Administrador() {
                                     <div className="space-y-4">
                                       {/* Desarrollo */}
                                       {preview.desarrollo > 0 && (
-                                        <div className="bg-white p-4 rounded-lg border border-emerald-200/30">
+                                        <div className="bg-white p-4 rounded-lg border border-red-200/30">
                                           <div className="flex justify-between items-center mb-2">
                                             <span className="text-sm font-medium text-secondary">🧑‍💻 Desarrollo</span>
                                             <div className="flex gap-2 items-center">
@@ -2800,13 +2779,13 @@ export default function Administrador() {
                                                   ${preview.desarrollo.toFixed(2)}
                                                 </span>
                                               )}
-                                              <span className={`font-bold ${preview.desarrollo !== preview.desarrolloConDescuento ? 'text-emerald-600' : 'text-secondary'}`}>
+                                              <span className={`font-bold ${preview.desarrollo !== preview.desarrolloConDescuento ? 'text-red-600' : 'text-secondary'}`}>
                                                 ${preview.desarrolloConDescuento.toFixed(2)}
                                               </span>
                                             </div>
                                           </div>
                                           {preview.desarrollo !== preview.desarrolloConDescuento && (
-                                            <div className="text-xs text-emerald-600 font-semibold">
+                                            <div className="text-xs text-red-600 font-semibold">
                                               Ahorro: ${(preview.desarrollo - preview.desarrolloConDescuento).toFixed(2)} ({(((preview.desarrollo - preview.desarrolloConDescuento) / preview.desarrollo) * 100).toFixed(1)}%)
                                             </div>
                                           )}
@@ -2815,7 +2794,7 @@ export default function Administrador() {
 
                                       {/* Servicios Base */}
                                       {preview.serviciosBase.total > 0 && (
-                                        <div className="bg-white p-4 rounded-lg border border-emerald-200/30">
+                                        <div className="bg-white p-4 rounded-lg border border-red-200/30">
                                           <div className="flex justify-between items-center mb-3">
                                             <span className="text-sm font-medium text-secondary">📦 Servicios Base</span>
                                             <div className="flex gap-2 items-center">
@@ -2824,13 +2803,13 @@ export default function Administrador() {
                                                   ${preview.serviciosBase.total.toFixed(2)}
                                                 </span>
                                               )}
-                                              <span className={`font-bold ${preview.serviciosBase.total !== preview.serviciosBase.conDescuento ? 'text-emerald-600' : 'text-secondary'}`}>
+                                              <span className={`font-bold ${preview.serviciosBase.total !== preview.serviciosBase.conDescuento ? 'text-red-600' : 'text-secondary'}`}>
                                                 ${preview.serviciosBase.conDescuento.toFixed(2)}
                                               </span>
                                             </div>
                                           </div>
                                           {preview.serviciosBase.desglose.length > 0 && (
-                                            <div className="space-y-1 text-xs text-neutral-600 mb-2 pl-2 border-l-2 border-emerald-200">
+                                            <div className="space-y-1 text-xs text-neutral-600 mb-2 pl-2 border-l-2 border-red-200">
                                               {preview.serviciosBase.desglose.map((item, idx) => (
                                                 <div key={idx} className="flex justify-between">
                                                   <span>{item.nombre}</span>
@@ -2842,7 +2821,7 @@ export default function Administrador() {
                                             </div>
                                           )}
                                           {preview.serviciosBase.total !== preview.serviciosBase.conDescuento && (
-                                            <div className="text-xs text-emerald-600 font-semibold">
+                                            <div className="text-xs text-red-600 font-semibold">
                                               Ahorro: ${(preview.serviciosBase.total - preview.serviciosBase.conDescuento).toFixed(2)} ({(((preview.serviciosBase.total - preview.serviciosBase.conDescuento) / preview.serviciosBase.total) * 100).toFixed(1)}%)
                                             </div>
                                           )}
@@ -2851,7 +2830,7 @@ export default function Administrador() {
 
                                       {/* Otros Servicios */}
                                       {preview.otrosServicios.total > 0 && (
-                                        <div className="bg-white p-4 rounded-lg border border-emerald-200/30">
+                                        <div className="bg-white p-4 rounded-lg border border-red-200/30">
                                           <div className="flex justify-between items-center mb-3">
                                             <span className="text-sm font-medium text-secondary">🎁 Otros Servicios</span>
                                             <div className="flex gap-2 items-center">
@@ -2860,13 +2839,13 @@ export default function Administrador() {
                                                   ${preview.otrosServicios.total.toFixed(2)}
                                                 </span>
                                               )}
-                                              <span className={`font-bold ${preview.otrosServicios.total !== preview.otrosServicios.conDescuento ? 'text-emerald-600' : 'text-secondary'}`}>
+                                              <span className={`font-bold ${preview.otrosServicios.total !== preview.otrosServicios.conDescuento ? 'text-red-600' : 'text-secondary'}`}>
                                                 ${preview.otrosServicios.conDescuento.toFixed(2)}
                                               </span>
                                             </div>
                                           </div>
                                           {preview.otrosServicios.desglose.length > 0 && (
-                                            <div className="space-y-1 text-xs text-neutral-600 mb-2 pl-2 border-l-2 border-emerald-200">
+                                            <div className="space-y-1 text-xs text-neutral-600 mb-2 pl-2 border-l-2 border-red-200">
                                               {preview.otrosServicios.desglose.map((item, idx) => (
                                                 <div key={idx} className="flex justify-between">
                                                   <span>{item.nombre}</span>
@@ -2878,7 +2857,7 @@ export default function Administrador() {
                                             </div>
                                           )}
                                           {preview.otrosServicios.total !== preview.otrosServicios.conDescuento && (
-                                            <div className="text-xs text-emerald-600 font-semibold">
+                                            <div className="text-xs text-red-600 font-semibold">
                                               Ahorro: ${(preview.otrosServicios.total - preview.otrosServicios.conDescuento).toFixed(2)} ({(((preview.otrosServicios.total - preview.otrosServicios.conDescuento) / preview.otrosServicios.total) * 100).toFixed(1)}%)
                                             </div>
                                           )}
@@ -2886,9 +2865,9 @@ export default function Administrador() {
                                       )}
 
                                       {/* Total General */}
-                                      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg border-2 border-emerald-300/50 mt-4">
+                                      <div className="bg-gradient-to-r from-red-50 to-amber-50 p-4 rounded-lg border border-red-300/50 mt-4">
                                         <div className="flex justify-between items-center">
-                                          <span className="text-base font-bold text-emerald-700">Total General</span>
+                                          <span className="text-base font-bold text-red-700">Total General</span>
                                           <div className="flex gap-3 items-center">
                                             <div className="text-right">
                                               {preview.totalOriginal !== preview.totalConDescuentos && (
@@ -2896,16 +2875,16 @@ export default function Administrador() {
                                                   ${preview.totalOriginal.toFixed(2)}
                                                 </div>
                                               )}
-                                              <div className={`font-bold text-2xl ${preview.totalOriginal !== preview.totalConDescuentos ? 'text-emerald-600' : 'text-secondary'}`}>
+                                              <div className={`font-bold text-2xl ${preview.totalOriginal !== preview.totalConDescuentos ? 'text-red-600' : 'text-secondary'}`}>
                                                 ${preview.totalConDescuentos.toFixed(2)}
                                               </div>
                                             </div>
                                           </div>
                                         </div>
                                         {preview.totalAhorro > 0 && (
-                                          <div className="mt-3 pt-3 border-t-2 border-emerald-200/50 flex justify-between items-center">
-                                            <span className="text-sm font-semibold text-emerald-700">💚 Ahorro Total</span>
-                                            <span className="text-lg font-bold text-emerald-600">
+                                          <div className="mt-3 pt-3 border-t-2 border-red-200/50 flex justify-between items-center">
+                                            <span className="text-sm font-semibold text-red-700">🔴 Ahorro Total</span>
+                                            <span className="text-lg font-bold text-red-600">
                                               ${preview.totalAhorro.toFixed(2)} ({preview.porcentajeAhorro.toFixed(1)}%)
                                             </span>
                                           </div>
