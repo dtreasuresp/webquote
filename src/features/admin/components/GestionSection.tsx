@@ -9,7 +9,7 @@ interface GestionSectionProps {
 }
 
 export default function GestionSection({ gestion, setGestion }: GestionSectionProps) {
-  const normalizarMeses = (mesesGratis: number, mesesPago: number) => {
+  const normalizarMeses = (mesesGratis: number, mesesPago: number): GestionConfig => {
     let g = Math.max(0, Math.min(mesesGratis, 12))
     let p = Math.max(0, Math.min(mesesPago, 12))
     if (g + p !== 12) {
@@ -17,9 +17,9 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
       else if (p > 0) g = 12 - p
       else p = 12
     }
-    if (g === 12) return { mesesGratis: 12, mesesPago: 0 }
-    if (p === 0) return { mesesGratis: g, mesesPago: 1 }
-    return { mesesGratis: g, mesesPago: p }
+    if (g === 12) return { ...gestion, mesesGratis: 12, mesesPago: 0 }
+    if (p === 0) return { ...gestion, mesesGratis: g, mesesPago: 1 }
+    return { ...gestion, mesesGratis: g, mesesPago: p }
   }
 
   return (
@@ -128,3 +128,4 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
       </div>
     </motion.div>
   )
+}

@@ -141,3 +141,4 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
       </div>
     </motion.div>
   )
+}
