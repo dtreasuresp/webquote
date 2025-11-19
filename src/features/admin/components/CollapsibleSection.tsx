@@ -10,6 +10,7 @@ interface CollapsibleSectionProps {
   readonly children: ReactNode
   readonly defaultOpen?: boolean
   readonly icon?: ReactNode
+  readonly validationBadge?: ReactNode
 }
 
 export default function CollapsibleSection({
@@ -17,7 +18,8 @@ export default function CollapsibleSection({
   title,
   children,
   defaultOpen = true,
-  icon
+  icon,
+  validationBadge
 }: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
@@ -50,9 +52,12 @@ export default function CollapsibleSection({
       >
         <div className="flex items-center gap-3">
           {icon && <span className="text-lg">{icon}</span>}
-          <h3 className="text-lg font-semibold text-white group-hover:text-accent transition-colors">
-            {title}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-white group-hover:text-accent transition-colors">
+              {title}
+            </h3>
+            {validationBadge}
+          </div>
         </div>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}

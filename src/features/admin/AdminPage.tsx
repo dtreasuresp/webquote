@@ -9,27 +9,17 @@ import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
 import type { ServicioBase, GestionConfig, Package, Servicio, PackageSnapshot } from '@/lib/types'
 
-import ServiciosBaseSection from '@/features/admin/components/ServiciosBaseSection'
-import PaqueteSection from '@/features/admin/components/PaqueteSection'
-import GestionSection from '@/features/admin/components/GestionSection'
-import ServiciosOpcionalesSection from '@/features/admin/components/ServiciosOpcionalesSection'
-import DescuentosSection from '@/features/admin/components/DescuentosSection'
-import SnapshotsTableSection from '@/features/admin/components/SnapshotsTableSection'
-import KPICards from '@/features/admin/components/KPICards'
-import SnapshotFilters from '@/features/admin/components/SnapshotFilters'
-import SectionBadge from '@/features/admin/components/SectionBadge'
-import CollapsibleSection from '@/features/admin/components/CollapsibleSection'
-import SkeletonLoader from '@/features/admin/components/SkeletonLoader'
+import ServiciosBaseSection from './components/ServiciosBaseSection'
+import PaqueteSection from './components/PaqueteSection'
+import ServiciosOpcionalesSection from './components/ServiciosOpcionalesSection'
+import DescuentosSection from './components/DescuentosSection'
+import SnapshotsTableSection from './components/SnapshotsTableSection'
+import { usePdfExport } from './hooks/usePdfExport'
 import { generateSnapshotPDF } from '@/features/pdf-export/utils/generator'
-import '@/styles/admin-overlays.css'
 
 export default function AdminPage() {
   // Obtener función de refresh global
   const refreshSnapshots = useSnapshotsRefresh()
-
-  // Estados de filtros
-  const [searchValue, setSearchValue] = useState('')
-  const [filterValue, setFilterValue] = useState<'all' | '7days' | '30days'>('all')
 
   // Estados principales
   const [serviciosBase, setServiciosBase] = useState<ServicioBase[]>([
@@ -104,22 +94,6 @@ export default function AdminPage() {
   const gestionValida = gestion.precio === 0 || (gestion.precio > 0 && gestion.mesesPago > gestion.mesesGratis)
   const todoEsValido = paqueteEsValido && serviciosBaseValidos && gestionValida
 
-  // Función para filtrar snapshots
-  const getFilteredSnapshots = () => {
-    let filtered = snapshots.filter(s => 
-      s.nombre.toLowerCase().includes(searchValue.toLowerCase())
-    )
-
-    if (filterValue !== 'all') {
-      const now = new Date()
-      const days = filterValue === '7days' ? 7 : 30
-      const cutoffDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
-      filtered = filtered.filter(s => new Date(s.createdAt) >= cutoffDate)
-    }
-
-    return filtered
-  }
-
   // Funciones de PDF
   const handleDescargarPdf = () => {
     if (snapshots.length === 0) {
@@ -149,12 +123,9 @@ export default function AdminPage() {
 
   return (
     <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-secondary via-secondary-light to-secondary-dark">
-
-      {/* Overlay dorado radial más elaborado */}
-              <div className="pointer-events-none absolute inset-0">
-          <div className="overlay-radial-amber absolute -top-20 -right-20 w-[480px] h-[480px] rounded-full blur-3xl opacity-20" />
-          <div className="overlay-radial-amber-dark absolute -bottom-32 -left-40 w-[600px] h-[600px] rounded-full blur-3xl opacity-15" />
-        </div>
+      {/* Overlay dorado sutil */}
+      {/* Overlay dorado sutil */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-amber-400/5" />
       <Navigation />
       <div className="max-w-7xl mx-auto py-20 px-4 pt-32">
         <motion.div
@@ -163,13 +134,13 @@ export default function AdminPage() {
           transition={{ duration: 0.6 }}
         >
           {/* Header con botones de acción */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
                 Panel Administrativo
               </h1>
               <p className="text-xl text-neutral-200">
-                Gestiona la configuración de tu servicio y genera paquetes personalizados.
+                Calculadora de Presupuestos y Gestión de Servicios
               </p>
             </div>
             <div className="flex flex-wrap gap-3 items-center">
@@ -201,118 +172,43 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* KPI Cards */}
-          <KPICards snapshots={snapshots} cargandoSnapshots={cargandoSnapshots} />
+          <div className="space-y-8">
+            {/* Sección 1: Servicios Base */}
+            <ServiciosBaseSection
+              serviciosBase={serviciosBase}
+              setServiciosBase={setServiciosBase}
+            />
 
-          {/* Grid responsivo: 2 columnas en lg, 1 en mobile */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Columna izquierda: 2/3 del ancho */}
-            <div className="col-span-1 lg:col-span-2 space-y-6">
+            {/* Sección 2: Paquete */}
+            <PaqueteSection
+              paqueteActual={paqueteActual}
+              setPaqueteActual={setPaqueteActual}
+            />
 
-              {/* Sección 1: Servicios Base */}
-              <CollapsibleSection
-                id="servicios-base"
-                title="Servicios Base"
-                icon="🏢"
-                defaultOpen={true}
-                validationBadge={<SectionBadge isValid={serviciosBaseValidos} title="Válido" />}
-              >
-                <ServiciosBaseSection
-                  serviciosBase={serviciosBase}
-                  setServiciosBase={setServiciosBase}
-                />
-              </CollapsibleSection>
+            {/* Sección 3: Servicios Opcionales */}
+            <ServiciosOpcionalesSection
+              serviciosOpcionales={serviciosOpcionales}
+              setServiciosOpcionales={setServiciosOpcionales}
+              snapshots={snapshots}
+              setSnapshots={setSnapshots}
+              serviciosBase={serviciosBase}
+              paqueteActual={paqueteActual}
+              gestion={gestion}
+              todoEsValido={todoEsValido}
+              refreshSnapshots={refreshSnapshots}
+            />
 
-              {/* Sección 2: Paquete */}
-              <CollapsibleSection
-                id="paquete"
-                title="Paquete"
-                icon="📦"
-                defaultOpen={true}
-                validationBadge={<SectionBadge isValid={paqueteEsValido} title="Válido" />}
-              >
-                <PaqueteSection
-                  paqueteActual={paqueteActual}
-                  setPaqueteActual={setPaqueteActual}
-                />
-              </CollapsibleSection>
+            {/* Sección 4: Descuentos */}
+            <DescuentosSection />
 
-              {/* Sección 3: Gestión */}
-              <CollapsibleSection
-                id="gestion"
-                title="Gestión"
-                icon="⚙️"
-                defaultOpen={true}
-                validationBadge={<SectionBadge isValid={gestionValida} title="Válido" />}
-              >
-                <GestionSection
-                  gestion={gestion}
-                  setGestion={setGestion}
-                />
-              </CollapsibleSection>
-
-              {/* Sección 4: Servicios Opcionales */}
-              <CollapsibleSection
-                id="servicios-opcionales"
-                title="Servicios Opcionales"
-                icon="✨"
-                defaultOpen={true}
-              >
-                <ServiciosOpcionalesSection
-                  serviciosOpcionales={serviciosOpcionales}
-                  setServiciosOpcionales={setServiciosOpcionales}
-                  snapshots={snapshots}
-                  setSnapshots={setSnapshots}
-                  serviciosBase={serviciosBase}
-                  paqueteActual={paqueteActual}
-                  gestion={gestion}
-                  todoEsValido={todoEsValido}
-                  refreshSnapshots={refreshSnapshots}
-                />
-              </CollapsibleSection>
-
-              {/* Sección 5: Descuentos */}
-              <CollapsibleSection
-                id="descuentos"
-                title="Descuentos"
-                icon="🎁"
-                defaultOpen={true}
-              >
-                <DescuentosSection />
-              </CollapsibleSection>
-            </div>
-
-            {/* Columna derecha: 1/3 del ancho (Sidebar) */}
-            <div className="col-span-1 space-y-6">
-
-              {/* Sección 6: Snapshots con filtros */}
-              <CollapsibleSection
-                id="snapshots"
-                title="Snapshots de Paquetes"
-                icon="📊"
-                defaultOpen={true}
-              >
-                {cargandoSnapshots ? (
-                  <SkeletonLoader />
-                ) : (
-                  <>
-                    <SnapshotFilters
-                      searchValue={searchValue}
-                      filterValue={filterValue}
-                      onSearchChange={setSearchValue}
-                      onFilterChange={setFilterValue}
-                    />
-                    <SnapshotsTableSection
-                      snapshots={getFilteredSnapshots()}
-                      setSnapshots={setSnapshots}
-                      cargandoSnapshots={cargandoSnapshots}
-                      errorSnapshots={errorSnapshots}
-                      refreshSnapshots={refreshSnapshots}
-                    />
-                  </>
-                )}
-              </CollapsibleSection>
-            </div>
+            {/* Sección 5: Snapshots */}
+            <SnapshotsTableSection
+              snapshots={snapshots}
+              setSnapshots={setSnapshots}
+              cargandoSnapshots={cargandoSnapshots}
+              errorSnapshots={errorSnapshots}
+              refreshSnapshots={refreshSnapshots}
+            />
           </div>
         </motion.div>
       </div>

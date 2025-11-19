@@ -4,8 +4,8 @@ import { motion } from 'framer-motion'
 import type { GestionConfig } from '@/lib/types'
 
 interface GestionSectionProps {
-  gestion: GestionConfig
-  setGestion: (gestion: GestionConfig) => void
+  readonly gestion: GestionConfig
+  readonly setGestion: (gestion: GestionConfig) => void
 }
 
 export default function GestionSection({ gestion, setGestion }: GestionSectionProps) {
@@ -27,20 +27,21 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white rounded-2xl shadow-xl border-l-4 border-secondary p-8"
+      className="space-y-6"
     >
-      <h2 className="text-2xl font-bold text-secondary mb-6 flex items-center gap-3">
-        <span className="text-3xl">📋</span>
-        2.5 Gestión Mensual (Opcional)
-      </h2>
-
-      <div className="space-y-4 p-6 bg-gradient-to-r from-secondary/5 to-accent/5 rounded-xl border-2 border-secondary/20">
-        <p className="text-sm text-secondary mb-4">
+      {/* PARTE 1: Configuración */}
+      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          ⚙️ Configuración de Gestión
+        </h3>
+        
+        <p className="text-neutral-300 text-sm mb-4">
           Configura el servicio de gestión mensual. Si el precio es 0, este servicio no se incluirá.
         </p>
-        <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr] gap-4">
+
+        <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="gestionPrecio" className="block font-semibold text-secondary mb-2 text-sm">
+            <label htmlFor="gestionPrecio" className="block font-semibold text-white mb-2 text-sm">
               💰 Precio Mensual (USD)
             </label>
             <input
@@ -54,12 +55,12 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
                   precio: Number.parseFloat(e.target.value) || 0,
                 })
               }
-              className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
               min="0"
             />
           </div>
           <div>
-            <label htmlFor="gestionMesesGratis" className="block font-semibold text-secondary mb-2 text-sm">
+            <label htmlFor="gestionMesesGratis" className="block font-semibold text-white mb-2 text-sm">
               🎁 Meses Gratis
             </label>
             <input
@@ -68,17 +69,20 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
               placeholder="0"
               value={gestion.mesesGratis}
               onChange={(e) => {
-                const gratis = Number.parseInt(e.target.value) || 0
+                const gratis = Number.parseInt(e.target.value, 10) || 0
                 const nm = normalizarMeses(gratis, gestion.mesesPago)
                 setGestion(nm)
               }}
-              className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
               min="0"
               max="12"
             />
           </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
           <div>
-            <label htmlFor="gestionMesesPago" className="block font-semibold text-secondary mb-2 text-sm">
+            <label htmlFor="gestionMesesPago" className="block font-semibold text-white mb-2 text-sm">
               💳 Meses Pago
             </label>
             <input
@@ -87,27 +91,40 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
               placeholder="12"
               value={gestion.mesesPago}
               onChange={(e) => {
-                const pago = Number.parseInt(e.target.value) || 12
+                const pago = Number.parseInt(e.target.value, 10) || 12
                 const nm = normalizarMeses(gestion.mesesGratis, pago)
                 setGestion(nm)
               }}
-              className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
               min="1"
               max="12"
             />
           </div>
-          <div>
-            <label className="block font-semibold text-secondary mb-2 text-sm">
-              💵 Subtotal Año 1
-            </label>
-            <div className="px-4 py-2 bg-secondary/10 rounded-lg flex items-center justify-center">
-              <span className="text-lg font-bold text-secondary">
-                ${(gestion.precio * gestion.mesesPago).toFixed(2)}
-              </span>
-            </div>
+        </div>
+      </div>
+
+      {/* PARTE 2: Resumen */}
+      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          📊 Resumen de Gestión
+        </h3>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
+            <p className="text-neutral-300 text-sm mb-1">Precio Mensual</p>
+            <p className="text-2xl font-bold text-accent">${gestion.precio.toFixed(2)}</p>
+          </div>
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
+            <p className="text-neutral-300 text-sm mb-1">Meses: {gestion.mesesGratis}G + {gestion.mesesPago}P</p>
+            <p className="text-neutral-300 text-xs">(Gratuitos + Pagos)</p>
+          </div>
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
+            <p className="text-neutral-300 text-sm mb-1">Total Primer Año</p>
+            <p className="text-2xl font-bold text-accent">
+              ${(gestion.precio * gestion.mesesPago).toFixed(2)}
+            </p>
           </div>
         </div>
       </div>
     </motion.div>
   )
-}

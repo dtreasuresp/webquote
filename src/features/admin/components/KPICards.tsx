@@ -28,7 +28,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
       valor: totalSnapshots,
       icono: FaBox,
       color: 'from-blue-500 to-blue-600',
-      bg: 'bg-blue-500/10',
+      bg: 'bg-gradient-to-br from-blue-900/40 to-blue-800/30',
       id: 'total-snapshots'
     },
     {
@@ -36,7 +36,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
       valor: paquetesActivos,
       icono: FaCheckCircle,
       color: 'from-green-500 to-green-600',
-      bg: 'bg-green-500/10',
+      bg: 'bg-gradient-to-br from-green-900/40 to-green-800/30',
       id: 'paquetes-activos'
     },
     {
@@ -44,7 +44,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
       valor: ultimoCambio,
       icono: FaClock,
       color: 'from-amber-500 to-amber-600',
-      bg: 'bg-amber-500/10',
+      bg: 'bg-gradient-to-br from-amber-900/40 to-amber-800/30',
       id: 'ultimo-cambio'
     }
   ]
@@ -60,7 +60,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1, duration: 0.4 }}
             whileHover={{ translateY: -4 }}
-            className={`${kpi.bg} backdrop-blur-md rounded-lg p-5 border border-white/10 cursor-pointer`}
+            className={`${kpi.bg} backdrop-blur-md rounded-lg p-5 border border-white/20 cursor-pointer shadow-lg transition-all`}
           >
             <div className="flex items-start justify-between">
               <div>
