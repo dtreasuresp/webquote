@@ -1,0 +1,106 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Check TypeScript compilation
+      run: npx tsc --noEmit
+    
+    - name: Run linting
+      run: npm run lint || echo "Linting completed (warnings allowed)"
+    
+    - name: Build Next.js project
+      run: npm run build
+      env:
+        STORAGE_POSTGRES_PRISMA_URL: ${{ secrets.STORAGE_POSTGRES_PRISMA_URL }}
+        STORAGE_POSTGRES_URL_NON_POOLING: ${{ secrets.STORAGE_POSTGRES_URL_NON_POOLING }}
+    
+    - name: Check for security vulnerabilities
+      run: npm audit --omit=dev --audit-level=moderate
+      continue-on-error: true
+
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Generate Prisma Client
+      run: npm run prisma:generate
+    
+    - name: Check for unused dependencies
+      run: npx depcheck --ignores next,@prisma/client,react,react-dom || true
+
+  deploy-preview:
+    needs: [build-and-test, code-quality]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Vercel (Preview)
+      uses: vercel/action@v6
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        scope: ${{ secrets.VERCEL_ORG_ID }}
+      env:
+        STORAGE_POSTGRES_PRISMA_URL: ${{ secrets.STORAGE_POSTGRES_PRISMA_URL }}
+        STORAGE_POSTGRES_URL_NON_POOLING: ${{ secrets.STORAGE_POSTGRES_URL_NON_POOLING }}
+
+  deploy-production:
+    needs: [build-and-test, code-quality]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Vercel (Production)
+      uses: vercel/action@v6
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        vercel-args: --prod
+        scope: ${{ secrets.VERCEL_ORG_ID }}
+      env:
+        STORAGE_POSTGRES_PRISMA_URL: ${{ secrets.STORAGE_POSTGRES_PRISMA_URL }}
+        STORAGE_POSTGRES_URL_NON_POOLING: ${{ secrets.STORAGE_POSTGRES_URL_NON_POOLING }}
+    
+    - name: Notify deployment success
+      run: echo "✅ Production deployment successful!"
