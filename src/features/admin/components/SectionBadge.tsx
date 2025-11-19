@@ -16,14 +16,14 @@ export default function SectionBadge({ isValid, title }: SectionBadgeProps) {
       className="flex items-center gap-2"
     >
       {isValid ? (
-        <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-full">
-          <FaCheckCircle className="text-green-400 text-sm" />
-          <span className="text-xs font-medium text-green-300">{title}</span>
+        <div className="flex items-center gap-2 px-3 py-1 bg-accent/20 border border-accent/50 rounded-full">
+          <FaCheckCircle className="text-accent text-sm" />
+          <span className="text-xs font-medium text-accent">{title}</span>
         </div>
       ) : (
-        <div className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full">
-          <FaExclamationCircle className="text-red-400 text-sm" />
-          <span className="text-xs font-medium text-red-300">{title}</span>
+        <div className="flex items-center gap-2 px-3 py-1 bg-primary/20 border border-primary/50 rounded-full">
+          <FaExclamationCircle className="text-primary text-sm" />
+          <span className="text-xs font-medium text-primary">{title}</span>
         </div>
       )}
     </motion.div>

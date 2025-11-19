@@ -76,7 +76,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
         
         {serviciosBase.length > 0 ? (
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-neutral-300 mb-2 grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 px-2">
+            <div className="text-sm font-semibold text-white mb-2 grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 px-2 bg-white/5 py-2 rounded-lg border border-white/10">
               <span>Nombre</span>
               <span>Precio</span>
               <span>Gratis</span>

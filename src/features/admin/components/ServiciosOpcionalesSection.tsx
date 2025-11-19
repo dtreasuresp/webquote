@@ -77,7 +77,7 @@ export default function ServiciosOpcionalesSection({
   }
 
   const guardarEditarServicioOpcional = () => {
-    if (servicioEditando && servicioEditando.nombre.trim() && servicioEditando.precio > 0) {
+    if (servicioEditando?.nombre?.trim() && servicioEditando?.precio > 0) {
       const nm = normalizarMeses(servicioEditando.mesesGratis, servicioEditando.mesesPago)
       const actualizado: Servicio = { ...servicioEditando, ...nm, nombre: servicioEditando.nombre.trim() }
       setServiciosOpcionales(prev => prev.map(s => s.id === actualizado.id ? actualizado : s))
@@ -153,278 +153,270 @@ export default function ServiciosOpcionalesSection({
         paquete: {
           desarrollo: paqueteActual.desarrollo,
           descuento: paqueteActual.descuento,
-          tipo: paqueteActual.tipo || '',
-          descripcion: paqueteActual.descripcion || 'Paquete personalizado para empresas.',
-          descuentosGenerales: {
-            aplicarAlDesarrollo: false,
-            aplicarAServiciosBase: false,
-            aplicarAOtrosServicios: false,
-            porcentaje: 0,
-          },
-          descuentosPorServicio: {
-            aplicarAServiciosBase: false,
-            aplicarAOtrosServicios: false,
-            serviciosBase: serviciosBase.map(s => ({
-              servicioId: s.id,
-              aplicarDescuento: false,
-              porcentajeDescuento: 0,
-            })),
-            otrosServicios: otrosServiciosUnificados.map((s, idx) => ({
-              servicioId: `otro-${idx}`,
-              aplicarDescuento: false,
-              porcentajeDescuento: 0,
-            })),
-          },
+          tipo: paqueteActual.tipo,
+          descripcion: paqueteActual.descripcion,
+          emoji: paqueteActual.emoji,
+          tagline: paqueteActual.tagline,
+          precioHosting: paqueteActual.precioHosting,
+          precioMailbox: paqueteActual.precioMailbox,
+          precioDominio: paqueteActual.precioDominio,
+          tiempoEntrega: paqueteActual.tiempoEntrega,
+          opcionesPago: paqueteActual.opcionesPago,
+          descuentoPagoUnico: paqueteActual.descuentoPagoUnico,
+          descuentosGenerales: paqueteActual.descuentosGenerales,
+          descuentosPorServicio: paqueteActual.descuentosPorServicio,
+          gestionMensual: paqueteActual.gestionMensual,
         },
         otrosServicios: otrosServiciosUnificados,
         costos: {
-          inicial: 0,
-          año1: 0,
-          año2: 0,
+          inicial: calcularCostoInicialSnapshot({} as PackageSnapshot),
+          año1: calcularCostoAño1Snapshot({} as PackageSnapshot),
+          año2: calcularCostoAño2Snapshot({} as PackageSnapshot),
         },
         activo: true,
         createdAt: new Date().toISOString(),
       }
 
-      nuevoSnapshot.costos.inicial = calcularCostoInicialSnapshot(nuevoSnapshot)
-      nuevoSnapshot.costos.año1 = calcularCostoAño1Snapshot(nuevoSnapshot)
-      nuevoSnapshot.costos.año2 = calcularCostoAño2Snapshot(nuevoSnapshot)
-
-      const snapshotGuardado = await crearSnapshot(nuevoSnapshot)
-      setSnapshots([...snapshots, snapshotGuardado])
-
+      const snapshot = await crearSnapshot(nuevoSnapshot)
+      setSnapshots([...snapshots, snapshot])
       await refreshSnapshots()
-
-      alert('✅ Paquete creado y guardado correctamente')
+      alert('✅ Paquete guardado correctamente')
     } catch (error) {
-      console.error('Error al crear paquete:', error)
-      alert('❌ Error al guardar el paquete. Por favor intenta de nuevo.')
+      console.error('Error creando snapshot:', error)
+      alert('❌ Error al guardar el paquete')
     }
   }
-
-  const serviciosOpcionalesValidos = serviciosOpcionales.every(s => s.nombre && s.precio > 0 && (s.mesesGratis + s.mesesPago === 12))
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white rounded-2xl shadow-xl border-l-4 border-accent p-8"
+      className="space-y-6"
     >
-      <h2 className="text-2xl font-bold text-secondary mb-6">3. Servicios Opcionales</h2>
+      {/* PARTE 1: Servicios Opcionales Existentes */}
+      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          ✨ Servicios Opcionales
+        </h3>
 
-      {serviciosOpcionales.length > 0 && (
-        <div className="mb-6 space-y-3">
-          <div className="text-sm font-semibold text-secondary mb-3 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,auto] gap-3 px-2 text-left">
-            <span>📝 Nombre</span>
-            <span>💰 Precio</span>
-            <span>🎁 Gratis</span>
-            <span>📅 Pago</span>
-            <span>💵 Subtotal Año 1</span>
-            <span className="text-center">⚙️ Acciones</span>
-          </div>
-          {serviciosOpcionales.map(serv => (
-            <div
-              key={serv.id}
-              className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,auto] gap-3 items-center bg-gradient-to-r from-accent/5 to-primary/5 p-4 rounded-xl border-2 border-accent/20"
-            >
-              {editandoServicioId === serv.id ? (
-                <>
-                  <input
-                    type="text"
-                    value={servicioEditando?.nombre || ''}
-                    aria-label="Nombre servicio opcional"
-                    onChange={(e) => setServicioEditando({ ...servicioEditando!, nombre: e.target.value })}
-                    className="px-3 py-2 border-2 border-accent/30 rounded-lg focus:border-accent focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    value={servicioEditando?.precio || 0}
-                    aria-label="Precio mensual servicio opcional"
-                    min={0}
-                    onChange={(e) => setServicioEditando({ ...servicioEditando!, precio: Number.parseFloat(e.target.value) || 0 })}
-                    className="px-3 py-2 border-2 border-accent/30 rounded-lg focus:border-accent focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    value={servicioEditando?.mesesGratis || 0}
-                    aria-label="Meses gratis servicio opcional"
-                    min={0}
-                    max={12}
-                    onChange={(e) => {
-                      const val = Number.parseInt(e.target.value) || 0
-                      const nm = normalizarMeses(val, servicioEditando?.mesesPago || 12)
-                      setServicioEditando({ ...servicioEditando!, ...nm })
-                    }}
-                    className="px-3 py-2 border-2 border-accent/30 rounded-lg focus:border-accent focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    value={servicioEditando?.mesesPago || 0}
-                    aria-label="Meses pago servicio opcional"
-                    min={0}
-                    max={12}
-                    onChange={(e) => {
-                      const val = Number.parseInt(e.target.value) || 0
-                      const nm = normalizarMeses(servicioEditando?.mesesGratis || 0, val)
-                      setServicioEditando({ ...servicioEditando!, ...nm })
-                    }}
-                    className="px-3 py-2 border-2 border-accent/30 rounded-lg focus:border-accent focus:outline-none"
-                  />
-                  <span className="text-primary font-bold">${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}</span>
-                  <div className="flex gap-2 justify-center">
-                    <button
-                      aria-label="Guardar servicio opcional"
-                      onClick={guardarEditarServicioOpcional}
-                      className="px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                      disabled={!(servicioEditando?.nombre.trim() && (servicioEditando?.precio || 0) > 0)}
-                    >
-                      <FaCheck />
-                    </button>
-                    <button
-                      aria-label="Cancelar edición servicio opcional"
-                      onClick={cancelarEditarServicioOpcional}
-                      className="px-3 py-2 bg-neutral-400 text-white rounded-lg hover:bg-neutral-500 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                    >
-                      <FaTimes />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <span className="font-semibold text-secondary">{serv.nombre}</span>
-                  <span className="text-primary font-bold">${serv.precio.toFixed(2)}</span>
-                  <span className="text-secondary">{serv.mesesGratis}m</span>
-                  <span className="text-secondary">{serv.mesesPago}m</span>
-                  <span className="text-primary font-bold">${(serv.precio * serv.mesesPago).toFixed(2)}</span>
-                  <div className="flex gap-2 justify-center">
-                    <button
-                      aria-label="Editar servicio opcional"
-                      onClick={() => abrirEditarServicioOpcional(serv)}
-                      className="px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      aria-label="Eliminar servicio opcional"
-                      onClick={() => eliminarServicioOpcional(serv.id)}
-                      className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </>
-              )}
+        {serviciosOpcionales.length > 0 ? (
+          <div className="space-y-2">
+            <div className="text-sm font-semibold text-white mb-2 grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 px-2 bg-white/5 py-2 rounded-lg border border-white/10">
+              <span>Nombre</span>
+              <span>Precio</span>
+              <span>Gratis</span>
+              <span>Pago</span>
+              <span>Subtotal</span>
+              <span className="text-center">Acciones</span>
             </div>
-          ))}
-        </div>
-      )}
-
-      <div className="space-y-4 p-6 bg-gradient-to-r from-accent/5 to-primary/10 rounded-xl border-2 border-dashed border-accent/40">
-        <h3 className="font-bold text-secondary mb-4">➕ Agregar Servicio Opcional</h3>
-        <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-4 items-end">
-          <div>
-            <label htmlFor="servOpcNombre" className="block font-semibold text-secondary mb-2 text-sm">📝 Nombre</label>
-            <input
-              id="servOpcNombre"
-              type="text"
-              placeholder="Ej: SEO Premium"
-              value={nuevoServicio.nombre}
-              onChange={(e) => setNuevoServicio({ ...nuevoServicio, nombre: e.target.value })}
-              className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
-            />
+            {serviciosOpcionales.map((servicio) => (
+              <div
+                key={servicio.id}
+                className="grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 items-center bg-gradient-to-r from-accent/10 to-accent/5 p-3 rounded-lg border border-accent/20 hover:border-accent/40 transition-all"
+              >
+                {editandoServicioId === servicio.id ? (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Nombre"
+                      value={servicioEditando?.nombre || ''}
+                      onChange={(e) =>
+                        setServicioEditando({
+                          ...servicioEditando!,
+                          nombre: e.target.value,
+                        })
+                      }
+                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
+                    />
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={servicioEditando?.precio || 0}
+                      onChange={(e) =>
+                        setServicioEditando({
+                          ...servicioEditando!,
+                          precio: Number.parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
+                      min="0"
+                    />
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={servicioEditando?.mesesGratis || 0}
+                      onChange={(e) =>
+                        setServicioEditando({
+                          ...servicioEditando!,
+                          mesesGratis: Number.parseInt(e.target.value, 10) || 0,
+                        })
+                      }
+                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
+                      min="0"
+                      max="12"
+                    />
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={servicioEditando?.mesesPago || 0}
+                      onChange={(e) =>
+                        setServicioEditando({
+                          ...servicioEditando!,
+                          mesesPago: Number.parseInt(e.target.value, 10) || 0,
+                        })
+                      }
+                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
+                      min="1"
+                      max="12"
+                    />
+                    <span className="text-accent font-bold text-sm">
+                      ${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}
+                    </span>
+                    <div className="flex gap-1 justify-center">
+                      <button
+                        aria-label="Guardar servicio opcional"
+                        onClick={guardarEditarServicioOpcional}
+                        className="p-1.5 bg-accent text-white rounded-md hover:bg-accent-dark transition-all"
+                      >
+                        <FaCheck className="text-sm" />
+                      </button>
+                      <button
+                        aria-label="Cancelar edición servicio opcional"
+                        onClick={cancelarEditarServicioOpcional}
+                        className="p-1.5 bg-primary text-white rounded-md hover:bg-primary-dark transition-all"
+                      >
+                        <FaTimes className="text-sm" />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-white font-medium">{servicio.nombre}</span>
+                    <span className="text-accent font-bold">${servicio.precio.toFixed(2)}</span>
+                    <span className="text-neutral-300 text-sm">{servicio.mesesGratis}m</span>
+                    <span className="text-neutral-300 text-sm">{servicio.mesesPago}m</span>
+                    <span className="text-accent font-bold">${(servicio.precio * servicio.mesesPago).toFixed(2)}</span>
+                    <div className="flex gap-1 justify-center">
+                      <button
+                        aria-label="Editar servicio opcional"
+                        onClick={() => abrirEditarServicioOpcional(servicio)}
+                        className="p-1.5 bg-accent/20 text-accent hover:bg-accent/30 rounded-md transition-all"
+                      >
+                        <FaEdit className="text-sm" />
+                      </button>
+                      <button
+                        aria-label="Eliminar servicio opcional"
+                        onClick={() => eliminarServicioOpcional(servicio.id)}
+                        className="p-1.5 bg-primary/20 text-primary hover:bg-primary/30 rounded-md transition-all"
+                      >
+                        <FaTrash className="text-sm" />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
           </div>
-          <div>
-            <label htmlFor="servOpcPrecio" className="block font-semibold text-secondary mb-2 text-sm">💰 Precio (USD)</label>
-            <input
-              id="servOpcPrecio"
-              type="number"
-              min={0}
-              value={nuevoServicio.precio}
-              placeholder="0"
-              onChange={(e) => setNuevoServicio({ ...nuevoServicio, precio: Number.parseFloat(e.target.value) || 0 })}
-              className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
-            />
-          </div>
-          <div>
-            <label htmlFor="servOpcGratis" className="block font-semibold text-secondary mb-2 text-sm">🎁 Gratis</label>
-            <input
-              id="servOpcGratis"
-              type="number"
-              min={0}
-              max={12}
-              value={nuevoServicio.mesesGratis}
-              onChange={(e) => {
-                const val = Number.parseInt(e.target.value) || 0
-                const nm = normalizarMeses(val, nuevoServicio.mesesPago)
-                setNuevoServicio({ ...nuevoServicio, ...nm })
-              }}
-              className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
-            />
-          </div>
-          <div>
-            <label htmlFor="servOpcPago" className="block font-semibold text-secondary mb-2 text-sm">📅 Pago</label>
-            <input
-              id="servOpcPago"
-              type="number"
-              min={0}
-              max={12}
-              value={nuevoServicio.mesesPago}
-              onChange={(e) => {
-                const val = Number.parseInt(e.target.value) || 0
-                const nm = normalizarMeses(nuevoServicio.mesesGratis, val)
-                setNuevoServicio({ ...nuevoServicio, ...nm })
-              }}
-              className="w-full px-4 py-2 border-2 border-accent/20 rounded-lg focus:border-accent focus:outline-none"
-            />
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={agregarServicioOpcional}
-            disabled={!(nuevoServicio.nombre.trim() && nuevoServicio.precio > 0)}
-            className={`px-6 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
-              nuevoServicio.nombre.trim() && nuevoServicio.precio > 0
-                ? 'bg-gradient-to-r from-accent to-primary text-white hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-                : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
-            }`}
-          >
-            <FaPlus /> Agregar
-          </motion.button>
-        </div>
-      </div>
-
-      <div className="mt-6 p-4 bg-accent/10 rounded-lg border border-accent/30 text-sm flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-        <span className="font-semibold text-secondary">Servicios opcionales: {serviciosOpcionales.length}</span>
-        <span className="text-secondary">Total Año 1: ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * s.mesesPago, 0).toFixed(2)}</span>
-        <span className="text-secondary">Total Anual (Año 2+): ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * 12, 0).toFixed(2)}</span>
-      </div>
-      {!serviciosOpcionalesValidos && serviciosOpcionales.length > 0 && (
-        <p className="mt-2 text-xs text-red-600 font-semibold">
-          ⚠️ Revisa meses (Gratis + Pago deben sumar 12) y que todos tengan nombre y precio.
-        </p>
-      )}
-
-      <div className="mt-8 pt-6 border-t-2 border-accent/30">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={crearPaqueteSnapshot}
-          disabled={!todoEsValido}
-          className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
-            todoEsValido
-              ? 'bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-              : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
-          }`}
-        >
-          <FaPlus /> Crear Paquete con esta Configuración
-        </motion.button>
-        {!todoEsValido && (
-          <p className="text-sm text-primary mt-2 text-center">
-            ⚠️ Completa: Nombre del paquete, Desarrollo, Precios servicios y Meses válidos
-          </p>
+        ) : (
+          <p className="text-neutral-400 text-sm italic">No hay servicios opcionales añadidos</p>
         )}
       </div>
+
+      {/* PARTE 2: Agregar Nuevo Servicio Opcional */}
+      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          ➕ Agregar Nuevo Servicio
+        </h3>
+
+        <div className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="nuevoServicioNombre" className="block font-semibold text-white mb-2 text-sm">
+                📝 Nombre del Servicio *
+              </label>
+              <input
+                id="nuevoServicioNombre"
+                type="text"
+                placeholder="Ej: API REST"
+                value={nuevoServicio.nombre}
+                onChange={(e) => setNuevoServicio({ ...nuevoServicio, nombre: e.target.value })}
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="nuevoServicioPrecio" className="block font-semibold text-white mb-2 text-sm">
+                💵 Precio Mensual (USD) *
+              </label>
+              <input
+                id="nuevoServicioPrecio"
+                type="number"
+                placeholder="0.00"
+                value={nuevoServicio.precio}
+                onChange={(e) => setNuevoServicio({ ...nuevoServicio, precio: Number.parseFloat(e.target.value) || 0 })}
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                min="0"
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="nuevoServicioGratis" className="block font-semibold text-white mb-2 text-sm">
+                📅 Meses Gratis (0-12) *
+              </label>
+              <input
+                id="nuevoServicioGratis"
+                type="number"
+                placeholder="0"
+                value={nuevoServicio.mesesGratis}
+                onChange={(e) => setNuevoServicio({ ...nuevoServicio, mesesGratis: Number.parseInt(e.target.value, 10) || 0 })}
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                min="0"
+                max="12"
+              />
+            </div>
+            <div>
+              <label htmlFor="nuevoServicioPago" className="block font-semibold text-white mb-2 text-sm">
+                📆 Meses de Pago (1-12) *
+              </label>
+              <input
+                id="nuevoServicioPago"
+                type="number"
+                placeholder="12"
+                value={nuevoServicio.mesesPago}
+                onChange={(e) => setNuevoServicio({ ...nuevoServicio, mesesPago: Number.parseInt(e.target.value, 10) || 12 })}
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                min="1"
+                max="12"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={agregarServicioOpcional}
+            className="w-full px-4 py-2.5 bg-gradient-to-r from-accent to-accent-dark text-white font-semibold rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
+          >
+            <FaPlus className="text-sm" />
+            Agregar Servicio
+          </button>
+        </div>
+      </div>
+
+      {/* PARTE 3: Crear Snapshot */}
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={crearPaqueteSnapshot}
+        disabled={!todoEsValido}
+        className={`w-full px-6 py-3 rounded-lg font-bold text-white transition-all ${
+          todoEsValido
+            ? 'bg-gradient-to-r from-primary to-primary-dark hover:shadow-lg cursor-pointer'
+            : 'bg-neutral-600 cursor-not-allowed opacity-60'
+        }`}
+      >
+        💾 Guardar Paquete Completo
+      </motion.button>
     </motion.div>
   )
 }

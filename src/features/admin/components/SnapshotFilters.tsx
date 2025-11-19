@@ -28,13 +28,13 @@ export default function SnapshotFilters({
     <div className="space-y-3 mb-6">
       {/* Barra de búsqueda */}
       <div className="relative group">
-        <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within:text-accent transition-colors duration-300" />
+
         <input
           type="text"
           placeholder="Buscar por nombre del paquete..."
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-12 pr-4 py-2.5 bg-white/5 backdrop-blur-md rounded-lg border border-white/15 text-white placeholder-neutral-400 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
+          className="w-full pl-12 pr-4 py-2.5 bg-white/5 backdrop-blur-md rounded-lg border border-white/15 text-white placeholder-neutral-500 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
         />
       </div>
 
