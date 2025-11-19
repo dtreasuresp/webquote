@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("STORAGE_POSTGRES_PRISMA_URL")
+  directUrl = env("STORAGE_POSTGRES_URL_NON_POOLING")
+}
+
+model PackageSnapshot {
+  id              String   @id @default(cuid())
+  nombre          String
+  
+  // Servicios Base (JSON Array)
+  serviciosBase   Json
+  
+  // Gestión
+  gestionPrecio   Float
+  gestionMesesGratis Int
+  gestionMesesPago Int
+  
+  // Paquete
+  desarrollo      Float
+  descuento       Int
+  tipo            String?
+  descripcion     String?
+  emoji           String?
+  tagline         String?
+  precioHosting   Float?
+  precioMailbox   Float?
+  precioDominio   Float?
+  tiempoEntrega   String?
+  opcionesPago    Json?     // Array de { nombre, porcentaje, descripcion }
+  descuentoPagoUnico Int?    // Porcentaje de descuento por pago único
+  
+  // Otros Servicios (JSON)
+  otrosServicios  Json
+  
+  // Costos
+  costoInicial    Float
+  costoAño1       Float
+  costoAño2       Float
+  
+  // Metadata
+  activo          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([createdAt])
+}

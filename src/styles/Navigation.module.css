@@ -1,0 +1,88 @@
+/* Navigation blur effect */
+.navBackdrop {
+  transition: background-color 500ms ease, backdrop-filter 500ms ease;
+}
+
+.navBackdropActive {
+  -webkit-backdrop-filter: blur(14px) brightness(0.95);
+  backdrop-filter: blur(14px) brightness(0.95);
+}
+
+/* Overlay styles - Solo escala de rojo, negro, blanco, gris */
+.navOverlayResumen {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.navOverlayAnalisis {
+  background-color: rgba(220, 38, 38, 0.3);
+}
+
+.navOverlayDinamico {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+.navOverlayPaquetes {
+  background-color: rgba(220, 38, 38, 0.25);
+}
+
+.navOverlayComparativa {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.navOverlayConclusion {
+  background-color: rgba(220, 38, 38, 0.28);
+}
+
+.navOverlayGarantias {
+  background-color: rgba(220, 38, 38, 0.2);
+}
+
+.navOverlayFaq {
+  background-color: rgba(0, 0, 0, 0.32);
+}
+
+.navOverlayContacto {
+  background-color: rgba(220, 38, 38, 0.35);
+}
+
+/* Text color styles - Coherencia con colores corporativos */
+.navTextResumen {
+  color: #ffffff;
+}
+
+.navTextAnalisis {
+  color: #ffffff;
+}
+
+.navTextDinamico {
+  color: #ffffff;
+}
+
+.navTextPaquetes {
+  color: #ffffff;
+}
+
+.navTextComparativa {
+  color: #ffffff;
+}
+
+.navTextConclusion {
+  color: #ffffff;
+}
+
+.navTextGarantias {
+  color: #ffffff;
+}
+
+.navTextFaq {
+  color: #ffffff;
+}
+
+.navTextContacto {
+  color: #ffffff;
+}
+
+/* Text shadow for legibility */
+.navTextWithShadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
