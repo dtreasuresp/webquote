@@ -1,9 +1,10 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd proposal-web && npm run build",
-  "devCommand": "cd proposal-web && npm run dev",
-  "installCommand": "cd proposal-web && npm install",
-  "outputDirectory": "proposal-web/.next",
+  "projectId": "prj_webquote",
+  "buildCommand": "npm run build",
   "framework": "nextjs",
-  "regions": ["sfo1"]
+  "regions": ["sfo1"],
+  "env": {
+    "STORAGE_POSTGRES_PRISMA_URL": "@storage_postgres_prisma_url",
+    "STORAGE_POSTGRES_URL_NON_POOLING": "@storage_postgres_url_non_pooling"
+  }
 }
