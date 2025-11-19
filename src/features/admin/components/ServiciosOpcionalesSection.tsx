@@ -202,7 +202,7 @@ export default function ServiciosOpcionalesSection({
 
         {serviciosOpcionales.length > 0 ? (
           <div className="space-y-2">
-            <div className="text-sm font-semibold text-white mb-2 grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 px-2 bg-white/5 py-2 rounded-lg border border-white/10">
+            <div className="text-sm font-semibold text-white mb-2 grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 px-3 bg-gradient-to-r from-accent/20 to-accent/10 py-3 rounded-lg border-2 border-accent/50 shadow-md">
               <span>Nombre</span>
               <span>Precio</span>
               <span>Gratis</span>

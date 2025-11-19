@@ -29,7 +29,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
       icono: FaBox,
       color: 'from-accent to-accent-dark',
       bg: 'bg-gradient-to-br from-accent/25 to-accent/12',
-        
+      border: 'border-accent/50',
       id: 'total-snapshots'
     },
     {
@@ -38,7 +38,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
       icono: FaCheckCircle,
       color: 'from-primary to-primary-dark',
       bg: 'bg-gradient-to-br from-primary/25 to-primary/12',
-      border: 'border-primary',
+      border: 'border-primary/50',
       id: 'paquetes-activos'
     },
     {
@@ -46,7 +46,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
       valor: ultimoCambio,
       icono: FaClock,
       color: 'from-secondary-light to-secondary',
-      bg: 'bg-gradient-to-br from-secondary/35 to-secondary/20',
+      bg: 'bg-gradient-to-br from-secondary/25 to-secondary/12',
       border: 'border-secondary/40',
       id: 'ultimo-cambio'
     }
