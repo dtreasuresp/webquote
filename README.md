@@ -1,4 +1,4 @@
-# WebQuote - Propuesta Web Dinámica para Urbanísima Constructora
+# WebQuote - Donde las ideas web se convierten en números claros
 
 WebQuote es una solución digital que transforma la complejidad de las cotizaciones en un proceso ágil, transparente y profesional. Diseñado para proyectos web, permite a empresas y clientes construir propuestas claras y competitivas en cuestión de minutos.
 
