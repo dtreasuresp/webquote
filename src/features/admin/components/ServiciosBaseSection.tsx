@@ -69,133 +69,138 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
       className="space-y-6"
     >
       {/* PARTE 1: Elementos Existentes */}
-      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
+      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6 grid grid-cols-6 gap-4">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
           📝 Servicios Existentes
         </h3>
         
         {serviciosBase.length > 0 ? (
-          <div className="space-y-2">
-            <div className="text-sm font-semibold text-white mb-2 grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 px-3 bg-gradient-to-r from-accent/20 to-accent/10 py-3 rounded-lg border-2 border-accent/50 shadow-md">
-              <span>Nombre</span>
-              <span>Precio</span>
-              <span>Gratis</span>
-              <span>Pago</span>
-              <span>Subtotal</span>
-              <span className="text-center">Acciones</span>
+          <>
+            {/* Header - solo en desktop */}
+            <div className="grid text-sm font-semibold text-white/80 mb-3 grid-cols-6 gap-3 px-2 text-left">
+              <span>📝 Nombre</span>
+              <span>💰 Precio (USD)</span>
+              <span>🎁 Meses Gratis</span>
+              <span>🗓️ Meses Pago</span>
+              <span>💵 Subtotal</span>
+              <span className="text-center">⚙️ Acciones</span>
             </div>
-            {serviciosBase.map((servicio) => (
-              <div
-                key={servicio.id}
-                className="grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 items-center bg-gradient-to-r from-accent/10 to-accent/5 p-3 rounded-lg border border-accent/20 hover:border-accent/40 transition-all"
-              >
-                {editandoServicioBaseId === servicio.id ? (
-                  <>
-                    <input
-                      type="text"
-                      placeholder="Nombre"
-                      value={servicioBaseEditando?.nombre || ''}
-                      onChange={(e) =>
-                        setServicioBaseEditando({
-                          ...servicioBaseEditando!,
-                          nombre: e.target.value,
-                        })
-                      }
-                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
-                    />
-                    <input
-                      type="number"
-                      placeholder="0.00"
-                      value={servicioBaseEditando?.precio || 0}
-                      onChange={(e) =>
-                        setServicioBaseEditando({
-                          ...servicioBaseEditando!,
-                          precio: Number.parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
-                      min="0"
-                    />
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={servicioBaseEditando?.mesesGratis || 0}
-                      onChange={(e) =>
-                        setServicioBaseEditando({
-                          ...servicioBaseEditando!,
-                          mesesGratis: Number.parseInt(e.target.value, 10) || 0,
-                        })
-                      }
-                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
-                      min="0"
-                      max="12"
-                    />
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={servicioBaseEditando?.mesesPago || 0}
-                      onChange={(e) =>
-                        setServicioBaseEditando({
-                          ...servicioBaseEditando!,
-                          mesesPago: Number.parseInt(e.target.value, 10) || 0,
-                        })
-                      }
-                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
-                      min="1"
-                      max="12"
-                    />
-                    <span className="text-accent font-bold text-sm">
-                      ${((servicioBaseEditando?.precio || 0) * (servicioBaseEditando?.mesesPago || 0)).toFixed(2)}
-                    </span>
-                    <div className="flex gap-1 justify-center">
-                      <button
-                        aria-label="Guardar servicio base"
-                        onClick={guardarEditarServicioBase}
-                        className="p-1.5 bg-accent text-white rounded-md hover:bg-accent-dark transition-all"
-                      >
-                        <FaCheck className="text-sm" />
-                      </button>
-                      <button
-                        aria-label="Cancelar edición servicio base"
-                        onClick={cancelarEditarServicioBase}
-                        className="p-1.5 bg-neutral-500 text-white rounded-md hover:bg-neutral-600 transition-all"
-                      >
-                        <FaTimes className="text-sm" />
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="font-semibold text-white">{servicio.nombre}</span>
-                    <span className="text-accent font-bold">${servicio.precio.toFixed(2)}</span>
-                    <span className="text-neutral-300">{servicio.mesesGratis}m</span>
-                    <span className="text-neutral-300">{servicio.mesesPago}m</span>
-                    <span className="text-accent font-bold">
-                      ${(servicio.precio * servicio.mesesPago).toFixed(2)}
-                    </span>
-                    <div className="flex gap-1 justify-center">
-                      <button
-                        aria-label={`Editar servicio base ${servicio.nombre}`}
-                        onClick={() => abrirEditarServicioBase(servicio)}
-                        className="p-1.5 bg-accent text-white rounded-md hover:bg-accent-dark transition-all"
-                      >
-                        <FaEdit className="text-sm" />
-                      </button>
-                      <button
-                        aria-label={`Eliminar servicio base ${servicio.nombre}`}
-                        onClick={() => eliminarServicioBase(servicio.id)}
-                        className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-all"
-                      >
-                        <FaTrash className="text-sm" />
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
+
+            {/* Contenedor de filas */}
+            <div className="space-y-3">
+              {serviciosBase.map((servicio) => (
+                <div
+                  key={servicio.id}
+                  className="grid grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 items-center bg-[#12121a] p-4 rounded-xl border border-white/10 hover:border-white/20 transition-all"
+                >
+                  {editandoServicioBaseId === servicio.id ? (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Nombre"
+                        value={servicioBaseEditando?.nombre || ''}
+                        onChange={(e) =>
+                          setServicioBaseEditando({
+                            ...servicioBaseEditando!,
+                            nombre: e.target.value,
+                          })
+                        }
+                        className="hidden md:block w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                      />
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={servicioBaseEditando?.precio || 0}
+                        onChange={(e) =>
+                          setServicioBaseEditando({
+                            ...servicioBaseEditando!,
+                            precio: Number.parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="hidden md:block w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                        min="0"
+                      />
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={servicioBaseEditando?.mesesGratis || 0}
+                        onChange={(e) =>
+                          setServicioBaseEditando({
+                            ...servicioBaseEditando!,
+                            mesesGratis: Number.parseInt(e.target.value, 10) || 0,
+                          })
+                        }
+                        className="hidden md:block w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                        min="0"
+                        max="12"
+                      />
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={servicioBaseEditando?.mesesPago || 0}
+                        onChange={(e) =>
+                          setServicioBaseEditando({
+                            ...servicioBaseEditando!,
+                            mesesPago: Number.parseInt(e.target.value, 10) || 0,
+                          })
+                        }
+                        className="hidden md:block w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                        min="1"
+                        max="12"
+                      />
+                      <span className="hidden md:block text-lg font-bold text-white">
+                        ${((servicioBaseEditando?.precio || 0) * (servicioBaseEditando?.mesesPago || 0)).toFixed(2)}
+                      </span>
+                      <div className="hidden md:flex gap-2 justify-center">
+                        <button
+                          aria-label="Guardar servicio base"
+                          onClick={guardarEditarServicioBase}
+                          className="px-3 py-2 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all"
+                        >
+                          <FaCheck />
+                        </button>
+                        <button
+                          aria-label="Cancelar edición servicio base"
+                          onClick={cancelarEditarServicioBase}
+                          className="px-3 py-2 bg-[#12121a]0 text-white rounded-lg hover:bg-[#12121a] transition-all"
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-semibold text-white">{servicio.nombre}</span>
+                      <span className="text-white font-bold">${servicio.precio.toFixed(2)}</span>
+                      <span className="text-white/80">{servicio.mesesGratis}m</span>
+                      <span className="text-white/80">{servicio.mesesPago}m</span>
+                      <span className="text-lg font-bold text-white">
+                        ${(servicio.precio * servicio.mesesPago).toFixed(2)}
+                      </span>
+                      <div className="hidden md:flex gap-2 justify-center">
+                        <button
+                          aria-label={`Editar servicio base ${servicio.nombre}`}
+                          onClick={() => abrirEditarServicioBase(servicio)}
+                          className="px-3 py-2 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          aria-label={`Eliminar servicio base ${servicio.nombre}`}
+                          onClick={() => eliminarServicioBase(servicio.id)}
+                          className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-          <p className="text-neutral-400 text-center py-4">No hay servicios base configurados</p>
+          <p className="text-white/70 text-center py-4">No hay servicios base configurados</p>
         )}
       </div>
 
@@ -204,7 +209,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
           ➕ Agregar Nuevo Servicio Base
         </h3>
-        <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-4 items-end">
+        <div className="grid md:grid-cols-4 gap-4">
           <div>
             <label htmlFor="nuevoServicioBaseNombre" className="block font-semibold text-white mb-2 text-sm">
               📝 Nombre del Servicio
@@ -217,7 +222,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
               onChange={(e) =>
                 setNuevoServicioBase({ ...nuevoServicioBase, nombre: e.target.value })
               }
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
             />
           </div>
           <div>
@@ -235,7 +240,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   precio: Number.parseFloat(e.target.value) || 0,
                 })
               }
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               min="0"
             />
           </div>
@@ -257,7 +262,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   mesesPago: pagoCalculado,
                 })
               }}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               min="0"
               max="12"
             />
@@ -279,11 +284,13 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   mesesPago: pagoValidado,
                 })
               }}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               min="1"
               max="12"
             />
           </div>
+        </div>
+        <div className="flex justify-center mt-6">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -291,8 +298,8 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
             disabled={!nuevoServicioBase.nombre || nuevoServicioBase.precio <= 0}
             className={`px-6 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
               nuevoServicioBase.nombre && nuevoServicioBase.precio > 0
-                ? 'bg-gradient-to-r from-accent to-accent-dark text-white hover:shadow-lg'
-                : 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
+                ? 'bg-white text-white hover:shadow-lg'
+                : 'bg-[#12121a] text-white/70 cursor-not-allowed'
             }`}
           >
             <FaPlus className="text-sm" /> Agregar
@@ -302,3 +309,9 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
     </motion.div>
   )
 }
+
+
+
+
+
+

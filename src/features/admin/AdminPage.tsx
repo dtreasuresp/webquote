@@ -122,7 +122,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="relative overflow-hidden min-h-screen bg-gradient-to-br from-secondary via-secondary-light to-secondary-dark">
+    <div className="relative overflow-hidden min-h-screen bg-[#0a0a0f]">
       {/* Overlay dorado sutil */}
       {/* Overlay dorado sutil */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-amber-400/5" />
@@ -139,7 +139,7 @@ export default function AdminPage() {
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
                 Panel Administrativo
               </h1>
-              <p className="text-xl text-neutral-200">
+              <p className="text-xl text-white/90">
                 Calculadora de Presupuestos y Gestión de Servicios
               </p>
             </div>
@@ -148,7 +148,7 @@ export default function AdminPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleDescargarPdf}
-                className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
+                className="px-6 py-3 bg-white text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f]"
               >
                 <FaDownload /> Descargar PDF
               </motion.button>
@@ -156,7 +156,7 @@ export default function AdminPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={guardarConfiguracionActual}
-                className="px-6 py-3 bg-gradient-to-r from-accent to-accent-dark text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
+                className="px-6 py-3 bg-white text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2 font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f]"
               >
                 💾 Guardar
               </motion.button>
@@ -164,7 +164,7 @@ export default function AdminPage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-all flex items-center gap-2 font-semibold border border-white/50 backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
+                  className="px-6 py-3 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-all flex items-center gap-2 font-semibold border border-white/50 backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f]"
                 >
                   <FaArrowLeft /> Volver
                 </motion.button>
@@ -215,3 +215,6 @@ export default function AdminPage() {
     </div>
   )
 }
+
+
+

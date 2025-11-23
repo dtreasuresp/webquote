@@ -81,6 +81,42 @@ export interface OtroServicio {
 
 export type OtroServicioSnapshot = OtroServicio
 
+export interface QuotationConfig {
+  id: string
+  // Cotización
+  numero: string
+  versionNumber: number
+  fechaEmision: string
+  tiempoValidez: number
+  fechaVencimiento: string
+  presupuesto: string
+  moneda: string
+  // Cliente
+  empresa: string
+  sector: string
+  ubicacion: string
+  emailCliente: string
+  whatsappCliente: string
+  // Proveedor
+  profesional: string
+  empresaProveedor: string
+  email: string
+  whatsapp: string
+  ubicacionProveedor: string
+  // Vigencia del contrato
+  tiempoVigenciaValor: number
+  tiempoVigenciaUnidad: string  // "días", "meses", "años"
+  // Hero (editables por cotización)
+  heroTituloMain: string
+  heroTituloSub: string
+  // Estados de control
+  activo: boolean
+  isGlobal: boolean
+  // Metadata
+  createdAt: string
+  updatedAt: string
+}
+
 export interface PackageSnapshot {
   id: string
   nombre: string
@@ -117,5 +153,16 @@ export interface PackageSnapshot {
     año2: number
   }
   activo: boolean
+  quotationConfigId?: string
   createdAt: string
+}
+
+export interface UserPreferences {
+  id: string
+  userId: string
+  cerrarModalAlGuardar: boolean
+  mostrarConfirmacionGuardado: boolean
+  validarDatosAntes: boolean
+  createdAt: string
+  updatedAt: string
 }

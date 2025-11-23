@@ -35,7 +35,7 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
           ⚙️ Configuración de Gestión
         </h3>
         
-        <p className="text-neutral-300 text-sm mb-4">
+        <p className="text-white/80 text-sm mb-4">
           Configura el servicio de gestión mensual. Si el precio es 0, este servicio no se incluirá.
         </p>
 
@@ -55,7 +55,7 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
                   precio: Number.parseFloat(e.target.value) || 0,
                 })
               }
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               min="0"
             />
           </div>
@@ -73,7 +73,7 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
                 const nm = normalizarMeses(gratis, gestion.mesesPago)
                 setGestion(nm)
               }}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               min="0"
               max="12"
             />
@@ -95,7 +95,7 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
                 const nm = normalizarMeses(gestion.mesesGratis, pago)
                 setGestion(nm)
               }}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               min="1"
               max="12"
             />
@@ -110,17 +110,17 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
         </h3>
         
         <div className="grid md:grid-cols-3 gap-4">
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-            <p className="text-neutral-300 text-sm mb-1">Precio Mensual</p>
-            <p className="text-2xl font-bold text-accent">${gestion.precio.toFixed(2)}</p>
+          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
+            <p className="text-white/80 text-sm mb-1">Precio Mensual</p>
+            <p className="text-2xl font-bold text-white">${gestion.precio.toFixed(2)}</p>
           </div>
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-            <p className="text-neutral-300 text-sm mb-1">Meses: {gestion.mesesGratis}G + {gestion.mesesPago}P</p>
-            <p className="text-neutral-300 text-xs">(Gratuitos + Pagos)</p>
+          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
+            <p className="text-white/80 text-sm mb-1">Meses: {gestion.mesesGratis}G + {gestion.mesesPago}P</p>
+            <p className="text-white/80 text-xs">(Gratuitos + Pagos)</p>
           </div>
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-            <p className="text-neutral-300 text-sm mb-1">Total Primer Año</p>
-            <p className="text-2xl font-bold text-accent">
+          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
+            <p className="text-white/80 text-sm mb-1">Total Primer Año</p>
+            <p className="text-2xl font-bold text-white">
               ${(gestion.precio * gestion.mesesPago).toFixed(2)}
             </p>
           </div>
@@ -129,3 +129,6 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
     </motion.div>
   )
 }
+
+
+

@@ -122,13 +122,13 @@ export default function SnapshotEditModal({
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-[#0a0a0f] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-secondary/10 to-accent/10 border-b-2 border-secondary/20 p-6 flex items-center justify-between sticky top-0 z-10">
+          <div className="bg-[#1a1a24] border-b border-white/10 p-6 flex items-center justify-between sticky top-0 z-10">
             <div>
-              <h2 className="text-2xl font-bold text-secondary">Editar Paquete</h2>
-              <p className="text-sm text-neutral-500">📦 {snapshotEditando.nombre}</p>
+              <h2 className="text-2xl font-bold text-white">Editar Paquete</h2>
+              <p className="text-sm text-white/70">📦 {snapshotEditando.nombre}</p>
             </div>
             <div className="flex items-center gap-4">
               {tieneCambios && (
@@ -138,7 +138,7 @@ export default function SnapshotEditModal({
                   className="text-sm font-semibold"
                 >
                   {autoSaveStatus === 'saving' && (
-                    <span className="text-accent">💾 Guardando...</span>
+                    <span className="text-white">💾 Guardando...</span>
                   )}
                   {autoSaveStatus === 'saved' && (
                     <span className="text-green-600">✅ Guardado</span>
@@ -152,7 +152,7 @@ export default function SnapshotEditModal({
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onClose}
-                className="text-neutral-500 hover:text-primary transition-colors"
+                className="text-white/70 hover:text-white transition-colors"
               >
                 <FaTimes className="text-2xl" />
               </motion.button>
@@ -160,7 +160,7 @@ export default function SnapshotEditModal({
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-secondary/10 bg-white sticky top-[80px] z-10">
+          <div className="border-b border-white/10 bg-[#0a0a0f] sticky top-[80px] z-10">
             <div className="flex gap-2 p-4 overflow-x-auto">
               {tabs.map((tab, idx) => (
                 <motion.button
@@ -170,8 +170,8 @@ export default function SnapshotEditModal({
                   onClick={() => setActiveModalTab(idx)}
                   className={`px-4 py-2 rounded-lg font-semibold transition-all whitespace-nowrap ${
                     activeModalTab === idx
-                      ? 'bg-secondary text-white'
-                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                      ? 'bg-white text-[#0a0a0f]'
+                      : 'bg-[#1a1a24] text-white/70 hover:bg-[#12121a]'
                   }`}
                 >
                   {tab.label}
@@ -192,7 +192,7 @@ export default function SnapshotEditModal({
                 className="space-y-4"
               >
                 <div>
-                  <label htmlFor="nombre" className="block text-sm font-bold text-secondary mb-2">
+                  <label htmlFor="nombre" className="block text-sm font-bold text-white mb-2">
                     Nombre del Paquete
                   </label>
                   <input
@@ -201,11 +201,11 @@ export default function SnapshotEditModal({
                     value={snapshotEditando.nombre}
                     onChange={(e) => handleCambiar('nombre', e.target.value)}
                     placeholder="Nombre del paquete"
-                    className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                    className="w-full px-4 py-2 border border-white/10 rounded-lg focus:border-white/20 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label htmlFor="descripcion" className="block text-sm font-bold text-secondary mb-2">
+                  <label htmlFor="descripcion" className="block text-sm font-bold text-white mb-2">
                     Descripción
                   </label>
                   <textarea
@@ -217,7 +217,7 @@ export default function SnapshotEditModal({
                     })}
                     rows={5}
                     placeholder="Descripción del paquete"
-                    className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                    className="w-full px-4 py-2 border border-white/10 rounded-lg focus:border-white/20 focus:outline-none"
                   />
                 </div>
               </motion.div>
@@ -229,12 +229,12 @@ export default function SnapshotEditModal({
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-4"
               >
-                <h3 className="text-lg font-bold text-secondary">Servicios Base</h3>
+                <h3 className="text-lg font-bold text-white">Servicios Base</h3>
                 <div className="space-y-3">
                   {snapshotEditando.serviciosBase.map((servicio) => (
-                    <div key={servicio.id} className="bg-neutral-50 p-4 rounded-lg border-2 border-secondary/10">
-                      <p className="font-semibold text-secondary">{servicio.nombre}</p>
-                      <p className="text-sm text-neutral-500">
+                    <div key={servicio.id} className="bg-[#12121a] p-4 rounded-lg border border-white/10">
+                      <p className="font-semibold text-white">{servicio.nombre}</p>
+                      <p className="text-sm text-white/70">
                         Precio: ${servicio.precio.toFixed(2)} - Meses Pago: {servicio.mesesPago}
                       </p>
                     </div>
@@ -249,10 +249,10 @@ export default function SnapshotEditModal({
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-4"
               >
-                <h3 className="text-lg font-bold text-secondary">Gestión</h3>
+                <h3 className="text-lg font-bold text-white">Gestión</h3>
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label htmlFor="precio" className="block text-sm font-bold text-secondary mb-2">
+                    <label htmlFor="precio" className="block text-sm font-bold text-white mb-2">
                       Precio
                     </label>
                     <input
@@ -266,12 +266,12 @@ export default function SnapshotEditModal({
                         precio: Number.parseFloat(e.target.value),
                       })}
                       placeholder="Precio de gestión"
-                      className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                      className="w-full px-4 py-2 border border-white/10 rounded-lg focus:border-white/20 focus:outline-none"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="mesesGratis" className="block text-sm font-bold text-secondary mb-2">
+                      <label htmlFor="mesesGratis" className="block text-sm font-bold text-white mb-2">
                         Meses Gratis
                       </label>
                       <input
@@ -285,11 +285,11 @@ export default function SnapshotEditModal({
                           mesesGratis: Number(e.target.value),
                         })}
                         placeholder="Meses gratis"
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                        className="w-full px-4 py-2 border border-white/10 rounded-lg focus:border-white/20 focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label htmlFor="mesesPago" className="block text-sm font-bold text-secondary mb-2">
+                      <label htmlFor="mesesPago" className="block text-sm font-bold text-white mb-2">
                         Meses Pago
                       </label>
                       <input
@@ -303,7 +303,7 @@ export default function SnapshotEditModal({
                           mesesPago: Number(e.target.value),
                         })}
                         placeholder="Meses de pago"
-                        className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                        className="w-full px-4 py-2 border border-white/10 rounded-lg focus:border-white/20 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -317,9 +317,9 @@ export default function SnapshotEditModal({
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-4"
               >
-                <h3 className="text-lg font-bold text-secondary">Descuentos</h3>
+                <h3 className="text-lg font-bold text-white">Descuentos</h3>
                 <div>
-                  <label htmlFor="descuento" className="block text-sm font-bold text-secondary mb-2">
+                  <label htmlFor="descuento" className="block text-sm font-bold text-white mb-2">
                     Descuento del Paquete (%)
                   </label>
                   <input
@@ -334,7 +334,7 @@ export default function SnapshotEditModal({
                       descuento: Number.parseFloat(e.target.value),
                     })}
                     placeholder="Porcentaje de descuento"
-                    className="w-full px-4 py-2 border-2 border-secondary/20 rounded-lg focus:border-secondary focus:outline-none"
+                    className="w-full px-4 py-2 border border-white/10 rounded-lg focus:border-white/20 focus:outline-none"
                   />
                 </div>
               </motion.div>
@@ -342,12 +342,12 @@ export default function SnapshotEditModal({
           </div>
 
           {/* Footer */}
-          <div className="border-t-2 border-secondary/10 bg-neutral-50 p-6 flex gap-4">
+          <div className="border-t border-white/10 bg-[#12121a] p-6 flex gap-4">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onClose}
-              className="flex-1 px-6 py-3 bg-neutral-200 text-neutral-800 rounded-lg hover:bg-neutral-300 transition-all font-semibold flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-[#1a1a24] text-[#0a0a0f] rounded-lg hover:bg-[#12121a] transition-all font-semibold flex items-center justify-center gap-2"
             >
               <FaTimes /> Cerrar
             </motion.button>
@@ -356,7 +356,7 @@ export default function SnapshotEditModal({
               whileTap={{ scale: 0.95 }}
               onClick={handleGuardarYCerrar}
               disabled={!tieneCambios}
-              className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FaCheck /> Guardar y Cerrar
             </motion.button>
@@ -366,3 +366,8 @@ export default function SnapshotEditModal({
     </AnimatePresence>
   )
 }
+
+
+
+
+

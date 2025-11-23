@@ -16,7 +16,7 @@ export default function DescuentosSection() {
           💸 Sistema de Descuentos
         </h3>
 
-        <p className="text-sm text-neutral-200 mb-4">
+        <p className="text-sm text-white/90 mb-4">
           Los descuentos se aplican a nivel de snapshot (paquete guardado) en el modal de edición.
         </p>
       </div>
@@ -27,24 +27,24 @@ export default function DescuentosSection() {
           ⚙️ Gestión en Modal de Edición
         </h3>
 
-        <p className="text-sm text-neutral-200 mb-4">
+        <p className="text-sm text-white/90 mb-4">
           Al abrir el modal de edición de un snapshot, podrás gestionar:
         </p>
         <ul className="space-y-2">
-          <li className="flex items-start gap-2 text-neutral-200">
-            <span className="text-accent font-bold">✓</span>
+          <li className="flex items-start gap-2 text-white/90">
+            <span className="text-white font-bold">✓</span>
             <span>Descuentos generales (aplicables a desarrollo, servicios base u otros servicios)</span>
           </li>
-          <li className="flex items-start gap-2 text-neutral-200">
-            <span className="text-accent font-bold">✓</span>
+          <li className="flex items-start gap-2 text-white/90">
+            <span className="text-white font-bold">✓</span>
             <span>Descuentos por servicio individual</span>
           </li>
-          <li className="flex items-start gap-2 text-neutral-200">
-            <span className="text-accent font-bold">✓</span>
+          <li className="flex items-start gap-2 text-white/90">
+            <span className="text-white font-bold">✓</span>
             <span>Descuento por pago único</span>
           </li>
-          <li className="flex items-start gap-2 text-neutral-200">
-            <span className="text-accent font-bold">✓</span>
+          <li className="flex items-start gap-2 text-white/90">
+            <span className="text-white font-bold">✓</span>
             <span>Vista previa en tiempo real de montos con descuentos aplicados</span>
           </li>
         </ul>
@@ -52,3 +52,5 @@ export default function DescuentosSection() {
     </motion.div>
   )
 }
+
+

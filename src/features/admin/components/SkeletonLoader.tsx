@@ -9,11 +9,11 @@ export default function SkeletonLoader() {
       transition={{ duration: 2, repeat: Infinity }}
       className="space-y-4"
     >
-      <div className="h-10 bg-white/10 rounded-lg" />
-      <div className="h-32 bg-white/10 rounded-lg" />
+      <div className="h-10 bg-[#222] rounded" />
+      <div className="h-32 bg-[#222] rounded" />
       <div className="grid grid-cols-2 gap-4">
-        <div className="h-20 bg-white/10 rounded-lg" />
-        <div className="h-20 bg-white/10 rounded-lg" />
+        <div className="h-20 bg-[#222] rounded" />
+        <div className="h-20 bg-[#222] rounded" />
       </div>
     </motion.div>
   )

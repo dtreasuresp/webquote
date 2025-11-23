@@ -11,44 +11,115 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-model PackageSnapshot {
-  id              String   @id @default(cuid())
-  nombre          String
+model QuotationConfig {
+  id                  String    @id @default(cuid())
   
-  // Servicios Base (JSON Array)
-  serviciosBase   Json
+  // Información de la Cotización
+  numero              String    @unique @default("")
+  versionNumber       Int       @default(1)
+  fechaEmision        DateTime  @default(now())
+  tiempoValidez       Int       @default(30)
+  fechaVencimiento    DateTime
+  presupuesto         String    @default("")
+  moneda              String    @default("USD")
   
-  // Gestión
-  gestionPrecio   Float
-  gestionMesesGratis Int
-  gestionMesesPago Int
+  // Información del Cliente
+  empresa             String    @default("")
+  sector              String    @default("")
+  ubicacion           String    @default("")
+  emailCliente        String    @default("")
+  whatsappCliente     String    @default("")
   
-  // Paquete
-  desarrollo      Float
-  descuento       Int
-  tipo            String?
-  descripcion     String?
-  emoji           String?
-  tagline         String?
-  precioHosting   Float?
-  precioMailbox   Float?
-  precioDominio   Float?
-  tiempoEntrega   String?
-  opcionesPago    Json?     // Array de { nombre, porcentaje, descripcion }
-  descuentoPagoUnico Int?    // Porcentaje de descuento por pago único
+  // Información del Proveedor
+  profesional         String    @default("")
+  empresaProveedor    String    @default("")
+  email               String    @default("")
+  whatsapp            String    @default("")
+  ubicacionProveedor  String    @default("")
   
-  // Otros Servicios (JSON)
-  otrosServicios  Json
+  // Tiempo de vigencia del contrato
+  tiempoVigenciaValor Int       @default(12)
+  tiempoVigenciaUnidad String   @default("meses")  // "días", "meses", "años"
   
-  // Costos
-  costoInicial    Float
-  costoAño1       Float
-  costoAño2       Float
+  // Configuración del Hero (por cotización)
+  heroTituloMain      String    @default("PROPUESTA DE COTIZACIÓN")
+  heroTituloSub       String    @default("PÁGINA CATÁLOGO DINÁMICA")
   
-  // Metadata
-  activo          Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  // Estados de control
+  activo              Boolean   @default(true)
+  isGlobal            Boolean   @default(false)
+  
+  // Relaciones
+  snapshots           PackageSnapshot[]
+  
+  // Control
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([createdAt])
+  @@index([isGlobal])
+  @@index([activo])
+}
+
+model PackageSnapshot {
+  id                  String   @id @default(cuid())
+  nombre              String
+  
+  // Servicios Base (JSON Array)
+  serviciosBase       Json
+  
+  // Gestión
+  gestionPrecio       Float
+  gestionMesesGratis  Int
+  gestionMesesPago    Int
+  
+  // Paquete
+  desarrollo          Float
+  descuento           Int
+  tipo                String?
+  descripcion         String?
+  emoji               String?
+  tagline             String?
+  precioHosting       Float?
+  precioMailbox       Float?
+  precioDominio       Float?
+  tiempoEntrega       String?
+  opcionesPago        Json?     // Array de { nombre, porcentaje, descripcion }
+  descuentoPagoUnico  Int?      // Porcentaje de descuento por pago único
+  
+  // Otros Servicios (JSON)
+  otrosServicios      Json
+  
+  // Costos
+  costoInicial        Float
+  costoAño1           Float
+  costoAño2           Float
+  
+  // Relación con QuotationConfig
+  quotationConfigId   String?
+  quotationConfig     QuotationConfig? @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  activo              Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([quotationConfigId])
+}
+
+model UserPreferences {
+  id                          String   @id @default(cuid())
+  userId                      String   @unique
+  
+  // Preferencias del Modal
+  cerrarModalAlGuardar        Boolean  @default(false)
+  mostrarConfirmacionGuardado Boolean  @default(true)
+  validarDatosAntes           Boolean  @default(true)
+  
+  // Control
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  @@index([userId])
 }

@@ -66,13 +66,14 @@ export default function Tooltip({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.15 }}
-            className={`absolute ${getPositionClasses(position)} bg-neutral-900 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap z-50 pointer-events-none border border-white/10 backdrop-blur-md`}
+            className={`absolute ${getPositionClasses(position)} bg-[#0a0a0f] text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap z-50 pointer-events-none border border-white/10 backdrop-blur-md`}
           >
             {text}
-            <div className={`absolute w-2 h-2 bg-neutral-900 border border-white/10 rotate-45 ${getArrowClasses(position)}`} />
+            <div className={`absolute w-2 h-2 bg-[#0a0a0f] border border-white/10 rotate-45 ${getArrowClasses(position)}`} />
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   )
 }
+

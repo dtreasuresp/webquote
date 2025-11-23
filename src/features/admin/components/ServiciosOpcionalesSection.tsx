@@ -202,7 +202,7 @@ export default function ServiciosOpcionalesSection({
 
         {serviciosOpcionales.length > 0 ? (
           <div className="space-y-2">
-            <div className="text-sm font-semibold text-white mb-2 grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 px-3 bg-gradient-to-r from-accent/20 to-accent/10 py-3 rounded-lg border-2 border-accent/50 shadow-md">
+            <div className="text-sm font-semibold text-white mb-2 grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 px-3 bg-[#1a1a24] py-3 rounded-lg border border-white/10 shadow-md">
               <span>Nombre</span>
               <span>Precio</span>
               <span>Gratis</span>
@@ -213,7 +213,7 @@ export default function ServiciosOpcionalesSection({
             {serviciosOpcionales.map((servicio) => (
               <div
                 key={servicio.id}
-                className="grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 items-center bg-gradient-to-r from-accent/10 to-accent/5 p-3 rounded-lg border border-accent/20 hover:border-accent/40 transition-all"
+                className="grid md:grid-cols-[2fr,1fr,1fr,1fr,1.2fr,1fr] gap-2 items-center bg-[#12121a] p-3 rounded-lg border border-white/10 hover:border-white/20 transition-all"
               >
                 {editandoServicioId === servicio.id ? (
                   <>
@@ -227,7 +227,7 @@ export default function ServiciosOpcionalesSection({
                           nombre: e.target.value,
                         })
                       }
-                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
+                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                     />
                     <input
                       type="number"
@@ -239,7 +239,7 @@ export default function ServiciosOpcionalesSection({
                           precio: Number.parseFloat(e.target.value) || 0,
                         })
                       }
-                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
+                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                       min="0"
                     />
                     <input
@@ -252,7 +252,7 @@ export default function ServiciosOpcionalesSection({
                           mesesGratis: Number.parseInt(e.target.value, 10) || 0,
                         })
                       }
-                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
+                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                       min="0"
                       max="12"
                     />
@@ -266,25 +266,25 @@ export default function ServiciosOpcionalesSection({
                           mesesPago: Number.parseInt(e.target.value, 10) || 0,
                         })
                       }
-                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-neutral-400 focus:border-accent focus:outline-none"
+                      className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                       min="1"
                       max="12"
                     />
-                    <span className="text-accent font-bold text-sm">
+                    <span className="text-white font-bold text-sm">
                       ${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}
                     </span>
                     <div className="flex gap-1 justify-center">
                       <button
                         aria-label="Guardar servicio opcional"
                         onClick={guardarEditarServicioOpcional}
-                        className="p-1.5 bg-accent text-white rounded-md hover:bg-accent-dark transition-all"
+                        className="p-1.5 bg-white text-[#0a0a0f] rounded-md hover:bg-white/90 transition-all"
                       >
                         <FaCheck className="text-sm" />
                       </button>
                       <button
                         aria-label="Cancelar edición servicio opcional"
                         onClick={cancelarEditarServicioOpcional}
-                        className="p-1.5 bg-primary text-white rounded-md hover:bg-primary-dark transition-all"
+                        className="p-1.5 bg-white text-[#0a0a0f] rounded-md hover:bg-white/90 transition-all"
                       >
                         <FaTimes className="text-sm" />
                       </button>
@@ -293,22 +293,22 @@ export default function ServiciosOpcionalesSection({
                 ) : (
                   <>
                     <span className="text-white font-medium">{servicio.nombre}</span>
-                    <span className="text-accent font-bold">${servicio.precio.toFixed(2)}</span>
-                    <span className="text-neutral-300 text-sm">{servicio.mesesGratis}m</span>
-                    <span className="text-neutral-300 text-sm">{servicio.mesesPago}m</span>
-                    <span className="text-accent font-bold">${(servicio.precio * servicio.mesesPago).toFixed(2)}</span>
+                    <span className="text-white font-bold">${servicio.precio.toFixed(2)}</span>
+                    <span className="text-white/80 text-sm">{servicio.mesesGratis}m</span>
+                    <span className="text-white/80 text-sm">{servicio.mesesPago}m</span>
+                    <span className="text-white font-bold">${(servicio.precio * servicio.mesesPago).toFixed(2)}</span>
                     <div className="flex gap-1 justify-center">
                       <button
                         aria-label="Editar servicio opcional"
                         onClick={() => abrirEditarServicioOpcional(servicio)}
-                        className="p-1.5 bg-accent/20 text-accent hover:bg-accent/30 rounded-md transition-all"
+                        className="p-1.5 bg-white/10 text-white hover:bg-white/20 rounded-md transition-all"
                       >
                         <FaEdit className="text-sm" />
                       </button>
                       <button
                         aria-label="Eliminar servicio opcional"
                         onClick={() => eliminarServicioOpcional(servicio.id)}
-                        className="p-1.5 bg-primary/20 text-primary hover:bg-primary/30 rounded-md transition-all"
+                        className="p-1.5 bg-white/10 text-white hover:bg-white/20 rounded-md transition-all"
                       >
                         <FaTrash className="text-sm" />
                       </button>
@@ -319,7 +319,7 @@ export default function ServiciosOpcionalesSection({
             ))}
           </div>
         ) : (
-          <p className="text-neutral-400 text-sm italic">No hay servicios opcionales añadidos</p>
+          <p className="text-white/70 text-sm italic">No hay servicios opcionales añadidos</p>
         )}
       </div>
 
@@ -341,7 +341,7 @@ export default function ServiciosOpcionalesSection({
                 placeholder="Ej: API REST"
                 value={nuevoServicio.nombre}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, nombre: e.target.value })}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               />
             </div>
             <div>
@@ -354,7 +354,7 @@ export default function ServiciosOpcionalesSection({
                 placeholder="0.00"
                 value={nuevoServicio.precio}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, precio: Number.parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                 min="0"
               />
             </div>
@@ -371,7 +371,7 @@ export default function ServiciosOpcionalesSection({
                 placeholder="0"
                 value={nuevoServicio.mesesGratis}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, mesesGratis: Number.parseInt(e.target.value, 10) || 0 })}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                 min="0"
                 max="12"
               />
@@ -386,7 +386,7 @@ export default function ServiciosOpcionalesSection({
                 placeholder="12"
                 value={nuevoServicio.mesesPago}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, mesesPago: Number.parseInt(e.target.value, 10) || 12 })}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                 min="1"
                 max="12"
               />
@@ -395,7 +395,7 @@ export default function ServiciosOpcionalesSection({
 
           <button
             onClick={agregarServicioOpcional}
-            className="w-full px-4 py-2.5 bg-gradient-to-r from-accent to-accent-dark text-white font-semibold rounded-lg hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            className="w-full px-4 py-2.5 bg-white text-[#0a0a0f] font-semibold rounded-lg hover:bg-white/90 transition-all flex items-center justify-center gap-2"
           >
             <FaPlus className="text-sm" />
             Agregar Servicio
@@ -411,8 +411,8 @@ export default function ServiciosOpcionalesSection({
         disabled={!todoEsValido}
         className={`w-full px-6 py-3 rounded-lg font-bold text-white transition-all ${
           todoEsValido
-            ? 'bg-gradient-to-r from-primary to-primary-dark hover:shadow-lg cursor-pointer'
-            : 'bg-neutral-600 cursor-not-allowed opacity-60'
+            ? 'bg-white hover:shadow-lg cursor-pointer'
+            : 'bg-[#12121a] cursor-not-allowed opacity-60'
         }`}
       >
         💾 Guardar Paquete Completo
@@ -420,3 +420,9 @@ export default function ServiciosOpcionalesSection({
     </motion.div>
   )
 }
+
+
+
+
+
+

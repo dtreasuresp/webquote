@@ -22,7 +22,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
           📋 Información del Paquete
         </h3>
         
-        <div className="space-y-4">
+        <div className="space-y-4 grid md:grid-cols-2 gap-2 *:md:space-y-0">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="paqueteNombre" className="block font-semibold text-white mb-2 text-sm">
@@ -36,7 +36,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                 onChange={(e) =>
                   setPaqueteActual({ ...paqueteActual, nombre: e.target.value })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               />
             </div>
             <div>
@@ -54,7 +54,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                     desarrollo: Number.parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                 min="0"
               />
             </div>
@@ -73,7 +73,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                 onChange={(e) =>
                   setPaqueteActual({ ...paqueteActual, tipo: e.target.value })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
               />
             </div>
             <div>
@@ -91,7 +91,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                     descuento: Number.parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
                 min="0"
                 max="100"
               />
@@ -110,7 +110,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                 setPaqueteActual({ ...paqueteActual, descripcion: e.target.value })
               }
               rows={3}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-neutral-500 focus:border-accent focus:outline-none"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
             />
           </div>
         </div>
@@ -123,17 +123,17 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
         </h3>
         
         <div className="grid md:grid-cols-3 gap-4">
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-            <p className="text-neutral-300 text-sm mb-1">Valor de Desarrollo</p>
-            <p className="text-2xl font-bold text-accent">${paqueteActual.desarrollo.toFixed(2)}</p>
+          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
+            <p className="text-white/80 text-sm mb-1">Valor de Desarrollo</p>
+            <p className="text-2xl font-bold text-white">${paqueteActual.desarrollo.toFixed(2)}</p>
           </div>
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-            <p className="text-neutral-300 text-sm mb-1">Descuento</p>
-            <p className="text-2xl font-bold text-accent">{paqueteActual.descuento.toFixed(1)}%</p>
+          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
+            <p className="text-white/80 text-sm mb-1">Descuento</p>
+            <p className="text-2xl font-bold text-white">{paqueteActual.descuento.toFixed(1)}%</p>
           </div>
-          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-            <p className="text-neutral-300 text-sm mb-1">Total con Descuento</p>
-            <p className="text-2xl font-bold text-accent">
+          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
+            <p className="text-white/80 text-sm mb-1">Total con Descuento</p>
+            <p className="text-2xl font-bold text-white">
               ${(paqueteActual.desarrollo * (1 - paqueteActual.descuento / 100)).toFixed(2)}
             </p>
           </div>
@@ -142,3 +142,6 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
     </motion.div>
   )
 }
+
+
+
