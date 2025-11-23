@@ -2,26 +2,29 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
-import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown, FaSave, FaFileAlt, FaMapMarkerAlt, FaEnvelope, FaTag, FaCalendar, FaDollarSign, FaGlobe, FaHeadset, FaPercent, FaPalette, FaHistory, FaGift, FaCog, FaToggleOn, FaToggleOff, FaEye, FaUser, FaBriefcase } from 'react-icons/fa'
+import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown, FaSave, FaFileAlt, FaMapMarkerAlt, FaEnvelope, FaTag, FaCalendar, FaDollarSign, FaGlobe, FaHeadset, FaPercent, FaPalette, FaHistory, FaGift, FaCog, FaUser, FaBriefcase } from 'react-icons/fa'
 import Link from 'next/link'
-import Navigation from '@/components/Navigation'
-import TabsModal from '@/components/TabsModal'
-import Historial from '@/components/Historial'
-import Toast from '@/components/Toast'
+import Navigation from '@/components/layout/Navigation'
+import TabsModal from '@/components/layout/TabsModal'
+import Historial from '@/components/admin/Historial'
+import CotizacionTab from '@/components/admin/CotizacionTab'
+import OfertaTab from '@/components/admin/OfertaTab'
+import PaquetesTab from '@/components/admin/PaquetesTab'
+import EstilosYDisenoTab from '@/components/admin/EstilosYDisenoTab'
+import PreferenciasTab from '@/components/admin/PreferenciasTab'
+import Toast from '@/components/layout/Toast'
 import { useToast } from '@/lib/hooks/useToast'
 import { jsPDF } from 'jspdf'
-import { obtenerSnapshots, crearSnapshot, actualizarSnapshot, eliminarSnapshot, obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
+import { obtenerSnapshotsCompleto, crearSnapshot, actualizarSnapshot, eliminarSnapshot } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
-import type { ServicioBase, GestionConfig, Package, Servicio, OtroServicio, OtroServicioSnapshot, PackageSnapshot, QuotationConfig, UserPreferences } from '@/lib/types'
+import { compararQuotations, validarQuotation, validarSnapshot } from '@/lib/utils/validation'
+import type { ServicioBase, GestionConfig, Package, Servicio, OtroServicio, PackageSnapshot, QuotationConfig, UserPreferences } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
-import type { TabItem } from '@/components/TabsModal'
+import type { TabItem } from '@/components/layout/TabsModal'
 
 // UI Components
 import KPICards from '@/features/admin/components/KPICards'
-import SnapshotFilters from '@/features/admin/components/SnapshotFilters'
-import SectionBadge from '@/features/admin/components/SectionBadge'
 import CollapsibleSection from '@/features/admin/components/CollapsibleSection'
-import SkeletonLoader from '@/features/admin/components/SkeletonLoader'
 
 export default function Administrador() {
   // Obtener función de refresh global
@@ -34,8 +37,8 @@ export default function Administrador() {
   const [cotizacionConfig, setCotizacionConfig] = useState<QuotationConfig | null>(null)
   const [cargandoCotizacion, setCargandoCotizacion] = useState(false)
   const [erroresValidacionCotizacion, setErroresValidacionCotizacion] = useState<{
-    email?: string
-    whatsapp?: string
+    emailProveedor?: string
+    whatsappProveedor?: string
     emailCliente?: string
     whatsappCliente?: string
     fechas?: string
@@ -97,7 +100,6 @@ export default function Administrador() {
   // En esta primera fase se poblará desde ambos arrays legacy (otrosServicios y servicios) al cargar configuración.
   const [serviciosOpcionales, setServiciosOpcionales] = useState<Servicio[]>([])
   const [snapshots, setSnapshots] = useState<PackageSnapshot[]>([])
-  const [editingSnapshotId, setEditingSnapshotId] = useState<string | null>(null)
   const [showModalEditar, setShowModalEditar] = useState(false)
   const [activeModalTab, setActiveModalTab] = useState<string>('descripcion')
   const [activePageTab, setActivePageTab] = useState<string>('cotizacion')
@@ -114,9 +116,7 @@ export default function Administrador() {
   
   // ==================== ESTADOS QUOTATIONS Y PREFERENCIAS ====================
   const [quotations, setQuotations] = useState<QuotationConfig[]>([])
-  const [cargandoQuotations, setCargandoQuotations] = useState(true)
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null)
-  const [cargandoPreferences, setCargandoPreferences] = useState(true)
   
   // Estado para la cotización actual (información general)
   const [cotizacionActual, setCotizacionActual] = useState<Partial<QuotationConfig>>({
@@ -139,18 +139,19 @@ export default function Administrador() {
   
   // ==================== FIN ESTADOS QUOTATIONS ====================
   
+  // ==================== NUEVOS ESTADOS FASES 3-6 ====================
+  const [readOnly, setReadOnly] = useState(false)
+  const [alertaMostradaEnSesion, setAlertaMostradaEnSesion] = useState(false)
+  const [mostrarDialogoConfirmacion, setMostrarDialogoConfirmacion] = useState(false)
+  const [accionPendiente, setAccionPendiente] = useState<{
+    tipo: 'guardar-sin-activar' | 'guardar-y-activar' | null
+  }>({ tipo: null })
+  // ==================== FIN NUEVOS ESTADOS ====================
+  
   // Estado para expandibles en descuentos por servicio
   const [expandidosDescuentos, setExpandidosDescuentos] = useState<{ [key: string]: boolean }>({
     serviciosBase: false,
     otrosServicios: false,
-  })
-
-  // Estado para secciones colapsables principales
-  const [seccionesExpandidas, setSeccionesExpandidas] = useState<{ [key: string]: boolean }>({
-    serviciosBase: true,
-    paquete: true,
-    serviciosOpcionales: true,
-    paquetesInactivos: false,
   })
 
   // Cargar snapshots desde la API y configuración del localStorage al montar
@@ -183,8 +184,6 @@ export default function Administrador() {
         }
       } catch (error) {
         console.error('Error cargando quotations:', error)
-      } finally {
-        setCargandoQuotations(false)
       }
     }
 
@@ -198,8 +197,6 @@ export default function Administrador() {
         }
       } catch (error) {
         console.error('Error cargando preferences:', error)
-      } finally {
-        setCargandoPreferences(false)
       }
     }
 
@@ -355,65 +352,7 @@ export default function Administrador() {
   }, [])
 
   // Guardar cotización en BD
-  const guardarCotizacion = async () => {
-    const errores: typeof erroresValidacionCotizacion = {}
-
-    if (!cotizacionConfig?.empresa?.trim()) {
-      errores.empresa = 'Requerido'
-    }
-    if (!cotizacionConfig?.profesional?.trim()) {
-      errores.profesional = 'Requerido'
-    }
-    if (cotizacionConfig?.email && !validarEmail(cotizacionConfig.email)) {
-      errores.email = 'Email inválido'
-    }
-    if (cotizacionConfig?.whatsapp && !validarWhatsApp(cotizacionConfig.whatsapp)) {
-      errores.whatsapp = 'WhatsApp inválido (ej: +535 856 9291)'
-    }
-    if (cotizacionConfig && !validarFechas(cotizacionConfig.fechaEmision, cotizacionConfig.fechaVencimiento)) {
-      errores.fechas = 'Fecha vencimiento debe ser > emisión'
-    }
-
-    if (Object.keys(errores).length > 0) {
-      setErroresValidacionCotizacion(errores)
-      alert('⚠️ Hay errores en los datos. Revisa los campos resaltados.')
-      return
-    }
-
-    try {
-      if (!cotizacionConfig) return
-
-      const method = cotizacionConfig.id ? 'PUT' : 'POST'
-      const url = cotizacionConfig.id
-        ? `/api/quotation-config?id=${cotizacionConfig.id}`
-        : '/api/quotation-config'
-
-      const fechaEmision = new Date(cotizacionConfig.fechaEmision)
-      const fechaVencimiento = calcularFechaVencimiento(fechaEmision, cotizacionConfig.tiempoValidez)
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...cotizacionConfig,
-          fechaEmision: fechaEmision.toISOString(),
-          fechaVencimiento: fechaVencimiento.toISOString(),
-        }),
-      })
-
-      if (response.ok) {
-        const saved = await response.json()
-        setCotizacionConfig(saved)
-        setErroresValidacionCotizacion({})
-        alert('✅ Cotización guardada correctamente')
-      } else {
-        alert('❌ Error al guardar la cotización')
-      }
-    } catch (error) {
-      console.error('Error guardando:', error)
-      alert('❌ Error al guardar la cotización')
-    }
-  }
+  // FUNCIÓN ELIMINADA: guardarCotizacion() ha sido unificada en guardarConfiguracionActual()
 
   // Calcular costo inicial para un snapshot
   const calcularCostoInicialSnapshot = (snapshot: PackageSnapshot) => {
@@ -563,6 +502,12 @@ export default function Administrador() {
   }
 
   const crearPaqueteSnapshot = async () => {
+    // PROPUESTA 1: Validar que cotizacionConfig exista ✅
+    if (!cotizacionConfig?.id) {
+      toast.error('❌ Cotización no cargada - Primero debes crear o cargar una cotización antes de agregar paquetes.')
+      return
+    }
+
     if (!todoEsValido) {
       alert('Por favor completa todos los campos requeridos: Nombre del paquete, Desarrollo, Precios de servicios, y Meses válidos.')
       return
@@ -580,6 +525,7 @@ export default function Administrador() {
       const nuevoSnapshot: PackageSnapshot = {
         id: Date.now().toString(),
         nombre: paqueteActual.nombre,
+        quotationConfigId: cotizacionConfig?.id, // ✅ Vinculación automática a cotización activa
         serviciosBase: serviciosBase.map(s => ({ ...s })),
         gestion: {
           precio: gestion.precio,
@@ -641,7 +587,8 @@ export default function Administrador() {
       // Llamar refresh global para notificar a todos los componentes
       await refreshSnapshots()
 
-      alert('✅ Paquete creado y guardado correctamente')
+      // PROPUESTA 2: Toast mejorado con información de vinculación ✅
+      toast.success(`✅ Paquete creado y vinculado: "${paqueteActual.nombre}" a cotización ${cotizacionConfig?.numero || cotizacionConfig?.id}`)
     } catch (error) {
       console.error('Error al crear paquete:', error)
       alert('❌ Error al guardar el paquete. Por favor intenta de nuevo.')
@@ -854,6 +801,13 @@ export default function Administrador() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [showModalEditar, snapshotEditando, snapshotOriginalJson])
 
+  // FASE 4: Mostrar alerta si no hay cotizaciones activas
+  useEffect(() => {
+    if (quotations.length > 0) {
+      verificarCotizacionesActivas(quotations)
+    }
+  }, [quotations])
+
   const handleEliminarSnapshot = async (id: string) => {
     if (confirm('¿Estás seguro de que deseas eliminar este paquete?')) {
       try {
@@ -870,6 +824,224 @@ export default function Administrador() {
       }
     }
   }
+
+  // ==================== FUNCIONES AUXILIARES FASES 3-6 ====================
+
+  /**
+   * Desactiva todas las cotizaciones excepto la especificada
+   */
+  const desactivarTodas = async (exceptoId: string) => {
+    try {
+      const response = await fetch('/api/quotations/deactivate-others', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exceptoId }),
+      })
+      if (!response.ok) throw new Error('Error desactivando cotizaciones')
+      return true
+    } catch (error) {
+      console.error('Error en desactivarTodas:', error)
+      toast.error('❌ Error al desactivar otras cotizaciones')
+      return false
+    }
+  }
+
+  /**
+   * Recarga la lista de cotizaciones desde la BD
+   */
+  const recargarQuotations = async () => {
+    try {
+      const response = await fetch('/api/quotations')
+      const data = await response.json()
+      if (data.success) {
+        setQuotations(data.data || [])
+      }
+    } catch (error) {
+      console.error('Error recargando quotations:', error)
+    }
+  }
+
+  /**
+   * PROPUESTA 3: Calcula resumen de paquetes para la confirmación
+   */
+  const calcularResumenPaquetes = () => {
+    const totalPaquetes = snapshots.length
+    const totalServicios = snapshots.reduce((sum, s) => sum + s.serviciosBase.length, 0)
+    const costoTotalInicial = snapshots.reduce((sum, s) => sum + (s.costos?.inicial || 0), 0)
+    const costoTotalAño1 = snapshots.reduce((sum, s) => sum + (s.costos?.año1 || 0), 0)
+    const costoTotalAño2 = snapshots.reduce((sum, s) => sum + (s.costos?.año2 || 0), 0)
+    
+    return {
+      totalPaquetes,
+      totalServicios,
+      costoTotalInicial,
+      costoTotalAño1,
+      costoTotalAño2,
+    }
+  }
+
+  /**
+   * Verifica si hay cotizaciones activas y muestra alerta si no las hay
+   */
+  const verificarCotizacionesActivas = (quotations: QuotationConfig[]) => {
+    const tieneActiva = quotations.some(q => q.isGlobal === true)
+    if (!tieneActiva && !alertaMostradaEnSesion && quotations.length > 0) {
+      toast.warning(
+        '⚠️ No hay cotizaciones activas. Por favor, crea o activa una para iniciar cotizaciones a clientes'
+      )
+      setAlertaMostradaEnSesion(true)
+    }
+  }
+
+  /**
+   * PROPUESTA 3: Mostrar modal de confirmación con resumen de paquetes antes de guardar
+   */
+  const mostrarConfirmacionGuardar = async () => {
+    if (!cotizacionConfig) {
+      alert('❌ No hay cotización activa')
+      return
+    }
+
+    const resumen = calcularResumenPaquetes()
+
+    // Crear contenido del modal
+    const mensaje = `
+📋 RESUMEN DE COTIZACIÓN:
+
+Empresa: ${cotizacionConfig.empresa || 'Sin especificar'}
+Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
+
+📦 PAQUETES: ${resumen.totalPaquetes}
+🔧 SERVICIOS TOTALES: ${resumen.totalServicios}
+
+💰 COSTOS:
+• Inicial: $${resumen.costoTotalInicial.toFixed(2)}
+• Año 1: $${resumen.costoTotalAño1.toFixed(2)}
+• Año 2: $${resumen.costoTotalAño2.toFixed(2)}
+
+¿Deseas guardar esta cotización con todos sus paquetes?
+    `
+
+    if (window.confirm(mensaje)) {
+      await guardarConfiguracionActual()
+    }
+  }
+
+  /**
+   * Guarda la configuración de cotización en el header
+   */
+  const guardarConfiguracionActual = async () => {
+    // PASO 1: Validar que hay cotización cargada
+    if (!cotizacionConfig) {
+      toast.error('❌ No hay cotización cargada')
+      return
+    }
+
+    // PASO 1B: Validar que todos los paquetes tienen quotationConfigId
+    const paquetesSinVinculacion = snapshots.filter(s => !s.quotationConfigId)
+    if (paquetesSinVinculacion.length > 0) {
+      toast.error(`❌ Hay ${paquetesSinVinculacion.length} paquete(s) sin vinculación. Recarga la página e intenta de nuevo.`)
+      console.error('Paquetes sin quotationConfigId:', paquetesSinVinculacion)
+      return
+    }
+
+    // PASO 2: Validaciones específicas de campos requeridos
+    const errores: typeof erroresValidacionCotizacion = {}
+
+    if (!cotizacionConfig?.empresa?.trim()) {
+      errores.empresa = 'Requerido'
+    }
+    if (!cotizacionConfig?.profesional?.trim()) {
+      errores.profesional = 'Requerido'
+    }
+    if (cotizacionConfig?.emailProveedor && !validarEmail(cotizacionConfig.emailProveedor)) {
+      errores.emailProveedor = 'Email inválido'
+    }
+    if (cotizacionConfig?.whatsappProveedor && !validarWhatsApp(cotizacionConfig.whatsappProveedor)) {
+      errores.whatsappProveedor = 'WhatsApp inválido (ej: +535 856 9291)'
+    }
+    if (cotizacionConfig && !validarFechas(cotizacionConfig.fechaEmision, cotizacionConfig.fechaVencimiento)) {
+      errores.fechas = 'Fecha vencimiento debe ser > emisión'
+    }
+
+    if (Object.keys(errores).length > 0) {
+      setErroresValidacionCotizacion(errores)
+      toast.error('⚠️ Hay errores en los datos. Revisa los campos resaltados.')
+      return
+    }
+
+    // PASO 3: Validar si está habilitada la validación completa
+    if (userPreferences?.validarDatosAntes) {
+      const { valido, errores: erroresCompletos } = validarQuotation(cotizacionConfig)
+      if (!valido) {
+        toast.error(`❌ Errores de validación:\n${erroresCompletos.slice(0, 3).join('\n')}`)
+        return
+      }
+    }
+
+    // PASO 4: Comparar con datos guardados para evitar duplicados
+    const sonIguales = compararQuotations(cotizacionConfig, {
+      numero: cotizacionConfig.numero,
+      empresa: cotizacionConfig.empresa,
+      sector: cotizacionConfig.sector,
+      ubicacion: cotizacionConfig.ubicacion,
+      emailCliente: cotizacionConfig.emailCliente,
+      whatsappCliente: cotizacionConfig.whatsappCliente,
+      profesional: cotizacionConfig.profesional,
+      empresaProveedor: cotizacionConfig.empresaProveedor,
+      emailProveedor: cotizacionConfig.emailProveedor,
+      whatsappProveedor: cotizacionConfig.whatsappProveedor,
+      ubicacionProveedor: cotizacionConfig.ubicacionProveedor,
+      heroTituloMain: cotizacionConfig.heroTituloMain,
+      heroTituloSub: cotizacionConfig.heroTituloSub,
+    })
+
+    if (sonIguales) {
+      toast.info('ℹ️ La cotización ya está configurada con estos datos')
+      return
+    }
+
+    try {
+      // PASO 5: Guardar en BD
+      toast.info('⏳ Guardando cotización...')
+      
+      const response = await fetch(`/api/quotation-config/${cotizacionConfig.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cotizacionConfig),
+      })
+
+      if (!response.ok) throw new Error('Error guardando')
+
+      // PASO 6: Desactivar todas y activar esta
+      const desactivOk = await desactivarTodas(cotizacionConfig.id)
+      if (!desactivOk) return
+
+      // PASO 7: Mostrar éxito
+      setErroresValidacionCotizacion({})
+      toast.success(
+        '✅ Cotización guardada correctamente. El resto han sido puestas en modo inactivo'
+      )
+
+      // PASO 8: Recargar datos
+      await recargarQuotations()
+
+      // PASO 9: Mostrar confirmación adicional si preferencia está activa
+      if (userPreferences?.mostrarConfirmacionGuardado) {
+        toast.info('✓ Cambios guardados exitosamente')
+      }
+
+      // PASO 10: Cerrar modal si preferencia está activa
+      if (userPreferences?.cerrarModalAlGuardar && showModalEditar) {
+        handleCerrarModalEditar()
+      }
+    } catch (error) {
+      console.error('Error guardando:', error)
+      toast.error('❌ Error al guardar cotización. Intenta de nuevo.')
+    }
+  }
+
+  // ==================== FIN FUNCIONES AUXILIARES ====================
 
   // Funciones para PDF y Guardar Configuración
   const handleDescargarPdf = () => {
@@ -1026,68 +1198,6 @@ export default function Administrador() {
     doc.save(`presupuesto-${snapshot.nombre.replace(/\s+/g, '-')}.pdf`)
   }
 
-  const guardarConfiguracionActual = async () => {
-    const configActual = {
-      serviciosBase,
-      gestion,
-      paqueteActual,
-      serviciosOpcionales,
-      timestamp: new Date().toISOString(),
-    }
-    localStorage.setItem('configuracionAdministrador', JSON.stringify(configActual))
-    // Guardar también los snapshots creados
-    localStorage.setItem('paquetesSnapshots', JSON.stringify(snapshots))
-    
-    // Guardar configuración de la cotización en BD
-    try {
-      const quotationData = {
-        numero: cotizacionActual.numero || 'SIN-NUMERO',
-        fechaEmision: cotizacionActual.fechaEmision || new Date().toISOString().split('T')[0],
-        tiempoValidez: cotizacionActual.tiempoValidez || 30,
-        empresa: cotizacionActual.empresa || '',
-        sector: cotizacionActual.sector || '',
-        ubicacion: cotizacionActual.ubicacion || '',
-        emailCliente: cotizacionActual.emailCliente || '',
-        whatsappCliente: cotizacionActual.whatsappCliente || '',
-        profesional: cotizacionActual.profesional || '',
-        empresaProveedor: cotizacionActual.empresaProveedor || '',
-        emailProveedor: cotizacionActual.emailProveedor || '',
-        whatsappProveedor: cotizacionActual.whatsappProveedor || '',
-        ubicacionProveedor: cotizacionActual.ubicacionProveedor || '',
-        heroTituloMain: cotizacionActual.heroTituloMain || 'Mi Propuesta',
-        heroTituloSub: cotizacionActual.heroTituloSub || 'Cotización personalizada',
-      }
-      
-      const response = await fetch('/api/quotations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(quotationData)
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        if (result.success) {
-          // Recargar quotations
-          const updatedResponse = await fetch('/api/quotations')
-          const data = await updatedResponse.json()
-          if (data.success) {
-            setQuotations(data.data || [])
-            toast.success('✓ Cotización guardada correctamente')
-          }
-        }
-      } else {
-        toast.error('❌ Error al guardar la cotización')
-      }
-    } catch (error) {
-      console.error('Error guardando cotización en BD:', error)
-      toast.error('❌ Error al guardar la cotización')
-    }
-    
-    // Disparar refresh global para sincronizar todos los componentes
-    console.log('🔄 Refresh global disparado desde botón Guardar')
-    await refreshSnapshots()
-  }
-
   // ---- Autoguardado de configuración general fuera del modal ----
   // Autoguardado general fuera del modal eliminado: solo se mantiene autoguardado dentro del modal de edición
 
@@ -1125,7 +1235,170 @@ export default function Administrador() {
       id: 'historial',
       label: 'Historial',
       icon: <FaHistory size={16} />,
-      content: <div />, // Placeholder
+      content: (
+        <Historial 
+          quotations={quotations} 
+          snapshots={snapshots}
+          onEdit={(quotation) => {
+              // FASE 3: No cambiar el estado activo al editar
+              setCotizacionActual({
+                id: quotation.id,
+                numero: quotation.numero,
+                versionNumber: quotation.versionNumber,
+                fechaEmision: quotation.fechaEmision,
+                tiempoValidez: quotation.tiempoValidez,
+                empresa: quotation.empresa,
+                sector: quotation.sector,
+                ubicacion: quotation.ubicacion,
+                emailCliente: quotation.emailCliente,
+                whatsappCliente: quotation.whatsappCliente,
+                profesional: quotation.profesional,
+                empresaProveedor: quotation.empresaProveedor,
+                emailProveedor: quotation.emailProveedor,
+                whatsappProveedor: quotation.whatsappProveedor,
+                ubicacionProveedor: quotation.ubicacionProveedor,
+                heroTituloMain: quotation.heroTituloMain,
+                heroTituloSub: quotation.heroTituloSub,
+              })
+              const quotationSnapshot = snapshots.find(s => s.quotationConfigId === quotation.id)
+              if (quotationSnapshot) {
+                setSnapshotEditando(quotationSnapshot)
+              }
+              setReadOnly(false) // Modo editable
+              setShowModalEditar(true)
+              console.log('Cotización cargada en modo EDITABLE (sin cambiar estado activo):', quotation.numero)
+            }}
+            onDelete={async (quotationId) => {
+              // Guardar el estado actual por si acaso necesitamos revertir
+              const quotationsAnteriores = quotations
+              
+              console.log('🔴 DELETE HANDLER: Iniciando eliminación de cotización:', quotationId)
+              console.log('📊 Estado actual - Total cotizaciones:', quotationsAnteriores.length)
+              
+              try {
+                // PASO 1: Eliminar localmente del estado INMEDIATAMENTE para UI responsiva
+                const quotationsActualizadas = quotationsAnteriores.filter(q => q.id !== quotationId)
+                setQuotations(quotationsActualizadas)
+                console.log('✅ DELETE HANDLER: Estado actualizado localmente. Cotizaciones restantes:', quotationsActualizadas.length)
+                
+                // PASO 2: Enviar DELETE a la API
+                console.log('🔄 DELETE HANDLER: Enviando DELETE a /api/quotations/' + quotationId)
+                const response = await fetch(`/api/quotations/${quotationId}`, {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' }
+                })
+                
+                console.log('📌 DELETE HANDLER: Respuesta HTTP status:', response.status, 'ok:', response.ok)
+                
+                if (!response.ok) {
+                  // Si falla, restaurar inmediatamente
+                  console.error('❌ DELETE HANDLER: HTTP Error - restaurando estado')
+                  setQuotations(quotationsAnteriores)
+                  throw new Error(`HTTP ${response.status}`)
+                }
+                
+                const resultData = await response.json()
+                console.log('📋 DELETE HANDLER: Respuesta JSON:', resultData)
+                
+                if (resultData.success) {
+                  // Éxito confirmado - mantener el estado actualizado
+                  console.log('✅ DELETE HANDLER: Eliminación exitosa en base de datos')
+                  toast.success('✅ Cotización eliminada correctamente')
+                } else {
+                  // API retorna error - restaurar
+                  console.error('❌ DELETE HANDLER: API error:', resultData.error)
+                  setQuotations(quotationsAnteriores)
+                  toast.error('❌ Error en el servidor: ' + (resultData.error || 'Error desconocido'))
+                }
+              } catch (error) {
+                console.error('Error eliminando cotización:', error)
+                // Restaurar el estado original en caso de error
+                setQuotations(quotationsAnteriores)
+                toast.error('❌ Error al eliminar la cotización. Por favor intenta de nuevo.')
+              }
+            }}
+            onToggleActive={async (quotationId, newStatus) => {
+              try {
+                // FASE 3: Si va a activarse, desactivar todas las otras
+                if (newStatus.isGlobal === true) {
+                  await desactivarTodas(quotationId)
+                  toast.success('✓ Cotización activada. El resto de cotizaciones han sido desactivadas')
+                } else {
+                  // Si va a desactivarse, solo actualizar este registro
+                  const response = await fetch(`/api/quotations/${quotationId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      activo: newStatus.activo,
+                      isGlobal: newStatus.isGlobal
+                    })
+                  })
+                  if (response.ok) {
+                    toast.success('✓ Cotización desactivada')
+                  } else {
+                    throw new Error('Error al desactivar')
+                  }
+                }
+                // Recargar cotizaciones
+                await recargarQuotations()
+              } catch (error) {
+                console.error('Error actualizando cotización:', error)
+                toast.error('❌ Error al actualizar el estado')
+              }
+            }}
+            onViewProposal={(quotation) => {
+              // FASE 5: Abrir en modo lectura (read-only)
+              setCotizacionActual({
+                id: quotation.id,
+                numero: quotation.numero,
+                versionNumber: quotation.versionNumber,
+                fechaEmision: quotation.fechaEmision,
+                tiempoValidez: quotation.tiempoValidez,
+                empresa: quotation.empresa,
+                sector: quotation.sector,
+                ubicacion: quotation.ubicacion,
+                emailCliente: quotation.emailCliente,
+                whatsappCliente: quotation.whatsappCliente,
+                profesional: quotation.profesional,
+                empresaProveedor: quotation.empresaProveedor,
+                emailProveedor: quotation.emailProveedor,
+                whatsappProveedor: quotation.whatsappProveedor,
+                ubicacionProveedor: quotation.ubicacionProveedor,
+                heroTituloMain: quotation.heroTituloMain,
+                heroTituloSub: quotation.heroTituloSub,
+              })
+              const quotationSnapshot = snapshots.find(s => s.quotationConfigId === quotation.id)
+              if (quotationSnapshot) {
+                // FASE 5: Cargar datos completos del snapshot pero sin editar
+                setPaqueteActual({
+                  nombre: quotationSnapshot.nombre,
+                  desarrollo: quotationSnapshot.paquete.desarrollo,
+                  descuento: quotationSnapshot.paquete.descuento,
+                  activo: quotationSnapshot.activo,
+                  tipo: quotationSnapshot.paquete.tipo,
+                  descripcion: quotationSnapshot.paquete.descripcion,
+                  emoji: quotationSnapshot.paquete.emoji,
+                  tagline: quotationSnapshot.paquete.tagline,
+                  precioHosting: quotationSnapshot.paquete.precioHosting,
+                  precioMailbox: quotationSnapshot.paquete.precioMailbox,
+                  precioDominio: quotationSnapshot.paquete.precioDominio,
+                  tiempoEntrega: quotationSnapshot.paquete.tiempoEntrega,
+                  opcionesPago: quotationSnapshot.paquete.opcionesPago,
+                  descuentoPagoUnico: quotationSnapshot.paquete.descuentoPagoUnico,
+                  descuentosGenerales: quotationSnapshot.paquete.descuentosGenerales,
+                  descuentosPorServicio: quotationSnapshot.paquete.descuentosPorServicio,
+                  gestionMensual: quotationSnapshot.paquete.gestionMensual,
+                })
+                setSnapshotEditando(quotationSnapshot)
+                setReadOnly(true) // Modo lectura
+                setShowModalEditar(true)
+                console.log('Cotización cargada en modo LECTURA (sin cambiar estado activo):', quotation.numero)
+              } else {
+                toast.error('❌ No se encontró paquete asociado')
+              }
+            }}
+          />
+      ),
       hasChanges: false,
     },
     {
@@ -1168,10 +1441,10 @@ export default function Administrador() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={guardarConfiguracionActual}
+                onClick={mostrarConfirmacionGuardar}
                 className="px-4 py-2 bg-white text-[#0a0a0f] rounded-lg hover:shadow-lg transition-all flex items-center gap-2 text-xs font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f]"
               >
-                <FaSave /> Guardar
+                <FaSave /> Guardar Cotización
               </motion.button>
               <Link href="/">
                 <motion.button
@@ -1189,7 +1462,7 @@ export default function Administrador() {
           <KPICards snapshots={snapshots} cargandoSnapshots={cargandoSnapshots} />
 
           {/* Tab Navigation */}
-          <div className="mt-6">
+          <div>
             <TabsModal
               tabs={pageTabs}
               activeTab={activePageTab}
@@ -1197,1557 +1470,117 @@ export default function Administrador() {
             />
           </div>
 
-          {/* Tab Content - renderizado conditionally */}
-          <div className="mt-0 bg-black rounded-b-lg border-b border-l border-r border-[#333]">
+          {/* Tab Content - usando componentes */}
+          <div className="bg-black rounded-b-lg border-b border-l border-r border-[#333]">
             {/* TAB 1: COTIZACIÓN */}
             {activePageTab === 'cotizacion' && (
-              <div className="p-6 space-y-4">
-                {cargandoCotizacion ? (
-                  <div className="text-center py-6 text-[#888888]">Cargando cotización...</div>
-                ) : (
-                  <div className="space-y-4">
-                  {/* Grid 2 Columnas */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* COLUMNA 1: Información de Cotización */}
-                    <div className="space-y-3 bg-[#111] p-3 rounded-lg border border-[#333]">
-                      <h4 className="text-xs font-bold text-[#ededed] flex items-center gap-2">
-                        <FaFileAlt /> Información de Cotización
-                      </h4>
-
-                      {/* Título Secundario (Hero) */}
-                      <div className="border-t border-[#333]"></div>
-                      <div>
-                        <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Nombre de la cotización</label>
-                        <input
-                          type="text"
-                          value={cotizacionConfig?.heroTituloSub || ''}
-                          onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, heroTituloSub: e.target.value } : null)}
-                          className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                          placeholder="Ej: PÁGINA CATÁLOGO DINÁMICA"
-                        />
-                        <p className="text-[#888888] text-xs mt-1">Se muestra en la página principal</p>
-                      </div>
-
-                      {/* GRUPO 1: Identificación */}
-                      <div className="pt-2 border-t border-[#333]">
-                        <h5 className="text-xs font-bold text-[#ededed] mb-2 flex items-center gap-2">
-                          <FaTag /> Identificación
-                        </h5>
-                        <div className="grid md:grid-cols-2 gap-2">
-                          {/* Número (readonly) */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Número *</label>
-                            <input
-                              type="text"
-                              value={cotizacionConfig?.numero || ''}
-                              disabled
-                              className="w-full px-3 py-2 bg-[#0a0a0f] text-[#999] border border-[#333] rounded focus:outline-none text-xs cursor-not-allowed"
-                              placeholder="Auto-generado"
-                            />
-                            <p className="text-[#888888] text-xs mt-1">Se genera automáticamente</p>
-                          </div>
-
-                          {/* Versión */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Versión *</label>
-                            <input
-                              type="text"
-                              value={cotizacionConfig?.version || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, version: e.target.value } : null)}
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* GRUPO 2: Fechas */}
-                      <div className="pt-2 border-t border-[#333]">
-                        <h5 className="text-xs font-bold text-[#ededed] mb-2 flex items-center gap-2">
-                          <FaCalendar /> Fechas
-                        </h5>
-                        <div className="grid md:grid-cols-3 gap-2">
-                          {/* Fecha Emisión */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Fecha Emisión *</label>
-                            <input
-                              type="date"
-                              value={cotizacionConfig?.fechaEmision ? new Date(cotizacionConfig.fechaEmision).toISOString().split('T')[0] : ''}
-                              onChange={(e) => {
-                                const newFecha = new Date(e.target.value)
-                                const newFechaVencimiento = calcularFechaVencimiento(newFecha, cotizacionConfig?.tiempoValidez || 30)
-                                if (cotizacionConfig) {
-                                  setCotizacionConfig({
-                                    ...cotizacionConfig,
-                                    fechaEmision: newFecha.toISOString(),
-                                    fechaVencimiento: newFechaVencimiento.toISOString(),
-                                  })
-                                }
-                              }}
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                            />
-                          </div>
-
-                          {/* Tiempo Validez */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Validez (días) *</label>
-                            <input
-                              type="number"
-                              value={cotizacionConfig?.tiempoValidez || 30}
-                              onChange={(e) => {
-                                const newValue = parseInt(e.target.value) || 30
-                                if (cotizacionConfig) {
-                                  const newFechaVencimiento = calcularFechaVencimiento(new Date(cotizacionConfig.fechaEmision), newValue)
-                                  setCotizacionConfig({
-                                    ...cotizacionConfig,
-                                    tiempoValidez: newValue,
-                                    fechaVencimiento: newFechaVencimiento.toISOString(),
-                                  })
-                                }
-                              }}
-                              min="1"
-                              max="365"
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                            />
-                          </div>
-
-                          {/* Fecha Vencimiento (readonly) */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Fecha Vencimiento *</label>
-                            <input
-                              type="text"
-                              value={cotizacionConfig?.fechaVencimiento ? formatearFechaLarga(cotizacionConfig.fechaVencimiento) : ''}
-                              disabled
-                              className="w-full px-3 py-2 bg-[#0a0a0f] text-[#999] border border-[#333] rounded focus:outline-none text-xs cursor-not-allowed"
-                            />
-                            {erroresValidacionCotizacion.fechas && (
-                              <p className="text-red-500 text-xs mt-1">{erroresValidacionCotizacion.fechas}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* GRUPO 3: Presupuesto */}
-                      <div className="pt-2 border-t border-[#333]">
-                        <h5 className="text-xs font-bold text-[#ededed] mb-2 flex items-center gap-2">
-                          <FaDollarSign /> Presupuesto
-                        </h5>
-                        <div className="grid md:grid-cols-2 gap-2">
-                          {/* Presupuesto */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Monto *</label>
-                            <input
-                              type="text"
-                              value={cotizacionConfig?.presupuesto || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, presupuesto: e.target.value } : null)}
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                              placeholder="Ej: Menos de $300 USD"
-                            />
-                          </div>
-
-                          {/* Moneda */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Moneda *</label>
-                            <select
-                              value={cotizacionConfig?.moneda || 'USD'}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, moneda: e.target.value } : null)}
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                            >
-                              <option>USD</option>
-                              <option>EUR</option>
-                              <option>CUP</option>
-                              <option>MXN</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* GRUPO 4: Vigencia del Contrato */}
-                      <div className="pt-2 border-t border-[#333]">
-                        <h5 className="text-xs font-bold text-[#ededed] mb-2 flex items-center gap-2">
-                          <FaCalculator /> Vigencia del Contrato
-                        </h5>
-                        <div className="grid md:grid-cols-3 gap-2">
-                          {/* Valor */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Valor</label>
-                            <input
-                              type="number"
-                              value={cotizacionConfig?.tiempoVigenciaValor || 12}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, tiempoVigenciaValor: parseInt(e.target.value) || 12 } : null)}
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                              min="1"
-                              max="365"
-                            />
-                          </div>
-
-                          {/* Unidad */}
-                          <div className="md:col-span-2">
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Unidad de Tiempo</label>
-                            <select
-                              value={cotizacionConfig?.tiempoVigenciaUnidad || 'meses'}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, tiempoVigenciaUnidad: e.target.value } : null)}
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                            >
-                              <option value="días">Días</option>
-                              <option value="meses">Meses</option>
-                              <option value="años">Años</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* COLUMNA 2: Información Cliente y Proveedor */}
-                    <div className="space-y-2">
-                      {/* Contenedor Cliente */}
-                      <div className="space-y-2 bg-[#111] p-3 rounded-lg border border-[#333]">
-                        <h4 className="text-xs font-bold text-[#ededed] flex items-center gap-2">
-                          <FaMapMarkerAlt /> Información del Cliente
-                        </h4>
-                        <div className="border-t border-[#333]"></div>
-                        {/* Fila 1: Empresa, Sector */}
-                        <div className="grid md:grid-cols-2 gap-2">
-                          {/* Empresa */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">
-                              Empresa {!cotizacionConfig?.empresa && <span className="text-red-500">*</span>}
-                            </label>
-                            <input
-                              type="text"
-                              value={cotizacionConfig?.empresa || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, empresa: e.target.value } : null)}
-                              className={`w-full px-3 py-2 bg-black border rounded focus:outline-none text-xs text-[#ededed] ${
-                                erroresValidacionCotizacion.empresa ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#666]'
-                              }`}
-                            />
-                            {erroresValidacionCotizacion.empresa && (
-                              <p className="text-red-500 text-xs mt-1">{erroresValidacionCotizacion.empresa}</p>
-                            )}
-                          </div>
-
-                          {/* Sector */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Sector</label>
-                            <input
-                              type="text"
-                              value={cotizacionConfig?.sector || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, sector: e.target.value } : null)}
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Fila 2: Email, WhatsApp */}
-                        <div className="grid md:grid-cols-2 gap-2">
-                          {/* Email Cliente */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Email</label>
-                            <input
-                              type="email"
-                              value={cotizacionConfig?.emailCliente || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, emailCliente: e.target.value } : null)}
-                              className={`w-full px-3 py-2 bg-black border rounded focus:outline-none text-xs text-[#ededed] ${
-                                erroresValidacionCotizacion.emailCliente ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#666]'
-                              }`}
-                            />
-                            {erroresValidacionCotizacion.emailCliente && (
-                              <p className="text-red-500 text-xs mt-1">{erroresValidacionCotizacion.emailCliente}</p>
-                            )}
-                          </div>
-
-                          {/* WhatsApp Cliente */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">WhatsApp</label>
-                            <input
-                              type="tel"
-                              value={cotizacionConfig?.whatsappCliente || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, whatsappCliente: e.target.value } : null)}
-                              className={`w-full px-3 py-2 bg-black border rounded focus:outline-none text-xs text-[#ededed] ${
-                                erroresValidacionCotizacion.whatsappCliente ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#666]'
-                              }`}
-                              placeholder="+535 856 9291"
-                            />
-                            {erroresValidacionCotizacion.whatsappCliente && (
-                              <p className="text-red-500 text-xs mt-1">{erroresValidacionCotizacion.whatsappCliente}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Ubicación Cliente (full-width) */}
-                        <div>
-                          <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Ubicación</label>
-                          <textarea
-                            value={cotizacionConfig?.ubicacion || ''}
-                            onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, ubicacion: e.target.value } : null)}
-                            rows={3}
-                            className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed] resize-none"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Contenedor Proveedor */}
-                      <div className="space-y-2 bg-[#111] p-3 rounded-lg border border-[#333]">
-                        <h4 className="text-xs font-bold text-[#ededed] flex items-center gap-2">
-                          <FaEnvelope /> Información del Proveedor
-                        </h4>
-                        <div className="border-t border-[#333]"></div>
-
-                        {/* Fila 1: Profesional, Empresa */}
-                        <div className="grid md:grid-cols-2 gap-2">
-                          {/* Profesional */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">
-                              Profesional {!cotizacionConfig?.profesional && <span className="text-red-500">*</span>}
-                            </label>
-                            <input
-                              type="text"
-                              value={cotizacionConfig?.profesional || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, profesional: e.target.value } : null)}
-                              className={`w-full px-3 py-2 bg-black border rounded focus:outline-none text-xs text-[#ededed] ${
-                                erroresValidacionCotizacion.profesional ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#666]'
-                              }`}
-                            />
-                            {erroresValidacionCotizacion.profesional && (
-                              <p className="text-red-500 text-xs mt-1">{erroresValidacionCotizacion.profesional}</p>
-                            )}
-                          </div>
-
-                          {/* Empresa Proveedor */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Empresa</label>
-                            <input
-                              type="text"
-                              value={cotizacionConfig?.empresaProveedor || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, empresaProveedor: e.target.value } : null)}
-                              className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Fila 2: Email, WhatsApp */}
-                        <div className="grid md:grid-cols-2 gap-2">
-                          {/* Email */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Email</label>
-                            <input
-                              type="email"
-                              value={cotizacionConfig?.email || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, email: e.target.value } : null)}
-                              className={`w-full px-3 py-2 bg-black border rounded focus:outline-none text-xs text-[#ededed] ${
-                                erroresValidacionCotizacion.email ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#666]'
-                              }`}
-                            />
-                            {erroresValidacionCotizacion.email && (
-                              <p className="text-red-500 text-xs mt-1">{erroresValidacionCotizacion.email}</p>
-                            )}
-                          </div>
-
-                          {/* WhatsApp */}
-                          <div>
-                            <label className="block text-[#ededed] font-semibold text-[10px] mb-1">WhatsApp</label>
-                            <input
-                              type="tel"
-                              value={cotizacionConfig?.whatsapp || ''}
-                              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, whatsapp: e.target.value } : null)}
-                              className={`w-full px-3 py-2 bg-black border rounded focus:outline-none text-xs text-[#ededed] ${
-                                erroresValidacionCotizacion.whatsapp ? 'border-red-500 focus:border-red-500' : 'border-[#333] focus:border-[#666]'
-                              }`}
-                              placeholder="+535 856 9291"
-                            />
-                            {erroresValidacionCotizacion.whatsapp && (
-                              <p className="text-red-500 text-xs mt-1">{erroresValidacionCotizacion.whatsapp}</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Ubicación Proveedor (full-width) */}
-                        <div>
-                          <label className="block text-[#ededed] font-semibold text-[10px] mb-1">Ubicación</label>
-                          <textarea
-                            value={cotizacionConfig?.ubicacionProveedor || ''}
-                            onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, ubicacionProveedor: e.target.value } : null)}
-                            rows={3}
-                            className="w-full px-3 py-2 bg-black border border-[#333] rounded focus:border-[#666] focus:outline-none text-xs text-[#ededed] resize-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Botones Guardar y Sincronizar */}
-                  <div className="flex gap-4 pt-4">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={guardarCotizacion}
-                      className="flex items-center gap-2 px-6 py-2 bg-[#ededed] text-black font-semibold rounded-lg hover:bg-[#ccc] transition-all"
-                    >
-                      <FaSave /> Guardar Cotización
-                    </motion.button>
-                  </div>
-                </div>
-              )}
-              </div>
+              <CotizacionTab
+                cotizacionConfig={cotizacionConfig}
+                setCotizacionConfig={setCotizacionConfig}
+                cargandoCotizacion={cargandoCotizacion}
+                erroresValidacionCotizacion={erroresValidacionCotizacion}
+                setErroresValidacionCotizacion={setErroresValidacionCotizacion}
+                validarEmail={validarEmail}
+                validarWhatsApp={validarWhatsApp}
+                validarFechas={validarFechas}
+                formatearFechaLarga={formatearFechaLarga}
+                calcularFechaVencimiento={calcularFechaVencimiento}
+              />
             )}
 
             {/* TAB 2: OFERTA */}
             {activePageTab === 'oferta' && (
-              <div className="p-6 space-y-4">
-                {/* Sección: Servicios Base */}
-            <CollapsibleSection
-              id="servicios-base"
-              title="Servicios Base Asociados al Paquete"
-              icon=""
-              defaultOpen={true}
-            >
-              {/* Lista de Servicios Base Existentes */}
-              {serviciosBase.length > 0 && (
-                <div className="mb-6 space-y-2">
-                  <div className="text-xs font-semibold text-[#888888] mb-2 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-2 px-2 text-left">
-                    <span>Nombre</span>
-                    <span>Precio</span>
-                    <span>Meses Gratis</span>
-                    <span>Meses Pago</span>
-                    <span>Subtotal</span>
-                    <span className="text-center">Acciones</span>
-                  </div>
-                  {serviciosBase.map((servicio) => (
-                    <div
-                      key={servicio.id}
-                      className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-2 items-center bg-[#111] p-2 rounded border border-[#333]"
-                    >
-                      {editandoServicioBaseId === servicio.id ? (
-                        <>
-                          <input
-                            type="text"
-                            value={servicioBaseEditando?.nombre || ''}
-                            onChange={(e) =>
-                              setServicioBaseEditando({
-                                ...servicioBaseEditando!,
-                                nombre: e.target.value,
-                              })
-                            }
-                            className="px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                          />
-                          <input
-                            type="number"
-                            value={servicioBaseEditando?.precio || 0}
-                            onChange={(e) =>
-                              setServicioBaseEditando({
-                                ...servicioBaseEditando!,
-                                precio: parseFloat(e.target.value) || 0,
-                              })
-                            }
-                            className="px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                            min="0"
-                          />
-                          <input
-                            type="number"
-                            value={servicioBaseEditando?.mesesGratis || 0}
-                            onChange={(e) =>
-                              setServicioBaseEditando({
-                                ...servicioBaseEditando!,
-                                mesesGratis: parseInt(e.target.value) || 0,
-                              })
-                            }
-                            className="px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                            min="0"
-                            max="12"
-                          />
-                          <input
-                            type="number"
-                            value={servicioBaseEditando?.mesesPago || 0}
-                            onChange={(e) =>
-                              setServicioBaseEditando({
-                                ...servicioBaseEditando!,
-                                mesesPago: parseInt(e.target.value) || 0,
-                              })
-                            }
-                            className="px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                            min="1"
-                            max="12"
-                          />
-                          <span className="text-sm font-bold text-[#ededed]">
-                            ${((servicioBaseEditando?.precio || 0) * (servicioBaseEditando?.mesesPago || 0)).toFixed(2)}
-                          </span>
-                          <div className="flex gap-1 justify-center">
-                            <button
-                              aria-label="Guardar servicio base"
-                              onClick={guardarEditarServicioBase}
-                              className="p-1.5 bg-white text-black rounded hover:bg-white/90 transition-all"
-                            >
-                              <FaCheck size={12} />
-                            </button>
-                            <button
-                              aria-label="Cancelar edición servicio base"
-                              onClick={cancelarEditarServicioBase}
-                              className="p-1.5 bg-[#222] text-[#ededed] rounded hover:bg-[#333] transition-all"
-                            >
-                              <FaTimes size={12} />
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-[#888888] text-xs">{servicio.nombre}</span>
-                          <span className="text-[#888888] text-xs">${servicio.precio.toFixed(2)}</span>
-                          <span className="text-[#888888] text-xs">{servicio.mesesGratis}m</span>
-                          <span className="text-[#888888] text-xs">{servicio.mesesPago}m</span>
-                          <span className="text-[#888888] text-xs">
-                            ${(servicio.precio * servicio.mesesPago).toFixed(2)}
-                          </span>
-                          <div className="flex gap-1 justify-center">
-                            <button
-                              aria-label={`Editar servicio base ${servicio.nombre}`}
-                              onClick={() => abrirEditarServicioBase(servicio)}
-                              className="p-1.5 bg-white text-black rounded hover:bg-white/90 transition-all"
-                            >
-                              <FaEdit size={12} />
-                            </button>
-                            <button
-                              aria-label={`Eliminar servicio base ${servicio.nombre}`}
-                              onClick={() => eliminarServicioBase(servicio.id)}
-                              className="p-1.5 bg-white text-black rounded hover:bg-white/90 transition-all"
-                            >
-                              <FaTrash size={12} />
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Formulario para Agregar Nuevo Servicio Base */}
-              <div className="space-y-2 p-3 bg-[#111] rounded border border-dashed border-[#333]">
-                <h3 className="text-xs font-bold text-[#ededed] mb-1">Agregar Nuevo Servicio Base</h3>
-                <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-2 items-end">
-                  <div>
-                    <label htmlFor="nuevoServicioBaseNombre" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                      Nombre del Servicio
-                    </label>
-                    <input
-                      id="nuevoServicioBaseNombre"
-                      type="text"
-                      placeholder="Ej: Hosting, SSL, etc."
-                      value={nuevoServicioBase.nombre}
-                      onChange={(e) =>
-                        setNuevoServicioBase({ ...nuevoServicioBase, nombre: e.target.value })
-                      }
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="nuevoServicioBasePrecio" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                      Precio
-                    </label>
-                    <input
-                      id="nuevoServicioBasePrecio"
-                      type="number"
-                      placeholder="0"
-                      value={nuevoServicioBase.precio}
-                      onChange={(e) =>
-                        setNuevoServicioBase({
-                          ...nuevoServicioBase,
-                          precio: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="nuevoServicioBaseMesesGratis" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                      Meses Gratis
-                    </label>
-                    <input
-                      id="nuevoServicioBaseMesesGratis"
-                      type="number"
-                      placeholder="0"
-                      value={nuevoServicioBase.mesesGratis}
-                      onChange={(e) => {
-                        const gratis = parseInt(e.target.value) || 0;
-                        const pagoCalculado = Math.max(1, 12 - gratis);
-                        setNuevoServicioBase({
-                          ...nuevoServicioBase,
-                          mesesGratis: Math.min(gratis, 12),
-                          mesesPago: pagoCalculado,
-                        })
-                      }}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                      min="0"
-                      max="12"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="nuevoServicioBaseMesesPago" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                      Meses Pago
-                    </label>
-                    <input
-                      id="nuevoServicioBaseMesesPago"
-                      type="number"
-                      placeholder="12"
-                      value={nuevoServicioBase.mesesPago}
-                      onChange={(e) => {
-                        const pago = parseInt(e.target.value) || 12;
-                        const pagoValidado = Math.max(1, Math.min(pago, 12));
-                        setNuevoServicioBase({
-                          ...nuevoServicioBase,
-                          mesesPago: pagoValidado,
-                        })
-                      }}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                      min="1"
-                      max="12"
-                    />
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={agregarServicioBase}
-                    disabled={!nuevoServicioBase.nombre || nuevoServicioBase.precio <= 0}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      nuevoServicioBase.nombre && nuevoServicioBase.precio > 0
-                        ? 'bg-white text-[#0a0a0f] hover:bg-white/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-                        : 'bg-white/10 text-white/70 cursor-not-allowed'
-                    }`}
-                  >
-                    <FaPlus /> Agregar
-                  </motion.button>
-                </div>
-              </div>
-            </CollapsibleSection>
-
-            {/* Sección: Servicios Opcionales */}
-            <CollapsibleSection
-              id="paquetes"
-              title="Descripción del paquetes"
-              icon=""
-              defaultOpen={true}
-            >
-              <div className="space-y-2 p-3 bg-[#111] rounded border border-dashed border-[#333]">
-                <h3 className="text-xs font-bold text-[#ededed] mb-1">Agregar Nuevo Paquete</h3>
-                <div className="grid md:grid-cols-4 gap-2">
-                  <div>
-                    <label htmlFor="paqueteNombre" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                      Nombre del Paquete *
-                    </label>
-                    <input
-                      id="paqueteNombre"
-                      type="text"
-                      placeholder="Ej: Constructor"
-                      value={paqueteActual.nombre}
-                      onChange={(e) =>
-                        setPaqueteActual({ ...paqueteActual, nombre: e.target.value })
-                      }
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="paqueteDesarrollo" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                      Desarrollo*
-                    </label>
-                    <input
-                      id="paqueteDesarrollo"
-                      type="number"
-                      placeholder="0"
-                      value={paqueteActual.desarrollo}
-                      onChange={(e) =>
-                        setPaqueteActual({
-                          ...paqueteActual,
-                          desarrollo: Number.parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="paqueteDescuento" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                      Descuento (%)
-                    </label>
-                    <input
-                      id="paqueteDescuento"
-                      type="number"
-                      placeholder="0"
-                      value={paqueteActual.descuento}
-                      onChange={(e) =>
-                        setPaqueteActual({
-                          ...paqueteActual,
-                          descuento: Number.parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="paqueteTipo" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                      Tipo de Paquete
-                    </label>
-                    <input
-                      id="paqueteTipo"
-                      type="text"
-                      placeholder="Ej: Básico"
-                      value={paqueteActual.tipo || ''}
-                      onChange={(e) =>
-                        setPaqueteActual({ ...paqueteActual, tipo: e.target.value })
-                      }
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="paqueteDescripcion" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                    Descripción del Paquete
-                  </label>
-                  <textarea
-                    id="paqueteDescripcion"
-                    placeholder="Ej: Paquete personalizado para empresas..."
-                    value={paqueteActual.descripcion || ''}
-                    onChange={(e) => {
-                      setPaqueteActual({ ...paqueteActual, descripcion: e.target.value });
-                      if (descripcionTextareaRef.current) {
-                        descripcionTextareaRef.current.style.height = 'auto';
-                        descripcionTextareaRef.current.style.height = descripcionTextareaRef.current.scrollHeight + 'px';
-                      }
-                    }}
-                    ref={descripcionTextareaRef}
-                    className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed] resize-none"
-                    rows={2}
-                  />
-                </div>
-              </div>
-            </CollapsibleSection>
-
-            {/* Sección 3: Servicios Opcionales */}
-            <CollapsibleSection
-              id="servicios-opcionales"
-              title="Servicios Opcionales del Paquete"
-              icon=""
-              defaultOpen={true}
-            >
-              {serviciosOpcionales.length > 0 && (
-                <div className="mb-6 space-y-2">
-                  <div className="text-xs font-semibold text-[#888888] mb-2 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-2 px-2 text-left">
-                    <span>Nombre</span>
-                    <span>Precio</span>
-                    <span>Meses Gratis</span>
-                    <span>Meses Pago</span>
-                    <span>Subtotal</span>
-                    <span className="text-center">Acciones</span>
-                  </div>
-                  {serviciosOpcionales.map(serv => (
-                    <div
-                      key={serv.id}
-                      className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-2 items-center bg-[#111] p-2 rounded border border-[#333]"
-                    >
-                      {editandoServicioId === serv.id ? (
-                        <>
-                          <input
-                            type="text"
-                            value={servicioEditando?.nombre || ''}
-                            aria-label="Nombre servicio opcional"
-                            onChange={(e) => setServicioEditando({ ...servicioEditando!, nombre: e.target.value })}
-                            className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                          />
-                          <input
-                            type="number"
-                            value={servicioEditando?.precio || 0}
-                            aria-label="Precio mensual servicio opcional"
-                            min={0}
-                            onChange={(e) => setServicioEditando({ ...servicioEditando!, precio: Number.parseFloat(e.target.value) || 0 })}
-                            className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                          />
-                          <input
-                            type="number"
-                            value={servicioEditando?.mesesGratis || 0}
-                            aria-label="Meses gratis servicio opcional"
-                            min={0}
-                            max={12}
-                            onChange={(e) => {
-                              const val = Number.parseInt(e.target.value) || 0
-                              const nm = normalizarMeses(val, servicioEditando?.mesesPago || 12)
-                              setServicioEditando({ ...servicioEditando!, ...nm })
-                            }}
-                            className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                          />
-                          <input
-                            type="number"
-                            value={servicioEditando?.mesesPago || 0}
-                            aria-label="Meses pago servicio opcional"
-                            min={0}
-                            max={12}
-                            onChange={(e) => {
-                              const val = Number.parseInt(e.target.value) || 0
-                              const nm = normalizarMeses(servicioEditando?.mesesGratis || 0, val)
-                              setServicioEditando({ ...servicioEditando!, ...nm })
-                            }}
-                            className="w-full px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                          />
-                          <span className="text-[#888888] text-xs">${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}</span>
-                          <div className="flex gap-2 justify-center">
-                            <button
-                              aria-label="Guardar servicio opcional"
-                              onClick={guardarEditarServicioOpcional}
-                              className="w-full px-2 py-1.5 bg-white text-black rounded hover:bg-gray-200 transition-all focus:outline-none text-xs"
-                              disabled={!(servicioEditando?.nombre.trim() && (servicioEditando?.precio || 0) > 0)}
-                            >
-                              <FaCheck />
-                            </button>
-                            <button
-                              aria-label="Cancelar edición servicio opcional"
-                              onClick={cancelarEditarServicioOpcional}
-                              className="w-full px-2 py-1.5 bg-[#222] text-[#ededed] rounded hover:bg-[#333] transition-all focus:outline-none text-xs"
-                            >
-                              <FaTimes />
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-[#888888] text-xs">{serv.nombre}</span>
-                          <span className="text-[#888888] text-xs">${serv.precio.toFixed(2)}</span>
-                          <span className="text-[#888888] text-xs">{serv.mesesGratis}m</span>
-                          <span className="text-[#888888] text-xs">{serv.mesesPago}m</span>
-                          <span className="text-[#888888] text-xs">${(serv.precio * serv.mesesPago).toFixed(2)}</span>
-                          <div className="flex gap-2 justify-center">
-                            <button
-                              aria-label="Editar servicio opcional"
-                              onClick={() => abrirEditarServicioOpcional(serv)}
-                              className="px-2 py-1 bg-white text-black rounded hover:bg-gray-200 transition-all focus:outline-none text-xs"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              aria-label="Eliminar servicio opcional"
-                              onClick={() => eliminarServicioOpcional(serv.id)}
-                              className="px-2 py-1 bg-white text-black rounded hover:bg-gray-200 transition-all focus:outline-none text-xs"
-                            >
-                              <FaTrash />
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="space-y-2 p-3 bg-[#111] rounded border border-dashed border-[#333]">
-                <h3 className="text-xs font-bold text-[#ededed] mb-1">Agregar Nuevo Servicio Opcional</h3>
-                <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-2 items-end">
-                  <div>
-                    <label htmlFor="servOpcNombre" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">Nombre</label>
-                    <input
-                      id="servOpcNombre"
-                      type="text"
-                      placeholder="Ej: SEO Premium"
-                      value={nuevoServicio.nombre}
-                      onChange={(e) => setNuevoServicio({ ...nuevoServicio, nombre: e.target.value })}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="servOpcPrecio" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">Precio</label>
-                    <input
-                      id="servOpcPrecio"
-                      type="number"
-                      min={0}
-                      value={nuevoServicio.precio}
-                      placeholder="0"
-                      onChange={(e) => setNuevoServicio({ ...nuevoServicio, precio: Number.parseFloat(e.target.value) || 0 })}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="servOpcGratis" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">Gratis</label>
-                    <input
-                      id="servOpcGratis"
-                      type="number"
-                      min={0}
-                      max={12}
-                      value={nuevoServicio.mesesGratis}
-                      onChange={(e) => {
-                        const val = Number.parseInt(e.target.value) || 0
-                        const nm = normalizarMeses(val, nuevoServicio.mesesPago)
-                        setNuevoServicio({ ...nuevoServicio, ...nm })
-                      }}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="servOpcPago" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">Pago</label>
-                    <input
-                      id="servOpcPago"
-                      type="number"
-                      min={0}
-                      max={12}
-                      value={nuevoServicio.mesesPago}
-                      onChange={(e) => {
-                        const val = Number.parseInt(e.target.value) || 0
-                        const nm = normalizarMeses(nuevoServicio.mesesGratis, val)
-                        setNuevoServicio({ ...nuevoServicio, ...nm })
-                      }}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
-                    />
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={agregarServicioOpcional}
-                    disabled={!(nuevoServicio.nombre.trim() && nuevoServicio.precio > 0)}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      nuevoServicio.nombre.trim() && nuevoServicio.precio > 0
-                        ? 'bg-white text-[#0a0a0f] hover:bg-white/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-                        : 'bg-white/10 text-white/70 cursor-not-allowed'
-                    }`}
-                  >
-                    <FaPlus /> Agregar
-                  </motion.button>
-                </div>
-              </div>
-
-              <div className="mt-4 p-3 bg-[#111] rounded-lg border border-[#333] text-xs flex flex-col md:flex-row gap-2 md:items-center md:justify-between">
-                <span className="text-[#888888]">Servicios opcionales: {serviciosOpcionales.length}</span>
-                <span className="text-[#888888]">Total Año 1: ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * s.mesesPago, 0).toFixed(2)}</span>
-                <span className="text-[#888888]">Total Anual (Año 2+): ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * 12, 0).toFixed(2)}</span>
-              </div>
-              {!serviciosOpcionalesValidos && serviciosOpcionales.length > 0 && (
-                <p className="mt-1 text-[10px] text-[#888888]">
-                  Revisa meses (Meses Gratis + Meses Pago deben sumar 12) y que todos tengan nombre y precio.
-                </p>
-              )}
-
-              {/* Botón Crear Paquete - Ahora Flotante */}
-              {!todoEsValido && (
-                <div className="mt-4 pt-3 border-t border-[#333]">
-                  <p className="text-xs text-[#888888] text-center bg-[#111] p-3 rounded-lg border border-[#333]">
-                    ⚠️ Completa: Nombre del paquete, Desarrollo, Precios servicios y Meses válidos
-                  </p>
-                </div>
-              )}
-            </CollapsibleSection>
-              </div>
+              <OfertaTab
+                serviciosBase={serviciosBase}
+                setServiciosBase={setServiciosBase}
+                nuevoServicioBase={nuevoServicioBase}
+                setNuevoServicioBase={setNuevoServicioBase}
+                editandoServicioBaseId={editandoServicioBaseId}
+                setEditandoServicioBaseId={setEditandoServicioBaseId}
+                servicioBaseEditando={servicioBaseEditando}
+                setServicioBaseEditando={setServicioBaseEditando}
+                paqueteActual={paqueteActual}
+                setPaqueteActual={setPaqueteActual}
+                serviciosOpcionales={serviciosOpcionales}
+                setServiciosOpcionales={setServiciosOpcionales}
+                nuevoServicio={nuevoServicio}
+                setNuevoServicio={setNuevoServicio}
+                editandoServicioId={editandoServicioId}
+                setEditandoServicioId={setEditandoServicioId}
+                servicioEditando={servicioEditando}
+                setServicioEditando={setServicioEditando}
+                descripcionTextareaRef={descripcionTextareaRef}
+                agregarServicioBase={agregarServicioBase}
+                abrirEditarServicioBase={abrirEditarServicioBase}
+                guardarEditarServicioBase={guardarEditarServicioBase}
+                cancelarEditarServicioBase={cancelarEditarServicioBase}
+                eliminarServicioBase={eliminarServicioBase}
+                agregarServicioOpcional={agregarServicioOpcional}
+                abrirEditarServicioOpcional={abrirEditarServicioOpcional}
+                guardarEditarServicioOpcional={guardarEditarServicioOpcional}
+                cancelarEditarServicioOpcional={cancelarEditarServicioOpcional}
+                eliminarServicioOpcional={eliminarServicioOpcional}
+                normalizarMeses={normalizarMeses}
+                serviciosOpcionalesValidos={serviciosOpcionalesValidos}
+                todoEsValido={!!todoEsValido}
+              />
             )}
 
             {/* TAB 3: PAQUETES */}
             {activePageTab === 'paquetes' && (
-              <div className="p-6 space-y-4">
-            {/* Sección 4: Paquetes Creados */}
-            <CollapsibleSection
-              id="paquetes-creados"
-              title={`Paquetes Creados (${snapshots.filter(s => s.activo).length})`}
-              icon=""
-              defaultOpen={true}
-            >
-            {cargandoSnapshots ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="bg-[#111] rounded-xl border border-[#333] p-8 text-center"
-              >
-                <div className="flex items-center justify-center gap-3">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  >
-                    <FaCalculator className="text-[#ededed] text-3xl" />
-                  </motion.div>
-                  <p className="text-lg text-[#ededed] font-semibold">Cargando paquetes...</p>
-                </div>
-              </motion.div>
-            ) : errorSnapshots ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="bg-[#111] rounded-xl border border-red-500/30 p-8"
-              >
-                <p className="text-[#ededed] font-semibold">❌ {errorSnapshots}</p>
-              </motion.div>
-            ) : snapshots.length > 0 ? (
-                <div className="space-y-4 md:grid md:grid-cols-2 gap-2 md:space-y-0">
-                  {snapshots.filter(s => s.activo).map((snapshot, idx) => (
-                    <motion.div
-                      key={snapshot.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="bg-[#111] rounded-xl border border-[#333] overflow-hidden"
-                    >
-                      {/* Header del Snapshot */}
-                      <div className="bg-[#111] p-4 border-b border-[#333] relative">
-                        {/* Contenido Principal */}
-                        <div className="pr-4">
-                          <h3 className="text-xl font-bold text-[#ededed]">
-                            {snapshot.nombre}
-                          </h3>
-                          {snapshot.paquete.tipo && (
-                            <p className="text-xs font-semibold tracking-wide text-[#888888] uppercase mt-1">
-                              {snapshot.paquete.tipo}
-                            </p>
-                          )}
-                          {snapshot.paquete.descripcion && (
-                            <p className="text-sm text-[#888888] italic mt-1 line-clamp-3 min-h-[4rem]">
-                              {snapshot.paquete.descripcion}
-                            </p>
-                          )}
-                          <p className="text-sm text-[#888888] mt-2">
-                            {new Date(snapshot.createdAt).toLocaleDateString('es-ES')}
-                          </p>
-                        </div>
-
-                        {/* Botones FAB Flotantes Horizontales */}
-                        <div className="absolute top-2 right-2 flex flex-row gap-1.5 bg-[#111] p-1.5 rounded-lg border border-[#333]">
-                          {/* FAB Toggle Activo */}
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={async () => {
-                              const marcado = !snapshot.activo
-                              const provisional = { ...snapshot, activo: marcado }
-                              setSnapshots(prev => prev.map(s => s.id === snapshot.id ? provisional : s))
-                              try {
-                                const actualizado = { ...provisional }
-                                actualizado.costos.inicial = calcularCostoInicialSnapshot(actualizado)
-                                actualizado.costos.año1 = calcularCostoAño1Snapshot(actualizado)
-                                actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
-                                const guardado = await actualizarSnapshot(actualizado.id, actualizado)
-                                setSnapshots(prev => prev.map(s => s.id === snapshot.id ? guardado : s))
-                                console.log(`✅ Estado Activo actualizado para ${snapshot.nombre}: ${marcado}`)
-                                await refreshSnapshots()
-                              } catch (err) {
-                                console.error('Error al autoguardar estado activo:', err)
-                                setSnapshots(prev => prev.map(s => s.id === snapshot.id ? { ...s, activo: !marcado } : s))
-                                alert('❌ No se pudo actualizar el estado Activo. Intenta nuevamente.')
-                              }
-                            }}
-                            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                              snapshot.activo
-                                ? 'bg-[#ededed] text-black hover:bg-[#fff]'
-                                : 'bg-[#222] text-[#888888] hover:bg-[#333]'
-                            }`}
-                            title={snapshot.activo ? 'Desactivar' : 'Activar'}
-                          >
-                            {snapshot.activo ? (
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            )}
-                          </motion.button>
-
-                          {/* FAB Editar */}
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => abrirModalEditar(snapshot)}
-                            className="w-7 h-7 rounded-full bg-[#ededed] text-black hover:bg-[#fff] transition-all flex items-center justify-center"
-                            title="Editar paquete"
-                          >
-                            <FaEdit size={12} />
-                          </motion.button>
-
-                          {/* FAB Eliminar */}
-                          <motion.button
-                            aria-label={`Eliminar paquete ${snapshot.nombre}`}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleEliminarSnapshot(snapshot.id)}
-                            className="w-7 h-7 rounded-full bg-[#222] text-[#888888] hover:bg-[#333] transition-all flex items-center justify-center"
-                            title="Eliminar paquete"
-                          >
-                            <FaTrash size={11} />
-                          </motion.button>
-                        </div>
-                      </div>
-
-                      {/* Detalle del Snapshot - Tabla */}
-                      <div className="p-4">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr className="border-b border-[#333] bg-[#111] text-pretty">
-                                <th className="text-left p-1.5 font-bold text-[#ededed] text-xs">Concepto</th>
-                                <th className="text-center p-1.5 font-bold text-[#ededed] text-xs">Meses Gratis</th>
-                                <th className="text-center p-1.5 font-bold text-[#ededed] text-xs">Meses Pago</th>
-                                <th className="text-right p-1.5 font-bold text-[#ededed] bg-[#222] text-xs">Costo Mensual</th>
-                                <th className="text-right p-1.5 font-bold text-[#ededed] bg-[#222] text-xs">Año 1</th>
-                                <th className="text-right p-1.5 font-bold text-[#ededed] bg-[#222] text-xs">Año 2</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {/* Servicios Base */}
-                              <tr className="border-b border-[#333] bg-[#111]">
-                                {/* Título de sección */}
-                                <td className="p-1.5 font-bold text-[#ededed] text-xs" colSpan={3}>
-                                  Servicios Base
-                                </td>
-                                {/* Subtotal Mensual */}
-                                <td className="p-1.5 text-right font-bold text-[#ededed] bg-[#222] text-xs">
-                                  ${((snapshot.serviciosBase ?? []).reduce((sum, s) => sum + (s.precio ?? 0), 0)).toFixed(2)}
-                                </td>
-                                {/* Subtotal Año 1 */}
-                                <td className="p-1.5 text-right font-bold text-[#ededed] bg-[#222] text-xs">
-                                  ${((snapshot.serviciosBase ?? []).reduce((sum, s) => sum + (s.precio ?? 0) * (s.mesesPago ?? 0), 0)).toFixed(2)}
-                                </td>
-                                {/* Subtotal Año 2 */}
-                                <td className="p-1.5 text-right font-bold text-[#ededed] bg-[#222] text-xs">
-                                  ${((snapshot.serviciosBase ?? []).reduce((sum, s) => sum + (s.precio ?? 0) * 12, 0)).toFixed(2)}
-                                </td>
-                              </tr>
-                              {snapshot.serviciosBase?.map((servicio) => (
-                                <tr key={servicio.id} className="border-b border-[#333] hover:bg-[#222] transition-colors">
-                                  <td className="p-1.5 text-[#ededed] text-xs">{servicio.nombre}</td>
-                                  <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">
-                                    {servicio.mesesGratis}
-                                  </td>
-                                  <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">
-                                    {servicio.mesesPago}
-                                  </td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                    ${servicio.precio.toFixed(2)}
-                                  </td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                    ${(servicio.precio * servicio.mesesPago).toFixed(2)}
-                                  </td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                    ${(servicio.precio * 12).toFixed(2)}
-                                  </td>
-                                </tr>
-                              )) || (
-                                <tr className="border-b border-[#333]">
-                                  <td colSpan={6} className="p-1.5 text-center text-[#888888] italic text-xs">
-                                    No hay servicios base definidos
-                                  </td>
-                                </tr>
-                              )}
-
-                              {/* Paquete */}
-                              <tr className="border-b border-[#333]">
-                                <td colSpan={6} className="p-1.5 font-bold bg-[#111] text-[#ededed] text-xs">
-                                  Costo del desarrollo
-                                </td>
-                              </tr>
-                              <tr className="border-b border-[#333] hover:bg-[#222] transition-colors">
-                                <td className="p-1.5 text-[#ededed] text-xs">Desarrollo</td>
-                                <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">-</td>
-                                <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">-</td>
-                                <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                  ${snapshot.paquete.desarrollo.toFixed(2)}
-                                </td>
-                                <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                  ${snapshot.paquete.desarrollo.toFixed(2)}
-                                </td>
-                                <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                  -
-                                </td>
-                              </tr>
-                              {snapshot.paquete.descuento > 0 && (
-                                <tr className="border-b border-[#333] hover:bg-[#222] transition-colors">
-                                  <td className="p-1.5 text-[#ededed] text-xs">Descuento</td>
-                                  <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">-</td>
-                                  <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">-</td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                    {snapshot.paquete.descuento}%
-                                  </td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                    {snapshot.paquete.descuento}%
-                                  </td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                    -
-                                  </td>
-                                </tr>
-                              )}
-
-                              {/* Otros Servicios */}
-                              {snapshot.otrosServicios.length > 0 && (
-                                <>
-                                  <tr className="border-b border-[#333]">
-                                    <td colSpan={6} className="p-1.5 font-bold bg-[#111] text-[#ededed] text-xs">
-                                      Otros Servicios
-                                    </td>
-                                  </tr>
-                                  {snapshot.otrosServicios.map((servicio, sIdx) => (
-                                    <motion.tr
-                                      key={sIdx}
-                                      initial={{ opacity: 0, x: -20 }}
-                                      animate={{ opacity: 1, x: 0 }}
-                                      transition={{ delay: sIdx * 0.05 }}
-                                      className="border-b border-[#333] hover:bg-[#222] transition-colors"
-                                    >
-                                      <td className="p-1.5 text-[#ededed] text-xs">
-                                        {servicio.nombre}
-                                      </td>
-                                      <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">
-                                        {servicio.mesesGratis}
-                                      </td>
-                                      <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">
-                                        {servicio.mesesPago}
-                                      </td>
-                                      <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                        ${servicio.precio.toFixed(2)}
-                                      </td>
-                                      <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                        ${(servicio.precio * servicio.mesesPago).toFixed(2)}
-                                      </td>
-                                      <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
-                                        ${(servicio.precio * 12).toFixed(2)}
-                                      </td>
-                                    </motion.tr>
-                                  ))}
-                                </>
-                              )}
-
-                              {/* Costos Finales */}
-                              <tr className="border-b border-[#333]">
-                                <td colSpan={6} className="p-1.5 font-bold bg-[#111] text-[#ededed] text-xs">
-                                  Costos totales
-                                </td>
-                              </tr>
-                              <tr className="border-b border-[#333] bg-[#111]">
-                                <td className="p-1.5 font-semibold text-[#ededed] text-xs">Pago Inicial</td>
-                                <td colSpan={5} className="p-1.5 text-right font-bold text-[#ededed] text-sm">
-                                  ${snapshot.costos.inicial.toFixed(2)}
-                                </td>
-                              </tr>
-                              <tr className="border-b border-[#333] bg-[#111]">
-                                <td className="p-1.5 font-semibold text-[#ededed] text-xs">Año 1</td>
-                                <td colSpan={5} className="p-1.5 text-right font-bold text-[#ededed] text-sm">
-                                  ${snapshot.costos.año1.toFixed(2)}
-                                </td>
-                              </tr>
-                              <tr className="bg-[#111]">
-                                <td className="p-1.5 font-semibold text-[#ededed] text-xs">Año 2</td>
-                                <td colSpan={5} className="p-1.5 text-right font-bold text-[#ededed] text-sm">
-                                  ${snapshot.costos.año2.toFixed(2)}
-                                </td>
-                              </tr>
-                              <tr className="bg-[#222]">
-                                <td colSpan={6} className="p-1.5 text-xs text-[#888888] italic text-center">
-                                  Año 2 no incluye desarrollo (pago único realizado en Año 1
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-            ) : (
-              <div className="bg-[#111] rounded-xl border border-[#333] p-8 text-center">
-                <p className="text-lg text-[#888888] font-semibold">📭 No hay paquetes creados aún</p>
-                <p className="text-sm text-[#888888] mt-2">Crea tu primer paquete completando los datos arriba</p>
-              </div>
-            )}
-            </CollapsibleSection>
-
-            {/* Sección 5: Paquetes Inactivos */}
-            {snapshots.filter(s => !s.activo).length > 0 && (
-            <CollapsibleSection
-              id="paquetes-inactivos"
-              title={`Paquetes Inactivos (${snapshots.filter(s => !s.activo).length})`}
-              icon=""
-              defaultOpen={false}
-            >
-                <div className="space-y-4">
-                  {snapshots.filter(s => !s.activo).map((snapshot, idx) => (
-                    <motion.div
-                      key={snapshot.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      className="bg-[#111] rounded-lg border border-dashed border-[#333] p-4 opacity-50 hover:opacity-100 transition-opacity"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-[#ededed] text-lg">{snapshot.nombre}</h3>
-                          {snapshot.paquete.tipo && (
-                            <p className="text-xs font-semibold tracking-wide text-[#666] uppercase mt-1">
-                              {snapshot.paquete.tipo}
-                            </p>
-                          )}
-                          {snapshot.paquete.descripcion && (
-                            <p className="text-sm text-[#666] italic mt-1">
-                              {snapshot.paquete.descripcion}
-                            </p>
-                          )}
-                          <p className="text-sm text-[#666] mt-2">
-                            {new Date(snapshot.createdAt).toLocaleDateString('es-ES')}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-2 relative">
-                            <input
-                              id={`snapshot-inactivo-${snapshot.id}`}
-                              type="checkbox"
-                              checked={snapshot.activo}
-                              onChange={async (e) => {
-                                const marcado = e.target.checked
-                                const provisional = { ...snapshot, activo: marcado }
-                                setSnapshots(prev => prev.map(s => s.id === snapshot.id ? provisional : s))
-                                try {
-                                  const actualizado = { ...provisional }
-                                  actualizado.costos.inicial = calcularCostoInicialSnapshot(actualizado)
-                                  actualizado.costos.año1 = calcularCostoAño1Snapshot(actualizado)
-                                  actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
-                                  const guardado = await actualizarSnapshot(actualizado.id, actualizado)
-                                  setSnapshots(prev => prev.map(s => s.id === snapshot.id ? guardado : s))
-                                  console.log(`Estado Activo actualizado para ${snapshot.nombre}: ${marcado}`)
-                                  // Disparar refresh global inmediatamente
-                                  await refreshSnapshots()
-                                } catch (err) {
-                                  console.error('Error al actualizar estado activo:', err)
-                                  setSnapshots(prev => prev.map(s => s.id === snapshot.id ? { ...s, activo: !marcado } : s))
-                                  alert('❌ No se pudo actualizar el estado. Intenta nuevamente.')
-                                }
-                              }}
-                              className="w-5 h-5 cursor-pointer"
-                            />
-                            <label htmlFor={`snapshot-inactivo-${snapshot.id}`} className="font-semibold text-[#888888] text-sm">Activar</label>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleEliminarSnapshot(snapshot.id)}
-                            className="w-9 h-9 bg-[#222] text-[#888888] hover:bg-[#333] transition-colors flex items-center justify-center rounded-lg"
-                          >
-                            <FaTrash size={14} />
-                          </motion.button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-            </CollapsibleSection>
-            )}
-
-              </div>
+              <PaquetesTab
+                snapshots={snapshots}
+                setSnapshots={setSnapshots}
+                cargandoSnapshots={cargandoSnapshots}
+                errorSnapshots={errorSnapshots}
+                abrirModalEditar={abrirModalEditar}
+                handleEliminarSnapshot={handleEliminarSnapshot}
+                calcularCostoInicialSnapshot={calcularCostoInicialSnapshot}
+                calcularCostoAño1Snapshot={calcularCostoAño1Snapshot}
+                calcularCostoAño2Snapshot={calcularCostoAño2Snapshot}
+                actualizarSnapshot={actualizarSnapshot}
+                refreshSnapshots={refreshSnapshots}
+              />
             )}
 
             {/* TAB 4: ESTILOS Y DISEÑO */}
             {activePageTab === 'estilos' && (
-              <div className="p-6 space-y-4">
-                <div className="bg-[#111] p-4 rounded-lg border border-[#333] space-y-4">
-                  <h3 className="text-sm font-bold text-[#ededed] mb-3 flex items-center gap-2">
-                    <FaPalette size={16} /> Configuración de Estilos
-                  </h3>
-                  
-                  <div className="text-center text-[#888888] py-8">
-                    <p className="mb-2">✨ Configuración visual para personalizar tu cotización</p>
-                    <p className="text-xs">Los estilos se aplicarán automáticamente a tu propuesta</p>
-                  </div>
-                </div>
-              </div>
+              <EstilosYDisenoTab />
             )}
 
-            {/* TAB 5: HISTORIAL */}
-            {activePageTab === 'historial' && (
-              <div className="p-6 space-y-4">
-                <Historial 
-                  quotations={quotations} 
-                  snapshots={snapshots}
-                  onEdit={(quotation) => {
-                    // Cargar cotización en cotizacionActual
-                    setCotizacionActual({
-                      id: quotation.id,
-                      numero: quotation.numero,
-                      versionNumber: quotation.versionNumber,
-                      fechaEmision: quotation.fechaEmision,
-                      tiempoValidez: quotation.tiempoValidez,
-                      empresa: quotation.empresa,
-                      sector: quotation.sector,
-                      ubicacion: quotation.ubicacion,
-                      emailCliente: quotation.emailCliente,
-                      whatsappCliente: quotation.whatsappCliente,
-                      profesional: quotation.profesional,
-                      empresaProveedor: quotation.empresaProveedor,
-                      emailProveedor: quotation.email,
-                      whatsappProveedor: quotation.whatsapp,
-                      ubicacionProveedor: quotation.ubicacionProveedor,
-                      heroTituloMain: quotation.heroTituloMain,
-                      heroTituloSub: quotation.heroTituloSub,
-                    })
-                    
-                    // Cargar el primer snapshot asociado
-                    const quotationSnapshot = snapshots.find(s => s.quotationConfigId === quotation.id)
-                    if (quotationSnapshot) {
-                      setSnapshotEditando(quotationSnapshot)
-                    }
-                    
-                    // Abrir modal
-                    setShowModalEditar(true)
-                    console.log('Cotización cargada en modal:', quotation.numero)
-                  }}
-                  onDelete={async (quotationId) => {
-                    try {
-                      const response = await fetch(`/api/quotations/${quotationId}`, {
-                        method: 'DELETE'
-                      })
-                      if (response.ok) {
-                        // Recargar quotations
-                        const updatedResponse = await fetch('/api/quotations')
-                        const data = await updatedResponse.json()
-                        if (data.success) {
-                          setQuotations(data.data || [])
-                          toast.success('✓ Cotización eliminada correctamente')
-                        }
-                      } else {
-                        toast.error('❌ Error al eliminar la cotización')
-                      }
-                    } catch (error) {
-                      console.error('Error eliminando cotización:', error)
-                      toast.error('❌ Error al eliminar la cotización')
-                    }
-                  }}
-                  onToggleActive={async (quotationId, newStatus) => {
-                    try {
-                      const response = await fetch(`/api/quotations/${quotationId}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          activo: newStatus.activo,
-                          isGlobal: newStatus.isGlobal
-                        })
-                      })
-                      if (response.ok) {
-                        // Recargar quotations
-                        const updatedResponse = await fetch('/api/quotations')
-                        const data = await updatedResponse.json()
-                        if (data.success) {
-                          setQuotations(data.data || [])
-                          const estado = newStatus.isGlobal ? 'activada' : 'desactivada'
-                          toast.success(`✓ Cotización ${estado} correctamente`)
-                        }
-                      } else {
-                        toast.error('❌ Error al actualizar el estado')
-                      }
-                    } catch (error) {
-                      console.error('Error actualizando cotización:', error)
-                      toast.error('❌ Error al actualizar el estado')
-                    }
-                  }}
-                  onViewProposal={(quotation) => {
-                    console.log('Ver propuesta:', quotation)
-                  }}
-                />
-              </div>
-            )}
 
-            {/* TAB 6: PREFERENCIAS */}
+
+            {/* TAB 5: PREFERENCIAS */}
             {activePageTab === 'preferencias' && (
-              <div className="p-6 space-y-4">
-                <div className="bg-[#111] p-6 rounded-lg border border-[#333] space-y-4">
-                  <h3 className="text-sm font-bold text-[#ededed] mb-4 flex items-center gap-2">
-                    <FaCog size={16} /> Preferencias de Usuario
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <label className="flex items-center gap-3 cursor-pointer p-3 hover:bg-[#222] rounded-lg transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={userPreferences?.cerrarModalAlGuardar || false}
-                        onChange={(e) => {
-                          if (userPreferences) {
-                            setUserPreferences({
-                              ...userPreferences,
-                              cerrarModalAlGuardar: e.target.checked
-                            })
-                          }
-                        }}
-                        className="w-4 h-4 accent-white cursor-pointer"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-[#ededed]">Cerrar modal al guardar</span>
-                        <p className="text-xs text-[#888888] mt-0.5">Cierra automáticamente el modal después de guardar cambios</p>
-                      </div>
-                    </label>
-
-                    <label className="flex items-center gap-3 cursor-pointer p-3 hover:bg-[#222] rounded-lg transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={userPreferences?.mostrarConfirmacionGuardado || false}
-                        onChange={(e) => {
-                          if (userPreferences) {
-                            setUserPreferences({
-                              ...userPreferences,
-                              mostrarConfirmacionGuardado: e.target.checked
-                            })
-                          }
-                        }}
-                        className="w-4 h-4 accent-white cursor-pointer"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-[#ededed]">Mostrar confirmación al guardar</span>
-                        <p className="text-xs text-[#888888] mt-0.5">Muestra un mensaje de confirmación al guardar cambios</p>
-                      </div>
-                    </label>
-
-                    <label className="flex items-center gap-3 cursor-pointer p-3 hover:bg-[#222] rounded-lg transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={userPreferences?.validarDatosAntes || false}
-                        onChange={(e) => {
-                          if (userPreferences) {
-                            setUserPreferences({
-                              ...userPreferences,
-                              validarDatosAntes: e.target.checked
-                            })
-                          }
-                        }}
-                        className="w-4 h-4 accent-white cursor-pointer"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-[#ededed]">Validar datos antes de guardar</span>
-                        <p className="text-xs text-[#888888] mt-0.5">Valida todos los datos antes de permitir guardar</p>
-                      </div>
-                    </label>
-                  </div>
-
-                  <div className="mt-6 pt-4 border-t border-[#333] flex gap-3 justify-end">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={async () => {
-                        if (!userPreferences) return
-                        try {
-                          const response = await fetch('/api/preferences', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              userId: 'default-user',
-                              cerrarModalAlGuardar: userPreferences.cerrarModalAlGuardar,
-                              mostrarConfirmacionGuardado: userPreferences.mostrarConfirmacionGuardado,
-                              validarDatosAntes: userPreferences.validarDatosAntes,
-                            })
-                          })
-                          if (response.ok) {
-                            const result = await response.json()
-                            setUserPreferences(result.data)
-                            toast.success('✓ Preferencias guardadas correctamente')
-                          } else {
-                            toast.error('❌ Error al guardar preferencias')
-                          }
-                        } catch (error) {
-                          console.error('Error guardando preferencias:', error)
-                          toast.error('❌ Error al guardar preferencias')
-                        }
-                      }}
-                      className="px-6 py-2 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all font-semibold text-sm flex items-center gap-2"
-                    >
-                      <FaSave /> Guardar
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
+              <PreferenciasTab
+                userPreferences={userPreferences}
+                setUserPreferences={setUserPreferences}
+                guardarPreferencias={async () => {
+                  if (!userPreferences) return
+                  try {
+                    const response = await fetch('/api/preferences', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userId: 'default-user',
+                        cerrarModalAlGuardar: userPreferences.cerrarModalAlGuardar,
+                        mostrarConfirmacionGuardado: userPreferences.mostrarConfirmacionGuardado,
+                        validarDatosAntes: userPreferences.validarDatosAntes,
+                      })
+                    })
+                    if (response.ok) {
+                      const result = await response.json()
+                      setUserPreferences(result.data)
+                      toast.success('✓ Preferencias guardadas correctamente')
+                    } else {
+                      toast.error('❌ Error al guardar preferencias')
+                    }
+                  } catch (error) {
+                    console.error('Error guardando preferencias:', error)
+                    toast.error('❌ Error al guardar preferencias')
+                  }
+                }}
+              />
             )}
           </div>
         </motion.div>
@@ -2776,10 +1609,17 @@ export default function Administrador() {
               {/* Header Fijo - Diseño Profesional Minimalista */}
               <div className="flex-shrink-0 bg-[#111] text-[#ededed] py-3 px-5 flex justify-between items-center border-b border-[#333]">
                 <div>
-                  <h2 id="modal-editar-titulo" className="text-lg font-bold flex items-center gap-2">
-                    <FaEdit size={14} /> {snapshotEditando.nombre}
-                  </h2>
-                  <p className="text-xs text-[#888888] mt-0.5">Editar configuración del paquete</p>
+                  <div className="flex items-center gap-2">
+                    <h2 id="modal-editar-titulo" className="text-lg font-bold flex items-center gap-2">
+                      <FaEdit size={14} /> {snapshotEditando.nombre}
+                    </h2>
+                    {readOnly && (
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">📖 Solo lectura</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#888888] mt-0.5">
+                    {readOnly ? 'Visualizar configuración del paquete' : 'Editar configuración del paquete'}
+                  </p>
                 </div>
                 <button
                   aria-label="Cerrar modal edición"
@@ -2810,7 +1650,8 @@ export default function Administrador() {
                                 type="text"
                                 value={snapshotEditando.nombre}
                                 onChange={(e) => setSnapshotEditando({ ...snapshotEditando, nombre: e.target.value })}
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                 ref={nombrePaqueteInputRef}
                               />
                             </div>
@@ -2821,7 +1662,8 @@ export default function Administrador() {
                                 value={snapshotEditando.paquete.tipo || ''}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tipo: e.target.value}})}
                                 placeholder="Básico"
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                               />
                             </div>
                             <div>
@@ -2831,7 +1673,8 @@ export default function Administrador() {
                                 value={snapshotEditando.paquete.emoji || ''}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, emoji: e.target.value}})}
                                 placeholder=""
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                               />
                             </div>
                             <div>
@@ -2841,7 +1684,8 @@ export default function Administrador() {
                                 value={snapshotEditando.paquete.tagline || ''}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tagline: e.target.value}})}
                                 placeholder="Presencia digital confiable"
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                               />
                             </div>
                             <div>
@@ -2851,7 +1695,8 @@ export default function Administrador() {
                                 value={snapshotEditando.paquete.tiempoEntrega || ''}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tiempoEntrega: e.target.value}})}
                                 placeholder="14 días"
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                               />
                             </div>
                             <div>
@@ -2860,7 +1705,8 @@ export default function Administrador() {
                                 type="number"
                                 value={snapshotEditando.paquete.desarrollo}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, desarrollo: Number.parseFloat(e.target.value) || 0}})}
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                 min="0"
                               />
                             </div>
@@ -2873,7 +1719,8 @@ export default function Administrador() {
                               value={snapshotEditando.paquete.descripcion || ''}
                               onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, descripcion: e.target.value}})}
                               placeholder="Paquete personalizado para empresas..."
-                              className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                              disabled={readOnly}
+                              className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                               rows={3}
                             />
                           </div>
@@ -2921,7 +1768,8 @@ export default function Administrador() {
                                           nuevosServicios[index].nombre = e.target.value
                                           setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
                                         }}
-                                        className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                        disabled={readOnly}
+                                        className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                       />
                                     </div>
                                     <div>
@@ -2934,7 +1782,8 @@ export default function Administrador() {
                                           nuevosServicios[index].precio = Number.parseFloat(e.target.value) || 0
                                           setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
                                         }}
-                                        className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                        disabled={readOnly}
+                                        className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                         min="0"
                                       />
                                     </div>
@@ -2950,7 +1799,8 @@ export default function Administrador() {
                                           nuevosServicios[index].mesesPago = Math.max(1, 12 - gratis)
                                           setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
                                         }}
-                                        className="w-full px-3 py-2 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-sm text-[#ededed]"
+                                        disabled={readOnly}
+                                        className={`w-full px-3 py-2 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-sm text-[#ededed]`}
                                         min="0"
                                         max="12"
                                       />
@@ -2966,7 +1816,8 @@ export default function Administrador() {
                                           nuevosServicios[index].mesesPago = Math.max(1, Math.min(pago, 12))
                                           setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
                                         }}
-                                        className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                        disabled={readOnly}
+                                        className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                         min="1"
                                         max="12"
                                       />
@@ -3024,7 +1875,8 @@ export default function Administrador() {
                                             actualizado[idx].nombre = e.target.value
                                             setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                           }}
-                                          className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                          disabled={readOnly}
+                                          className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                         />
                                       </div>
                                       <div>
@@ -3037,7 +1889,8 @@ export default function Administrador() {
                                             actualizado[idx].precio = Number.parseFloat(e.target.value) || 0
                                             setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                           }}
-                                          className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                          disabled={readOnly}
+                                          className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                           min="0"
                                         />
                                       </div>
@@ -3053,7 +1906,8 @@ export default function Administrador() {
                                             actualizado[idx].mesesPago = Math.max(1, 12 - gratis)
                                             setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                           }}
-                                          className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                          disabled={readOnly}
+                                          className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                           min="0"
                                           max="12"
                                         />
@@ -3069,7 +1923,8 @@ export default function Administrador() {
                                             actualizado[idx].mesesPago = Math.max(1, Math.min(pago, 12))
                                             setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                           }}
-                                          className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                          disabled={readOnly}
+                                          className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                           min="1"
                                           max="12"
                                         />
@@ -3161,7 +2016,8 @@ export default function Administrador() {
                           },
                         })
                       }
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                      disabled={readOnly}
+                      className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                       min="0"
                     />
                   </div>
@@ -3213,7 +2069,8 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                 placeholder="Ej: Inicial"
                               />
                             </div>
@@ -3238,7 +2095,8 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                 min="0"
                                 max="100"
                                 placeholder="30"
@@ -3262,7 +2120,8 @@ export default function Administrador() {
                                     },
                                   })
                                 }}
-                                className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                disabled={readOnly}
+                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                 placeholder="Ej: Al firmar contrato"
                               />
                             </div>
@@ -3447,7 +2306,8 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                    disabled={readOnly}
+                                    className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                     min="0"
                                     max="100"
                                     placeholder="0"
@@ -3469,7 +2329,8 @@ export default function Administrador() {
                                         },
                                       })
                                     }
-                                    className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                    disabled={readOnly}
+                                    className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                     min="0"
                                     max="100"
                                     placeholder="0"
@@ -3486,7 +2347,8 @@ export default function Administrador() {
                                     type="number"
                                     value={snapshotEditando.paquete.descuento}
                                     onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, descuento: Math.max(0, Math.min(100, Number.parseFloat(e.target.value) || 0))}})}
-                                    className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                    disabled={readOnly}
+                                    className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                     min="0"
                                     max="100"
                                   />
@@ -3617,7 +2479,8 @@ export default function Administrador() {
                                                       }
                                                       setSnapshotEditando(updated)
                                                     }}
-                                                    className="w-16 px-2 py-1 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                                    disabled={readOnly}
+                                                    className={`w-16 px-2 py-1 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                                     min="0"
                                                     max="100"
                                                     placeholder="0%"
@@ -3699,7 +2562,8 @@ export default function Administrador() {
                                                       }
                                                       setSnapshotEditando(updated)
                                                     }}
-                                                    className="w-16 px-2 py-1 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                                    disabled={readOnly}
+                                                    className={`w-16 px-2 py-1 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                                     min="0"
                                                     max="100"
                                                     placeholder="0%"
@@ -3914,7 +2778,8 @@ export default function Administrador() {
                                   type="text"
                                   value={cotizacionActual.empresa || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, empresa: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="Nombre de la empresa"
                                 />
                               </div>
@@ -3924,7 +2789,8 @@ export default function Administrador() {
                                   type="text"
                                   value={cotizacionActual.sector || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, sector: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="Industria/Sector"
                                 />
                               </div>
@@ -3934,7 +2800,8 @@ export default function Administrador() {
                                   type="text"
                                   value={cotizacionActual.ubicacion || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, ubicacion: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="Ciudad/País"
                                 />
                               </div>
@@ -3944,7 +2811,8 @@ export default function Administrador() {
                                   type="email"
                                   value={cotizacionActual.emailCliente || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, emailCliente: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="cliente@empresa.com"
                                 />
                               </div>
@@ -3954,7 +2822,8 @@ export default function Administrador() {
                                   type="tel"
                                   value={cotizacionActual.whatsappCliente || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, whatsappCliente: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="+34 600 000 000"
                                 />
                               </div>
@@ -3976,7 +2845,8 @@ export default function Administrador() {
                                   type="text"
                                   value={cotizacionActual.profesional || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, profesional: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="Nombre del profesional"
                                 />
                               </div>
@@ -3986,7 +2856,8 @@ export default function Administrador() {
                                   type="text"
                                   value={cotizacionActual.empresaProveedor || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, empresaProveedor: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="Nombre de la empresa"
                                 />
                               </div>
@@ -3996,7 +2867,8 @@ export default function Administrador() {
                                   type="email"
                                   value={cotizacionActual.emailProveedor || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, emailProveedor: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="profesional@empresa.com"
                                 />
                               </div>
@@ -4006,7 +2878,8 @@ export default function Administrador() {
                                   type="tel"
                                   value={cotizacionActual.whatsappProveedor || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, whatsappProveedor: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="+34 600 000 000"
                                 />
                               </div>
@@ -4016,7 +2889,8 @@ export default function Administrador() {
                                   type="text"
                                   value={cotizacionActual.ubicacionProveedor || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, ubicacionProveedor: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="Ciudad/País"
                                 />
                               </div>
@@ -4038,7 +2912,8 @@ export default function Administrador() {
                                   type="text"
                                   value={cotizacionActual.heroTituloMain || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, heroTituloMain: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="Título principal de tu cotización"
                                 />
                                 <p className="text-[10px] text-[#888888] mt-1">Se mostrará como encabezado principal en tu propuesta</p>
@@ -4049,7 +2924,8 @@ export default function Administrador() {
                                   type="text"
                                   value={cotizacionActual.heroTituloSub || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, heroTituloSub: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  disabled={readOnly}
+                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
                                   placeholder="Subtítulo o descripción breve"
                                 />
                                 <p className="text-[10px] text-[#888888] mt-1">Descripción complementaria debajo del título principal</p>
@@ -4076,26 +2952,33 @@ export default function Administrador() {
               <div className="flex-shrink-0 bg-[#12121a] border-t border-white/10 px-6 py-4 flex justify-between items-center">
                 {/* Indicador de autoguardado a la izquierda */}
                 <div className="flex items-center gap-3">
-                  {autoSaveStatus === 'saving' && (
+                  {readOnly && (
+                    <span className="text-sm text-blue-400 bg-blue-500/10 px-3 py-1 rounded-lg flex items-center gap-2">
+                      📖 Modo de solo lectura
+                    </span>
+                  )}
+                  {!readOnly && autoSaveStatus === 'saving' && (
                     <span className="text-sm text-white animate-pulse">Guardando cambios...</span>
                   )}
-                  {autoSaveStatus === 'saved' && (
+                  {!readOnly && autoSaveStatus === 'saved' && (
                     <span className="text-sm text-white/90">✓ Cambios guardados</span>
                   )}
-                  {autoSaveStatus === 'error' && (
+                  {!readOnly && autoSaveStatus === 'error' && (
                     <span className="text-sm text-white/90">❌ Error al guardar. Reintentando...</span>
                   )}
                 </div>
                 {/* Botones a la derecha */}
                 <div className="flex gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={guardarEdicion}
-                    className="py-2 px-6 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all flex items-center justify-center gap-2 font-semibold"
-                  >
-                    <FaCheck /> Guardar
-                  </motion.button>
+                  {!readOnly && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={guardarEdicion}
+                      className="py-2 px-6 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all flex items-center justify-center gap-2 font-semibold"
+                    >
+                      <FaCheck /> Guardar
+                    </motion.button>
+                  )}
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -4151,9 +3034,3 @@ export default function Administrador() {
     </div>
   )
 }
-
-
-
-
-
-
