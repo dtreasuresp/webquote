@@ -100,8 +100,8 @@ export interface QuotationConfig {
   // Proveedor
   profesional: string
   empresaProveedor: string
-  email: string
-  whatsapp: string
+  emailProveedor: string
+  whatsappProveedor: string
   ubicacionProveedor: string
   // Vigencia del contrato
   tiempoVigenciaValor: number

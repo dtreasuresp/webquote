@@ -33,8 +33,8 @@ model QuotationConfig {
   // Información del Proveedor
   profesional         String    @default("")
   empresaProveedor    String    @default("")
-  email               String    @default("")
-  whatsapp            String    @default("")
+  emailProveedor      String    @default("")
+  whatsappProveedor   String    @default("")
   ubicacionProveedor  String    @default("")
   
   // Tiempo de vigencia del contrato

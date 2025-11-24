@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import styles from '../styles/Navigation.module.css'
+import styles from '../../styles/Navigation.module.css'
 
 const navItems = [
   { id: 'resumen', label: 'Inicio' },

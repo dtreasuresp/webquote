@@ -25,6 +25,7 @@ export interface SnapshotFromDB {
   costoInicial: number
   costoAño1: number
   costoAño2: number
+  quotationConfigId?: string | null
   activo: boolean
   createdAt: string
   updatedAt: string
@@ -75,6 +76,7 @@ function migrarServiciosLegacy(snapshot: any): ServicioBase[] {
 export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 'createdAt' | 'updatedAt'> {
   return {
     nombre: snapshot.nombre || '',
+    quotationConfigId: snapshot.quotationConfigId || null, // ✅ Mapear quotationConfigId
     serviciosBase: migrarServiciosLegacy(snapshot),
     gestionPrecio: snapshot.gestion?.precio || 0,
     gestionMesesGratis: snapshot.gestion?.mesesGratis || 0,

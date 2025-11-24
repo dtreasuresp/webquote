@@ -45,7 +45,7 @@ export default function Hero() {
               {cotizacion?.empresa || 'Urbanísima CONSTRUCTORA S.R.L'}
             </h3>
             <p className="text-lg mt-4 text-gray-200">
-              VERSIÓN {cotizacion?.version || '1.0'} - 2025
+              VERSIÓN {cotizacion?.versionNumber?.toString() || '1'} - 2025
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-8 mt-12 text-left bg-white/20 backdrop-blur-md rounded-2xl p-8 shadow-2xl">
@@ -53,7 +53,7 @@ export default function Hero() {
             <div className="space-y-1">
               <h4 className="text-xl font-bold mb-4 text-white drop-shadow-lg">📄 Información de Cotización</h4>
               <InfoItem label="Cotización" value={cotizacion?.numero || '#004-2025'} />
-              <InfoItem label="Versión" value={cotizacion?.version || '1.0'} />
+              <InfoItem label="Versión" value={cotizacion?.versionNumber?.toString() || '1'} />
               <InfoItem label="Fecha de emisión" value={cotizacion?.fechaEmision ? formatearFechaLarga(cotizacion.fechaEmision) : '13 de noviembre de 2025'} />
               <InfoItem label="Fecha de vencimiento" value={cotizacion?.fechaVencimiento ? formatearFechaLarga(cotizacion.fechaVencimiento) : '13 de diciembre de 2025'} />
               <InfoItem label="Tiempo de validez" value={`${cotizacion?.tiempoValidez || 30} días`} />
@@ -79,14 +79,14 @@ export default function Hero() {
                   <p><strong>Empresa:</strong> {cotizacion?.empresaProveedor || 'DGTECNOVA'}</p>
                   <div className="flex items-center gap-2">
                     <FaEnvelope className="text-white" />
-                    <a href={`mailto:${cotizacion?.email || 'dgtecnova@gmail.com'}`} className="hover:text-accent transition">
-                      {cotizacion?.email || 'dgtecnova@gmail.com'}
+                    <a href={`mailto:${cotizacion?.emailProveedor || 'dgtecnova@gmail.com'}`} className="hover:text-accent transition">
+                      {cotizacion?.emailProveedor || 'dgtecnova@gmail.com'}
                     </a>
                   </div>
                   <div className="flex items-center gap-2">
                     <FaWhatsapp className="text-white" />
-                    <a href={`https://wa.me/${(cotizacion?.whatsapp || '+5358569291').replace(/[^\d+]/g, '')}`} className="hover:text-accent transition">
-                      {cotizacion?.whatsapp || '+535 856 9291'}
+                    <a href={`https://wa.me/${(cotizacion?.whatsappProveedor || '+5358569291').replace(/[^\d+]/g, '')}`} className="hover:text-accent transition">
+                      {cotizacion?.whatsappProveedor || '+535 856 9291'}
                     </a>
                   </div>
                   <div className="flex items-center gap-2">

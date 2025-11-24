@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const cotizacion = await prisma.quotationConfig.create({
       data: {
         numero: numeroGenerado,
-        version: data.version || '1.0',
+        versionNumber: data.versionNumber || 1,
         fechaEmision,
         tiempoValidez: data.tiempoValidez || 30,
         fechaVencimiento,
@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
         ubicacion: data.ubicacion || '',
         profesional: data.profesional || '',
         empresaProveedor: data.empresaProveedor || '',
-        email: data.email || '',
-        whatsapp: data.whatsapp || '',
+        emailProveedor: data.emailProveedor || '',
+        whatsappProveedor: data.whatsappProveedor || '',
         ubicacionProveedor: data.ubicacionProveedor || '',
         tiempoVigenciaValor: data.tiempoVigenciaValor || 12,
         tiempoVigenciaUnidad: data.tiempoVigenciaUnidad || 'meses',
@@ -120,7 +120,7 @@ export async function PUT(request: NextRequest) {
       where: { id },
       data: {
         numero: numeroGenerado,
-        version: data.version || '1.0',
+        versionNumber: data.versionNumber || 1,
         fechaEmision,
         tiempoValidez: data.tiempoValidez || 30,
         fechaVencimiento,
@@ -131,8 +131,8 @@ export async function PUT(request: NextRequest) {
         ubicacion: data.ubicacion || '',
         profesional: data.profesional || '',
         empresaProveedor: data.empresaProveedor || '',
-        email: data.email || '',
-        whatsapp: data.whatsapp || '',
+        emailProveedor: data.emailProveedor || '',
+        whatsappProveedor: data.whatsappProveedor || '',
         ubicacionProveedor: data.ubicacionProveedor || '',
         tiempoVigenciaValor: data.tiempoVigenciaValor || 12,
         tiempoVigenciaUnidad: data.tiempoVigenciaUnidad || 'meses',

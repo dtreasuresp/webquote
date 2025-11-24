@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       const snapshot = await prisma.packageSnapshot.create({
         data: {
           nombre: data.nombre || '',
+          quotationConfigId: data.quotationConfigId || null, // ✅ Guardar quotationConfigId desde el request
           serviciosBase: data.serviciosBase || [],
           gestionPrecio: data.gestionPrecio || 0,
           gestionMesesGratis: data.gestionMesesGratis || 0,

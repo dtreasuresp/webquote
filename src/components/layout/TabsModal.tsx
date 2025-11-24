@@ -164,7 +164,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
             duration: 0.3,
             ease: 'easeInOut',
           }}
-          className="relative w-full overflow-hidden"
+          className="overflow-hidden"
         >
           <div className="w-full">
             {activeTabItem && (
@@ -172,7 +172,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1, duration: 0.2 }}
-                className="p-6 bg-black"
+                className="bg-black"
               >
                 {activeTabItem.content}
               </motion.div>
