@@ -9,11 +9,14 @@ import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
 
 // Hooks del admin
-import { useAdminState, useAdvancedValidation } from './hooks'
+import { useAdminState, useAdvancedValidation, useEventTracking } from './hooks'
 
 // Componentes del admin
-import { AdminHeader, DialogoGenerico, ValidationStatusBar } from './components'
+import { AdminHeader, DialogoGenerico, ValidationStatusBar, AnalyticsDashboard } from './components'
 import ServiciosBaseSection from './components/ServiciosBaseSection'
+
+// Context
+import { AnalyticsProvider } from './contexts'
 import PaqueteSection from './components/PaqueteSection'
 import ServiciosOpcionalesSection from './components/ServiciosOpcionalesSection'
 import DescuentosSection from './components/DescuentosSection'
@@ -23,7 +26,14 @@ import SnapshotsTableSection from './components/SnapshotsTableSection'
 import { generateSnapshotPDF } from '@/features/pdf-export/utils/generator'
 
 export default function AdminPage() {
-  // ==================== HOOKS PRINCIPALES ====================
+  return (
+    <AnalyticsProvider>
+      <AdminPageContent />
+    </AnalyticsProvider>
+  )
+}
+
+function AdminPageContent() {
   
   // Estado principal del admin
   const {
@@ -50,6 +60,15 @@ export default function AdminPage() {
     validarTodo,
     getValidationContext 
   } = useAdvancedValidation()
+
+  // ==================== HOOKS DE TRACKING ====================
+  const { 
+    trackCotizacionCreated, 
+    trackPaqueteCreated,
+    trackSnapshotCreated,
+    startTracking,
+    endTracking 
+  } = useEventTracking()
 
   // ==================== ESTADO LOCAL ====================
   
@@ -318,6 +337,16 @@ export default function AdminPage() {
               errorSnapshots={errorSnapshots}
               refreshSnapshots={refreshSnapshots}
             />
+
+            {/* Analytics Dashboard (Phase 13) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-gh-bg-secondary rounded-2xl border border-gh-border p-6"
+            >
+              <AnalyticsDashboard />
+            </motion.div>
           </div>
         </motion.div>
       </div>
