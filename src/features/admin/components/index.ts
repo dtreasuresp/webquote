@@ -26,5 +26,10 @@ export {
 } from './TabValidator'
 export type { TabType } from './TabValidator'
 
+// Snapshot Components (Phase 12)
+export { default as SnapshotTimeline } from './SnapshotTimeline'
+export { default as SnapshotComparison } from './SnapshotComparison'
+export { default as SnapshotDiffViewer } from './SnapshotDiffViewer'
+
 // TABs
 export * from './tabs'

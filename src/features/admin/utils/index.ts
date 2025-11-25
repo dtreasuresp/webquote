@@ -9,6 +9,13 @@ export type { AdvancedValidationResult, ValidationContext } from './advancedVali
 export * from './validationRules'
 export type { ValidationRule } from './validationRules'
 
+// Snapshot Utilities (Phase 12)
+export * from './snapshotComparison'
+export type { SnapshotDifference, SnapshotComparison, SnapshotComparisonResult } from './snapshotComparison'
+
+export * from './snapshotDiff'
+export type { DiffLine, FormattedDiff, DiffViewerConfig } from './snapshotDiff'
+
 // Formatters
 export * from './formatters'
 
