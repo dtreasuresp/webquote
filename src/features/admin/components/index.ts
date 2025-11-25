@@ -31,5 +31,8 @@ export { default as SnapshotTimeline } from './SnapshotTimeline'
 export { default as SnapshotComparison } from './SnapshotComparison'
 export { default as SnapshotDiffViewer } from './SnapshotDiffViewer'
 
+// Analytics Components (Phase 13)
+export { AnalyticsDashboard } from './AnalyticsDashboard'
+
 // TABs
 export * from './tabs'

@@ -6,3 +6,6 @@ export { useModalEdition } from './useModalEdition'
 export { usePdfGeneration } from './usePdfGeneration'
 export { useCotizacionCRUD } from './useCotizacionCRUD'
 export { useAdvancedValidation } from './useAdvancedValidation'
+export { useEventTracking } from './useEventTracking'
+export { useAnalyticsMetrics } from './useAnalyticsMetrics'
+
