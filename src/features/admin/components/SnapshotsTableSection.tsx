@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { FaCalculator, FaEdit, FaTrash, FaDownload, FaExchangeAlt, FaHistory } from 'react-icons/fa'
 import type { PackageSnapshot } from '@/lib/types'
 import { eliminarSnapshot, actualizarSnapshot } from '@/lib/snapshotApi'
@@ -79,29 +79,32 @@ export default function SnapshotsTableSection({
     }
   }
 
-  const handleDescargarPdf = (snapshot: PackageSnapshot) => {
+  const handleDescargarPdf = useCallback((snapshot: PackageSnapshot) => {
     generateSnapshotPDF(snapshot)
-  }
+  }, [])
 
-  const handleToggleActivo = async (snapshot: PackageSnapshot, marcado: boolean) => {
+  const handleToggleActivo = useCallback(async (snapshotId: string, marcado: boolean) => {
+    const snapshot = snapshots.find(s => s.id === snapshotId)
+    if (!snapshot) return
+
     const provisional = { ...snapshot, activo: marcado }
-    setSnapshots(snapshots.map(s => s.id === snapshot.id ? provisional : s))
+    setSnapshots(snapshots.map(s => s.id === snapshotId ? provisional : s))
     try {
       const actualizado = { ...provisional }
       actualizado.costos.inicial = calcularCostoInicialSnapshot(actualizado)
       actualizado.costos.año1 = calcularCostoAño1Snapshot(actualizado)
       actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
       const guardado = await actualizarSnapshot(actualizado.id, actualizado)
-      setSnapshots(snapshots.map(s => s.id === snapshot.id ? guardado : s))
+      setSnapshots(snapshots.map(s => s.id === snapshotId ? guardado : s))
       await refreshSnapshots()
     } catch (err) {
       console.error('Error al autoguardar estado activo:', err)
-      setSnapshots(snapshots.map(s => s.id === snapshot.id ? { ...s, activo: !marcado } : s))
+      setSnapshots(snapshots.map(s => s.id === snapshotId ? { ...s, activo: !marcado } : s))
       alert('No se pudo actualizar el estado Activo. Intenta nuevamente.')
     }
-  }
+  }, [snapshots, setSnapshots, refreshSnapshots])
 
-  const handleCompararSnapshot = (snapshot: PackageSnapshot) => {
+  const handleCompararSnapshot = useCallback((snapshot: PackageSnapshot) => {
     if (snapshotParaComparar && snapshotParaComparar.id !== snapshot.id) {
       setComparacionActiva({
         snapshot1: snapshotParaComparar,
@@ -113,7 +116,7 @@ export default function SnapshotsTableSection({
     } else {
       setSnapshotParaComparar(null)
     }
-  }
+  }, [snapshotParaComparar])
 
   const handleVerTimeline = () => {
     setShowTimelineModal(true)
@@ -213,7 +216,7 @@ export default function SnapshotsTableSection({
                     id={`snapshot-activo-${snapshot.id}`}
                     type="checkbox"
                     checked={snapshot.activo}
-                    onChange={(e) => handleToggleActivo(snapshot, e.target.checked)}
+                    onChange={(e) => handleToggleActivo(snapshot.id, e.target.checked)}
                     className="w-5 h-5 cursor-pointer accent-gh-success"
                   />
                   <label htmlFor={`snapshot-activo-${snapshot.id}`} className="font-semibold text-white text-sm">Activo</label>
