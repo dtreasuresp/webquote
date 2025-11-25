@@ -153,12 +153,12 @@ export default function ResumenEjecutivo() {
                 </h3>
                 
                 <ul className="space-y-3 text-gray-700">
-                  <li>❌ Ingresar al panel administrativo, a menos que sea para demostraciones o control de negocios</li>
-                  <li>❌ Instalar complementos</li>
-                  <li>❌ Hacer salvas</li>
-                  <li>❌ Actualizar la plataforma</li>
-                  <li>❌ Preocuparte de la seguridad</li>
-                  <li>❌ Tomar decisiones técnicas</li>
+                  <li>Ingresar al panel administrativo, a menos que sea para demostraciones o control de negocios</li>
+                  <li>Instalar complementos</li>
+                  <li>Hacer salvas</li>
+                  <li>Actualizar la plataforma</li>
+                  <li>Preocuparte de la seguridad</li>
+                  <li>Tomar decisiones técnicas</li>
                 </ul>
               </div>
             </div>

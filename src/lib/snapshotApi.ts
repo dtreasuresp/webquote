@@ -81,20 +81,20 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
     gestionPrecio: snapshot.gestion?.precio || 0,
     gestionMesesGratis: snapshot.gestion?.mesesGratis || 0,
     gestionMesesPago: snapshot.gestion?.mesesPago || 0,
-    desarrollo: snapshot.paquete?.desarrollo || 0,
-    descuento: snapshot.paquete?.descuento || 0,
-    tipo: snapshot.paquete?.tipo || '',
-    descripcion: snapshot.paquete?.descripcion || '',
-    emoji: snapshot.paquete?.emoji || '',
-    tagline: snapshot.paquete?.tagline || '',
-    tiempoEntrega: snapshot.paquete?.tiempoEntrega || '',
+    desarrollo: snapshot.paquete?.desarrollo ?? snapshot.desarrollo ?? 0,
+    descuento: snapshot.paquete?.descuento ?? snapshot.descuento ?? 0,
+    tipo: snapshot.paquete?.tipo ?? snapshot.tipo ?? '',
+    descripcion: snapshot.paquete?.descripcion ?? snapshot.descripcion ?? '',
+    emoji: snapshot.paquete?.emoji ?? snapshot.emoji ?? '',
+    tagline: snapshot.paquete?.tagline ?? snapshot.tagline ?? '',
+    tiempoEntrega: snapshot.paquete?.tiempoEntrega ?? snapshot.tiempoEntrega ?? '',
     // Mapear opciones de pago desde el objeto paquete del frontend a columnas de BD
     opcionesPago: snapshot.paquete?.opcionesPago || [],
-    descuentoPagoUnico: snapshot.paquete?.descuentoPagoUnico ?? 0,
+    descuentoPagoUnico: snapshot.paquete?.descuentoPagoUnico ?? snapshot.descuentoPagoUnico ?? 0,
     otrosServicios: snapshot.otrosServicios || [],
-    costoInicial: snapshot.costos?.inicial || 0,
-    costoAño1: snapshot.costos?.año1 || 0,
-    costoAño2: snapshot.costos?.año2 || 0,
+    costoInicial: snapshot.costos?.inicial ?? snapshot.costoInicial ?? 0,
+    costoAño1: snapshot.costos?.año1 ?? snapshot.costoAño1 ?? 0,
+    costoAño2: snapshot.costos?.año2 ?? snapshot.costoAño2 ?? 0,
     activo: snapshot.activo !== false,
   }
 }
@@ -104,6 +104,7 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
   return {
     id: dbSnapshot.id,
     nombre: dbSnapshot.nombre,
+    quotationConfigId: dbSnapshot.quotationConfigId || undefined, // ✅ Incluir quotationConfigId
     serviciosBase: dbSnapshot.serviciosBase || [],
     gestion: {
       precio: dbSnapshot.gestionPrecio,
@@ -191,8 +192,24 @@ export async function crearSnapshot(snapshot: any) {
 }
 
 // Actualizar snapshot
-export async function actualizarSnapshot(id: string, snapshot: any) {
+export async function actualizarSnapshot(idOrSnapshot: string | any, snapshotOptional?: any) {
   try {
+    // Soportar ambas formas de llamada:
+    // 1. actualizarSnapshot(id, snapshot)
+    // 2. actualizarSnapshot(snapshotConId)
+    let id: string
+    let snapshot: any
+    
+    if (typeof idOrSnapshot === 'string') {
+      // Forma 1: (id, snapshot)
+      id = idOrSnapshot
+      snapshot = snapshotOptional
+    } else {
+      // Forma 2: (snapshotConId)
+      snapshot = idOrSnapshot
+      id = snapshot.id
+    }
+    
     const datosDB = convertSnapshotToDB(snapshot)
     
     const response = await fetch(`/api/snapshots?id=${id}`, {

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
-import { FaCalculator, FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown, FaSave, FaFileAlt, FaMapMarkerAlt, FaEnvelope, FaTag, FaCalendar, FaDollarSign, FaGlobe, FaHeadset, FaPercent, FaPalette, FaHistory, FaGift, FaCog, FaUser, FaBriefcase } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown, FaSave, FaFileAlt, FaGlobe, FaHeadset, FaPercent, FaPalette, FaHistory, FaGift, FaCog, FaUser, FaBriefcase } from 'react-icons/fa'
 import Link from 'next/link'
 import Navigation from '@/components/layout/Navigation'
 import TabsModal from '@/components/layout/TabsModal'
@@ -12,19 +12,19 @@ import OfertaTab from '@/components/admin/OfertaTab'
 import PaquetesTab from '@/components/admin/PaquetesTab'
 import EstilosYDisenoTab from '@/components/admin/EstilosYDisenoTab'
 import PreferenciasTab from '@/components/admin/PreferenciasTab'
+import PaqueteContenidoTab from '@/components/admin/PaqueteContenidoTab'
 import Toast from '@/components/layout/Toast'
 import { useToast } from '@/lib/hooks/useToast'
 import { jsPDF } from 'jspdf'
 import { obtenerSnapshotsCompleto, crearSnapshot, actualizarSnapshot, eliminarSnapshot } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
-import { compararQuotations, validarQuotation, validarSnapshot } from '@/lib/utils/validation'
-import type { ServicioBase, GestionConfig, Package, Servicio, OtroServicio, PackageSnapshot, QuotationConfig, UserPreferences } from '@/lib/types'
+import { compararQuotations, validarQuotation } from '@/lib/utils/validation'
+import type { ServicioBase, GestionConfig, Package, Servicio, OtroServicio, PackageSnapshot, QuotationConfig, UserPreferences, DialogConfig } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 import type { TabItem } from '@/components/layout/TabsModal'
 
 // UI Components
 import KPICards from '@/features/admin/components/KPICards'
-import CollapsibleSection from '@/features/admin/components/CollapsibleSection'
 
 export default function Administrador() {
   // Obtener función de refresh global
@@ -101,7 +101,6 @@ export default function Administrador() {
   const [serviciosOpcionales, setServiciosOpcionales] = useState<Servicio[]>([])
   const [snapshots, setSnapshots] = useState<PackageSnapshot[]>([])
   const [showModalEditar, setShowModalEditar] = useState(false)
-  const [activeModalTab, setActiveModalTab] = useState<string>('descripcion')
   const [activePageTab, setActivePageTab] = useState<string>('cotizacion')
   const [snapshotEditando, setSnapshotEditando] = useState<PackageSnapshot | null>(null)
   // Estado para comparar cambios en el modal (versión original serializada)
@@ -142,11 +141,40 @@ export default function Administrador() {
   // ==================== NUEVOS ESTADOS FASES 3-6 ====================
   const [readOnly, setReadOnly] = useState(false)
   const [alertaMostradaEnSesion, setAlertaMostradaEnSesion] = useState(false)
-  const [mostrarDialogoConfirmacion, setMostrarDialogoConfirmacion] = useState(false)
-  const [accionPendiente, setAccionPendiente] = useState<{
-    tipo: 'guardar-sin-activar' | 'guardar-y-activar' | null
-  }>({ tipo: null })
+  // ==================== NUEVOS ESTADOS PARA MODAL 3 FILAS ====================
+  const [activeTabFila1, setActiveTabFila1] = useState<string>('cotizacion')
+  const [activeTabFila2, setActiveTabFila2] = useState<string>('')
+  const [activeTabFila3, setActiveTabFila3] = useState<string>('descripcion')
+  const [quotationEnModal, setQuotationEnModal] = useState<QuotationConfig | null>(null)
+  const [snapshotsModalActual, setSnapshotsModalActual] = useState<PackageSnapshot[]>([])
   // ==================== FIN NUEVOS ESTADOS ====================
+
+  // ==================== NUEVOS ESTADOS PARA VALIDACIÓN POR TAB ====================
+  const [estadoValidacionTabs, setEstadoValidacionTabs] = useState<{
+    cotizacion: 'ok' | 'pendiente' | 'error'
+    oferta: 'ok' | 'pendiente' | 'error'
+    paquetes: 'ok' | 'pendiente' | 'error'
+    estilos: 'ok' | 'pendiente' | 'error'
+  }>({
+    cotizacion: 'pendiente',
+    oferta: 'pendiente',
+    paquetes: 'pendiente',
+    estilos: 'pendiente',
+  })
+  // ==================== FIN ESTADOS VALIDACIÓN ====================
+
+  // ==================== ESTADOS PARA DIÁLOGO GENÉRICO ====================
+  const [mostrarDialogo, setMostrarDialogo] = useState(false)
+  const [datosDialogo, setDatosDialogo] = useState<DialogConfig | null>(null)
+  // ==================== FIN ESTADOS DIÁLOGO GENÉRICO ====================
+
+  // ==================== FASE 12: ESTADO PARA TRACKING DE CAMBIOS ====================
+  const [quotationEstadoAntes, setQuotationEstadoAntes] = useState<{
+    wasGlobal: boolean
+    wasActive: boolean
+    wasId: string
+  } | null>(null)
+  // ==================== FIN ESTADOS TRACKING ====================
   
   // Estado para expandibles en descuentos por servicio
   const [expandidosDescuentos, setExpandidosDescuentos] = useState<{ [key: string]: boolean }>({
@@ -301,6 +329,157 @@ export default function Administrador() {
     return new Date(vencimiento) > new Date(emisión)
   }
 
+  // ==================== FUNCIONES DE VALIDACIÓN POR TAB ====================
+  
+  /**
+   * Valida TAB Cotización: Campos requeridos con datos correctos
+   */
+  const validarTabCotizacion = (): { valido: boolean; errores: string[] } => {
+    const errores: string[] = []
+
+    if (!cotizacionConfig?.empresa?.trim()) {
+      errores.push('Empresa requerida')
+    }
+    if (!cotizacionConfig?.profesional?.trim()) {
+      errores.push('Profesional requerido')
+    }
+    if (!cotizacionConfig?.sector?.trim()) {
+      errores.push('Sector requerido')
+    }
+    if (!cotizacionConfig?.ubicacion?.trim()) {
+      errores.push('Ubicación cliente requerida')
+    }
+    if (cotizacionConfig?.emailProveedor && !validarEmail(cotizacionConfig.emailProveedor)) {
+      errores.push('Email proveedor inválido')
+    }
+    if (cotizacionConfig?.whatsappProveedor && !validarWhatsApp(cotizacionConfig.whatsappProveedor)) {
+      errores.push('WhatsApp proveedor inválido')
+    }
+    if (cotizacionConfig && !validarFechas(cotizacionConfig.fechaEmision, cotizacionConfig.fechaVencimiento)) {
+      errores.push('Fecha vencimiento debe ser mayor a emisión')
+    }
+
+    return {
+      valido: errores.length === 0,
+      errores,
+    }
+  }
+
+  /**
+   * Valida TAB Oferta: Servicios base + descripción paquete requeridos
+   */
+  const validarTabOferta = (): { valido: boolean; errores: string[] } => {
+    const errores: string[] = []
+
+    if (!serviciosBase || serviciosBase.length === 0) {
+      errores.push('Debe haber al menos un servicio base')
+    }
+    if (!paqueteActual?.nombre?.trim()) {
+      errores.push('Descripción del paquete (nombre) es requerida')
+    }
+    if (!paqueteActual?.descripcion?.trim()) {
+      errores.push('Descripción detallada del paquete es requerida')
+    }
+
+    return {
+      valido: errores.length === 0,
+      errores,
+    }
+  }
+
+  /**
+   * Valida TAB Paquetes: Debe haber al menos 1 paquete
+   */
+  const validarTabPaquetes = (): { valido: boolean; errores: string[] } => {
+    const errores: string[] = []
+
+    if (!snapshots || snapshots.filter(s => s.activo).length === 0) {
+      errores.push('Debe crear al menos un paquete activo')
+    }
+
+    return {
+      valido: errores.length === 0,
+      errores,
+    }
+  }
+
+  /**
+   * Valida TAB Estilos: Simplemente verifica que el TAB exista
+   */
+  const validarTabEstilos = (): { valido: boolean; errores: string[] } => {
+    // Este TAB es más informativo, casi siempre OK
+    return {
+      valido: true,
+      errores: [],
+    }
+  }
+
+  /**
+   * Actualiza estado de validación de todos los TABs
+   */
+  const actualizarEstadoValidacionTabs = () => {
+    const estadoCotizacion = validarTabCotizacion()
+    const estadoOferta = validarTabOferta()
+    const estadoPaquetes = validarTabPaquetes()
+    const estadoEstilos = validarTabEstilos()
+
+    setEstadoValidacionTabs({
+      cotizacion: estadoCotizacion.valido ? 'ok' : 'error',
+      oferta: estadoOferta.valido ? 'ok' : 'error',
+      paquetes: estadoPaquetes.valido ? 'ok' : 'error',
+      estilos: estadoEstilos.valido ? 'ok' : 'error',
+    })
+  }
+
+  /**
+   * Interceptor de cambio de TAB: valida antes de cambiar
+   */
+  // FASE 15: Función mejorada para cambiar TABs con validación de dependencias
+  const handleCambioTab = (nuevoTab: string) => {
+    const tabActual = activePageTab
+    
+    // Validar TAB ACTUAL antes de salir
+    let resultado: { valido: boolean; errores: string[] } | null = null
+
+    if (tabActual === 'cotizacion') {
+      resultado = validarTabCotizacion()
+    } else if (tabActual === 'oferta') {
+      resultado = validarTabOferta()
+    } else if (tabActual === 'paquetes') {
+      resultado = validarTabPaquetes()
+    } else if (tabActual === 'estilos') {
+      resultado = validarTabEstilos()
+    }
+
+    if (resultado && !resultado.valido) {
+      toast.error(`❌ ${resultado.errores[0]}`)
+      return
+    }
+
+    // FASE 15: Validar DEPENDENCIAS del TAB DESTINO
+    // Antes de entrar a "Paquetes": validar que existe descripción
+    if (nuevoTab === 'paquetes') {
+      if (!paqueteActual.descripcion || paqueteActual.descripcion.trim() === '') {
+        toast.error('❌ Completa la descripción en TAB Oferta antes de crear paquetes')
+        return
+      }
+    }
+
+    // Antes de entrar a "Estilos": validar que existe al menos 1 paquete
+    if (nuevoTab === 'estilos') {
+      if (snapshots.length === 0) {
+        toast.error('❌ Crea al menos un paquete en TAB Paquetes antes de configurar estilos')
+        return
+      }
+    }
+
+    // Si pasó validación, cambiar TAB
+    setActivePageTab(nuevoTab)
+    
+    // Actualizar validación del nuevo TAB
+    actualizarEstadoValidacionTabs()
+  }
+
   // Cargar cotización de la BD al montar
   useEffect(() => {
     const cargarCotizacion = async () => {
@@ -437,7 +616,19 @@ export default function Administrador() {
     if (serviciosBase.length > 1) {
       setServiciosBase(serviciosBase.filter(s => s.id !== id))
     } else {
-      alert('⚠️ Debe haber al menos un servicio base')
+      mostrarDialogoGenerico({
+        tipo: 'error',
+        titulo: 'No se puede eliminar',
+        icono: '⚠️',
+        mensaje: 'Debe haber al menos un servicio base. No puedes eliminar el último.',
+        botones: [
+          {
+            label: 'Entendido',
+            action: () => {},
+            style: 'primary'
+          }
+        ]
+      })
     }
   }
 
@@ -504,12 +695,24 @@ export default function Administrador() {
   const crearPaqueteSnapshot = async () => {
     // PROPUESTA 1: Validar que cotizacionConfig exista ✅
     if (!cotizacionConfig?.id) {
-      toast.error('❌ Cotización no cargada - Primero debes crear o cargar una cotización antes de agregar paquetes.')
+      toast.error('Cotización no cargada - Primero debes crear o cargar una cotización antes de agregar paquetes.')
       return
     }
 
     if (!todoEsValido) {
-      alert('Por favor completa todos los campos requeridos: Nombre del paquete, Desarrollo, Precios de servicios, y Meses válidos.')
+      mostrarDialogoGenerico({
+        tipo: 'error',
+        titulo: 'Campos incompletos',
+        icono: '⚠️',
+        mensaje: 'Por favor completa todos los campos requeridos: Nombre del paquete, Desarrollo, Precios de servicios, y Meses válidos.',
+        botones: [
+          {
+            label: 'Entendido',
+            action: () => {},
+            style: 'primary'
+          }
+        ]
+      })
       return
     }
 
@@ -591,41 +794,252 @@ export default function Administrador() {
       toast.success(`✅ Paquete creado y vinculado: "${paqueteActual.nombre}" a cotización ${cotizacionConfig?.numero || cotizacionConfig?.id}`)
     } catch (error) {
       console.error('Error al crear paquete:', error)
-      alert('❌ Error al guardar el paquete. Por favor intenta de nuevo.')
+      mostrarDialogoGenerico({
+        tipo: 'error',
+        titulo: 'Error al guardar',
+        icono: '❌',
+        mensaje: 'Ocurrió un error al guardar el paquete. Por favor intenta de nuevo.',
+        botones: [
+          {
+            label: 'Entendido',
+            action: () => {},
+            style: 'primary'
+          }
+        ]
+      })
     }
   }
 
-  const abrirModalEditar = (snapshot: PackageSnapshot) => {
-    // Inicializar descuentos si no existen
-    const snapshotConDescuentos = {
-      ...snapshot,
-      paquete: {
-        ...snapshot.paquete,
-        descuentosGenerales: snapshot.paquete.descuentosGenerales || {
-          aplicarAlDesarrollo: false,
-          aplicarAServiciosBase: false,
-          aplicarAOtrosServicios: false,
-          porcentaje: 0,
-        },
-        descuentosPorServicio: snapshot.paquete.descuentosPorServicio || {
-          aplicarAServiciosBase: false,
-          aplicarAOtrosServicios: false,
-          serviciosBase: snapshot.serviciosBase.map(s => ({
-            servicioId: s.id,
-            aplicarDescuento: false,
-            porcentajeDescuento: 0,
-          })),
-          otrosServicios: snapshot.otrosServicios.map((s, idx) => ({
-            servicioId: s.id || `otro-servicio-${idx}`,
-            aplicarDescuento: false,
-            porcentajeDescuento: 0,
-          })),
-        },
-      },
+  /**
+   * FASE 10: Obtener la cotización activa actual
+   */
+  const obtenerCotizacionActiva = () => {
+    return quotations.find(q => q.activo === true && q.isGlobal === true)
+  }
+
+  /**
+   * FASE 10 + 11 + 12: Lógica centralizada para abrir modal de editar/ver
+   * Verifica si la cotización está activa, y si no, muestra diálogo
+   */
+  const abrirModalConActivacion = (quotation: QuotationConfig, modo: 'editar' | 'ver') => {
+    const cotizacionActiva = obtenerCotizacionActiva()
+    
+    // Guardar estado ANTES de abrir (para luego comparar) - FASE 12
+    setQuotationEstadoAntes({
+      wasGlobal: quotation.isGlobal,
+      wasActive: quotation.activo,
+      wasId: quotation.id
+    })
+    
+    // Si NO es la cotización activa, mostrar diálogo de confirmación
+    if (!quotation.activo || !quotation.isGlobal) {
+      mostrarDialogoGenerico({
+        tipo: 'activar',
+        titulo: 'Cotización Inactiva',
+        icono: '⚠️',
+        mensaje: `La cotización "${quotation.numero || 'Sin número'}" no está activa actualmente.${
+          modo === 'editar'
+            ? ' Para editarla, primero debe activarla. Esto desactivará todas las demás cotizaciones.'
+            : ' Puede verla en modo lectura o activarla para editarla.'
+        }`,
+        modoAbrir: modo,
+        quotation: quotation,
+        botones: []
+      })
+    } 
+    // FASE 11: Si es cotización ACTIVA Y modo EDITAR, mostrar diálogo de confirmación
+    else if (modo === 'editar' && quotation.isGlobal === true) {
+      mostrarDialogoGenerico({
+        tipo: 'advertencia',
+        titulo: 'Cotización Activa',
+        icono: '⚠️',
+        mensaje: 'Esta es la cotización ACTIVA actualmente. Los cambios serán guardados inmediatamente. ¿Deseas continuar editando?',
+        subtitulo: quotation.numero || 'Sin número',
+        botones: [
+          {
+            label: 'Cancelar',
+            action: () => {
+              setQuotationEstadoAntes(null)
+            },
+            style: 'secondary'
+          },
+          {
+            label: 'Continuar editando',
+            action: () => {
+              abrirModalEditarInterno(quotation, modo)
+            },
+            style: 'primary'
+          }
+        ]
+      })
     }
-    setSnapshotEditando(snapshotConDescuentos)
+    // Si ya está activa Y modo VER
+    else {
+      abrirModalEditarInterno(quotation, modo)
+    }
+  }
+
+  /**
+   * FASE 10: Función interna para abrir el modal sin verificación
+   */
+  const abrirModalEditarInterno = (quotation: QuotationConfig, modo: 'editar' | 'ver') => {
+    // 1. Cargar snapshots de esta quotation
+    const snapshotsFiltrados = snapshots.filter(
+      s => s.quotationConfigId === quotation.id
+    )
+
+    // 2. Guardar contexto
+    setQuotationEnModal(quotation)
+    setSnapshotsModalActual(snapshotsFiltrados)
+
+    // 3. Seleccionar primer snapshot
+    if (snapshotsFiltrados.length > 0) {
+      const firstSnapshot = snapshotsFiltrados[0]
+
+      // Inicializar descuentos si no existen
+      const snapshotConDescuentos = {
+        ...firstSnapshot,
+        paquete: {
+          ...firstSnapshot.paquete,
+          descuentosGenerales: firstSnapshot.paquete.descuentosGenerales || {
+            aplicarAlDesarrollo: false,
+            aplicarAServiciosBase: false,
+            aplicarAOtrosServicios: false,
+            porcentaje: 0,
+          },
+          descuentosPorServicio: firstSnapshot.paquete.descuentosPorServicio || {
+            aplicarAServiciosBase: false,
+            aplicarAOtrosServicios: false,
+            serviciosBase: firstSnapshot.serviciosBase.map(s => ({
+              servicioId: s.id,
+              aplicarDescuento: false,
+              porcentajeDescuento: 0,
+            })),
+            otrosServicios: firstSnapshot.otrosServicios.map((s, idx) => ({
+              servicioId: s.id || `otro-servicio-${idx}`,
+              aplicarDescuento: false,
+              porcentajeDescuento: 0,
+            })),
+          },
+        },
+      }
+
+      setSnapshotEditando(snapshotConDescuentos)
+      setSnapshotOriginalJson(JSON.stringify(firstSnapshot))
+      setActiveTabFila2(firstSnapshot.id)
+    }
+
+    // 4. Inicializar TABs
+    setActiveTabFila1('cotizacion')
+    setActiveTabFila3('descripcion')
+
+    // 5. Establecer modo según parámetro
+    if (modo === 'ver') {
+      setReadOnly(true)
+    } else {
+      setReadOnly(false)
+    }
+    setAlertaMostradaEnSesion(false)
+
+    // 6. Mostrar modal
     setShowModalEditar(true)
-    setSnapshotOriginalJson(JSON.stringify(snapshot))
+  }
+
+  /**
+   * FASE 10: Función para activar la cotización y luego abrir el modal
+   */
+  const activarYAbrirModal = async () => {
+    if (!datosDialogo?.quotation) return
+
+    try {
+      // Desactivar todas las demás
+      await desactivarTodas(datosDialogo.quotation.id)
+
+      // Recargar cotizaciones para tener el estado actualizado
+      await recargarQuotations()
+
+      // Abrir el modal
+      abrirModalEditarInterno(datosDialogo.quotation, datosDialogo.modoAbrir || 'editar')
+
+      // Cerrar diálogo
+      setMostrarDialogo(false)
+      setDatosDialogo(null)
+
+      toast.success('✓ Cotización activada. Abriendo para editar...')
+    } catch (error) {
+      console.error('Error al activar cotización:', error)
+      toast.error('Error al activar la cotización')
+    }
+  }
+
+  /**
+   * FASE 10: Función para abrir sin activar (solo lectura)
+   */
+  const abrirSinActivar = () => {
+    if (!datosDialogo?.quotation) return
+    
+    abrirModalEditarInterno(datosDialogo.quotation, datosDialogo.modoAbrir || 'ver')
+    setMostrarDialogo(false)
+    setDatosDialogo(null)
+  }
+
+  const abrirModalEditar = (quotation: QuotationConfig) => {
+    abrirModalConActivacion(quotation, 'editar')
+  }
+
+  const abrirModalVer = (quotation: QuotationConfig) => {
+    abrirModalConActivacion(quotation, 'ver')
+  }
+
+  // FASE 14: Función para detectar cambios en el snapshot
+  const hayCambiosEnSnapshot = (): boolean => {
+    if (!snapshotEditando || !snapshotOriginalJson) return false
+    
+    const snapshotActual = JSON.stringify(snapshotEditando)
+    return snapshotActual !== snapshotOriginalJson
+  }
+
+  // FASE 14: Función para cerrar modal con validación de cambios sin guardar
+  const cerrarModalConValidacion = () => {
+    if (readOnly) {
+      // Modo lectura → Cerrar sin preguntar
+      setShowModalEditar(false)
+      setSnapshotEditando(null)
+      setQuotationEstadoAntes(null)
+      return
+    }
+
+    if (hayCambiosEnSnapshot()) {
+      // Hay cambios → Preguntar
+      mostrarDialogoGenerico({
+        tipo: 'advertencia',
+        titulo: 'Cambios sin guardar',
+        icono: '⚠️',
+        mensaje: '¿Estás seguro de que deseas cerrar? Los cambios se perderán.',
+        botones: [
+          {
+            label: 'Seguir editando',
+            action: () => {},
+            style: 'secondary'
+          },
+          {
+            label: 'Descartar cambios',
+            action: () => {
+              setShowModalEditar(false)
+              setSnapshotEditando(null)
+              setQuotationEstadoAntes(null)
+              setSnapshotOriginalJson(null)
+            },
+            style: 'danger'
+          }
+        ]
+      })
+    } else {
+      // No hay cambios → Cerrar directamente
+      setShowModalEditar(false)
+      setSnapshotEditando(null)
+      setQuotationEstadoAntes(null)
+    }
   }
 
   const guardarEdicion = async () => {
@@ -644,13 +1058,49 @@ export default function Administrador() {
       // Llamar refresh global para notificar a todos los componentes
       await refreshSnapshots()
       
+      // FASE 13: Lógica de activación al guardar desde cotización INACTIVA
+      if (quotationEstadoAntes?.wasGlobal === false && quotationEnModal) {
+        // Era INACTIVA → Preguntar si activar
+        mostrarDialogoGenerico({
+          tipo: 'confirmacion',
+          titulo: '¡Cambios guardados!',
+          icono: '✅',
+          mensaje: '¿Deseas activar esta cotización ahora? Al activarla, las demás serán desactivadas.',
+          subtitulo: quotationEnModal.numero || 'Sin número',
+          botones: [
+            {
+              label: 'Dejar inactiva',
+              action: () => {
+                toast.success('✓ Cambios guardados (cotización sigue inactiva)')
+              },
+              style: 'secondary'
+            },
+            {
+              label: 'Activar ahora',
+              action: async () => {
+                // Desactivar todas las demás
+                await desactivarTodas(quotationEnModal.id)
+                await recargarQuotations()
+                
+                toast.success('✓ Cotización activada y cambios guardados')
+              },
+              style: 'success'
+            }
+          ]
+        })
+      } else {
+        // Era ACTIVA → Solo guardar cambios sin preguntar
+        toast.success('✓ Cotización actualizada')
+      }
+
+      // Cerrar modal y limpiar estados
       setShowModalEditar(false)
       setSnapshotEditando(null)
-      alert('✅ Paquete actualizado correctamente')
+      setQuotationEstadoAntes(null)
       setSnapshotOriginalJson(JSON.stringify(snapshotActualizado))
     } catch (error) {
       console.error('Error al guardar edición:', error)
-      alert('❌ Error al actualizar el paquete. Por favor intenta de nuevo.')
+      toast.error('❌ Error al actualizar el paquete. Por favor intenta de nuevo.')
     }
   }
 
@@ -767,18 +1217,48 @@ export default function Administrador() {
 
   // Cerrar modal con validación de cambios sin guardar
   const handleCerrarModalEditar = () => {
-    // Usar nueva verificación basada en lastSavedJson y estado de autoguardado
-    if (snapshotEditando && tieneCambiosSinGuardar() && autoSaveStatus === 'saving') {
-      const confirmar = confirm('Se están guardando cambios. ¿Cerrar igualmente?')
-      if (!confirmar) return
-    } else if (snapshotEditando && tieneCambiosSinGuardar()) {
-      const confirmar = confirm('Hay cambios sin guardar. ¿Cerrar y descartar los cambios?')
-      if (!confirmar) return
+    // FASE 14: Usar nueva función mejorada para cerrar con validación
+    if (readOnly) {
+      // Modo lectura → Cerrar sin preguntar
+      setShowModalEditar(false)
+      setSnapshotEditando(null)
+      setQuotationEstadoAntes(null)
+      setSnapshotOriginalJson(null)
+      return
     }
-    setShowModalEditar(false)
-    setSnapshotEditando(null)
-    setActiveModalTab('descripcion')
-    setSnapshotOriginalJson(null)
+
+    if (hayCambiosEnSnapshot()) {
+      // Hay cambios → Preguntar
+      mostrarDialogoGenerico({
+        tipo: 'advertencia',
+        titulo: 'Cambios sin guardar',
+        icono: '⚠️',
+        mensaje: '¿Estás seguro de que deseas cerrar? Los cambios se perderán.',
+        botones: [
+          {
+            label: 'Seguir editando',
+            action: () => {},
+            style: 'secondary'
+          },
+          {
+            label: 'Descartar cambios',
+            action: () => {
+              setShowModalEditar(false)
+              setSnapshotEditando(null)
+              setQuotationEstadoAntes(null)
+              setSnapshotOriginalJson(null)
+            },
+            style: 'danger'
+          }
+        ]
+      })
+    } else {
+      // No hay cambios → Cerrar directamente
+      setShowModalEditar(false)
+      setSnapshotEditando(null)
+      setQuotationEstadoAntes(null)
+      setSnapshotOriginalJson(null)
+    }
   }
 
   // Foco inicial al abrir modal
@@ -808,21 +1288,125 @@ export default function Administrador() {
     }
   }, [quotations])
 
-  const handleEliminarSnapshot = async (id: string) => {
-    if (confirm('¿Estás seguro de que deseas eliminar este paquete?')) {
+  // ==================== USEEFFECT PARA ACTUALIZAR VALIDACIÓN DE TABS ====================
+  useEffect(() => {
+    // Actualizar estado de validación cada vez que cambian los datos principales
+    actualizarEstadoValidacionTabs()
+  }, [
+    cotizacionConfig,
+    serviciosBase,
+    paqueteActual,
+    snapshots,
+  ])
+
+  // ==================== USEEFFECT PARA MIGRAR SNAPSHOTS ACTIVOS SIN VINCULACIÓN ====================
+  useEffect(() => {
+    const migrarSnapshotsSinVinculacion = async () => {
+      // Solo ejecutar si hay cotizacionConfig y snapshots cargados
+      if (!cotizacionConfig?.id || !snapshots || snapshots.length === 0) {
+        console.log('⏭️ Saltando migración - cotizacionConfig:', !!cotizacionConfig?.id, 'snapshots:', snapshots?.length)
+        return
+      }
+
+      // Buscar snapshots ACTIVOS sin quotationConfigId
+      const paquetesActivosSinVinculacion = snapshots.filter(s => s.activo && !s.quotationConfigId)
+      
+      console.log('📊 Snapshots activos:', snapshots.filter(s => s.activo).length)
+      console.log('📊 Snapshots activos sin vinculación:', paquetesActivosSinVinculacion.length)
+      
+      if (paquetesActivosSinVinculacion.length === 0) {
+        console.log('✅ Todos los paquetes activos ya están vinculados')
+        return
+      }
+
+      console.warn(`⚠️ Detectados ${paquetesActivosSinVinculacion.length} paquete(s) activo(s) sin vinculación. Migrando a ${cotizacionConfig.id}...`)
+
       try {
-        await eliminarSnapshot(id)
-        setSnapshots(snapshots.filter(s => s.id !== id))
+        // Actualizar cada snapshot ACTIVO sin vinculación con el quotationConfigId actual
+        for (const snapshot of paquetesActivosSinVinculacion) {
+          console.log(`🔄 Vinculando snapshot ${snapshot.id} a cotización ${cotizacionConfig.id}`)
+          const snapshotActualizado = {
+            ...snapshot,
+            quotationConfigId: cotizacionConfig.id,
+          }
+          
+          // Guardar en la API
+          await actualizarSnapshot(snapshotActualizado)
+          console.log(`✅ Snapshot ${snapshot.id} vinculado correctamente`)
+        }
+
+        // Recargar snapshots después de la migración
+        console.log('🔄 Recargando snapshots desde la API...')
+        const snapshotsActualizados = await obtenerSnapshotsCompleto()
+        setSnapshots(snapshotsActualizados)
+        console.log(`✅ ${paquetesActivosSinVinculacion.length} paquete(s) activo(s) vinculados correctamente`)
         
-        // Llamar refresh global para notificar a todos los componentes
-        await refreshSnapshots()
-        
-        alert('✅ Paquete eliminado correctamente')
+        toast.info(`✅ ${paquetesActivosSinVinculacion.length} paquete(s) activo(s) vinculados correctamente`)
       } catch (error) {
-        console.error('Error al eliminar snapshot:', error)
-        alert('❌ Error al eliminar el paquete. Por favor intenta de nuevo.')
+        console.error('❌ Error migrando snapshots:', error)
+        toast.error('Error al vincular paquetes. Intenta recargar la página.')
       }
     }
+
+    migrarSnapshotsSinVinculacion()
+  }, [cotizacionConfig?.id, snapshots.length])
+
+  const handleEliminarSnapshot = async (id: string) => {
+    mostrarDialogoGenerico({
+      tipo: 'confirmacion',
+      titulo: '¿Eliminar paquete?',
+      icono: '🗑️',
+      mensaje: '¿Estás seguro de que deseas eliminar este paquete? Esta acción no se puede deshacer.',
+      botones: [
+        {
+          label: 'Cancelar',
+          action: () => {},
+          style: 'secondary'
+        },
+        {
+          label: 'Eliminar',
+          action: async () => {
+            try {
+              await eliminarSnapshot(id)
+              setSnapshots(snapshots.filter(s => s.id !== id))
+              
+              // Llamar refresh global para notificar a todos los componentes
+              await refreshSnapshots()
+              
+              mostrarDialogoGenerico({
+                tipo: 'success',
+                titulo: '¡Listo!',
+                icono: '✅',
+                mensaje: 'Paquete eliminado correctamente.',
+                botones: [
+                  {
+                    label: 'Entendido',
+                    action: () => {},
+                    style: 'primary'
+                  }
+                ]
+              })
+            } catch (error) {
+              console.error('Error al eliminar snapshot:', error)
+              mostrarDialogoGenerico({
+                tipo: 'error',
+                titulo: 'Error al eliminar',
+                icono: '❌',
+                mensaje: 'Ocurrió un error al eliminar el paquete. Por favor intenta de nuevo.',
+                botones: [
+                  {
+                    label: 'Entendido',
+                    action: () => {},
+                    style: 'primary'
+                  }
+                ]
+              })
+            }
+          },
+          style: 'danger'
+        }
+      ]
+    })
   }
 
   // ==================== FUNCIONES AUXILIARES FASES 3-6 ====================
@@ -841,7 +1425,7 @@ export default function Administrador() {
       return true
     } catch (error) {
       console.error('Error en desactivarTodas:', error)
-      toast.error('❌ Error al desactivar otras cotizaciones')
+      toast.error('Error al desactivar otras cotizaciones')
       return false
     }
   }
@@ -894,11 +1478,82 @@ export default function Administrador() {
   }
 
   /**
+   * Crea una NUEVA cotización con ID único
+   */
+  const crearNuevaCotizacion = async () => {
+    try {
+      toast.info('⏳ Creando nueva cotización...')
+
+      const response = await fetch('/api/quotation-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          version: '1.0',
+          tiempoValidez: 30,
+          presupuesto: 'Menos de $300 USD',
+          moneda: 'USD',
+          empresa: '',
+          sector: '',
+          ubicacion: '',
+          profesional: '',
+          empresaProveedor: 'Urbanísima Constructora S.R.L',
+          emailProveedor: '',
+          whatsappProveedor: '',
+          ubicacionProveedor: '',
+          heroTituloMain: 'Mi Propuesta',
+          heroTituloSub: 'Cotización personalizada',
+        }),
+      })
+
+      if (!response.ok) throw new Error('Error creando cotización')
+
+      const nuevaCotizacion = await response.json()
+
+      // Cargar la nueva cotización en la UI
+      setCotizacionConfig(nuevaCotizacion)
+
+      // Resetear estado de validación de TABs
+      setEstadoValidacionTabs({
+        cotizacion: 'pendiente',
+        oferta: 'pendiente',
+        paquetes: 'pendiente',
+        estilos: 'pendiente',
+      })
+
+      // Resetear snapshots (paquetes)
+      setSnapshots([])
+
+      // Ir al TAB Cotización
+      setActivePageTab('cotizacion')
+
+      toast.success('✅ Nueva cotización creada. Comienza completando el TAB Cotización.')
+      
+      // Recargar cotizaciones
+      await recargarQuotations()
+    } catch (error) {
+      console.error('Error creando nueva cotización:', error)
+      toast.error('Error al crear nueva cotización')
+    }
+  }
+
+  /**
    * PROPUESTA 3: Mostrar modal de confirmación con resumen de paquetes antes de guardar
    */
   const mostrarConfirmacionGuardar = async () => {
     if (!cotizacionConfig) {
-      alert('❌ No hay cotización activa')
+      mostrarDialogoGenerico({
+        tipo: 'error',
+        titulo: 'Sin cotización activa',
+        icono: '⚠️',
+        mensaje: 'No hay cotización cargada. Por favor, carga o crea una cotización primero.',
+        botones: [
+          {
+            label: 'Entendido',
+            action: () => {},
+            style: 'primary'
+          }
+        ]
+      })
       return
     }
 
@@ -917,35 +1572,101 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
 💰 COSTOS:
 • Inicial: $${resumen.costoTotalInicial.toFixed(2)}
 • Año 1: $${resumen.costoTotalAño1.toFixed(2)}
-• Año 2: $${resumen.costoTotalAño2.toFixed(2)}
+• Año 2: $${resumen.costoTotalAño2.toFixed(2)}`
 
-¿Deseas guardar esta cotización con todos sus paquetes?
-    `
-
-    if (window.confirm(mensaje)) {
-      await guardarConfiguracionActual()
-    }
+    mostrarDialogoGenerico({
+      tipo: 'confirmacion',
+      titulo: 'Guardar Cotización',
+      icono: '💾',
+      mensaje: mensaje,
+      subtitulo: '¿Deseas guardar esta cotización con todos sus paquetes?',
+      botones: [
+        {
+          label: 'Cancelar',
+          action: () => {},
+          style: 'secondary'
+        },
+        {
+          label: 'Guardar',
+          action: async () => {
+            await guardarConfiguracionActual()
+          },
+          style: 'primary'
+        }
+      ]
+    })
   }
 
   /**
-   * Guarda la configuración de cotización en el header
+   * Función helper genérica para mostrar diálogos
+   * Centraliza toda la lógica de diálogos en un solo lugar
+   */
+  const mostrarDialogoGenerico = (config: DialogConfig) => {
+    setDatosDialogo(config)
+    setMostrarDialogo(true)
+  }
+
+  /**
+   * Guarda la configuración de cotización en el header (Guardar Paquete)
+   * VERSIÓN MEJORADA: Valida todos los TABs de forma integrada
    */
   const guardarConfiguracionActual = async () => {
+    // PASO 0: Actualizar estado de validación de todos los TABs
+    actualizarEstadoValidacionTabs()
+
     // PASO 1: Validar que hay cotización cargada
     if (!cotizacionConfig) {
-      toast.error('❌ No hay cotización cargada')
+      toast.error('No hay cotización cargada')
       return
     }
 
-    // PASO 1B: Validar que todos los paquetes tienen quotationConfigId
-    const paquetesSinVinculacion = snapshots.filter(s => !s.quotationConfigId)
-    if (paquetesSinVinculacion.length > 0) {
-      toast.error(`❌ Hay ${paquetesSinVinculacion.length} paquete(s) sin vinculación. Recarga la página e intenta de nuevo.`)
-      console.error('Paquetes sin quotationConfigId:', paquetesSinVinculacion)
+    // PASO 2: Validar que todos los TABs están OK
+    const validarCotizacion = validarTabCotizacion()
+    const validarOferta = validarTabOferta()
+    const validarPaquetes = validarTabPaquetes()
+
+    if (!validarCotizacion.valido) {
+      toast.error(`Cotización incompleto:\n${validarCotizacion.errores.join('\n')}`)
+      setActivePageTab('cotizacion')
       return
     }
 
-    // PASO 2: Validaciones específicas de campos requeridos
+    if (!validarOferta.valido) {
+      toast.error(`Oferta incompleto:\n${validarOferta.errores.join('\n')}`)
+      setActivePageTab('oferta')
+      return
+    }
+
+    if (!validarPaquetes.valido) {
+      toast.error(`Paquetes incompleto:\n${validarPaquetes.errores.join('\n')}`)
+      setActivePageTab('paquetes')
+      return
+    }
+
+    // PASO 3: INTENTAR VINCULAR automáticamente paquetes activos sin vinculación
+    const paquetesActivosSinVinculacion = snapshots.filter(s => s.activo && !s.quotationConfigId)
+    if (paquetesActivosSinVinculacion.length > 0) {
+      console.log(`⏳ Intentando vincular ${paquetesActivosSinVinculacion.length} paquete(s) activo(s)...`)
+      try {
+        for (const snapshot of paquetesActivosSinVinculacion) {
+          const snapshotActualizado = {
+            ...snapshot,
+            quotationConfigId: cotizacionConfig?.id,
+          }
+          await actualizarSnapshot(snapshotActualizado)
+        }
+        // Recargar snapshots después de vincular
+        const snapshotsActualizados = await obtenerSnapshotsCompleto()
+        setSnapshots(snapshotsActualizados)
+        toast.info(`✅ ${paquetesActivosSinVinculacion.length} paquete(s) vinculado(s) correctamente`)
+      } catch (error) {
+        console.error('Error vinculando paquetes:', error)
+        toast.error(`Error al vincular ${paquetesActivosSinVinculacion.length} paquete(s). Por favor intenta de nuevo.`)
+        return
+      }
+    }
+
+    // PASO 4: Validaciones específicas de campos requeridos
     const errores: typeof erroresValidacionCotizacion = {}
 
     if (!cotizacionConfig?.empresa?.trim()) {
@@ -967,19 +1688,20 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
     if (Object.keys(errores).length > 0) {
       setErroresValidacionCotizacion(errores)
       toast.error('⚠️ Hay errores en los datos. Revisa los campos resaltados.')
+      setActivePageTab('cotizacion')
       return
     }
 
-    // PASO 3: Validar si está habilitada la validación completa
+    // PASO 5: Validar si está habilitada la validación completa
     if (userPreferences?.validarDatosAntes) {
       const { valido, errores: erroresCompletos } = validarQuotation(cotizacionConfig)
       if (!valido) {
-        toast.error(`❌ Errores de validación:\n${erroresCompletos.slice(0, 3).join('\n')}`)
+        toast.error(`Errores de validación:\n${erroresCompletos.slice(0, 3).join('\n')}`)
         return
       }
     }
 
-    // PASO 4: Comparar con datos guardados para evitar duplicados
+    // PASO 6: Comparar con datos guardados para evitar duplicados
     const sonIguales = compararQuotations(cotizacionConfig, {
       numero: cotizacionConfig.numero,
       empresa: cotizacionConfig.empresa,
@@ -1002,42 +1724,51 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
     }
 
     try {
-      // PASO 5: Guardar en BD
+      // PASO 7: Guardar en BD - Incrementar versión
       toast.info('⏳ Guardando cotización...')
+      
+      // Incrementar versionNumber cada vez que se guarda
+      const cotizacionConVersionActualizada = {
+        ...cotizacionConfig,
+        versionNumber: (cotizacionConfig.versionNumber || 1) + 1,
+      }
       
       const response = await fetch(`/api/quotation-config/${cotizacionConfig.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cotizacionConfig),
+        body: JSON.stringify(cotizacionConVersionActualizada),
       })
 
       if (!response.ok) throw new Error('Error guardando')
 
-      // PASO 6: Desactivar todas y activar esta
+      // PASO 8: Actualizar estado local con la nueva versión
+      setCotizacionConfig(cotizacionConVersionActualizada)
+
+      // PASO 9: Desactivar todas y activar esta
       const desactivOk = await desactivarTodas(cotizacionConfig.id)
       if (!desactivOk) return
 
-      // PASO 7: Mostrar éxito
+      // PASO 10: Mostrar éxito
       setErroresValidacionCotizacion({})
       toast.success(
         '✅ Cotización guardada correctamente. El resto han sido puestas en modo inactivo'
       )
 
-      // PASO 8: Recargar datos
+      // PASO 11: Recargar datos
       await recargarQuotations()
 
-      // PASO 9: Mostrar confirmación adicional si preferencia está activa
+      // PASO 12: Mostrar confirmación adicional si preferencia está activa
       if (userPreferences?.mostrarConfirmacionGuardado) {
         toast.info('✓ Cambios guardados exitosamente')
       }
 
-      // PASO 10: Cerrar modal si preferencia está activa
+      // PASO 13: Cerrar modal si preferencia está activa
       if (userPreferences?.cerrarModalAlGuardar && showModalEditar) {
         handleCerrarModalEditar()
       }
     } catch (error) {
       console.error('Error guardando:', error)
-      toast.error('❌ Error al guardar cotización. Intenta de nuevo.')
+      toast.error('Error al guardar cotización. Intenta de nuevo.')
     }
   }
 
@@ -1046,7 +1777,19 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
   // Funciones para PDF y Guardar Configuración
   const handleDescargarPdf = () => {
     if (snapshots.length === 0) {
-      alert('No hay paquetes para descargar. Por favor, crea un paquete primero.')
+      mostrarDialogoGenerico({
+        tipo: 'error',
+        titulo: 'Sin paquetes',
+        icono: '📦',
+        mensaje: 'No hay paquetes para descargar. Por favor, crea un paquete primero.',
+        botones: [
+          {
+            label: 'Entendido',
+            action: () => {},
+            style: 'primary'
+          }
+        ]
+      })
       return
     }
     const ultimoSnapshot = snapshots[snapshots.length - 1]
@@ -1205,31 +1948,31 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
   const pageTabs: TabItem[] = [
     {
       id: 'cotizacion',
-      label: 'Cotización',
+      label: `Cotización ${estadoValidacionTabs.cotizacion === 'error' ? '⚠️' : estadoValidacionTabs.cotizacion === 'ok' ? '✓' : ''}`,
       icon: <FaFileAlt size={16} />,
       content: <div />, // Placeholder
-      hasChanges: false,
+      hasChanges: estadoValidacionTabs.cotizacion === 'error',
     },
     {
       id: 'oferta',
-      label: 'Oferta',
+      label: `Oferta ${estadoValidacionTabs.oferta === 'error' ? '⚠️' : estadoValidacionTabs.oferta === 'ok' ? '✓' : ''}`,
       icon: <FaGlobe size={16} />,
       content: <div />, // Placeholder
-      hasChanges: false,
+      hasChanges: estadoValidacionTabs.oferta === 'error',
     },
     {
       id: 'paquetes',
-      label: 'Paquetes',
+      label: `Paquetes ${estadoValidacionTabs.paquetes === 'error' ? '⚠️' : estadoValidacionTabs.paquetes === 'ok' ? '✓' : ''}`,
       icon: <FaGift size={16} />,
       content: <div />, // Placeholder
-      hasChanges: false,
+      hasChanges: estadoValidacionTabs.paquetes === 'error',
     },
     {
       id: 'estilos',
-      label: 'Estilos y Diseño',
+      label: `Estilos y Diseño ${estadoValidacionTabs.estilos === 'error' ? '⚠️' : estadoValidacionTabs.estilos === 'ok' ? '✓' : ''}`,
       icon: <FaPalette size={16} />,
       content: <div />, // Placeholder
-      hasChanges: false,
+      hasChanges: estadoValidacionTabs.estilos === 'error',
     },
     {
       id: 'historial',
@@ -1240,34 +1983,8 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
           quotations={quotations} 
           snapshots={snapshots}
           onEdit={(quotation) => {
-              // FASE 3: No cambiar el estado activo al editar
-              setCotizacionActual({
-                id: quotation.id,
-                numero: quotation.numero,
-                versionNumber: quotation.versionNumber,
-                fechaEmision: quotation.fechaEmision,
-                tiempoValidez: quotation.tiempoValidez,
-                empresa: quotation.empresa,
-                sector: quotation.sector,
-                ubicacion: quotation.ubicacion,
-                emailCliente: quotation.emailCliente,
-                whatsappCliente: quotation.whatsappCliente,
-                profesional: quotation.profesional,
-                empresaProveedor: quotation.empresaProveedor,
-                emailProveedor: quotation.emailProveedor,
-                whatsappProveedor: quotation.whatsappProveedor,
-                ubicacionProveedor: quotation.ubicacionProveedor,
-                heroTituloMain: quotation.heroTituloMain,
-                heroTituloSub: quotation.heroTituloSub,
-              })
-              const quotationSnapshot = snapshots.find(s => s.quotationConfigId === quotation.id)
-              if (quotationSnapshot) {
-                setSnapshotEditando(quotationSnapshot)
-              }
-              setReadOnly(false) // Modo editable
-              setShowModalEditar(true)
-              console.log('Cotización cargada en modo EDITABLE (sin cambiar estado activo):', quotation.numero)
-            }}
+            abrirModalEditar(quotation)
+          }}
             onDelete={async (quotationId) => {
               // Guardar el estado actual por si acaso necesitamos revertir
               const quotationsAnteriores = quotations
@@ -1292,7 +2009,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                 
                 if (!response.ok) {
                   // Si falla, restaurar inmediatamente
-                  console.error('❌ DELETE HANDLER: HTTP Error - restaurando estado')
+                  console.error('DELETE HANDLER: HTTP Error - restaurando estado')
                   setQuotations(quotationsAnteriores)
                   throw new Error(`HTTP ${response.status}`)
                 }
@@ -1306,15 +2023,15 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                   toast.success('✅ Cotización eliminada correctamente')
                 } else {
                   // API retorna error - restaurar
-                  console.error('❌ DELETE HANDLER: API error:', resultData.error)
+                  console.error('DELETE HANDLER: API error:', resultData.error)
                   setQuotations(quotationsAnteriores)
-                  toast.error('❌ Error en el servidor: ' + (resultData.error || 'Error desconocido'))
+                  toast.error('Error en el servidor: ' + (resultData.error || 'Error desconocido'))
                 }
               } catch (error) {
                 console.error('Error eliminando cotización:', error)
                 // Restaurar el estado original en caso de error
                 setQuotations(quotationsAnteriores)
-                toast.error('❌ Error al eliminar la cotización. Por favor intenta de nuevo.')
+                toast.error('Error al eliminar la cotización. Por favor intenta de nuevo.')
               }
             }}
             onToggleActive={async (quotationId, newStatus) => {
@@ -1343,59 +2060,11 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                 await recargarQuotations()
               } catch (error) {
                 console.error('Error actualizando cotización:', error)
-                toast.error('❌ Error al actualizar el estado')
+                toast.error('Error al actualizar el estado')
               }
             }}
             onViewProposal={(quotation) => {
-              // FASE 5: Abrir en modo lectura (read-only)
-              setCotizacionActual({
-                id: quotation.id,
-                numero: quotation.numero,
-                versionNumber: quotation.versionNumber,
-                fechaEmision: quotation.fechaEmision,
-                tiempoValidez: quotation.tiempoValidez,
-                empresa: quotation.empresa,
-                sector: quotation.sector,
-                ubicacion: quotation.ubicacion,
-                emailCliente: quotation.emailCliente,
-                whatsappCliente: quotation.whatsappCliente,
-                profesional: quotation.profesional,
-                empresaProveedor: quotation.empresaProveedor,
-                emailProveedor: quotation.emailProveedor,
-                whatsappProveedor: quotation.whatsappProveedor,
-                ubicacionProveedor: quotation.ubicacionProveedor,
-                heroTituloMain: quotation.heroTituloMain,
-                heroTituloSub: quotation.heroTituloSub,
-              })
-              const quotationSnapshot = snapshots.find(s => s.quotationConfigId === quotation.id)
-              if (quotationSnapshot) {
-                // FASE 5: Cargar datos completos del snapshot pero sin editar
-                setPaqueteActual({
-                  nombre: quotationSnapshot.nombre,
-                  desarrollo: quotationSnapshot.paquete.desarrollo,
-                  descuento: quotationSnapshot.paquete.descuento,
-                  activo: quotationSnapshot.activo,
-                  tipo: quotationSnapshot.paquete.tipo,
-                  descripcion: quotationSnapshot.paquete.descripcion,
-                  emoji: quotationSnapshot.paquete.emoji,
-                  tagline: quotationSnapshot.paquete.tagline,
-                  precioHosting: quotationSnapshot.paquete.precioHosting,
-                  precioMailbox: quotationSnapshot.paquete.precioMailbox,
-                  precioDominio: quotationSnapshot.paquete.precioDominio,
-                  tiempoEntrega: quotationSnapshot.paquete.tiempoEntrega,
-                  opcionesPago: quotationSnapshot.paquete.opcionesPago,
-                  descuentoPagoUnico: quotationSnapshot.paquete.descuentoPagoUnico,
-                  descuentosGenerales: quotationSnapshot.paquete.descuentosGenerales,
-                  descuentosPorServicio: quotationSnapshot.paquete.descuentosPorServicio,
-                  gestionMensual: quotationSnapshot.paquete.gestionMensual,
-                })
-                setSnapshotEditando(quotationSnapshot)
-                setReadOnly(true) // Modo lectura
-                setShowModalEditar(true)
-                console.log('Cotización cargada en modo LECTURA (sin cambiar estado activo):', quotation.numero)
-              } else {
-                toast.error('❌ No se encontró paquete asociado')
-              }
+              abrirModalVer(quotation)
             }}
           />
       ),
@@ -1411,21 +2080,21 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
   ]
 
   return (
-    <div className="relative min-h-screen bg-black text-[#ededed]">
+    <div className="relative min-h-screen bg-gh-bg text-gh-text">
       <Navigation />
-      <div className="max-w-7xl mx-auto py-12 px-4 pt-20">
+      <div className="max-w-7xl mx-auto py-8 px-4 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           {/* Header con botones de acción */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-gh-border pb-6">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
+              <h1 className="text-3xl md:text-4xl font-bold text-gh-text mb-2">
                 Panel Administrativo
               </h1>
-              <p className="text-sm text-white/80">
+              <p className="text-sm text-gh-text-muted">
                 Gestione toda la configuración de su propuesta de cotización.
               </p>
             </div>
@@ -1434,15 +2103,23 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleDescargarPdf}
-                className="px-4 py-2 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all flex items-center gap-2 text-xs font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f]"
+                className="px-6 py-2.5 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all flex items-center gap-2 text-sm font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gh-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-gh-bg"
               >
                 <FaDownload /> Descargar PDF
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={crearNuevaCotizacion}
+                className="px-6 py-2.5 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all flex items-center gap-2 text-sm font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gh-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-gh-bg"
+              >
+                <FaPlus /> Nueva Cotización
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={mostrarConfirmacionGuardar}
-                className="px-4 py-2 bg-white text-[#0a0a0f] rounded-lg hover:shadow-lg transition-all flex items-center gap-2 text-xs font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f]"
+                className="px-6 py-2.5 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all flex items-center gap-2 text-sm font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gh-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-gh-bg-absolute"
               >
                 <FaSave /> Guardar Cotización
               </motion.button>
@@ -1466,12 +2143,12 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
             <TabsModal
               tabs={pageTabs}
               activeTab={activePageTab}
-              onTabChange={setActivePageTab}
+              onTabChange={handleCambioTab}
             />
           </div>
 
           {/* Tab Content - usando componentes */}
-          <div className="bg-black rounded-b-lg border-b border-l border-r border-[#333]">
+          <div className="bg-gh-bg rounded-b-md border-b border-l border-r border-gh-border">
             {/* TAB 1: COTIZACIÓN */}
             {activePageTab === 'cotizacion' && (
               <CotizacionTab
@@ -1533,7 +2210,13 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                 setSnapshots={setSnapshots}
                 cargandoSnapshots={cargandoSnapshots}
                 errorSnapshots={errorSnapshots}
-                abrirModalEditar={abrirModalEditar}
+                abrirModalEditar={(snapshot) => {
+                  // Encontrar la quotation del snapshot
+                  const quotation = quotations.find(q => q.id === snapshot.quotationConfigId)
+                  if (quotation) {
+                    abrirModalEditar(quotation)
+                  }
+                }}
                 handleEliminarSnapshot={handleEliminarSnapshot}
                 calcularCostoInicialSnapshot={calcularCostoInicialSnapshot}
                 calcularCostoAño1Snapshot={calcularCostoAño1Snapshot}
@@ -1573,11 +2256,11 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                       setUserPreferences(result.data)
                       toast.success('✓ Preferencias guardadas correctamente')
                     } else {
-                      toast.error('❌ Error al guardar preferencias')
+                      toast.error('Error al guardar preferencias')
                     }
                   } catch (error) {
                     console.error('Error guardando preferencias:', error)
-                    toast.error('❌ Error al guardar preferencias')
+                    toast.error('Error al guardar preferencias')
                   }
                 }}
               />
@@ -1586,9 +2269,9 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
         </motion.div>
       </div>
 
-      {/* Modal Editar Snapshot */}
+      {/* Modal Editar Snapshot - NUEVA ARQUITECTURA 3-FILA */}
       <AnimatePresence>
-        {showModalEditar && snapshotEditando && (
+        {showModalEditar && quotationEnModal && snapshotEditando && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1600,14 +2283,14 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-black rounded-xl border border-[#333] max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden"
+              className="bg-gh-bg rounded-md border border-gh-border max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
               aria-labelledby="modal-editar-titulo"
             >
-              {/* Header Fijo - Diseño Profesional Minimalista */}
-              <div className="flex-shrink-0 bg-[#111] text-[#ededed] py-3 px-5 flex justify-between items-center border-b border-[#333]">
+              {/* Header Fijo */}
+              <div className="flex-shrink-0 bg-gh-bg-secondary text-gh-text py-3 px-5 flex justify-between items-center border-b border-gh-border">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 id="modal-editar-titulo" className="text-lg font-bold flex items-center gap-2">
@@ -1617,22 +2300,65 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                       <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">📖 Solo lectura</span>
                     )}
                   </div>
-                  <p className="text-xs text-[#888888] mt-0.5">
-                    {readOnly ? 'Visualizar configuración del paquete' : 'Editar configuración del paquete'}
+                  <p className="text-xs text-gh-text-muted mt-0.5">
+                    {readOnly ? 'Visualizar configuración' : 'Editar configuración'}
                   </p>
                 </div>
                 <button
                   aria-label="Cerrar modal edición"
                   onClick={handleCerrarModalEditar}
-                  className="text-[#888888] hover:text-[#ededed] text-2xl transition-all hover:scale-110"
+                  className="text-gh-text-muted hover:text-gh-text text-2xl transition-all hover:scale-110"
                 >
                   <FaTimes />
                 </button>
               </div>
 
-              {/* Contenido Scrollable */}
+              {/* FILA 1: Cotización (Información General) */}
+              <div className="flex-shrink-0 border-b border-gh-border">
+                <TabsModal
+                  tabs={[
+                    {
+                      id: 'cotizacion',
+                      label: 'Cotización',
+                      icon: <FaFileAlt />,
+                      content: (
+                        <div className="p-4 bg-gh-bg">
+                          <p className="text-xs text-gh-text-muted">Información de la cotización</p>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  activeTab={activeTabFila1}
+                  onTabChange={setActiveTabFila1}
+                />
+              </div>
+
+              {/* FILA 2: Paquetes Dinámicos (Lista de Snapshots) */}
+              <div className="flex-shrink-0 border-b border-gh-border bg-gh-bg">
+                <div className="overflow-x-auto">
+                  <div className="flex gap-1 p-2">
+                    {snapshotsModalActual.map((snapshot) => (
+                      <button
+                        key={snapshot.id}
+                        onClick={() => {
+                          setSnapshotEditando(snapshot)
+                          setActiveTabFila2(snapshot.id)
+                        }}
+                        className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-all ${
+                          activeTabFila2 === snapshot.id
+                            ? 'bg-gh-text text-gh-bg'
+                            : 'bg-gh-bg-secondary text-gh-text hover:bg-gh-border'
+                        }`}
+                      >
+                        {snapshot.nombre}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* FILA 3: Contenido Editable (TABs de Edición) */}
               <div ref={modalScrollContainerRef} className="flex-1 overflow-y-auto modal-scroll-container">
-                {/* TabsModal Component */}
                 <TabsModal
                   tabs={[
                     {
@@ -1641,7 +2367,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                       icon: <FaFileAlt />,
                       hasChanges: pestañaTieneCambios('descripcion'),
                       content: (
-                        <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                        <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-300px)]">
                           {/* Fila 1: nombre, tipo, emoji, tagline, tiempo de entrega, costo desarrollo */}
                           <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
                             <div>
@@ -2899,57 +3625,30 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         ),
                       },
                       {
-                        id: 'estilos-diseno',
-                        label: 'Estilos y Diseño',
-                        icon: <FaPalette />,
-                        hasChanges: pestañaTieneCambios('estilos-diseno'),
+                        id: 'contenido',
+                        label: 'Contenido',
+                        icon: <FaFileAlt />,
+                        hasChanges: pestañaTieneCambios('contenido'),
                         content: (
-                          <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-200px)]">
-                            <div className="space-y-3">
-                              <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Título Principal del Hero</label>
-                                <input
-                                  type="text"
-                                  value={cotizacionActual.heroTituloMain || ''}
-                                  onChange={(e) => setCotizacionActual({...cotizacionActual, heroTituloMain: e.target.value})}
-                                  disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
-                                  placeholder="Título principal de tu cotización"
-                                />
-                                <p className="text-[10px] text-[#888888] mt-1">Se mostrará como encabezado principal en tu propuesta</p>
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Subtítulo del Hero</label>
-                                <input
-                                  type="text"
-                                  value={cotizacionActual.heroTituloSub || ''}
-                                  onChange={(e) => setCotizacionActual({...cotizacionActual, heroTituloSub: e.target.value})}
-                                  disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
-                                  placeholder="Subtítulo o descripción breve"
-                                />
-                                <p className="text-[10px] text-[#888888] mt-1">Descripción complementaria debajo del título principal</p>
-                              </div>
-                              <div className="bg-[#111] p-4 rounded-lg border border-[#333]">
-                                <h3 className="text-xs font-bold text-[#ededed] mb-3">Vista Previa del Hero</h3>
-                                <div className="bg-black text-[#ededed] p-6 rounded-lg text-center border border-[#333]">
-                                  <h1 className="text-3xl font-bold mb-2 text-[#ededed]">{cotizacionActual.heroTituloMain || 'Título principal'}</h1>
-                                  <p className="text-lg text-[#888888]">{cotizacionActual.heroTituloSub || 'Subtítulo descriptivo'}</p>
-                                </div>
-                              </div>
-                            </div>
+                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-300px)]">
+                            <PaqueteContenidoTab 
+                              snapshot={snapshotEditando} 
+                              readOnly={readOnly}
+                              onChange={(updated) => setSnapshotEditando(updated)}
+                            />
                           </div>
                         ),
                       },
-                    ]}                    activeTab={activeModalTab}
-                    onTabChange={setActiveModalTab}
+                    ]}
+                    activeTab={activeTabFila3}
+                    onTabChange={setActiveTabFila3}
                     scrollContainerRef={modalScrollContainerRef}
                   />
               </div>
               {/* Fin Contenido Scrollable */}
 
               {/* Footer Fijo */}
-              <div className="flex-shrink-0 bg-[#12121a] border-t border-white/10 px-6 py-4 flex justify-between items-center">
+              <div className="flex-shrink-0 bg-gh-bg-secondary border-t border-gh-border px-6 py-4 flex justify-between items-center">
                 {/* Indicador de autoguardado a la izquierda */}
                 <div className="flex items-center gap-3">
                   {readOnly && (
@@ -2964,7 +3663,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                     <span className="text-sm text-white/90">✓ Cambios guardados</span>
                   )}
                   {!readOnly && autoSaveStatus === 'error' && (
-                    <span className="text-sm text-white/90">❌ Error al guardar. Reintentando...</span>
+                    <span className="text-sm text-white/90">Error al guardar. Reintentando...</span>
                   )}
                 </div>
                 {/* Botones a la derecha */}
@@ -3006,10 +3705,10 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
           >
             <motion.button
               onClick={crearPaqueteSnapshot}
-              className="w-16 h-16 bg-white text-[#0a0a0f] 
-                         rounded-full shadow-2xl hover:shadow-white/30
+              className="w-16 h-16 bg-gh-success text-white 
+                         rounded-full shadow-2xl hover:shadow-gh-success-hover/30
                          transition-all flex items-center justify-center
-                         border-2 border-white/20"
+                         border-2 border-gh-success/20"
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -3018,12 +3717,143 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
             
             {/* Tooltip */}
             <motion.div
-              className="absolute right-20 top-1/2 -translate-y-1/2 bg-[#1a1a24] text-white 
+              className="absolute right-20 top-1/2 -translate-y-1/2 bg-gh-bg text-gh-text 
                          px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap
-                         border border-white/10 pointer-events-none opacity-0 
+                         border border-gh-border pointer-events-none opacity-0 
                          group-hover:opacity-100 transition-opacity shadow-xl"
             >
               Crear Paquete
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* DIÁLOGO GENÉRICO - Para todos los tipos de diálogos */}
+      <AnimatePresence>
+        {mostrarDialogo && datosDialogo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]"
+            onClick={() => setMostrarDialogo(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`rounded-lg shadow-2xl p-8 max-w-sm w-full mx-4 border ${
+                datosDialogo.tipo === 'error' 
+                  ? 'bg-red-950/20 border-red-500/30' 
+                  : datosDialogo.tipo === 'advertencia'
+                  ? 'bg-yellow-950/20 border-yellow-500/30'
+                  : datosDialogo.tipo === 'success'
+                  ? 'bg-green-950/20 border-green-500/30'
+                  : datosDialogo.tipo === 'activar'
+                  ? 'bg-gh-bg-secondary border-gh-border'
+                  : 'bg-gh-bg-secondary border-gh-border'
+              }`}
+            >
+              {/* Header con icono y título */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="text-2xl">{datosDialogo.icono || '✓'}</div>
+                <h3 className={`text-xl font-bold ${
+                  datosDialogo.tipo === 'error'
+                    ? 'text-red-400'
+                    : datosDialogo.tipo === 'advertencia'
+                    ? 'text-yellow-400'
+                    : datosDialogo.tipo === 'success'
+                    ? 'text-green-400'
+                    : 'text-white'
+                }`}>
+                  {datosDialogo.titulo}
+                </h3>
+              </div>
+
+              {/* Subtítulo si existe */}
+              {datosDialogo.subtitulo && (
+                <p className="text-xs text-white/60 mb-2">{datosDialogo.subtitulo}</p>
+              )}
+
+              {/* Mensaje principal */}
+              <p className="text-white/80 mb-6">{datosDialogo.mensaje}</p>
+
+              {/* Caso especial: tipo 'activar' con opciones duales */}
+              {datosDialogo.tipo === 'activar' && datosDialogo.quotation ? (
+                <div className="flex gap-3">
+                  {datosDialogo.modoAbrir === 'editar' ? (
+                    <>
+                      <button
+                        onClick={() => setMostrarDialogo(false)}
+                        className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors font-semibold"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (datosDialogo.quotation) {
+                            await activarYAbrirModal()
+                          }
+                          setMostrarDialogo(false)
+                        }}
+                        className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center gap-2"
+                      >
+                        <FaCheck size={14} /> Activar y Editar
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={async () => {
+                          if (datosDialogo.quotation) {
+                            await abrirSinActivar()
+                          }
+                          setMostrarDialogo(false)
+                        }}
+                        className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors font-semibold"
+                      >
+                        Ver Solo Lectura
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (datosDialogo.quotation) {
+                            await activarYAbrirModal()
+                          }
+                          setMostrarDialogo(false)
+                        }}
+                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center gap-2"
+                      >
+                        <FaCheck size={14} /> Activar y Editar
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                /* Botones genéricos para otros tipos de diálogos */
+                <div className="flex gap-3 flex-wrap">
+                  {datosDialogo.botones.map((boton, idx) => (
+                    <button
+                      key={idx}
+                      onClick={async () => {
+                        await boton.action()
+                        setMostrarDialogo(false)
+                      }}
+                      className={`flex-1 min-w-max px-4 py-2 rounded-lg transition-colors font-semibold ${
+                        boton.style === 'primary'
+                          ? 'bg-white text-black hover:bg-white/90'
+                          : boton.style === 'danger'
+                          ? 'bg-red-600 hover:bg-red-700 text-white'
+                          : boton.style === 'success'
+                          ? 'bg-green-600 hover:bg-green-700 text-white'
+                          : 'bg-white/10 hover:bg-white/20 text-white'
+                      }`}
+                    >
+                      {boton.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

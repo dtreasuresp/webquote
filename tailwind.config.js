@@ -7,6 +7,29 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Absolute black for Vercel look
+        'gh-bg-absolute': '#0d1117',
+        'gh-bg': '#010409',           // GitHub ultra dark background
+        'gh-bg-overlay': '#0d1117',   // GitHub dark background
+        'gh-bg-secondary': '#161b22', // GitHub secondary bg
+        'gh-bg-tertiary': '#21262d',  // GitHub tertiary bg
+        // Button tokens
+        'gh-btn-primary': '#238636',
+        'gh-btn-secondary': '#21262d',
+        'gh-btn-ghost': 'transparent',
+        // GitHub-inspired dark palette
+        'gh-border': '#30363d',       // GitHub borders
+        'gh-border-light': '#444c56', // GitHub light borders
+        'gh-text': '#c9d1d9',         // GitHub primary text
+        'gh-text-muted': '#8b949e',   // GitHub muted text
+        'gh-text-secondary': '#6e7681', // GitHub secondary text
+        'gh-button-bg': '#21262d',    // GitHub button background
+        'gh-success': '#238636',      // GitHub green (success/primary)
+        'gh-success-hover': '#2ea043', // GitHub green hover
+        'gh-danger': '#f85149',       // GitHub red
+        'gh-warning': '#d29922',      // GitHub yellow
+        'gh-info': '#58a6ff',         // GitHub blue
+
         primary: {
           DEFAULT: '#DC2626', // Rojo corporativo - Energía y construcción
           dark: '#991B1B',     // Rojo oscuro - Hover y énfasis
@@ -37,6 +60,15 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        'xs': '12px',
+        'sm': '14px',
+        'base': '16px',
+        'lg': '18px',
+        'xl': '20px',
+        '2xl': '24px',
+        '3xl': '30px',
       },
     },
   },

@@ -59,24 +59,24 @@ export function validarQuotation(data: any): {
 
   camposRequeridos.forEach(({ campo, label }) => {
     if (!validarCampoRequerido(data[campo])) {
-      errores.push(`❌ ${label} es obligatorio`)
+      errores.push(`${label} es obligatorio`)
     }
   })
 
   // Validar emails
   if (data.emailCliente && !validarEmail(data.emailCliente)) {
-    errores.push(`❌ Email del cliente no es válido`)
+    errores.push(`Email del cliente no es válido`)
   }
   if (data.emailProveedor && !validarEmail(data.emailProveedor)) {
-    errores.push(`❌ Email del proveedor no es válido`)
+    errores.push(`Email del proveedor no es válido`)
   }
 
   // Validar teléfonos
   if (data.whatsappCliente && !validarTelefono(data.whatsappCliente)) {
-    errores.push(`❌ WhatsApp del cliente debe contener solo números, espacios y guiones`)
+    errores.push(`WhatsApp del cliente debe contener solo números, espacios y guiones`)
   }
   if (data.whatsappProveedor && !validarTelefono(data.whatsappProveedor)) {
-    errores.push(`❌ WhatsApp del proveedor debe contener solo números, espacios y guiones`)
+    errores.push(`WhatsApp del proveedor debe contener solo números, espacios y guiones`)
   }
 
   return {
@@ -133,19 +133,19 @@ export function validarSnapshot(data: any): {
 
   camposRequeridos.forEach(({ campo, label }) => {
     if (!validarCampoRequerido(data[campo])) {
-      errores.push(`❌ ${label} es obligatorio`)
+      errores.push(`${label} es obligatorio`)
     }
   })
 
   // Validar precios
   if (data.gestionPrecio !== undefined && !validarPrecio(data.gestionPrecio)) {
-    errores.push(`❌ Precio de gestión debe ser mayor a 0`)
+    errores.push(`Precio de gestión debe ser mayor a 0`)
   }
   if (data.desarrollo !== undefined && !validarPrecio(data.desarrollo)) {
-    errores.push(`❌ Precio de desarrollo debe ser mayor a 0`)
+    errores.push(`Precio de desarrollo debe ser mayor a 0`)
   }
   if (data.costoInicial !== undefined && !validarPrecio(data.costoInicial)) {
-    errores.push(`❌ Costo inicial debe ser mayor a 0`)
+    errores.push(`Costo inicial debe ser mayor a 0`)
   }
 
   return {

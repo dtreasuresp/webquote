@@ -38,7 +38,7 @@ Brindar servicios generales de la construcción y satisfacer las necesidades del
 | **Colores a Evitar** | Rosado |
 | **Estilo** | Corporativo y profesional |
 | **Logo** | ✅ Diseñado |
-| **Manual de Marca** | ❌ No disponible |
+| **Manual de Marca** | No disponible |
 
 ---
 
@@ -115,8 +115,8 @@ Brindar servicios generales de la construcción y satisfacer las necesidades del
 |----------|--------|---------------|
 | Logo | ✅ Disponible | Listo para implementar |
 | Videos Promocionales | ✅ Disponible | Cliente cuenta con material |
-| Textos/Contenidos | ❌ Requiere Creación | A ser desarrollados por el proveedor |
-| Manual de Marca | ❌ No Disponible | Será generado durante desarrollo |
+| Textos/Contenidos | Requiere Creación | A ser desarrollados por el proveedor |
+| Manual de Marca | No Disponible | Será generado durante desarrollo |
 
 ---
 

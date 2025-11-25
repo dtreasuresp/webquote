@@ -15,7 +15,7 @@ async function backupData() {
     const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
     
     if (!fs.existsSync(dbPath)) {
-      console.error('❌ No se encontró la base de datos en:', dbPath)
+      console.error('No se encontró la base de datos en:', dbPath)
       return
     }
 
@@ -113,7 +113,7 @@ async function backupData() {
     console.log('   3. Ejecuta: node scripts/restore-data.js\n')
 
   } catch (error) {
-    console.error('❌ Error durante el backup:', error)
+    console.error('Error durante el backup:', error)
   }
 }
 

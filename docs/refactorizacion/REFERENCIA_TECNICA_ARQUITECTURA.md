@@ -485,13 +485,13 @@ console.log('Snapshot eliminado:', snapshotId)
 
 ### Errores a Evitar
 ```
-❌ "Cannot read property 'id' of undefined"
+"Cannot read property 'id' of undefined"
 ✅ Usar optional chaining: snapshot?.id
 
-❌ "Memory leak warning"
+"Memory leak warning"
 ✅ Limpiar timeouts en cleanup function
 
-❌ "Each child should have a key prop"
+"Each child should have a key prop"
 ✅ Usar id único, no índice de array
 ```
 

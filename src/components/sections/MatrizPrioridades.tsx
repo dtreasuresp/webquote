@@ -142,7 +142,7 @@ export default function MatrizPrioridades() {
 
               {/* Cuadrante 4: Bajo impacto, alto esfuerzo */}
               <div className="bg-neutral-100 p-6 rounded">
-                <h4 className="font-bold text-neutral-700 mb-3">❌ ELIMINAR</h4>
+                <h4 className="font-bold text-neutral-700 mb-3">ELIMINAR</h4>
                 <div className="space-y-2 text-sm text-neutral-700">
                   <p>🗓️ Calendario eventos</p>
                   <p>🤖 Chatbot IA básico</p>

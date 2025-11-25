@@ -73,7 +73,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
   return (
     <>
       {/* Tab Bar - Mejorado con mejor UI/UX */}
-      <div className="flex border-b border-[#333] bg-black sticky top-0 z-40 overflow-x-auto shadow-lg">
+      <div className="flex border-b border-gh-border bg-gh-bg sticky top-0 z-40 overflow-x-auto shadow-lg">
         <div className="flex w-full">
           {tabs.map((tab, index) => (
             <motion.button
@@ -85,14 +85,14 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
               disabled={tab.disabled}
               onMouseEnter={() => handleMouseEnter(tab.id, index)}
               onMouseLeave={handleMouseLeave}
-              whileHover={!tab.disabled ? { backgroundColor: '#1a1a1a' } : {}}
+              whileHover={!tab.disabled ? { backgroundColor: '#21262d' } : {}}
               whileTap={!tab.disabled ? { scale: 0.98 } : {}}
               className={`flex-1 min-w-max px-4 py-3 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap relative group cursor-pointer ${
                 tab.disabled ? 'opacity-50 cursor-not-allowed' : ''
               } ${
                 activeTab === tab.id
-                  ? 'text-[#ededed] bg-[#111]'
-                  : 'text-[#888888] bg-black hover:text-[#b0b0b0]'
+                  ? 'text-gh-text bg-gh-bg-secondary'
+                  : 'text-gh-text-muted bg-gh-bg hover:text-gh-text hover:bg-gh-border'
               }`}
               aria-selected={activeTab === tab.id}
               role="tab"
@@ -124,7 +124,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#ededed] to-[#888888]"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gh-success"
                   initial={false}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
@@ -141,7 +141,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="fixed bg-[#222] text-[#ededed] text-xs px-3 py-1.5 rounded border border-[#444] shadow-lg pointer-events-none z-[999] whitespace-nowrap"
+            className="fixed bg-gh-bg-secondary text-gh-text text-xs px-3 py-1.5 rounded border border-gh-border shadow-lg pointer-events-none z-[999] whitespace-nowrap"
             style={{
               top: `${tooltipPosition.top}px`,
               left: `${tooltipPosition.left}px`,
@@ -172,7 +172,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1, duration: 0.2 }}
-                className="bg-black"
+                className="bg-gh-bg"
               >
                 {activeTabItem.content}
               </motion.div>

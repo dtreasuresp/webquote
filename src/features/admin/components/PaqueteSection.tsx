@@ -17,16 +17,16 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
       className="space-y-6"
     >
       {/* PARTE 1: Información Actual del Paquete */}
-      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          📋 Información del Paquete
+      <div className="bg-gh-bg-overlay border border-gh-border rounded-lg p-6 backdrop-blur-sm">
+        <h3 className="text-lg font-semibold text-gh-text mb-6 flex items-center gap-2">
+          <span className="text-gh-success">▪</span> Información del Paquete
         </h3>
         
         <div className="space-y-4 grid md:grid-cols-2 gap-2 *:md:space-y-0">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="paqueteNombre" className="block font-semibold text-white mb-2 text-sm">
-                📦 Nombre del Paquete *
+              <label htmlFor="paqueteNombre" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
+                Nombre del Paquete
               </label>
               <input
                 id="paqueteNombre"
@@ -36,12 +36,12 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                 onChange={(e) =>
                   setPaqueteActual({ ...paqueteActual, nombre: e.target.value })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
-              <label htmlFor="paqueteDesarrollo" className="block font-semibold text-white mb-2 text-sm">
-                💵 Desarrollo (USD) *
+              <label htmlFor="paqueteDesarrollo" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
+                Desarrollo (USD)
               </label>
               <input
                 id="paqueteDesarrollo"
@@ -54,7 +54,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                     desarrollo: Number.parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 min="0"
               />
             </div>
@@ -62,8 +62,8 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
           
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="paqueteTipo" className="block font-semibold text-white mb-2 text-sm">
-                🏆 Tipo de Paquete
+              <label htmlFor="paqueteTipo" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
+                Tipo de Paquete
               </label>
               <input
                 id="paqueteTipo"
@@ -73,12 +73,12 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                 onChange={(e) =>
                   setPaqueteActual({ ...paqueteActual, tipo: e.target.value })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
-              <label htmlFor="paqueteDescuento" className="block font-semibold text-white mb-2 text-sm">
-                🏷️ Descuento (%)
+              <label htmlFor="paqueteDescuento" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
+                Descuento (%)
               </label>
               <input
                 id="paqueteDescuento"
@@ -91,7 +91,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                     descuento: Number.parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 min="0"
                 max="100"
               />
@@ -99,41 +99,41 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
           </div>
 
           <div>
-            <label htmlFor="paqueteDescripcion" className="block font-semibold text-white mb-2 text-sm">
-              📝 Descripción del Paquete
+            <label htmlFor="paqueteDescripcion" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
+              Descripción del Paquete
             </label>
             <textarea
               id="paqueteDescripcion"
-              placeholder="Ej: Paquete personalizado para empresas..."
+              placeholder="Descripción personalizada..."
               value={paqueteActual.descripcion || ''}
               onChange={(e) =>
                 setPaqueteActual({ ...paqueteActual, descripcion: e.target.value })
               }
               rows={3}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none resize-none"
             />
           </div>
         </div>
       </div>
 
       {/* PARTE 2: Resumen de Valores */}
-      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          ✨ Resumen de Valores
+      <div className="bg-gh-bg-overlay border border-gh-border rounded-lg p-6 backdrop-blur-sm">
+        <h3 className="text-lg font-semibold text-gh-text mb-6 flex items-center gap-2">
+          <span className="text-gh-info">▪</span> Resumen de Valores
         </h3>
         
         <div className="grid md:grid-cols-3 gap-4">
-          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
-            <p className="text-white/80 text-sm mb-1">Valor de Desarrollo</p>
-            <p className="text-2xl font-bold text-white">${paqueteActual.desarrollo.toFixed(2)}</p>
+          <div className="bg-gh-bg-secondary border border-gh-border-light rounded-md p-4">
+            <p className="text-gh-text-muted text-xs mb-2 uppercase tracking-wide">Valor de Desarrollo</p>
+            <p className="text-2xl font-semibold text-gh-success">${paqueteActual.desarrollo.toFixed(2)}</p>
           </div>
-          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
-            <p className="text-white/80 text-sm mb-1">Descuento</p>
-            <p className="text-2xl font-bold text-white">{paqueteActual.descuento.toFixed(1)}%</p>
+          <div className="bg-gh-bg-secondary border border-gh-border-light rounded-md p-4">
+            <p className="text-gh-text-muted text-xs mb-2 uppercase tracking-wide">Descuento</p>
+            <p className="text-2xl font-semibold text-gh-warning">{paqueteActual.descuento.toFixed(1)}%</p>
           </div>
-          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
-            <p className="text-white/80 text-sm mb-1">Total con Descuento</p>
-            <p className="text-2xl font-bold text-white">
+          <div className="bg-gh-bg-secondary border border-gh-border-light rounded-md p-4">
+            <p className="text-gh-text-muted text-xs mb-2 uppercase tracking-wide">Total con Descuento</p>
+            <p className="text-2xl font-semibold text-gh-text">
               ${(paqueteActual.desarrollo * (1 - paqueteActual.descuento / 100)).toFixed(2)}
             </p>
           </div>

@@ -38,7 +38,7 @@ async function diagnose() {
   const snapshotsSinQuotationId = snapshots.filter(s => !s.quotationConfigId)
 
   console.log(`✅ Snapshots con quotationConfigId: ${snapshotsConQuotationId.length}`)
-  console.log(`❌ Snapshots SIN quotationConfigId: ${snapshotsSinQuotationId.length}`)
+  console.log(`Snapshots SIN quotationConfigId: ${snapshotsSinQuotationId.length}`)
 
   // 4. Verificar si los quotationConfigId existen
   const quotationIds = quotations.map(q => q.id)

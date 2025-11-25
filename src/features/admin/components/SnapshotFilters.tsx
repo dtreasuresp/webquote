@@ -28,13 +28,13 @@ export default function SnapshotFilters({
     <div className="space-y-3 mb-6">
       {/* Barra de búsqueda */}
       <div className="relative group">
-        <FaSearch className="absolute left-4 top-2.5 text-[#888888] group-hover:text-[#ededed] transition-colors" />
+        <FaSearch className="absolute left-4 top-2.5 text-gh-text-muted group-hover:text-gh-text transition-colors" />
         <input
           type="text"
           placeholder="Buscar por nombre del paquete..."
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-12 pr-4 py-2.5 bg-black rounded border border-[#333] text-[#ededed] placeholder-[#666] focus:outline-none focus:border-[#666] focus:ring-1 focus:ring-[#666] transition-all"
+          className="w-full pl-12 pr-4 py-2.5 bg-gh-bg rounded border border-gh-border text-gh-text placeholder-gh-text-muted focus:outline-none focus:border-gh-success focus:ring-1 focus:ring-gh-success transition-all"
         />
       </div>
 
@@ -48,8 +48,8 @@ export default function SnapshotFilters({
             onClick={() => onFilterChange(filter.id as FilterType)}
             className={`px-4 py-2 rounded text-sm font-medium transition-all flex items-center gap-2 border ${
               filterValue === filter.id
-                ? 'bg-[#ededed] text-black border-[#ededed] font-bold'
-                : 'bg-[#111] border-[#333] text-[#888888] hover:bg-[#222] hover:border-[#555]'
+                ? 'bg-gh-success text-white border-gh-success font-bold'
+                : 'bg-gh-bg-secondary border-gh-border text-gh-text-muted hover:bg-gh-border hover:border-gh-success'
             }`}
           >
             <span>{filter.icon}</span>

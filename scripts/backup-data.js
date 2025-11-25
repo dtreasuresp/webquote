@@ -84,7 +84,7 @@ async function backupData() {
     console.log('   2. Ejecuta: node scripts/restore-data.js\n')
 
   } catch (error) {
-    console.error('❌ Error durante el backup:', error)
+    console.error('Error durante el backup:', error)
     throw error
   } finally {
     await prisma.$disconnect()

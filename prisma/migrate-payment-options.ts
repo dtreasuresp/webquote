@@ -52,7 +52,7 @@ export async function migratePaymentOptions() {
 
     console.log('✅ Migración completada')
   } catch (error) {
-    console.error('❌ Error en migración:', error)
+    console.error('Error en migración:', error)
     throw error
   }
 }

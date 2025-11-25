@@ -96,7 +96,7 @@ async function migrarServiciosBase() {
     console.log('\n✨ Migración completada exitosamente!')
 
   } catch (error) {
-    console.error('❌ Error durante la migración:', error)
+    console.error('Error durante la migración:', error)
     throw error
   } finally {
     await prisma.$disconnect()

@@ -349,19 +349,19 @@ RESUMEN_EJECUTIVO (START HERE)
 
 **¿Ya leí RESUMEN_EJECUTIVO?**
 → ✅ Sí: Ve a GUIA_INTEGRACION
-→ ❌ No: Léelo primero (5 min)
+→ No: Léelo primero (5 min)
 
 **¿Voy a integrar ahora?**
 → ✅ Sí: GUIA_INTEGRACION_MODULAR.md
-→ ❌ No: REFERENCIA_TECNICA_ARQUITECTURA.md
+→ No: REFERENCIA_TECNICA_ARQUITECTURA.md
 
 **¿Entiendo la arquitectura?**
 → ✅ Sí: Ve a INVENTARIO_ARCHIVOS para referencia rápida
-→ ❌ No: Relée REFERENCIA_TECNICA
+→ No: Relée REFERENCIA_TECNICA
 
 **¿Todos los pasos completados?**
 → ✅ Sí: 🎉 LISTO PARA PRODUCCIÓN
-→ ❌ No: Ve a sección de troubleshooting
+→ No: Ve a sección de troubleshooting
 
 ---
 

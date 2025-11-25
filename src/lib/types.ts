@@ -152,6 +152,14 @@ export interface PackageSnapshot {
     año1: number
     año2: number
   }
+  contenido?: {
+    features: string[]
+    beneficios: string[]
+    incluidos: string[]
+    exclusiones: string[]
+    terminosCondiciones: string
+    informacionAdicional: string
+  }
   activo: boolean
   quotationConfigId?: string
   createdAt: string
@@ -165,4 +173,23 @@ export interface UserPreferences {
   validarDatosAntes: boolean
   createdAt: string
   updatedAt: string
+}
+// ==================== TIPOS PARA SISTEMA GENÉRICO DE DIÁLOGOS ====================
+export type DialogType = 'error' | 'advertencia' | 'confirmacion' | 'info' | 'success' | 'activar'
+
+export interface DialogButton {
+  label: string
+  action: () => void | Promise<void>
+  style: 'primary' | 'secondary' | 'danger' | 'success'
+}
+
+export interface DialogConfig {
+  tipo: DialogType
+  titulo: string
+  mensaje: string
+  subtitulo?: string
+  icono?: string // emoji o nombre del icono
+  botones: DialogButton[]
+  quotation?: QuotationConfig // Solo para tipo 'activar'
+  modoAbrir?: 'editar' | 'ver' // Solo para tipo 'activar'
 }

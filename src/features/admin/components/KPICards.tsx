@@ -54,12 +54,12 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1, duration: 0.4 }}
             whileHover={{ translateY: -2 }}
-            className="bg-[#111] rounded p-4 border border-[#333] cursor-pointer hover:border-[#555] transition-all"
+            className="bg-gh-bg-secondary rounded-md p-4 border border-gh-border cursor-pointer hover:border-gh-success transition-all"
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-[#888888] mb-1 font-medium">{kpi.titulo}</p>
-                <p className="text-2xl font-bold text-[#ededed]">
+                <p className="text-xs text-gh-text-muted mb-1 font-medium">{kpi.titulo}</p>
+                <p className="text-2xl font-bold text-gh-text">
                   {cargandoSnapshots ? (
                     <span className="animate-pulse">--</span>
                   ) : (
@@ -67,8 +67,8 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
                   )}
                 </p>
               </div>
-              <div className="p-2 rounded bg-black border border-[#333]">
-                <Icon className="text-[#ededed] text-sm" />
+              <div className="p-2 rounded bg-gh-bg border border-gh-border">
+                <Icon className="text-gh-text text-sm" />
               </div>
             </div>
           </motion.div>

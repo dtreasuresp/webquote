@@ -43,17 +43,17 @@ export default function CollapsibleSection({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-[#111] rounded border border-[#333] overflow-hidden"
+      className="bg-gh-bg-secondary rounded-md border border-gh-border overflow-hidden"
     >
       {/* Header colapsable */}
       <button
         onClick={handleToggle}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#222] transition-colors group"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gh-border transition-colors group"
       >
         <div className="flex items-center gap-3">
           {icon && <span className="text-lg">{icon}</span>}
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-[#ededed] group-hover:text-white transition-colors">
+            <h3 className="text-lg font-semibold text-gh-text group-hover:text-white transition-colors">
               {title}
             </h3>
             {validationBadge}
@@ -63,7 +63,7 @@ export default function CollapsibleSection({
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3 }}
         >
-          <FaChevronDown className="text-[#888888] group-hover:text-[#ededed] transition-colors" />
+          <FaChevronDown className="text-gh-text-muted group-hover:text-gh-text transition-colors" />
         </motion.div>
       </button>
 
@@ -75,7 +75,7 @@ export default function CollapsibleSection({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="overflow-hidden border-t border-[#333]"
+            className="overflow-hidden border-t border-gh-border"
           >
             <div className="p-6">
               {children}

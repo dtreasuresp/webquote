@@ -63,11 +63,11 @@ mostrando tu catálogo, y convirtiendo visitantes en contactos.
 
 ### Lo que pasará sin esto:
 ```
-❌ Cliente busca "Construcción en La Habana" en Google
-❌ NO te ve porque no apareces en internet
-❌ Ve a tu competencia
-❌ Los llama a ellos
-❌ TÚ PIERDES LA VENTA
+Cliente busca "Construcción en La Habana" en Google
+NO te ve porque no apareces en internet
+Ve a tu competencia
+Los llama a ellos
+TÚ PIERDES LA VENTA
 ```
 
 ### Lo que pasará con esto:
@@ -171,13 +171,13 @@ mostrando tu catálogo, y convirtiendo visitantes en contactos.
 │ Diseño           │ ✅ Apruebas      │ ✅ Diseñamos     │
 │                  │    diseño         │                  │
 ├──────────────────┼──────────────────┼──────────────────┤
-│ Hosting/Dominio  │ ❌ Nada          │ ✅ Contratamos   │
+│ Hosting/Dominio  │ Nada          │ ✅ Contratamos   │
 │                  │                  │    y mantenemos  │
 ├──────────────────┼──────────────────┼──────────────────┤
 │ Actualizaciones  │ ✅ Solicitas     │ ✅ Las hacemos   │
 │ post-lanzamiento │    cambios        │    rápidamente   │
 ├──────────────────┼──────────────────┼──────────────────┤
-│ Seguridad        │ ❌ Nada          │ ✅ 100%          │
+│ Seguridad        │ Nada          │ ✅ 100%          │
 │                  │                  │    protegido     │
 └──────────────────┴──────────────────┴──────────────────┘
 ```
@@ -287,9 +287,9 @@ O paga todo de una (recibe descuento adicional).
 | **Blog de noticias** | Básico | Completo | Completo |
 | **Gestor de contenidos (3+ meses)** | 1 mes | 3 meses | 6 meses |
 | **Soporte 24/7** | 24h respuesta | 12h respuesta | 6h respuesta |
-| **Video corporativo** | ❌ | ❌ | ✅ |
-| **Sesión fotográfica profesional** | ❌ | ❌ | ✅ |
-| **Descuento futuro** | ❌ | 5% | 10% |
+| **Video corporativo** | | | ✅ |
+| **Sesión fotográfica profesional** | | | ✅ |
+| **Descuento futuro** | | 5% | 10% |
 | **Tiempo de entrega** | 4 semanas | 5-6 semanas | 7-8 semanas |
 | **Inversión mes 1** | $150 | $200 | $238 |
 | **Inversión mensual después** | $16.66 | $19 | $20.67 |

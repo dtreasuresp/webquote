@@ -30,19 +30,19 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
       className="space-y-6"
     >
       {/* PARTE 1: Configuración */}
-      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          ⚙️ Configuración de Gestión
+      <div className="bg-gh-bg-overlay border border-gh-border rounded-lg p-6 backdrop-blur-sm">
+        <h3 className="text-lg font-semibold text-gh-text mb-6 flex items-center gap-2">
+          <span className="text-gh-warning">▪</span> Configuración de Gestión
         </h3>
         
-        <p className="text-white/80 text-sm mb-4">
+        <p className="text-gh-text-muted text-sm mb-6">
           Configura el servicio de gestión mensual. Si el precio es 0, este servicio no se incluirá.
         </p>
 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="gestionPrecio" className="block font-semibold text-white mb-2 text-sm">
-              💰 Precio Mensual (USD)
+            <label htmlFor="gestionPrecio" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
+              Precio Mensual (USD)
             </label>
             <input
               id="gestionPrecio"
@@ -55,13 +55,13 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
                   precio: Number.parseFloat(e.target.value) || 0,
                 })
               }
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               min="0"
             />
           </div>
           <div>
-            <label htmlFor="gestionMesesGratis" className="block font-semibold text-white mb-2 text-sm">
-              🎁 Meses Gratis
+            <label htmlFor="gestionMesesGratis" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
+              Meses Gratis
             </label>
             <input
               id="gestionMesesGratis"
@@ -73,7 +73,7 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
                 const nm = normalizarMeses(gratis, gestion.mesesPago)
                 setGestion(nm)
               }}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               min="0"
               max="12"
             />
@@ -82,8 +82,8 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
 
         <div className="grid md:grid-cols-2 gap-4 mt-4">
           <div>
-            <label htmlFor="gestionMesesPago" className="block font-semibold text-white mb-2 text-sm">
-              💳 Meses Pago
+            <label htmlFor="gestionMesesPago" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
+              Meses Pago
             </label>
             <input
               id="gestionMesesPago"
@@ -95,7 +95,7 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
                 const nm = normalizarMeses(gestion.mesesGratis, pago)
                 setGestion(nm)
               }}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               min="1"
               max="12"
             />
@@ -104,23 +104,23 @@ export default function GestionSection({ gestion, setGestion }: GestionSectionPr
       </div>
 
       {/* PARTE 2: Resumen */}
-      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          📊 Resumen de Gestión
+      <div className="bg-gh-bg-overlay border border-gh-border rounded-lg p-6 backdrop-blur-sm">
+        <h3 className="text-lg font-semibold text-gh-text mb-6 flex items-center gap-2">
+          <span className="text-gh-info">▪</span> Resumen de Gestión
         </h3>
         
         <div className="grid md:grid-cols-3 gap-4">
-          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
-            <p className="text-white/80 text-sm mb-1">Precio Mensual</p>
-            <p className="text-2xl font-bold text-white">${gestion.precio.toFixed(2)}</p>
+          <div className="bg-gh-bg-secondary border border-gh-border-light rounded-md p-4">
+            <p className="text-gh-text-muted text-xs mb-2 uppercase tracking-wide">Precio Mensual</p>
+            <p className="text-2xl font-semibold text-gh-success">${gestion.precio.toFixed(2)}</p>
           </div>
-          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
-            <p className="text-white/80 text-sm mb-1">Meses: {gestion.mesesGratis}G + {gestion.mesesPago}P</p>
-            <p className="text-white/80 text-xs">(Gratuitos + Pagos)</p>
+          <div className="bg-gh-bg-secondary border border-gh-border-light rounded-md p-4">
+            <p className="text-gh-text-muted text-xs mb-1 uppercase tracking-wide">Meses: {gestion.mesesGratis}G + {gestion.mesesPago}P</p>
+            <p className="text-gh-text-muted text-xs">(Gratuitos + Pagos)</p>
           </div>
-          <div className="bg-[#12121a] border border-white/10 rounded-lg p-4">
-            <p className="text-white/80 text-sm mb-1">Total Primer Año</p>
-            <p className="text-2xl font-bold text-white">
+          <div className="bg-gh-bg-secondary border border-gh-border-light rounded-md p-4">
+            <p className="text-gh-text-muted text-xs mb-2 uppercase tracking-wide">Total Primer Año</p>
+            <p className="text-2xl font-semibold text-gh-text">
               ${(gestion.precio * gestion.mesesPago).toFixed(2)}
             </p>
           </div>

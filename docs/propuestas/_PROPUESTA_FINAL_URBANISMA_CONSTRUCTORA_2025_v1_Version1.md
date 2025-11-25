@@ -82,14 +82,14 @@ Este modelo es:
 
 ---
 
-### ❌ EL CLIENTE NO HARÁ:
+### EL CLIENTE NO HARÁ:
 
-❌ No ingresa al panel administrativo
-❌ No instala plugins
-❌ No hace backups
-❌ No actualiza WordPress
-❌ No maneja seguridad
-❌ No toma decisiones técnicas
+No ingresa al panel administrativo
+No instala plugins
+No hace backups
+No actualiza WordPress
+No maneja seguridad
+No toma decisiones técnicas
 
 ---
 

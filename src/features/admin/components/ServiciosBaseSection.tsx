@@ -69,15 +69,15 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
       className="space-y-6"
     >
       {/* PARTE 1: Elementos Existentes */}
-      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6 grid grid-cols-6 gap-4">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border p-6 grid grid-cols-6 gap-4">
+        <h3 className="text-xl font-bold text-gh-text mb-4 flex items-center gap-2">
           📝 Servicios Existentes
         </h3>
         
         {serviciosBase.length > 0 ? (
           <>
             {/* Header - solo en desktop */}
-            <div className="grid text-sm font-semibold text-white/80 mb-3 grid-cols-6 gap-3 px-2 text-left">
+            <div className="grid text-sm font-semibold text-gh-text-muted mb-3 grid-cols-6 gap-3 px-2 text-left">
               <span>📝 Nombre</span>
               <span>💰 Precio (USD)</span>
               <span>🎁 Meses Gratis</span>
@@ -91,7 +91,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
               {serviciosBase.map((servicio) => (
                 <div
                   key={servicio.id}
-                  className="grid grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 items-center bg-[#12121a] p-4 rounded-xl border border-white/10 hover:border-white/20 transition-all"
+                  className="grid grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 items-center bg-gh-bg p-4 rounded-xl border border-gh-border hover:border-gh-border transition-all"
                 >
                   {editandoServicioBaseId === servicio.id ? (
                     <>
@@ -105,7 +105,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                             nombre: e.target.value,
                           })
                         }
-                        className="hidden md:block w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                       />
                       <input
                         type="number"
@@ -117,7 +117,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                             precio: Number.parseFloat(e.target.value) || 0,
                           })
                         }
-                        className="hidden md:block w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                         min="0"
                       />
                       <input
@@ -130,7 +130,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                             mesesGratis: Number.parseInt(e.target.value, 10) || 0,
                           })
                         }
-                        className="hidden md:block w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                         min="0"
                         max="12"
                       />
@@ -144,25 +144,25 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                             mesesPago: Number.parseInt(e.target.value, 10) || 0,
                           })
                         }
-                        className="hidden md:block w-full px-3 py-2 bg-white/10 border border-white/20 rounded-md text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                         min="1"
                         max="12"
                       />
-                      <span className="hidden md:block text-lg font-bold text-white">
+                      <span className="hidden md:block text-lg font-bold text-gh-text">
                         ${((servicioBaseEditando?.precio || 0) * (servicioBaseEditando?.mesesPago || 0)).toFixed(2)}
                       </span>
                       <div className="hidden md:flex gap-2 justify-center">
                         <button
                           aria-label="Guardar servicio base"
                           onClick={guardarEditarServicioBase}
-                          className="px-3 py-2 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all"
+                          className="px-3 py-2 bg-gh-btn-secondary text-gh-text rounded-lg hover:bg-gh-bg-secondary transition-all"
                         >
                           <FaCheck />
                         </button>
                         <button
                           aria-label="Cancelar edición servicio base"
                           onClick={cancelarEditarServicioBase}
-                          className="px-3 py-2 bg-[#12121a]0 text-white rounded-lg hover:bg-[#12121a] transition-all"
+                          className="px-3 py-2 bg-gh-bg-secondary text-gh-text rounded-lg hover:bg-gh-bg transition-all"
                         >
                           <FaTimes />
                         </button>
@@ -170,25 +170,25 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                     </>
                   ) : (
                     <>
-                      <span className="font-semibold text-white">{servicio.nombre}</span>
-                      <span className="text-white font-bold">${servicio.precio.toFixed(2)}</span>
-                      <span className="text-white/80">{servicio.mesesGratis}m</span>
-                      <span className="text-white/80">{servicio.mesesPago}m</span>
-                      <span className="text-lg font-bold text-white">
+                      <span className="font-semibold text-gh-text">{servicio.nombre}</span>
+                      <span className="text-gh-text font-bold">${servicio.precio.toFixed(2)}</span>
+                      <span className="text-gh-text-muted">{servicio.mesesGratis}m</span>
+                      <span className="text-gh-text-muted">{servicio.mesesPago}m</span>
+                      <span className="text-lg font-bold text-gh-text">
                         ${(servicio.precio * servicio.mesesPago).toFixed(2)}
                       </span>
                       <div className="hidden md:flex gap-2 justify-center">
                         <button
                           aria-label={`Editar servicio base ${servicio.nombre}`}
                           onClick={() => abrirEditarServicioBase(servicio)}
-                          className="px-3 py-2 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all"
+                          className="px-3 py-2 bg-gh-btn-secondary text-gh-text rounded-lg hover:bg-gh-bg-secondary transition-all"
                         >
                           <FaEdit />
                         </button>
                         <button
                           aria-label={`Eliminar servicio base ${servicio.nombre}`}
                           onClick={() => eliminarServicioBase(servicio.id)}
-                          className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
+                          className="px-3 py-2 bg-gh-danger text-white rounded-lg hover:bg-red-600 transition-all"
                         >
                           <FaTrash />
                         </button>
@@ -200,18 +200,18 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
             </div>
           </>
         ) : (
-          <p className="text-white/70 text-center py-4">No hay servicios base configurados</p>
+          <p className="text-gh-text-muted text-center py-4">No hay servicios base configurados</p>
         )}
       </div>
 
       {/* PARTE 2: Agregar Nuevo */}
-      <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border p-6">
+        <h3 className="text-xl font-bold text-gh-text mb-4 flex items-center gap-2">
           ➕ Agregar Nuevo Servicio Base
         </h3>
         <div className="grid md:grid-cols-4 gap-4">
           <div>
-            <label htmlFor="nuevoServicioBaseNombre" className="block font-semibold text-white mb-2 text-sm">
+            <label htmlFor="nuevoServicioBaseNombre" className="block font-semibold text-gh-text mb-2 text-sm">
               📝 Nombre del Servicio
             </label>
             <input
@@ -222,11 +222,11 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
               onChange={(e) =>
                 setNuevoServicioBase({ ...nuevoServicioBase, nombre: e.target.value })
               }
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
             />
           </div>
           <div>
-            <label htmlFor="nuevoServicioBasePrecio" className="block font-semibold text-white mb-2 text-sm">
+            <label htmlFor="nuevoServicioBasePrecio" className="block font-semibold text-gh-text mb-2 text-sm">
               💵 Precio (USD)
             </label>
             <input
@@ -240,12 +240,12 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   precio: Number.parseFloat(e.target.value) || 0,
                 })
               }
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
               min="0"
             />
           </div>
           <div>
-            <label htmlFor="nuevoServicioBaseMesesGratis" className="block font-semibold text-white mb-2 text-sm">
+            <label htmlFor="nuevoServicioBaseMesesGratis" className="block font-semibold text-gh-text mb-2 text-sm">
               🎁 Gratis
             </label>
             <input
@@ -262,13 +262,13 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   mesesPago: pagoCalculado,
                 })
               }}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
               min="0"
               max="12"
             />
           </div>
           <div>
-            <label htmlFor="nuevoServicioBaseMesesPago" className="block font-semibold text-white mb-2 text-sm">
+            <label htmlFor="nuevoServicioBaseMesesPago" className="block font-semibold text-gh-text mb-2 text-sm">
               💳 Pago
             </label>
             <input
@@ -284,7 +284,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   mesesPago: pagoValidado,
                 })
               }}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:border-white/20 focus:outline-none"
+              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
               min="1"
               max="12"
             />
@@ -298,8 +298,8 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
             disabled={!nuevoServicioBase.nombre || nuevoServicioBase.precio <= 0}
             className={`px-6 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
               nuevoServicioBase.nombre && nuevoServicioBase.precio > 0
-                ? 'bg-white text-white hover:shadow-lg'
-                : 'bg-[#12121a] text-white/70 cursor-not-allowed'
+                ? 'bg-gh-success text-white hover:shadow-lg'
+                : 'bg-gh-bg text-gh-text-muted cursor-not-allowed'
             }`}
           >
             <FaPlus className="text-sm" /> Agregar

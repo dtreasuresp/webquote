@@ -66,7 +66,7 @@ export default function SnapshotsTableSection({
         alert('✅ Paquete eliminado correctamente')
       } catch (error) {
         console.error('Error al eliminar snapshot:', error)
-        alert('❌ Error al eliminar el paquete. Por favor intenta de nuevo.')
+        alert('Error al eliminar el paquete. Por favor intenta de nuevo.')
       }
     }
   }
@@ -89,7 +89,7 @@ export default function SnapshotsTableSection({
     } catch (err) {
       console.error('Error al autoguardar estado activo:', err)
       setSnapshots(snapshots.map(s => s.id === snapshot.id ? { ...s, activo: !marcado } : s))
-      alert('❌ No se pudo actualizar el estado Activo. Intenta nuevamente.')
+      alert('No se pudo actualizar el estado Activo. Intenta nuevamente.')
     }
   }
 
@@ -99,7 +99,7 @@ export default function SnapshotsTableSection({
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="bg-white/5 rounded-2xl border border-white/10 p-8 text-center"
+        className="bg-gh-bg-secondary rounded-2xl border border-gh-border p-8 text-center"
       >
         <div className="flex items-center justify-center gap-3">
           <motion.div
@@ -120,9 +120,9 @@ export default function SnapshotsTableSection({
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="bg-white/5 rounded-2xl border-2 border-red-500/50 p-8"
+          className="bg-gh-bg-secondary rounded-2xl border-2 border-gh-danger/50 p-8"
       >
-        <p className="text-red-400 font-semibold">❌ {errorSnapshots}</p>
+        <p className="text-red-400 font-semibold">{errorSnapshots}</p>
       </motion.div>
     )
   }
@@ -133,7 +133,7 @@ export default function SnapshotsTableSection({
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="bg-white/5 rounded-2xl border border-white/10 p-8 text-center"
+        className="bg-gh-bg-secondary rounded-2xl border border-gh-border p-8 text-center"
       >
         <p className="text-white/80 font-semibold">No hay paquetes creados aún</p>
       </motion.div>
@@ -142,7 +142,7 @@ export default function SnapshotsTableSection({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-white">
+      <h2 className="text-xl font-bold text-gh-text">
         Paquetes Creados ({snapshots.filter(s => s.activo).length})
       </h2>
 
@@ -153,20 +153,20 @@ export default function SnapshotsTableSection({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="bg-gradient-to-r from-[#12121a] to-[#0a0a0f] rounded-xl border border-white/10 hover:border-white/20 transition-all overflow-hidden"
+            className="bg-gradient-to-r from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border hover:border-gh-success transition-all overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-[#1a1a24] to-[#12121a] p-4 border-b border-white/10">
+              <div className="bg-gradient-to-r from-gh-bg to-gh-bg-secondary p-4 border-b border-gh-border">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white">
+                  <h3 className="text-lg font-bold text-gh-text">
                     📦 {snapshot.nombre}
                   </h3>
                   {snapshot.paquete.tipo && (
-                    <p className="text-xs font-semibold tracking-wide text-white uppercase mt-1">
+                    <p className="text-xs font-semibold tracking-wide text-gh-text mt-1 uppercase">
                       🏆 {snapshot.paquete.tipo}
                     </p>
                   )}
-                  <p className="text-xs text-white/70 mt-2">
+                  <p className="text-xs text-gh-text-muted mt-2">
                     {new Date(snapshot.createdAt).toLocaleDateString('es-ES')}
                   </p>
                 </div>
@@ -176,32 +176,32 @@ export default function SnapshotsTableSection({
                     type="checkbox"
                     checked={snapshot.activo}
                     onChange={(e) => handleToggleActivo(snapshot, e.target.checked)}
-                    className="w-5 h-5 cursor-pointer accent-white"
+                    className="w-5 h-5 cursor-pointer accent-gh-success"
                   />
                   <label htmlFor={`snapshot-activo-${snapshot.id}`} className="font-semibold text-white text-sm">Activo</label>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 space-y-3">
+                <div className="p-4 space-y-3">
               <div className="space-y-2">
-                <p className="text-sm text-white/90"><strong className="text-white">Desarrollo:</strong> ${snapshot.paquete.desarrollo.toFixed(2)}</p>
+                <p className="text-sm text-gh-text"><strong className="text-gh-text">Desarrollo:</strong> ${snapshot.paquete.desarrollo.toFixed(2)}</p>
                 {snapshot.paquete.descuento > 0 && (
                   <p className="text-sm text-white/90"><strong className="text-white">Descuento:</strong> {snapshot.paquete.descuento}%</p>
                 )}
               </div>
-              <div className="space-y-2 border-t border-white/10 pt-3">
-                <p className="text-sm font-semibold text-white">Costos:</p>
-                <p className="text-xs text-white/80">Pago Inicial: <span className="font-bold text-white">${snapshot.costos.inicial.toFixed(2)}</span></p>
+                <div className="space-y-2 border-t border-gh-border pt-3">
+                <p className="text-sm font-semibold text-gh-text">Costos:</p>
+                <p className="text-xs text-gh-text-muted">Pago Inicial: <span className="font-bold text-gh-text">${snapshot.costos.inicial.toFixed(2)}</span></p>
                 <p className="text-xs text-white/80">Año 1: <span className="font-bold text-white">${snapshot.costos.año1.toFixed(2)}</span></p>
                 <p className="text-xs text-white/80">Año 2+: <span className="font-bold text-white">${snapshot.costos.año2.toFixed(2)}</span></p>
               </div>
-              <div className="flex gap-2 pt-3 border-t border-white/10">
+                <div className="flex gap-2 pt-3 border-t border-gh-border">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setEditingSnapshotId(snapshot.id)}
-                  className="flex-1 px-3 py-2 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all text-sm font-semibold flex items-center justify-center gap-2"
+                  className="flex-1 px-3 py-2 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all text-sm font-semibold flex items-center justify-center gap-2"
                 >
                   <FaEdit /> Editar
                 </motion.button>
@@ -209,7 +209,7 @@ export default function SnapshotsTableSection({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleDescargarPdf(snapshot)}
-                  className="px-3 py-2 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all text-sm"
+                  className="px-3 py-2 bg-gh-btn-ghost text-gh-text rounded-lg border border-gh-border hover:bg-gh-bg-secondary transition-all text-sm"
                 >
                   <FaDownload />
                 </motion.button>
@@ -217,7 +217,7 @@ export default function SnapshotsTableSection({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleEliminarSnapshot(snapshot.id)}
-                  className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all text-sm"
+                  className="px-3 py-2 bg-gh-danger text-white rounded-lg hover:bg-red-600 transition-all text-sm"
                 >
                   <FaTrash />
                 </motion.button>

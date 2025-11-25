@@ -76,7 +76,7 @@ export default function OfertaTab({
   todoEsValido,
 }: OfertaTabProps) {
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-6">
       {/* Sección: Servicios Base */}
       <CollapsibleSection
         id="servicios-base"
@@ -86,8 +86,8 @@ export default function OfertaTab({
       >
         {/* Lista de Servicios Base Existentes */}
         {serviciosBase.length > 0 && (
-          <div className="mb-6 space-y-2">
-            <div className="text-xs font-semibold text-[#888888] mb-2 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-2 px-2 text-left">
+          <div className="mb-6 space-y-3">
+            <div className="text-xs font-semibold text-gh-text-muted uppercase tracking-wide mb-3 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 px-4">
               <span>Nombre</span>
               <span>Precio</span>
               <span>Meses Gratis</span>
@@ -98,7 +98,7 @@ export default function OfertaTab({
             {serviciosBase.map((servicio) => (
               <div
                 key={servicio.id}
-                className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-2 items-center bg-[#111] p-2 rounded border border-[#333]"
+                className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 items-center bg-gh-bg-secondary p-4 rounded-md border border-gh-border"
               >
                 {editandoServicioBaseId === servicio.id ? (
                   <>
@@ -111,7 +111,7 @@ export default function OfertaTab({
                           nombre: e.target.value,
                         })
                       }
-                      className="px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                     />
                     <input
                       type="number"
@@ -122,7 +122,7 @@ export default function OfertaTab({
                           precio: parseFloat(e.target.value) || 0,
                         })
                       }
-                      className="px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                       min="0"
                     />
                     <input
@@ -134,7 +134,7 @@ export default function OfertaTab({
                           mesesGratis: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                       min="0"
                       max="12"
                     />
@@ -147,25 +147,25 @@ export default function OfertaTab({
                           mesesPago: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                       min="1"
                       max="12"
                     />
-                    <span className="text-sm font-bold text-[#ededed]">
+                    <span className="text-sm font-semibold text-gh-text">
                       ${((servicioBaseEditando?.precio || 0) * (servicioBaseEditando?.mesesPago || 0)).toFixed(2)}
                     </span>
-                    <div className="flex gap-1 justify-center">
+                    <div className="flex gap-2 justify-center">
                       <button
                         aria-label="Guardar servicio base"
                         onClick={guardarEditarServicioBase}
-                        className="p-1.5 bg-white text-black rounded hover:bg-white/90 transition-all"
+                        className="p-2 bg-gh-success text-white rounded-md hover:bg-[#1f7935] transition-colors"
                       >
                         <FaCheck size={12} />
                       </button>
                       <button
                         aria-label="Cancelar edición servicio base"
                         onClick={cancelarEditarServicioBase}
-                        className="p-1.5 bg-[#222] text-[#ededed] rounded hover:bg-[#333] transition-all"
+                        className="p-2 bg-gh-border text-gh-text-muted rounded-md hover:bg-gh-border-light transition-colors"
                       >
                         <FaTimes size={12} />
                       </button>
@@ -173,25 +173,25 @@ export default function OfertaTab({
                   </>
                 ) : (
                   <>
-                    <span className="text-[#888888] text-xs">{servicio.nombre}</span>
-                    <span className="text-[#888888] text-xs">${servicio.precio.toFixed(2)}</span>
-                    <span className="text-[#888888] text-xs">{servicio.mesesGratis}m</span>
-                    <span className="text-[#888888] text-xs">{servicio.mesesPago}m</span>
-                    <span className="text-[#888888] text-xs">
+                    <span className="text-gh-text-muted text-xs">{servicio.nombre}</span>
+                    <span className="text-gh-text-muted text-xs">${servicio.precio.toFixed(2)}</span>
+                    <span className="text-gh-text-muted text-xs">{servicio.mesesGratis}m</span>
+                    <span className="text-gh-text-muted text-xs">{servicio.mesesPago}m</span>
+                    <span className="text-gh-text-muted text-xs">
                       ${(servicio.precio * servicio.mesesPago).toFixed(2)}
                     </span>
-                    <div className="flex gap-1 justify-center">
+                    <div className="flex gap-2 justify-center">
                       <button
                         aria-label={`Editar servicio base ${servicio.nombre}`}
                         onClick={() => abrirEditarServicioBase(servicio)}
-                        className="p-1.5 bg-white text-black rounded hover:bg-white/90 transition-all"
+                        className="p-2 bg-gh-info text-white rounded-md hover:bg-[#388bfd] transition-colors"
                       >
                         <FaEdit size={12} />
                       </button>
                       <button
                         aria-label={`Eliminar servicio base ${servicio.nombre}`}
                         onClick={() => eliminarServicioBase(servicio.id)}
-                        className="p-1.5 bg-white text-black rounded hover:bg-white/90 transition-all"
+                        className="p-2 bg-gh-warning text-white rounded-md hover:bg-[#d0981a] transition-colors"
                       >
                         <FaTrash size={12} />
                       </button>
@@ -204,11 +204,13 @@ export default function OfertaTab({
         )}
 
         {/* Formulario para Agregar Nuevo Servicio Base */}
-        <div className="space-y-2 p-3 bg-[#111] rounded border border-dashed border-[#333]">
-          <h3 className="text-xs font-bold text-[#ededed] mb-1">Agregar Nuevo Servicio Base</h3>
-          <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-2 items-end">
+        <div className="space-y-4 p-6 bg-gh-bg-overlay border border-gh-border rounded-lg">
+          <h3 className="text-sm font-semibold text-gh-text uppercase tracking-wide flex items-center gap-2">
+            <FaPlus size={14} /> Agregar Nuevo Servicio Base
+          </h3>
+          <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-3 items-end">
             <div>
-              <label htmlFor="nuevoServicioBaseNombre" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="nuevoServicioBaseNombre" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Nombre del Servicio
               </label>
               <input
@@ -219,11 +221,11 @@ export default function OfertaTab({
                 onChange={(e) =>
                   setNuevoServicioBase({ ...nuevoServicioBase, nombre: e.target.value })
                 }
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
               />
             </div>
             <div>
-              <label htmlFor="nuevoServicioBasePrecio" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="nuevoServicioBasePrecio" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Precio
               </label>
               <input
@@ -237,12 +239,12 @@ export default function OfertaTab({
                     precio: parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                 min="0"
               />
             </div>
             <div>
-              <label htmlFor="nuevoServicioBaseMesesGratis" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="nuevoServicioBaseMesesGratis" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Meses Gratis
               </label>
               <input
@@ -259,13 +261,13 @@ export default function OfertaTab({
                     mesesPago: pagoCalculado,
                   })
                 }}
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                 min="0"
                 max="12"
               />
             </div>
             <div>
-              <label htmlFor="nuevoServicioBaseMesesPago" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="nuevoServicioBaseMesesPago" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Meses Pago
               </label>
               <input
@@ -281,7 +283,7 @@ export default function OfertaTab({
                     mesesPago: pagoValidado,
                   })
                 }}
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                 min="1"
                 max="12"
               />
@@ -291,13 +293,13 @@ export default function OfertaTab({
               whileTap={{ scale: 0.95 }}
               onClick={agregarServicioBase}
               disabled={!nuevoServicioBase.nombre || nuevoServicioBase.precio <= 0}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+              className={`px-6 py-2.5 rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
                 nuevoServicioBase.nombre && nuevoServicioBase.precio > 0
-                  ? 'bg-white text-[#0a0a0f] hover:bg-white/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-                  : 'bg-white/10 text-white/70 cursor-not-allowed'
+                  ? 'bg-gh-success text-white hover:bg-[#1f7935]'
+                  : 'bg-gh-bg-secondary text-gh-text-muted cursor-not-allowed'
               }`}
             >
-              <FaPlus /> Agregar
+              <FaPlus size={12} /> Agregar
             </motion.button>
           </div>
         </div>
@@ -310,11 +312,13 @@ export default function OfertaTab({
         icon=""
         defaultOpen={true}
       >
-        <div className="space-y-2 p-3 bg-[#111] rounded border border-dashed border-[#333]">
-          <h3 className="text-xs font-bold text-[#ededed] mb-1">Agregar Nuevo Paquete</h3>
-          <div className="grid md:grid-cols-4 gap-2">
+        <div className="space-y-4 p-6 bg-gh-bg-overlay border border-gh-border rounded-lg">
+          <h3 className="text-sm font-semibold text-gh-text uppercase tracking-wide flex items-center gap-2">
+            Configurar Paquete
+          </h3>
+          <div className="grid md:grid-cols-4 gap-4">
             <div>
-              <label htmlFor="paqueteNombre" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="paqueteNombre" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Nombre del Paquete *
               </label>
               <input
@@ -325,12 +329,12 @@ export default function OfertaTab({
                 onChange={(e) =>
                   setPaqueteActual({ ...paqueteActual, nombre: e.target.value })
                 }
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
               />
             </div>
             <div>
-              <label htmlFor="paqueteDesarrollo" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
-                Desarrollo*
+              <label htmlFor="paqueteDesarrollo" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+                Desarrollo *
               </label>
               <input
                 id="paqueteDesarrollo"
@@ -343,12 +347,12 @@ export default function OfertaTab({
                     desarrollo: Number.parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                 min="0"
               />
             </div>
             <div>
-              <label htmlFor="paqueteDescuento" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="paqueteDescuento" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Descuento (%)
               </label>
               <input
@@ -362,13 +366,13 @@ export default function OfertaTab({
                     descuento: Number.parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                 min="0"
                 max="100"
               />
             </div>
             <div>
-              <label htmlFor="paqueteTipo" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="paqueteTipo" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Tipo de Paquete
               </label>
               <input
@@ -379,12 +383,12 @@ export default function OfertaTab({
                 onChange={(e) =>
                   setPaqueteActual({ ...paqueteActual, tipo: e.target.value })
                 }
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
               />
             </div>
           </div>
           <div>
-            <label htmlFor="paqueteDescripcion" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+            <label htmlFor="paqueteDescripcion" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
               Descripción del Paquete
             </label>
             <textarea
@@ -399,8 +403,8 @@ export default function OfertaTab({
                 }
               }}
               ref={descripcionTextareaRef}
-              className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed] resize-none"
-              rows={2}
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition resize-none"
+              rows={3}
             />
           </div>
         </div>
@@ -414,8 +418,8 @@ export default function OfertaTab({
         defaultOpen={true}
       >
         {serviciosOpcionales.length > 0 && (
-          <div className="mb-6 space-y-2">
-            <div className="text-xs font-semibold text-[#888888] mb-2 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-2 px-2 text-left">
+          <div className="mb-6 space-y-3">
+            <div className="text-xs font-semibold text-gh-text-muted uppercase tracking-wide mb-3 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 px-4">
               <span>Nombre</span>
               <span>Precio</span>
               <span>Meses Gratis</span>
@@ -426,7 +430,7 @@ export default function OfertaTab({
             {serviciosOpcionales.map((serv) => (
               <div
                 key={serv.id}
-                className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-2 items-center bg-[#111] p-2 rounded border border-[#333]"
+                className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 items-center bg-gh-bg-secondary p-4 rounded-md border border-gh-border"
               >
                 {editandoServicioId === serv.id ? (
                   <>
@@ -435,7 +439,7 @@ export default function OfertaTab({
                       value={servicioEditando?.nombre || ''}
                       aria-label="Nombre servicio opcional"
                       onChange={(e) => setServicioEditando({ ...servicioEditando!, nombre: e.target.value })}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                     />
                     <input
                       type="number"
@@ -443,7 +447,7 @@ export default function OfertaTab({
                       aria-label="Precio mensual servicio opcional"
                       min={0}
                       onChange={(e) => setServicioEditando({ ...servicioEditando!, precio: Number.parseFloat(e.target.value) || 0 })}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                     />
                     <input
                       type="number"
@@ -456,7 +460,7 @@ export default function OfertaTab({
                         const nm = normalizarMeses(val, servicioEditando?.mesesPago || 12)
                         setServicioEditando({ ...servicioEditando!, ...nm })
                       }}
-                      className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                     />
                     <input
                       type="number"
@@ -469,14 +473,14 @@ export default function OfertaTab({
                         const nm = normalizarMeses(servicioEditando?.mesesGratis || 0, val)
                         setServicioEditando({ ...servicioEditando!, ...nm })
                       }}
-                      className="w-full px-2 py-1 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                     />
-                    <span className="text-[#888888] text-xs">${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}</span>
+                    <span className="text-gh-text-muted text-xs">${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}</span>
                     <div className="flex gap-2 justify-center">
                       <button
                         aria-label="Guardar servicio opcional"
                         onClick={guardarEditarServicioOpcional}
-                        className="w-full px-2 py-1.5 bg-white text-black rounded hover:bg-gray-200 transition-all focus:outline-none text-xs"
+                        className="w-full px-3 py-2 bg-gh-success text-white rounded-md hover:bg-[#1f7935] transition-colors text-xs font-semibold"
                         disabled={!(servicioEditando?.nombre.trim() && (servicioEditando?.precio || 0) > 0)}
                       >
                         <FaCheck />
@@ -484,7 +488,7 @@ export default function OfertaTab({
                       <button
                         aria-label="Cancelar edición servicio opcional"
                         onClick={cancelarEditarServicioOpcional}
-                        className="w-full px-2 py-1.5 bg-[#222] text-[#ededed] rounded hover:bg-[#333] transition-all focus:outline-none text-xs"
+                        className="w-full px-3 py-2 bg-gh-border text-gh-text-muted rounded-md hover:bg-gh-border-light transition-colors text-xs font-semibold"
                       >
                         <FaTimes />
                       </button>
@@ -492,23 +496,23 @@ export default function OfertaTab({
                   </>
                 ) : (
                   <>
-                    <span className="text-[#888888] text-xs">{serv.nombre}</span>
-                    <span className="text-[#888888] text-xs">${serv.precio.toFixed(2)}</span>
-                    <span className="text-[#888888] text-xs">{serv.mesesGratis}m</span>
-                    <span className="text-[#888888] text-xs">{serv.mesesPago}m</span>
-                    <span className="text-[#888888] text-xs">${(serv.precio * serv.mesesPago).toFixed(2)}</span>
+                    <span className="text-gh-text-muted text-xs">{serv.nombre}</span>
+                    <span className="text-gh-text-muted text-xs">${serv.precio.toFixed(2)}</span>
+                    <span className="text-gh-text-muted text-xs">{serv.mesesGratis}m</span>
+                    <span className="text-gh-text-muted text-xs">{serv.mesesPago}m</span>
+                    <span className="text-gh-text-muted text-xs">${(serv.precio * serv.mesesPago).toFixed(2)}</span>
                     <div className="flex gap-2 justify-center">
                       <button
                         aria-label="Editar servicio opcional"
                         onClick={() => abrirEditarServicioOpcional(serv)}
-                        className="px-2 py-1 bg-white text-black rounded hover:bg-gray-200 transition-all focus:outline-none text-xs"
+                        className="px-3 py-2 bg-gh-info text-white rounded-md hover:bg-[#388bfd] transition-colors text-xs"
                       >
                         <FaEdit />
                       </button>
                       <button
                         aria-label="Eliminar servicio opcional"
                         onClick={() => eliminarServicioOpcional(serv.id)}
-                        className="px-2 py-1 bg-white text-black rounded hover:bg-gray-200 transition-all focus:outline-none text-xs"
+                        className="px-3 py-2 bg-gh-warning text-white rounded-md hover:bg-[#d0981a] transition-colors text-xs"
                       >
                         <FaTrash />
                       </button>
@@ -520,11 +524,13 @@ export default function OfertaTab({
           </div>
         )}
 
-        <div className="space-y-2 p-3 bg-[#111] rounded border border-dashed border-[#333]">
-          <h3 className="text-xs font-bold text-[#ededed] mb-1">Agregar Nuevo Servicio Opcional</h3>
-          <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-2 items-end">
+        <div className="space-y-4 p-6 bg-gh-bg-overlay border border-gh-border rounded-lg">
+          <h3 className="text-sm font-semibold text-gh-text uppercase tracking-wide flex items-center gap-2">
+            <FaPlus size={14} /> Agregar Nuevo Servicio Opcional
+          </h3>
+          <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-3 items-end">
             <div>
-              <label htmlFor="servOpcNombre" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="servOpcNombre" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Nombre
               </label>
               <input
@@ -533,11 +539,11 @@ export default function OfertaTab({
                 placeholder="Ej: SEO Premium"
                 value={nuevoServicio.nombre}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, nombre: e.target.value })}
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
               />
             </div>
             <div>
-              <label htmlFor="servOpcPrecio" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="servOpcPrecio" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Precio
               </label>
               <input
@@ -547,11 +553,11 @@ export default function OfertaTab({
                 value={nuevoServicio.precio}
                 placeholder="0"
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, precio: Number.parseFloat(e.target.value) || 0 })}
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
               />
             </div>
             <div>
-              <label htmlFor="servOpcGratis" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="servOpcGratis" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Gratis
               </label>
               <input
@@ -565,11 +571,11 @@ export default function OfertaTab({
                   const nm = normalizarMeses(val, nuevoServicio.mesesPago)
                   setNuevoServicio({ ...nuevoServicio, ...nm })
                 }}
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
               />
             </div>
             <div>
-              <label htmlFor="servOpcPago" className="block font-semibold text-[#888888] mb-0.5 text-[10px]">
+              <label htmlFor="servOpcPago" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Pago
               </label>
               <input
@@ -583,7 +589,7 @@ export default function OfertaTab({
                   const nm = normalizarMeses(nuevoServicio.mesesGratis, val)
                   setNuevoServicio({ ...nuevoServicio, ...nm })
                 }}
-                className="w-full px-2 py-1.5 bg-black border border-[#333] rounded focus:border-white/50 focus:outline-none text-xs text-[#ededed]"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
               />
             </div>
             <motion.button
@@ -591,32 +597,32 @@ export default function OfertaTab({
               whileTap={{ scale: 0.95 }}
               onClick={agregarServicioOpcional}
               disabled={!(nuevoServicio.nombre.trim() && nuevoServicio.precio > 0)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+              className={`px-6 py-2.5 rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
                 nuevoServicio.nombre.trim() && nuevoServicio.precio > 0
-                  ? 'bg-white text-[#0a0a0f] hover:bg-white/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
-                  : 'bg-white/10 text-white/70 cursor-not-allowed'
+                  ? 'bg-gh-success text-white hover:bg-[#1f7935]'
+                  : 'bg-gh-bg-secondary text-gh-text-muted cursor-not-allowed'
               }`}
             >
-              <FaPlus /> Agregar
+              <FaPlus size={12} /> Agregar
             </motion.button>
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-[#111] rounded-lg border border-[#333] text-xs flex flex-col md:flex-row gap-2 md:items-center md:justify-between">
-          <span className="text-[#888888]">Servicios opcionales: {serviciosOpcionales.length}</span>
-          <span className="text-[#888888]">Total Año 1: ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * s.mesesPago, 0).toFixed(2)}</span>
-          <span className="text-[#888888]">Total Anual (Año 2+): ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * 12, 0).toFixed(2)}</span>
+        <div className="mt-4 p-4 bg-gh-bg-secondary rounded-lg border border-gh-border text-xs flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+          <span className="text-gh-text-muted">Servicios opcionales: {serviciosOpcionales.length}</span>
+          <span className="text-gh-text-muted">Total Año 1: ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * s.mesesPago, 0).toFixed(2)}</span>
+          <span className="text-gh-text-muted">Total Anual (Año 2+): ${serviciosOpcionales.reduce((sum, s) => sum + s.precio * 12, 0).toFixed(2)}</span>
         </div>
         {!serviciosOpcionalesValidos && serviciosOpcionales.length > 0 && (
-          <p className="mt-1 text-[10px] text-[#888888]">
-            Revisa meses (Meses Gratis + Meses Pago deben sumar 12) y que todos tengan nombre y precio.
+          <p className="mt-3 text-xs text-gh-warning bg-gh-bg-secondary p-3 rounded-md border border-gh-border">
+            ⚠️ Revisa meses (Meses Gratis + Meses Pago deben sumar 12) y que todos tengan nombre y precio.
           </p>
         )}
 
         {!todoEsValido && (
-          <div className="mt-4 pt-3 border-t border-[#333]">
-            <p className="text-xs text-[#888888] text-center bg-[#111] p-3 rounded-lg border border-[#333]">
-              ⚠️ Completa: Nombre del paquete, Desarrollo, Precios servicios y Meses válidos
+          <div className="mt-4 pt-4 border-t border-gh-border">
+            <p className="text-xs text-gh-info bg-gh-bg-secondary p-4 rounded-lg border border-gh-border text-center font-medium">
+              ℹ️ Completa: Nombre del paquete, Desarrollo, Precios servicios y Meses válidos
             </p>
           </div>
         )}

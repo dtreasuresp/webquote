@@ -111,14 +111,14 @@ Este modelo es:
 
 ---
 
-### ❌ TU NO HARÁS NINGUNA DE ESTAS TAREAS:
+### TU NO HARÁS NINGUNA DE ESTAS TAREAS:
 
-- ❌ No ingresa al panel administrativo, a menos que sea para demostraciones o control de negocios
-- ❌ No instala plugins
-- ❌ No hace backups
-- ❌ No actualiza la plataforma web
-- ❌ No maneja seguridad
-- ❌ No toma decisiones técnicas
+- No ingresa al panel administrativo, a menos que sea para demostraciones o control de negocios
+- No instala plugins
+- No hace backups
+- No actualiza la plataforma web
+- No maneja seguridad
+- No toma decisiones técnicas
 
 ---
 
@@ -182,7 +182,7 @@ Brindar servicios generales de la construcción y satisfacer las necesidades del
 | **Colores a Evitar** | Rosado |
 | **Estilo** | Corporativo y profesional |
 | **Logo** | ✅ Diseñado |
-| **Manual de Marca** | ❌ No disponible |
+| **Manual de Marca** | No disponible |
 
 ---
 
@@ -259,8 +259,8 @@ Brindar servicios generales de la construcción y satisfacer las necesidades del
 |----------|--------|---------------|
 | Logo | ✅ Disponible | Listo para implementar |
 | Videos Promocionales | ✅ Disponible | Cliente cuenta con material |
-| Textos/Contenidos | ❌ Requiere Creación | A ser desarrollados por el proveedor |
-| Manual de Marca | ❌ No Disponible | Será generado durante desarrollo |
+| Textos/Contenidos | Requiere Creación | A ser desarrollados por el proveedor |
+| Manual de Marca | No Disponible | Será generado durante desarrollo |
 
 ---
 
@@ -432,16 +432,16 @@ HTML/CSS directamente. El contenido es idéntico para todos los visitantes.
 - ✅ Bajo costo inicial
 
 **DESVENTAJAS:**
-- ❌ Difíciles de actualizar
-- ❌ Requieren programador cada vez que cambies algo
-- ❌ Limitados en funcionalidad
-- ❌ NO permiten interacción con los usuarios
-- ❌ No tienen base de datos
-- ❌ No son ideales para catálogos o tiendas
-- ❌ No permiten blogs o noticias fácilmente
+- Difíciles de actualizar
+- Requieren programador cada vez que cambies algo
+- Limitados en funcionalidad
+- NO permiten interacción con los usuarios
+- No tienen base de datos
+- No son ideales para catálogos o tiendas
+- No permiten blogs o noticias fácilmente
 
 **PROBLEMA PARA TI:**
-Si tu catálogo cambia (nuevo servicio, cambio de precio, nueva foto), necesitarías contactarnos cada vez e incurrir en gastos recurrentes no planificados ❌ INEFICIENTE
+Si tu catálogo cambia (nuevo servicio, cambio de precio, nueva foto), necesitarías contactarnos cada vez e incurrir en gastos recurrentes no planificados INEFICIENTE
 
 ---
 
@@ -474,10 +474,10 @@ personalizada de una base de datos.
 - ✅ Independencia del programador para cambios, si necesites tomar las riendas de tu proyecto
 
 **DESVENTAJAS:**
-- ❌ Ligeramente más lentos que los estáticos (pero sigue siendo rápido)
-- ❌ Requieren mantenimiento (actualizaciones via Portal Admin)
-- ❌ Costos recurrentes (hosting, dominio, mantenimiento)
-- ❌ Más complejos técnicamente, pero no tienes que preocuparte por esto
+- Ligeramente más lentos que los estáticos (pero sigue siendo rápido)
+- Requieren mantenimiento (actualizaciones via Portal Admin)
+- Costos recurrentes (hosting, dominio, mantenimiento)
+- Más complejos técnicamente, pero no tienes que preocuparte por esto
 
 **BENEFICIO PARA TI:**
 Si lo decides, puede actualizar el contenido desde un panel fácil, sin llamar a programador. ✅ EFICIENTE
@@ -489,15 +489,15 @@ Si lo decides, puede actualizar el contenido desde un panel fácil, sin llamar a
 | Aspecto | ESTÁTICO | DINÁMICO |
 |---------|:--------:|:-------------------:|
 | **Velocidad de carga** | ⚡⚡⚡ Ultra rápido | ⚡⚡ Muy Rápido |
-| **Base de datos** | ❌ No | ✅ Sí |
+| **Base de datos** | No | ✅ Sí |
 | **Facilidad actualizar contenido** | 🔴 Muy difícil | 🟢 Muy fácil |
-| **Panel de administración** | ❌ No tiene | ✅ Intuitivo |
-| **Para usuarios no técnicos** | ❌ No | ✅ Sí |
+| **Panel de administración** | No tiene | ✅ Intuitivo |
+| **Para usuarios no técnicos** | No | ✅ Sí |
 | **Catálogo de productos** | ⚠️ Limitado | ✅ Ilimitado |
 | **Seguridad** | 🟢 Muy seguro | 🟢 Seguro (con actualizaciones) |
 | **Blog/Noticias** | ⚠️ Baja compatibilidad | ✅ Muy fácil |
 | **Funcionalidad completa** | ⚠️ Limitada | ✅ Completa |
-| **Tienda online futura** | ❌ No | ✅ Sí |
+| **Tienda online futura** | No | ✅ Sí |
 | **Mantenimiento** | Bajo | Moderado |
 | **Escalabilidad** | 🟢 Infinita | 🟢 Muy buena |
 

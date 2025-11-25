@@ -47,16 +47,16 @@ export default function PaquetesTab({
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-[#111] rounded-xl border border-[#333] p-8 text-center"
+            className="bg-gh-bg-secondary rounded-md border border-gh-border p-8 text-center"
           >
             <div className="flex items-center justify-center gap-3">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               >
-                <FaCalculator className="text-[#ededed] text-3xl" />
+                <FaCalculator className="text-gh-text text-3xl" />
               </motion.div>
-              <p className="text-lg text-[#ededed] font-semibold">Cargando paquetes...</p>
+              <p className="text-lg text-gh-text font-semibold">Cargando paquetes...</p>
             </div>
           </motion.div>
         ) : errorSnapshots ? (
@@ -64,9 +64,9 @@ export default function PaquetesTab({
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-[#111] rounded-xl border border-red-500/30 p-8"
+            className="bg-gh-bg-secondary rounded-md border border-red-500/30 p-8"
           >
-            <p className="text-[#ededed] font-semibold">❌ {errorSnapshots}</p>
+            <p className="text-gh-text font-semibold">{errorSnapshots}</p>
           </motion.div>
         ) : snapshots.length > 0 ? (
             <div className="space-y-4 md:grid md:grid-cols-2 gap-2 md:space-y-0">
@@ -76,32 +76,32 @@ export default function PaquetesTab({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-[#111] rounded-xl border border-[#333] overflow-hidden"
+                  className="bg-gh-bg-secondary rounded-md border border-gh-border overflow-hidden"
                 >
                   {/* Header del Snapshot */}
-                  <div className="bg-[#111] p-4 border-b border-[#333] relative">
+                  <div className="bg-gh-bg-secondary p-4 border-b border-gh-border relative">
                     {/* Contenido Principal */}
                     <div className="pr-4">
-                      <h3 className="text-xl font-bold text-[#ededed]">
+                      <h3 className="text-xl font-bold text-gh-text">
                         {snapshot.nombre}
                       </h3>
                       {snapshot.paquete.tipo && (
-                        <p className="text-xs font-semibold tracking-wide text-[#888888] uppercase mt-1">
+                        <p className="text-xs font-semibold tracking-wide text-gh-text-muted uppercase mt-1">
                           {snapshot.paquete.tipo}
                         </p>
                       )}
                       {snapshot.paquete.descripcion && (
-                        <p className="text-sm text-[#888888] italic mt-1 line-clamp-3 min-h-[4rem]">
+                        <p className="text-sm text-gh-text-muted italic mt-1 line-clamp-3 min-h-[4rem]">
                           {snapshot.paquete.descripcion}
                         </p>
                       )}
-                      <p className="text-sm text-[#888888] mt-2">
+                      <p className="text-sm text-gh-text-muted mt-2">
                         {new Date(snapshot.createdAt).toLocaleDateString('es-ES')}
                       </p>
                     </div>
 
                     {/* Botones FAB Flotantes Horizontales */}
-                    <div className="absolute top-2 right-2 flex flex-row gap-1.5 bg-[#111] p-1.5 rounded-lg border border-[#333]">
+                    <div className="absolute top-2 right-2 flex flex-row gap-1.5 bg-gh-bg-secondary p-1.5 rounded-lg border border-gh-border">
                       {/* FAB Toggle Activo */}
                       <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -122,13 +122,13 @@ export default function PaquetesTab({
                           } catch (err) {
                             console.error('Error al autoguardar estado activo:', err)
                             setSnapshots(snapshots.map(s => s.id === snapshot.id ? { ...s, activo: !marcado } : s))
-                            alert('❌ No se pudo actualizar el estado Activo. Intenta nuevamente.')
+                            alert('No se pudo actualizar el estado Activo. Intenta nuevamente.')
                           }
                         }}
                         className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                           snapshot.activo
-                            ? 'bg-[#ededed] text-black hover:bg-[#fff]'
-                            : 'bg-[#222] text-[#888888] hover:bg-[#333]'
+                            ? 'bg-gh-success text-white hover:bg-gh-success/90'
+                            : 'bg-gh-bg text-gh-text-muted hover:bg-gh-border'
                         }`}
                         title={snapshot.activo ? 'Desactivar' : 'Activar'}
                       >
@@ -148,7 +148,7 @@ export default function PaquetesTab({
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => abrirModalEditar(snapshot)}
-                        className="w-7 h-7 rounded-full bg-[#ededed] text-black hover:bg-[#fff] transition-all flex items-center justify-center"
+                        className="w-7 h-7 rounded-full bg-gh-success text-white hover:bg-gh-success/90 transition-all flex items-center justify-center"
                         title="Editar paquete"
                       >
                         <FaEdit size={12} />
@@ -160,7 +160,7 @@ export default function PaquetesTab({
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleEliminarSnapshot(snapshot.id)}
-                        className="w-7 h-7 rounded-full bg-[#222] text-[#888888] hover:bg-[#333] transition-all flex items-center justify-center"
+                        className="w-7 h-7 rounded-full bg-gh-bg text-gh-text-muted hover:bg-gh-border transition-all flex items-center justify-center"
                         title="Eliminar paquete"
                       >
                         <FaTrash size={11} />
@@ -173,90 +173,90 @@ export default function PaquetesTab({
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-[#333] bg-[#111] text-pretty">
-                            <th className="text-left p-1.5 font-bold text-[#ededed] text-xs">Concepto</th>
-                            <th className="text-center p-1.5 font-bold text-[#ededed] text-xs">Meses Gratis</th>
-                            <th className="text-center p-1.5 font-bold text-[#ededed] text-xs">Meses Pago</th>
-                            <th className="text-right p-1.5 font-bold text-[#ededed] bg-[#222] text-xs">Costo Mensual</th>
-                            <th className="text-right p-1.5 font-bold text-[#ededed] bg-[#222] text-xs">Año 1</th>
-                            <th className="text-right p-1.5 font-bold text-[#ededed] bg-[#222] text-xs">Año 2</th>
+                          <tr className="border-b border-gh-border bg-gh-bg-secondary text-pretty">
+                            <th className="text-left p-1.5 font-bold text-gh-text text-xs">Concepto</th>
+                            <th className="text-center p-1.5 font-bold text-gh-text text-xs">Meses Gratis</th>
+                            <th className="text-center p-1.5 font-bold text-gh-text text-xs">Meses Pago</th>
+                            <th className="text-right p-1.5 font-bold text-gh-text bg-gh-bg text-xs">Costo Mensual</th>
+                            <th className="text-right p-1.5 font-bold text-gh-text bg-gh-bg text-xs">Año 1</th>
+                            <th className="text-right p-1.5 font-bold text-gh-text bg-gh-bg text-xs">Año 2</th>
                           </tr>
                         </thead>
                         <tbody>
                           {/* Servicios Base */}
-                          <tr className="border-b border-[#333] bg-[#111]">
-                            <td className="p-1.5 font-bold text-[#ededed] text-xs" colSpan={3}>
+                          <tr className="border-b border-gh-border bg-gh-bg-secondary">
+                            <td className="p-1.5 font-bold text-gh-text text-xs" colSpan={3}>
                               Servicios Base
                             </td>
-                            <td className="p-1.5 text-right font-bold text-[#ededed] bg-[#222] text-xs">
+                            <td className="p-1.5 text-right font-bold text-gh-text bg-gh-bg text-xs">
                               ${((snapshot.serviciosBase ?? []).reduce((sum, s) => sum + (s.precio ?? 0), 0)).toFixed(2)}
                             </td>
-                            <td className="p-1.5 text-right font-bold text-[#ededed] bg-[#222] text-xs">
+                            <td className="p-1.5 text-right font-bold text-gh-text bg-gh-bg text-xs">
                               ${((snapshot.serviciosBase ?? []).reduce((sum, s) => sum + (s.precio ?? 0) * (s.mesesPago ?? 0), 0)).toFixed(2)}
                             </td>
-                            <td className="p-1.5 text-right font-bold text-[#ededed] bg-[#222] text-xs">
+                            <td className="p-1.5 text-right font-bold text-gh-text bg-gh-bg text-xs">
                               ${((snapshot.serviciosBase ?? []).reduce((sum, s) => sum + (s.precio ?? 0) * 12, 0)).toFixed(2)}
                             </td>
                           </tr>
                           {snapshot.serviciosBase?.map((servicio) => (
-                            <tr key={servicio.id} className="border-b border-[#333] hover:bg-[#222] transition-colors">
-                              <td className="p-1.5 text-[#ededed] text-xs">{servicio.nombre}</td>
-                              <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">
+                            <tr key={servicio.id} className="border-b border-gh-border hover:bg-gh-border transition-colors">
+                              <td className="p-1.5 text-gh-text text-xs">{servicio.nombre}</td>
+                              <td className="p-1.5 text-center font-semibold text-gh-text text-xs">
                                 {servicio.mesesGratis}
                               </td>
-                              <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">
+                              <td className="p-1.5 text-center font-semibold text-gh-text text-xs">
                                 {servicio.mesesPago}
                               </td>
-                              <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                              <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                 ${servicio.precio.toFixed(2)}
                               </td>
-                              <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                              <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                 ${(servicio.precio * servicio.mesesPago).toFixed(2)}
                               </td>
-                              <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                              <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                 ${(servicio.precio * 12).toFixed(2)}
                               </td>
                             </tr>
                           )) || (
-                            <tr className="border-b border-[#333]">
-                              <td colSpan={6} className="p-1.5 text-center text-[#888888] italic text-xs">
+                            <tr className="border-b border-gh-border">
+                              <td colSpan={6} className="p-1.5 text-center text-gh-text-muted italic text-xs">
                                 No hay servicios base definidos
                               </td>
                             </tr>
                           )}
 
                           {/* Paquete */}
-                          <tr className="border-b border-[#333]">
-                            <td colSpan={6} className="p-1.5 font-bold bg-[#111] text-[#ededed] text-xs">
+                          <tr className="border-b border-gh-border">
+                            <td colSpan={6} className="p-1.5 font-bold bg-gh-bg-secondary text-gh-text text-xs">
                               Costo del desarrollo
                             </td>
                           </tr>
-                          <tr className="border-b border-[#333] hover:bg-[#222] transition-colors">
-                            <td className="p-1.5 text-[#ededed] text-xs">Desarrollo</td>
-                            <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">-</td>
-                            <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">-</td>
-                            <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                          <tr className="border-b border-gh-border hover:bg-gh-border transition-colors">
+                            <td className="p-1.5 text-gh-text text-xs">Desarrollo</td>
+                            <td className="p-1.5 text-center font-semibold text-gh-text text-xs">-</td>
+                            <td className="p-1.5 text-center font-semibold text-gh-text text-xs">-</td>
+                            <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                               ${snapshot.paquete.desarrollo.toFixed(2)}
                             </td>
-                            <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                            <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                               ${snapshot.paquete.desarrollo.toFixed(2)}
                             </td>
-                            <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                            <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                               -
                             </td>
                           </tr>
                           {snapshot.paquete.descuento > 0 && (
-                            <tr className="border-b border-[#333] hover:bg-[#222] transition-colors">
-                              <td className="p-1.5 text-[#ededed] text-xs">Descuento</td>
-                              <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">-</td>
-                              <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">-</td>
-                              <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                            <tr className="border-b border-gh-border hover:bg-gh-border transition-colors">
+                              <td className="p-1.5 text-gh-text text-xs">Descuento</td>
+                              <td className="p-1.5 text-center font-semibold text-gh-text text-xs">-</td>
+                              <td className="p-1.5 text-center font-semibold text-gh-text text-xs">-</td>
+                              <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                 {snapshot.paquete.descuento}%
                               </td>
-                              <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                              <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                 {snapshot.paquete.descuento}%
                               </td>
-                              <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                              <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                 -
                               </td>
                             </tr>
@@ -265,8 +265,8 @@ export default function PaquetesTab({
                           {/* Otros Servicios */}
                           {snapshot.otrosServicios.length > 0 && (
                             <>
-                              <tr className="border-b border-[#333]">
-                                <td colSpan={6} className="p-1.5 font-bold bg-[#111] text-[#ededed] text-xs">
+                              <tr className="border-b border-gh-border">
+                                <td colSpan={6} className="p-1.5 font-bold bg-gh-bg-secondary text-gh-text text-xs">
                                   Otros Servicios
                                 </td>
                               </tr>
@@ -276,24 +276,24 @@ export default function PaquetesTab({
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ delay: sIdx * 0.05 }}
-                                  className="border-b border-[#333] hover:bg-[#222] transition-colors"
+                                  className="border-b border-gh-border hover:bg-gh-border transition-colors"
                                 >
-                                  <td className="p-1.5 text-[#ededed] text-xs">
+                                  <td className="p-1.5 text-gh-text text-xs">
                                     {servicio.nombre}
                                   </td>
-                                  <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">
+                                  <td className="p-1.5 text-center font-semibold text-gh-text text-xs">
                                     {servicio.mesesGratis}
                                   </td>
-                                  <td className="p-1.5 text-center font-semibold text-[#ededed] text-xs">
+                                  <td className="p-1.5 text-center font-semibold text-gh-text text-xs">
                                     {servicio.mesesPago}
                                   </td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                                  <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                     ${servicio.precio.toFixed(2)}
                                   </td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                                  <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                     ${(servicio.precio * servicio.mesesPago).toFixed(2)}
                                   </td>
-                                  <td className="p-1.5 text-right font-semibold text-[#ededed] bg-[#222] text-xs">
+                                  <td className="p-1.5 text-right font-semibold text-gh-text bg-gh-bg text-xs">
                                     ${(servicio.precio * 12).toFixed(2)}
                                   </td>
                                 </motion.tr>
@@ -302,31 +302,31 @@ export default function PaquetesTab({
                           )}
 
                           {/* Costos Finales */}
-                          <tr className="border-b border-[#333]">
-                            <td colSpan={6} className="p-1.5 font-bold bg-[#111] text-[#ededed] text-xs">
+                          <tr className="border-b border-gh-border">
+                            <td colSpan={6} className="p-1.5 font-bold bg-gh-bg-secondary text-gh-text text-xs">
                               Costos totales
                             </td>
                           </tr>
-                          <tr className="border-b border-[#333] bg-[#111]">
-                            <td className="p-1.5 font-semibold text-[#ededed] text-xs">Pago Inicial</td>
-                            <td colSpan={5} className="p-1.5 text-right font-bold text-[#ededed] text-sm">
+                          <tr className="border-b border-gh-border bg-gh-bg-secondary">
+                            <td className="p-1.5 font-semibold text-gh-text text-xs">Pago Inicial</td>
+                            <td colSpan={5} className="p-1.5 text-right font-bold text-gh-text text-sm">
                               ${snapshot.costos.inicial.toFixed(2)}
                             </td>
                           </tr>
-                          <tr className="border-b border-[#333] bg-[#111]">
-                            <td className="p-1.5 font-semibold text-[#ededad] text-xs">Año 1</td>
-                            <td colSpan={5} className="p-1.5 text-right font-bold text-[#ededad] text-sm">
+                          <tr className="border-b border-gh-border bg-gh-bg-secondary">
+                            <td className="p-1.5 font-semibold text-gh-text text-xs">Año 1</td>
+                            <td colSpan={5} className="p-1.5 text-right font-bold text-gh-text text-sm">
                               ${snapshot.costos.año1.toFixed(2)}
                             </td>
                           </tr>
-                          <tr className="bg-[#111]">
-                            <td className="p-1.5 font-semibold text-[#ededad] text-xs">Año 2</td>
-                            <td colSpan={5} className="p-1.5 text-right font-bold text-[#ededad] text-sm">
+                          <tr className="bg-gh-bg-secondary">
+                            <td className="p-1.5 font-semibold text-gh-text text-xs">Año 2</td>
+                            <td colSpan={5} className="p-1.5 text-right font-bold text-gh-text text-sm">
                               ${snapshot.costos.año2.toFixed(2)}
                             </td>
                           </tr>
-                          <tr className="bg-[#222]">
-                            <td colSpan={6} className="p-1.5 text-xs text-[#888888] italic text-center">
+                          <tr className="bg-gh-bg">
+                            <td colSpan={6} className="p-1.5 text-xs text-gh-text-muted italic text-center">
                               Año 2 no incluye desarrollo (pago único realizado en Año 1)
                             </td>
                           </tr>
@@ -338,9 +338,9 @@ export default function PaquetesTab({
               ))}
             </div>
         ) : (
-          <div className="bg-[#111] rounded-xl border border-[#333] p-8 text-center">
-            <p className="text-lg text-[#888888] font-semibold">📭 No hay paquetes creados aún</p>
-            <p className="text-sm text-[#888888] mt-2">Crea tu primer paquete completando los datos arriba</p>
+          <div className="bg-gh-bg-secondary rounded-md border border-gh-border p-8 text-center">
+            <p className="text-lg text-gh-text-muted font-semibold">📭 No hay paquetes creados aún</p>
+            <p className="text-sm text-gh-text-muted mt-2">Crea tu primer paquete completando los datos arriba</p>
           </div>
         )}
       </CollapsibleSection>
@@ -360,22 +360,22 @@ export default function PaquetesTab({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-[#111] rounded-lg border border-dashed border-[#333] p-4 opacity-50 hover:opacity-100 transition-opacity"
+                className="bg-gh-bg-secondary rounded-lg border border-dashed border-gh-border p-4 opacity-50 hover:opacity-100 transition-opacity"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-[#ededed] text-lg">{snapshot.nombre}</h3>
+                    <h3 className="font-semibold text-gh-text text-lg">{snapshot.nombre}</h3>
                     {snapshot.paquete.tipo && (
-                      <p className="text-xs font-semibold tracking-wide text-[#666] uppercase mt-1">
+                      <p className="text-xs font-semibold tracking-wide text-gh-text-muted uppercase mt-1">
                         {snapshot.paquete.tipo}
                       </p>
                     )}
                     {snapshot.paquete.descripcion && (
-                      <p className="text-sm text-[#666] italic mt-1">
+                      <p className="text-sm text-gh-text-muted italic mt-1">
                         {snapshot.paquete.descripcion}
                       </p>
                     )}
-                    <p className="text-sm text-[#666] mt-2">
+                    <p className="text-sm text-gh-text-muted mt-2">
                       {new Date(snapshot.createdAt).toLocaleDateString('es-ES')}
                     </p>
                   </div>
@@ -401,18 +401,18 @@ export default function PaquetesTab({
                           } catch (err) {
                             console.error('Error al actualizar estado activo:', err)
                             setSnapshots(snapshots.map(s => s.id === snapshot.id ? { ...s, activo: !marcado } : s))
-                            alert('❌ No se pudo actualizar el estado. Intenta nuevamente.')
+                            alert('No se pudo actualizar el estado. Intenta nuevamente.')
                           }
                         }}
                         className="w-5 h-5 cursor-pointer"
                       />
-                      <label htmlFor={`snapshot-inactivo-${snapshot.id}`} className="font-semibold text-[#888888] text-sm">Activar</label>
+                      <label htmlFor={`snapshot-inactivo-${snapshot.id}`} className="font-semibold text-gh-text-muted text-sm">Activar</label>
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleEliminarSnapshot(snapshot.id)}
-                      className="w-9 h-9 bg-[#222] text-[#888888] hover:bg-[#333] transition-colors flex items-center justify-center rounded-lg"
+                      className="w-9 h-9 bg-gh-bg text-gh-text-muted hover:bg-gh-border transition-colors flex items-center justify-center rounded-lg"
                     >
                       <FaTrash size={14} />
                     </motion.button>

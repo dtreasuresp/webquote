@@ -146,8 +146,8 @@ export default function AnalisisRequisitos() {
                 <div className="space-y-2 mt-4">
                   {[
                     { item: 'Videos corporativos', status: '✅ Está disponible', note: 'El cliente cuenta con el material' },
-                    { item: 'Textos/Contenidos', status: '❌ No Disponible', note: 'Será desarrollados por el nosotros' },
-                    { item: 'Manual de identidad visual', status: '❌ No Disponible', note: 'Será creado una versión básica, cuya propiedad será nuestra. Puedes adquirir la versión profesional con un costo adicional' },
+                    { item: 'Textos/Contenidos', status: 'No Disponible', note: 'Será desarrollados por el nosotros' },
+                    { item: 'Manual de identidad visual', status: 'No Disponible', note: 'Será creado una versión básica, cuya propiedad será nuestra. Puedes adquirir la versión profesional con un costo adicional' },
                   ].map((item) => (
                     <div key={item.item} className="flex justify-between items-start p-4 border-l-4 border-primary bg-primary/5 rounded">
                       <div>

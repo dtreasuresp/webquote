@@ -17,7 +17,7 @@ async function restoreData() {
     const backupDir = path.join(process.cwd(), 'prisma', 'backups')
     
     if (!fs.existsSync(backupDir)) {
-      console.error('❌ No se encontró el directorio de backups')
+      console.error('No se encontró el directorio de backups')
       return
     }
 
@@ -25,7 +25,7 @@ async function restoreData() {
     const convertedFiles = files.filter(f => f.startsWith('converted-'))
     
     if (convertedFiles.length === 0) {
-      console.error('❌ No se encontraron archivos de datos convertidos')
+      console.error('No se encontraron archivos de datos convertidos')
       return
     }
 
@@ -66,7 +66,7 @@ async function restoreData() {
         console.log(`✅ Restaurado: "${snapshot.nombre}"`)
         restaurados++
       } catch (error) {
-        console.error(`❌ Error al restaurar "${snapshot.nombre}":`, error)
+        console.error(`Error al restaurar "${snapshot.nombre}":`, error)
       }
     }
 
@@ -76,7 +76,7 @@ async function restoreData() {
     console.log('\n✨ Restauración completada!')
 
   } catch (error) {
-    console.error('❌ Error durante la restauración:', error)
+    console.error('Error durante la restauración:', error)
     throw error
   } finally {
     await prisma.$disconnect()

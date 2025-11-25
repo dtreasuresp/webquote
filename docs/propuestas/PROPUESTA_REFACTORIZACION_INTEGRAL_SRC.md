@@ -644,9 +644,9 @@ components/
 ```
 
 **Problemas:**
-- ❌ ¿Dónde está el botón reutilizable?
-- ❌ ¿Cuál es la jerarquía?
-- ❌ ¿Cuáles son compartidos vs. locales?
+- ¿Dónde está el botón reutilizable?
+- ¿Cuál es la jerarquía?
+- ¿Cuáles son compartidos vs. locales?
 
 #### Después (Organización Clara)
 
@@ -703,7 +703,7 @@ components/
 
 **Uso:**
 ```tsx
-// ❌ ANTES (confuso)
+// ANTES (confuso)
 import Navigation from '@/components/Navigation'
 import PackageCostSummary from '@/components/PackageCostSummary'
 
@@ -943,9 +943,9 @@ export interface PackageSnapshot { ... }
 ```
 
 **Problemas:**
-- ❌ ¿De dónde viene cada tipo?
-- ❌ ¿Cuál es la relación?
-- ❌ ¿Puedo cambiar uno sin romper otra cosa?
+- ¿De dónde viene cada tipo?
+- ¿Cuál es la relación?
+- ¿Puedo cambiar uno sin romper otra cosa?
 
 #### Después (Distribuido en features)
 
@@ -1198,11 +1198,11 @@ const { snapshots } = useSnapshotsContext()
 ## 📝 CONCLUSIÓN
 
 ### Antes de Refactorizar
-- ❌ 2,900 líneas en 1 archivo = imposible mantener
-- ❌ 24 componentes sin jerarquía = caos
-- ❌ State management = 3 patrones simultáneos
-- ❌ Testabilidad = 0%
-- ❌ Reutilización = mínima
+- 2,900 líneas en 1 archivo = imposible mantener
+- 24 componentes sin jerarquía = caos
+- State management = 3 patrones simultáneos
+- Testabilidad = 0%
+- Reutilización = mínima
 
 ### Después de Refactorizar
 - ✅ Max 300 líneas por archivo = fácil mantener

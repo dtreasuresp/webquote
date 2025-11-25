@@ -96,7 +96,7 @@ async function backupAndMigrate() {
     console.log('   2. Ejecuta: npx tsx scripts/restore-data.ts\n')
 
   } catch (error) {
-    console.error('❌ Error durante el proceso:', error)
+    console.error('Error durante el proceso:', error)
     throw error
   } finally {
     await prisma.$disconnect()
