@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaArrowRight, FaExchangeAlt, FaCheckCircle, FaTimesCircle, FaDownload } from 'react-icons/fa'
 import type { PackageSnapshot } from '@/lib/types'
-import { compararSnapshots, type SnapshotComparison } from '../utils/snapshotComparison'
+import { compararSnapshots, type SnapshotComparison as SnapshotComparisonType, type SnapshotDifference } from '../utils/snapshotComparison'
 import { exportarDiffCSV, exportarDiffJSON } from '../utils/snapshotDiff'
 
 interface SnapshotComparisonProps {
@@ -26,8 +26,7 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
   onRollback,
   showRollbackButton = true,
 }) => {
-  const [comparison, setComparison] = useState<SnapshotComparison | null>(null)
-  const [expandidoTab, setExpandidoTab] = useState<'críticos' | 'advertencias' | 'info' | null>(null)
+  const [comparison, setComparison] = useState<SnapshotComparisonType | null>(null)
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'críticos' | 'advertencias'>('todos')
 
   // Realizar comparación
@@ -43,13 +42,13 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
   const { diferencias, resumen, sonIdénticos } = comparison
 
   // Filtrar diferencias
-  const diferenciasFiltradas = diferencias.filter((d) => {
+  const diferenciasFiltradas = diferencias.filter((d: SnapshotDifference) => {
     if (filtroTipo === 'críticos') return d.severity === 'critical'
     if (filtroTipo === 'advertencias') return d.severity === 'warning' || d.severity === 'critical'
     return true
   })
 
-  const formatearValor = (valor: any) => {
+  const formatearValor = (valor: unknown) => {
     if (valor === null || valor === undefined) return '(vacío)'
     if (typeof valor === 'number') return valor.toLocaleString('es-ES')
     if (typeof valor === 'string') return valor
@@ -115,14 +114,16 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
       </div>
 
       {/* RESUMEN */}
+      {(() => {
+        let bgClass = 'bg-gh-success/10 border-gh-success/30'
+        if (!sonIdénticos) {
+          bgClass = resumen.críticos > 0
+            ? 'bg-gh-error/10 border-gh-error/30'
+            : 'bg-gh-warning/10 border-gh-warning/30'
+        }
+        return (
       <motion.div
-        className={`p-4 rounded-lg border ${
-          sonIdénticos
-            ? 'bg-gh-success/10 border-gh-success/30'
-            : resumen.críticos > 0
-              ? 'bg-gh-error/10 border-gh-error/30'
-              : 'bg-gh-warning/10 border-gh-warning/30'
-        }`}
+        className={`p-4 rounded-lg border ${bgClass}`}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -165,6 +166,8 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
           </div>
         )}
       </motion.div>
+        )
+      })()}
 
       {/* FILTROS */}
       {!sonIdénticos && (
@@ -206,7 +209,7 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
       <AnimatePresence>
         {!sonIdénticos && diferenciasFiltradas.length > 0 && (
           <motion.div className="space-y-3">
-            {diferenciasFiltradas.map((diff, index) => (
+            {diferenciasFiltradas.map((diff: SnapshotDifference, index: number) => (
               <motion.div
                 key={`${diff.field}-${index}`}
                 initial={{ opacity: 0, x: -10 }}
