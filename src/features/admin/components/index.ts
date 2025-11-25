@@ -34,5 +34,9 @@ export { default as SnapshotDiffViewer } from './SnapshotDiffViewer'
 // Analytics Components (Phase 13)
 export { AnalyticsDashboard } from './AnalyticsDashboard'
 
+// Performance Optimized Components (Phase 14)
+export { default as OptimizedSnapshotCard } from './OptimizedSnapshotCard'
+export type { OptimizedSnapshotCardProps } from './OptimizedSnapshotCard'
+
 // TABs
 export * from './tabs'

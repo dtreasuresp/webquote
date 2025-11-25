@@ -16,6 +16,9 @@ export type { SnapshotDifference, SnapshotComparison, SnapshotComparisonResult }
 export * from './snapshotDiff'
 export type { DiffLine, FormattedDiff, DiffViewerConfig } from './snapshotDiff'
 
+// Performance Optimizations (Phase 14)
+export * from './performanceOptimizations'
+
 // Formatters
 export * from './formatters'
 
