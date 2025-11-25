@@ -38,5 +38,12 @@ export { AnalyticsDashboard } from './AnalyticsDashboard'
 export { default as OptimizedSnapshotCard } from './OptimizedSnapshotCard'
 export type { OptimizedSnapshotCardProps } from './OptimizedSnapshotCard'
 
+export { 
+  withOptimizations, 
+  useOptimizedCallback, 
+  useOptimizedMemo, 
+  usePreviousProps 
+} from './withOptimizations'
+
 // TABs
 export * from './tabs'
