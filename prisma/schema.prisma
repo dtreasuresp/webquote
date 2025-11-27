@@ -87,6 +87,15 @@ model PackageSnapshot {
   opcionesPago        Json?     // Array de { nombre, porcentaje, descripcion }
   descuentoPagoUnico  Int?      // Porcentaje de descuento por pago único
   
+  // ✅ NUEVO SISTEMA DE DESCUENTOS - ConfigDescuentos completo
+  configDescuentos    Json?
+  
+  // @deprecated - Descuentos Generales (JSON) - mantener para compatibilidad
+  descuentosGenerales Json?
+  
+  // @deprecated - Descuentos por Servicio (JSON) - mantener para compatibilidad  
+  descuentosPorServicio Json?
+  
   // Otros Servicios (JSON)
   otrosServicios      Json
   

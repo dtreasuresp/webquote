@@ -43,6 +43,10 @@ export async function POST(request: NextRequest) {
           tiempoEntrega: data.tiempoEntrega || '',
           opcionesPago: data.opcionesPago || [],
           descuentoPagoUnico: data.descuentoPagoUnico || 0,
+          // Sistema de descuentos
+          configDescuentos: data.configDescuentos || null,
+          descuentosGenerales: data.descuentosGenerales || null,
+          descuentosPorServicio: data.descuentosPorServicio || null,
           otrosServicios: data.otrosServicios || [],
           costoInicial: data.costoInicial || 0,
           costoAño1: data.costoAño1 || data.costoAnio1 || 0,
@@ -89,6 +93,10 @@ export async function PUT(request: NextRequest) {
         tiempoEntrega: data.tiempoEntrega || '',
         opcionesPago: data.opcionesPago || [],
         descuentoPagoUnico: data.descuentoPagoUnico || 0,
+        // Sistema de descuentos
+        configDescuentos: data.configDescuentos || null,
+        descuentosGenerales: data.descuentosGenerales || null,
+        descuentosPorServicio: data.descuentosPorServicio || null,
         otrosServicios: data.otrosServicios || [],
         costoInicial: data.costoInicial || 0,
         costoAño1: data.costoAño1 || data.costoAnio1 || 0,
@@ -113,12 +121,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
     }
 
-    const snapshot = await prisma.packageSnapshot.update({
+    // Eliminar permanentemente de la base de datos (hard delete)
+    const snapshot = await prisma.packageSnapshot.delete({
       where: { id },
-      data: { activo: false },
     })
 
-    return NextResponse.json(snapshot)
+    return NextResponse.json({ success: true, deleted: snapshot })
   } catch (error) {
     console.error('Error en DELETE /api/snapshots:', error)
     return NextResponse.json({ error: 'Error al eliminar snapshot' }, { status: 500 })

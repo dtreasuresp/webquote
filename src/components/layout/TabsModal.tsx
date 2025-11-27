@@ -17,6 +17,8 @@ interface TabsModalProps {
   activeTab: string
   onTabChange: (tabId: string) => void
   scrollContainerRef?: RefObject<HTMLDivElement | null>
+  /** Número de tabs por fila. Si se proporciona, las tabs se dividirán en múltiples filas */
+  tabsPerRow?: number
 }
 
 interface TooltipPosition {
@@ -25,7 +27,7 @@ interface TooltipPosition {
   visible: boolean
 }
 
-export default function TabsModal({ tabs, activeTab, onTabChange, scrollContainerRef }: TabsModalProps) {
+export default function TabsModal({ tabs, activeTab, onTabChange, scrollContainerRef, tabsPerRow }: TabsModalProps) {
   const activeTabItem = tabs.find(tab => tab.id === activeTab)
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({
     top: 0,
@@ -34,6 +36,16 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
   })
   const [hoveredTabId, setHoveredTabId] = useState<string | null>(null)
   const tabButtonsRef = useRef<(HTMLButtonElement | null)[]>([])
+
+  // Dividir tabs en filas si se especifica tabsPerRow
+  const tabRows: TabItem[][] = tabsPerRow 
+    ? tabs.reduce((rows: TabItem[][], tab, index) => {
+        const rowIndex = Math.floor(index / tabsPerRow)
+        if (!rows[rowIndex]) rows[rowIndex] = []
+        rows[rowIndex].push(tab)
+        return rows
+      }, [])
+    : [tabs]
 
   // Scroll automático hacia arriba al cambiar de pestaña
   useEffect(() => {
@@ -70,116 +82,136 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
     setHoveredTabId(null)
   }
 
+  // Obtener el índice global de un tab
+  const getGlobalIndex = (rowIndex: number, tabIndex: number): number => {
+    let index = 0
+    for (let i = 0; i < rowIndex; i++) {
+      index += tabRows[i].length
+    }
+    return index + tabIndex
+  }
+
   return (
     <>
-      {/* Tab Bar - Mejorado con mejor UI/UX */}
-      <div className="flex border-b border-gh-border bg-gh-bg sticky top-0 z-40 overflow-x-auto shadow-lg">
-        <div className="flex w-full">
-          {tabs.map((tab, index) => (
-            <motion.button
-              key={tab.id}
-              ref={(el) => {
-                tabButtonsRef.current[index] = el
-              }}
-              onClick={() => handleTabClick(tab.id)}
-              disabled={tab.disabled}
-              onMouseEnter={() => handleMouseEnter(tab.id, index)}
-              onMouseLeave={handleMouseLeave}
-              whileHover={!tab.disabled ? { backgroundColor: '#21262d' } : {}}
-              whileTap={!tab.disabled ? { scale: 0.98 } : {}}
-              className={`flex-1 min-w-max px-4 py-3 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap relative group cursor-pointer ${
-                tab.disabled ? 'opacity-50 cursor-not-allowed' : ''
-              } ${
-                activeTab === tab.id
-                  ? 'text-gh-text bg-gh-bg-secondary'
-                  : 'text-gh-text-muted bg-gh-bg hover:text-gh-text hover:bg-gh-border'
-              }`}
-              aria-selected={activeTab === tab.id}
-              role="tab"
-              aria-disabled={tab.disabled}
-            >
-              {/* Icono */}
-              <motion.span
-                className="text-lg flex items-center justify-center w-5 h-5"
-                animate={activeTab === tab.id ? { scale: 1.1 } : { scale: 1 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              >
-                {typeof tab.icon === 'string' ? <span>{tab.icon}</span> : tab.icon}
-              </motion.span>
+      {/* Tab Bar - Diseño GitHub Premium con soporte multi-fila */}
+      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#161b22] to-[#0d1117] border-b border-[#30363d]">
+        {tabRows.map((row, rowIndex) => (
+          <div 
+            key={rowIndex} 
+            className={`flex px-2 ${rowIndex === 0 ? 'pt-2' : ''} ${rowIndex === tabRows.length - 1 ? '' : 'border-b border-[#21262d]'}`}
+          >
+            {row.map((tab, tabIndex) => {
+              const globalIndex = getGlobalIndex(rowIndex, tabIndex)
+              return (
+                <motion.button
+                  key={tab.id}
+                  ref={(el) => {
+                    tabButtonsRef.current[globalIndex] = el
+                  }}
+                  onClick={() => handleTabClick(tab.id)}
+                  disabled={tab.disabled}
+                  onMouseEnter={() => handleMouseEnter(tab.id, globalIndex)}
+                  onMouseLeave={handleMouseLeave}
+                  whileHover={!tab.disabled ? { y: -1 } : {}}
+                  whileTap={!tab.disabled ? { scale: 0.98 } : {}}
+                  className={`relative flex-1 px-3 py-2 text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer rounded-t-md mx-0.5 ${
+                    tab.disabled ? 'opacity-50 cursor-not-allowed' : ''
+                  } ${
+                    activeTab === tab.id
+                      ? 'text-white bg-[#0d1117] border-t border-l border-r border-[#30363d] border-b-0 -mb-px z-10'
+                      : 'text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]/50'
+                  }`}
+                  aria-selected={activeTab === tab.id}
+                  role="tab"
+                  aria-disabled={tab.disabled}
+                >
+                  {/* Icono con animación */}
+                  <motion.span
+                    className={`text-sm flex items-center justify-center w-4 h-4 ${
+                      activeTab === tab.id ? 'text-[#58a6ff]' : ''
+                    }`}
+                    animate={activeTab === tab.id ? { scale: 1.1 } : { scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                  >
+                    {typeof tab.icon === 'string' ? <span>{tab.icon}</span> : tab.icon}
+                  </motion.span>
 
-              {/* Label */}
-              <span className="hidden sm:inline">{tab.label}</span>
+                  {/* Label - siempre visible */}
+                  <span>{tab.label}</span>
 
-              {/* Indicador de cambios sin guardar */}
-              {tab.hasChanges && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full"
-                  title="Cambios sin guardar"
-                />
-              )}
+                  {/* Indicador de cambios sin guardar */}
+                  {tab.hasChanges && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full shadow-lg shadow-yellow-500/30"
+                      title="Cambios sin guardar"
+                    >
+                      <span className="absolute inset-0 rounded-full bg-yellow-400 animate-ping opacity-75" />
+                    </motion.div>
+                  )}
 
-              {/* Underline animado (activo) */}
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gh-success"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                />
-              )}
-            </motion.button>
-          ))}
-        </div>
+                  {/* Barra inferior activa con gradiente */}
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="activeTabBar"
+                      className="absolute -bottom-px left-1 right-1 h-0.5 bg-gradient-to-r from-[#238636] via-[#3fb950] to-[#238636] rounded-full"
+                      initial={false}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </motion.button>
+              )
+            })}
+          </div>
+        ))}
       </div>
 
-      {/* Tooltip con posicionamiento fixed */}
+      {/* Tooltip Premium */}
       <AnimatePresence>
         {hoveredTabId && tooltipPosition.visible && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="fixed bg-gh-bg-secondary text-gh-text text-xs px-3 py-1.5 rounded border border-gh-border shadow-lg pointer-events-none z-[999] whitespace-nowrap"
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            className="fixed bg-[#1c2128] text-[#c9d1d9] text-xs px-3 py-1.5 rounded-lg border border-[#30363d] shadow-xl shadow-black/40 pointer-events-none z-[999] whitespace-nowrap"
             style={{
               top: `${tooltipPosition.top}px`,
               left: `${tooltipPosition.left}px`,
               transform: 'translateX(-50%)',
             }}
           >
-            {tabs.find(t => t.id === hoveredTabId)?.label}
+            <span className="flex items-center gap-1.5">
+              {tabs.find(t => t.id === hoveredTabId)?.label}
+            </span>
+            {/* Flecha del tooltip */}
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1c2128] border-r border-b border-[#30363d] rotate-45" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Content Area - Con transiciones mejoradas */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, x: 20, y: -10 }}
-          animate={{ opacity: 1, x: 0, y: 0 }}
-          exit={{ opacity: 0, x: -20, y: 10 }}
-          transition={{
-            duration: 0.3,
-            ease: 'easeInOut',
-          }}
-          className="overflow-hidden"
-        >
-          <div className="w-full">
+      {/* Content Area - Con padding y transiciones suaves, sin scroll visible */}
+      <div className="overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.15,
+              ease: "easeOut",
+            }}
+            className="w-full"
+          >
             {activeTabItem && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1, duration: 0.2 }}
-                className="bg-gh-bg"
-              >
+              <div className="bg-[#0d1117] p-4">
                 {activeTabItem.content}
-              </motion.div>
+              </div>
             )}
-          </div>
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </>
   )
 }

@@ -77,234 +77,6 @@ export default function OfertaTab({
 }: OfertaTabProps) {
   return (
     <div className="p-6 space-y-6">
-      {/* Sección: Servicios Base */}
-      <CollapsibleSection
-        id="servicios-base"
-        title="Servicios Base Asociados al Paquete"
-        icon=""
-        defaultOpen={true}
-      >
-        {/* Lista de Servicios Base Existentes */}
-        {serviciosBase.length > 0 && (
-          <div className="mb-6 space-y-3">
-            <div className="text-xs font-semibold text-gh-text-muted uppercase tracking-wide mb-3 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 px-4">
-              <span>Nombre</span>
-              <span>Precio</span>
-              <span>Meses Gratis</span>
-              <span>Meses Pago</span>
-              <span>Subtotal</span>
-              <span className="text-center">Acciones</span>
-            </div>
-            {serviciosBase.map((servicio) => (
-              <div
-                key={servicio.id}
-                className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 items-center bg-gh-bg-secondary p-4 rounded-md border border-gh-border"
-              >
-                {editandoServicioBaseId === servicio.id ? (
-                  <>
-                    <input
-                      type="text"
-                      value={servicioBaseEditando?.nombre || ''}
-                      onChange={(e) =>
-                        setServicioBaseEditando({
-                          ...servicioBaseEditando!,
-                          nombre: e.target.value,
-                        })
-                      }
-                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
-                    />
-                    <input
-                      type="number"
-                      value={servicioBaseEditando?.precio || 0}
-                      onChange={(e) =>
-                        setServicioBaseEditando({
-                          ...servicioBaseEditando!,
-                          precio: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
-                      min="0"
-                    />
-                    <input
-                      type="number"
-                      value={servicioBaseEditando?.mesesGratis || 0}
-                      onChange={(e) =>
-                        setServicioBaseEditando({
-                          ...servicioBaseEditando!,
-                          mesesGratis: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
-                      min="0"
-                      max="12"
-                    />
-                    <input
-                      type="number"
-                      value={servicioBaseEditando?.mesesPago || 0}
-                      onChange={(e) =>
-                        setServicioBaseEditando({
-                          ...servicioBaseEditando!,
-                          mesesPago: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
-                      min="1"
-                      max="12"
-                    />
-                    <span className="text-sm font-semibold text-gh-text">
-                      ${((servicioBaseEditando?.precio || 0) * (servicioBaseEditando?.mesesPago || 0)).toFixed(2)}
-                    </span>
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        aria-label="Guardar servicio base"
-                        onClick={guardarEditarServicioBase}
-                        className="p-2 bg-gh-success text-white rounded-md hover:bg-[#1f7935] transition-colors"
-                      >
-                        <FaCheck size={12} />
-                      </button>
-                      <button
-                        aria-label="Cancelar edición servicio base"
-                        onClick={cancelarEditarServicioBase}
-                        className="p-2 bg-gh-border text-gh-text-muted rounded-md hover:bg-gh-border-light transition-colors"
-                      >
-                        <FaTimes size={12} />
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-gh-text-muted text-xs">{servicio.nombre}</span>
-                    <span className="text-gh-text-muted text-xs">${servicio.precio.toFixed(2)}</span>
-                    <span className="text-gh-text-muted text-xs">{servicio.mesesGratis}m</span>
-                    <span className="text-gh-text-muted text-xs">{servicio.mesesPago}m</span>
-                    <span className="text-gh-text-muted text-xs">
-                      ${(servicio.precio * servicio.mesesPago).toFixed(2)}
-                    </span>
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        aria-label={`Editar servicio base ${servicio.nombre}`}
-                        onClick={() => abrirEditarServicioBase(servicio)}
-                        className="p-2 bg-gh-info text-white rounded-md hover:bg-[#388bfd] transition-colors"
-                      >
-                        <FaEdit size={12} />
-                      </button>
-                      <button
-                        aria-label={`Eliminar servicio base ${servicio.nombre}`}
-                        onClick={() => eliminarServicioBase(servicio.id)}
-                        className="p-2 bg-gh-warning text-white rounded-md hover:bg-[#d0981a] transition-colors"
-                      >
-                        <FaTrash size={12} />
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Formulario para Agregar Nuevo Servicio Base */}
-        <div className="space-y-4 p-6 bg-gh-bg-overlay border border-gh-border rounded-lg">
-          <h3 className="text-sm font-semibold text-gh-text uppercase tracking-wide flex items-center gap-2">
-            <FaPlus size={14} /> Agregar Nuevo Servicio Base
-          </h3>
-          <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-3 items-end">
-            <div>
-              <label htmlFor="nuevoServicioBaseNombre" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
-                Nombre del Servicio
-              </label>
-              <input
-                id="nuevoServicioBaseNombre"
-                type="text"
-                placeholder="Ej: Hosting, SSL, etc."
-                value={nuevoServicioBase.nombre}
-                onChange={(e) =>
-                  setNuevoServicioBase({ ...nuevoServicioBase, nombre: e.target.value })
-                }
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
-              />
-            </div>
-            <div>
-              <label htmlFor="nuevoServicioBasePrecio" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
-                Precio
-              </label>
-              <input
-                id="nuevoServicioBasePrecio"
-                type="number"
-                placeholder="0"
-                value={nuevoServicioBase.precio}
-                onChange={(e) =>
-                  setNuevoServicioBase({
-                    ...nuevoServicioBase,
-                    precio: parseFloat(e.target.value) || 0,
-                  })
-                }
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
-                min="0"
-              />
-            </div>
-            <div>
-              <label htmlFor="nuevoServicioBaseMesesGratis" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
-                Meses Gratis
-              </label>
-              <input
-                id="nuevoServicioBaseMesesGratis"
-                type="number"
-                placeholder="0"
-                value={nuevoServicioBase.mesesGratis}
-                onChange={(e) => {
-                  const gratis = parseInt(e.target.value) || 0
-                  const pagoCalculado = Math.max(1, 12 - gratis)
-                  setNuevoServicioBase({
-                    ...nuevoServicioBase,
-                    mesesGratis: Math.min(gratis, 12),
-                    mesesPago: pagoCalculado,
-                  })
-                }}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
-                min="0"
-                max="12"
-              />
-            </div>
-            <div>
-              <label htmlFor="nuevoServicioBaseMesesPago" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
-                Meses Pago
-              </label>
-              <input
-                id="nuevoServicioBaseMesesPago"
-                type="number"
-                placeholder="12"
-                value={nuevoServicioBase.mesesPago}
-                onChange={(e) => {
-                  const pago = parseInt(e.target.value) || 12
-                  const pagoValidado = Math.max(1, Math.min(pago, 12))
-                  setNuevoServicioBase({
-                    ...nuevoServicioBase,
-                    mesesPago: pagoValidado,
-                  })
-                }}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
-                min="1"
-                max="12"
-              />
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={agregarServicioBase}
-              disabled={!nuevoServicioBase.nombre || nuevoServicioBase.precio <= 0}
-              className={`px-6 py-2.5 rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
-                nuevoServicioBase.nombre && nuevoServicioBase.precio > 0
-                  ? 'bg-gh-success text-white hover:bg-[#1f7935]'
-                  : 'bg-gh-bg-secondary text-gh-text-muted cursor-not-allowed'
-              }`}
-            >
-              <FaPlus size={12} /> Agregar
-            </motion.button>
-          </div>
-        </div>
-      </CollapsibleSection>
-
       {/* Sección: Descripción del Paquete */}
       <CollapsibleSection
         id="paquetes"
@@ -410,6 +182,290 @@ export default function OfertaTab({
         </div>
       </CollapsibleSection>
 
+      {/* Sección: Servicios Base */}
+      <CollapsibleSection
+        id="servicios-base"
+        title="Servicios Base Asociados al Paquete"
+        icon=""
+        defaultOpen={true}
+      >
+        {/* Lista de Servicios Base Existentes */}
+        {serviciosBase.length > 0 && (
+          <div className="mb-6 space-y-3">
+            <div className="text-xs font-semibold text-gh-text-muted uppercase tracking-wide mb-3 grid md:grid-cols-[2.5fr,0.8fr,0.8fr,0.8fr,0.8fr,0.8fr,1fr] gap-3 px-4">
+              <span>Nombre</span>
+              <span>Precio</span>
+              <span>Meses Gratis</span>
+              <span>Meses Pago</span>
+              <span>Tipo Pago</span>
+              <span>Subtotal</span>
+              <span className="text-center">Acciones</span>
+            </div>
+            {serviciosBase.map((servicio) => (
+              <div
+                key={servicio.id}
+                className="grid md:grid-cols-[2.5fr,0.8fr,0.8fr,0.8fr,0.8fr,0.8fr,1fr] gap-3 items-center bg-gh-bg-secondary p-4 rounded-md border border-gh-border"
+              >
+                {editandoServicioBaseId === servicio.id ? (
+                  <>
+                    <input
+                      type="text"
+                      value={servicioBaseEditando?.nombre || ''}
+                      onChange={(e) =>
+                        setServicioBaseEditando({
+                          ...servicioBaseEditando!,
+                          nombre: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
+                    />
+                    <input
+                      type="number"
+                      value={servicioBaseEditando?.precio || 0}
+                      onChange={(e) =>
+                        setServicioBaseEditando({
+                          ...servicioBaseEditando!,
+                          precio: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
+                      min="0"
+                    />
+                    <input
+                      type="number"
+                      value={servicioBaseEditando?.mesesGratis || 0}
+                      onChange={(e) =>
+                        setServicioBaseEditando({
+                          ...servicioBaseEditando!,
+                          mesesGratis: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
+                      min="0"
+                      max="12"
+                    />
+                    <input
+                      type="number"
+                      value={servicioBaseEditando?.mesesPago || 0}
+                      onChange={(e) =>
+                        setServicioBaseEditando({
+                          ...servicioBaseEditando!,
+                          mesesPago: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
+                      min="1"
+                      max="12"
+                    />
+                    <div className="flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setServicioBaseEditando({
+                            ...servicioBaseEditando!,
+                            frecuenciaPago: (servicioBaseEditando?.frecuenciaPago || 'mensual') === 'mensual' ? 'anual' : 'mensual',
+                          })
+                        }
+                        className="flex items-center gap-1.5"
+                      >
+                        <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+                          (servicioBaseEditando?.frecuenciaPago || 'mensual') === 'anual' ? 'bg-gh-success' : 'bg-gh-border'
+                        }`}>
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                            (servicioBaseEditando?.frecuenciaPago || 'mensual') === 'anual' ? 'translate-x-4' : 'translate-x-0.5'
+                          }`} />
+                        </div>
+                        <span className="text-[10px] text-gh-text-muted whitespace-nowrap">{(servicioBaseEditando?.frecuenciaPago || 'mensual') === 'mensual' ? 'Mensual' : 'Anual'}</span>
+                      </button>
+                    </div>
+                    <span className="text-xs font-semibold text-gh-text text-center">
+                      ${((servicioBaseEditando?.precio || 0) * (servicioBaseEditando?.mesesPago || 0)).toFixed(2)}
+                    </span>
+                    <div className="flex gap-2 justify-center">
+                      <button
+                        aria-label="Guardar servicio base"
+                        onClick={guardarEditarServicioBase}
+                        className="p-2 bg-gh-success text-white rounded-md hover:bg-[#1f7935] transition-colors"
+                      >
+                        <FaCheck size={12} />
+                      </button>
+                      <button
+                        aria-label="Cancelar edición servicio base"
+                        onClick={cancelarEditarServicioBase}
+                        className="p-2 bg-gh-border text-gh-text-muted rounded-md hover:bg-gh-border-light transition-colors"
+                      >
+                        <FaTimes size={12} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-gh-text-muted text-xs">{servicio.nombre}</span>
+                    <span className="text-gh-text-muted text-xs">${servicio.precio.toFixed(2)}</span>
+                    <span className="text-gh-text-muted text-xs">{servicio.mesesGratis}m</span>
+                    <span className="text-gh-text-muted text-xs">{servicio.mesesPago}m</span>
+                    <span className="text-xs">
+                      <span className={`inline-block px-2 py-1 rounded text-[10px] font-medium ${
+                        (servicio.frecuenciaPago || 'mensual') === 'anual'
+                          ? 'bg-gh-success/10 text-gh-success'
+                          : 'bg-gh-border/50 text-gh-text-muted'
+                      }`}>
+                        {(servicio.frecuenciaPago || 'mensual') === 'anual' ? 'Anual' : 'Mensual'}
+                      </span>
+                    </span>
+                    <span className="text-gh-text-muted text-xs">
+                      ${(servicio.precio * servicio.mesesPago).toFixed(2)}
+                    </span>
+                    <div className="flex gap-2 justify-center">
+                      <button
+                        aria-label={`Editar servicio base ${servicio.nombre}`}
+                        onClick={() => abrirEditarServicioBase(servicio)}
+                        className="p-2 bg-gh-info text-white rounded-md hover:bg-[#388bfd] transition-colors"
+                      >
+                        <FaEdit size={12} />
+                      </button>
+                      <button
+                        aria-label={`Eliminar servicio base ${servicio.nombre}`}
+                        onClick={() => eliminarServicioBase(servicio.id)}
+                        className="p-2 bg-gh-warning text-white rounded-md hover:bg-[#d0981a] transition-colors"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Formulario para Agregar Nuevo Servicio Base */}
+        <div className="space-y-4 p-6 bg-gh-bg-overlay border border-gh-border rounded-lg">
+          <h3 className="text-sm font-semibold text-gh-text uppercase tracking-wide flex items-center gap-2">
+            <FaPlus size={14} /> Agregar Nuevo Servicio a Oferta Base
+          </h3>
+          <div className="grid md:grid-cols-[2fr,0.8fr,0.8fr,0.8fr,0.8fr,auto] gap-3 items-end">
+            <div>
+              <label htmlFor="nuevoServicioBaseNombre" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+                Nombre del Servicio
+              </label>
+              <input
+                id="nuevoServicioBaseNombre"
+                type="text"
+                placeholder="Ej: Hosting, SSL, etc."
+                value={nuevoServicioBase.nombre}
+                onChange={(e) =>
+                  setNuevoServicioBase({ ...nuevoServicioBase, nombre: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
+              />
+            </div>
+            <div>
+              <label htmlFor="nuevoServicioBasePrecio" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+                Precio
+              </label>
+              <input
+                id="nuevoServicioBasePrecio"
+                type="number"
+                placeholder="0"
+                value={nuevoServicioBase.precio}
+                onChange={(e) =>
+                  setNuevoServicioBase({
+                    ...nuevoServicioBase,
+                    precio: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
+                min="0"
+              />
+            </div>
+            <div>
+              <label htmlFor="nuevoServicioBaseMesesGratis" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+                Meses Gratis
+              </label>
+              <input
+                id="nuevoServicioBaseMesesGratis"
+                type="number"
+                placeholder="0"
+                value={nuevoServicioBase.mesesGratis}
+                onChange={(e) => {
+                  const gratis = parseInt(e.target.value) || 0
+                  const pagoCalculado = Math.max(1, 12 - gratis)
+                  setNuevoServicioBase({
+                    ...nuevoServicioBase,
+                    mesesGratis: Math.min(gratis, 12),
+                    mesesPago: pagoCalculado,
+                  })
+                }}
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
+                min="0"
+                max="12"
+              />
+            </div>
+            <div>
+              <label htmlFor="nuevoServicioBaseMesesPago" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+                Meses Pago
+              </label>
+              <input
+                id="nuevoServicioBaseMesesPago"
+                type="number"
+                placeholder="12"
+                value={nuevoServicioBase.mesesPago}
+                onChange={(e) => {
+                  const pago = parseInt(e.target.value) || 12
+                  const pagoValidado = Math.max(1, Math.min(pago, 12))
+                  setNuevoServicioBase({
+                    ...nuevoServicioBase,
+                    mesesPago: pagoValidado,
+                  })
+                }}
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
+                min="1"
+                max="12"
+              />
+            </div>
+            <div>
+              <label htmlFor="nuevoServicioBaseFrecuencia" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+                Forma de Pago
+              </label>
+              <button
+                id="nuevoServicioBaseFrecuencia"
+                type="button"
+                onClick={() =>
+                  setNuevoServicioBase({
+                    ...nuevoServicioBase,
+                    frecuenciaPago: nuevoServicioBase.frecuenciaPago === 'mensual' ? 'anual' : 'mensual',
+                  })
+                }
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md hover:border-gh-success/50 transition-colors h-[38px] w-full"
+              >
+                <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+                  nuevoServicioBase.frecuenciaPago === 'anual' ? 'bg-gh-success' : 'bg-gh-border'
+                }`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                    nuevoServicioBase.frecuenciaPago === 'anual' ? 'translate-x-4' : 'translate-x-0.5'
+                  }`} />
+                </div>
+                <span className="text-xs text-gh-text">{nuevoServicioBase.frecuenciaPago === 'mensual' ? 'Mensual' : 'Anual'}</span>
+              </button>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={agregarServicioBase}
+              disabled={!nuevoServicioBase.nombre || nuevoServicioBase.precio <= 0}
+              className={`px-6 py-2.5 rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+                nuevoServicioBase.nombre && nuevoServicioBase.precio > 0
+                  ? 'bg-gh-success text-white hover:bg-[#1f7935]'
+                  : 'bg-gh-bg-secondary text-gh-text-muted cursor-not-allowed'
+              }`}
+            >
+              <FaPlus size={12} /> Agregar
+            </motion.button>
+          </div>
+        </div>
+      </CollapsibleSection>
+
       {/* Sección: Servicios Opcionales */}
       <CollapsibleSection
         id="servicios-opcionales"
@@ -419,18 +475,19 @@ export default function OfertaTab({
       >
         {serviciosOpcionales.length > 0 && (
           <div className="mb-6 space-y-3">
-            <div className="text-xs font-semibold text-gh-text-muted uppercase tracking-wide mb-3 grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 px-4">
+            <div className="text-xs font-semibold text-gh-text-muted uppercase tracking-wide mb-3 grid md:grid-cols-[2.5fr,0.8fr,0.8fr,0.8fr,0.8fr,0.8fr,1fr] gap-3 px-4">
               <span>Nombre</span>
               <span>Precio</span>
               <span>Meses Gratis</span>
               <span>Meses Pago</span>
+              <span>Tipo Pago</span>
               <span>Subtotal</span>
               <span className="text-center">Acciones</span>
             </div>
             {serviciosOpcionales.map((serv) => (
               <div
                 key={serv.id}
-                className="grid md:grid-cols-[3fr,1fr,1fr,1fr,1fr,1fr] gap-3 items-center bg-gh-bg-secondary p-4 rounded-md border border-gh-border"
+                className="grid md:grid-cols-[2.5fr,0.8fr,0.8fr,0.8fr,0.8fr,0.8fr,1fr] gap-3 items-center bg-gh-bg-secondary p-4 rounded-md border border-gh-border"
               >
                 {editandoServicioId === serv.id ? (
                   <>
@@ -475,22 +532,43 @@ export default function OfertaTab({
                       }}
                       className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
                     />
-                    <span className="text-gh-text-muted text-xs">${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}</span>
+                    <div className="flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setServicioEditando({
+                            ...servicioEditando!,
+                            frecuenciaPago: (servicioEditando?.frecuenciaPago || 'mensual') === 'mensual' ? 'anual' : 'mensual',
+                          })
+                        }
+                        className="flex items-center gap-1.5"
+                      >
+                        <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+                          (servicioEditando?.frecuenciaPago || 'mensual') === 'anual' ? 'bg-gh-success' : 'bg-gh-border'
+                        }`}>
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                            (servicioEditando?.frecuenciaPago || 'mensual') === 'anual' ? 'translate-x-4' : 'translate-x-0.5'
+                          }`} />
+                        </div>
+                        <span className="text-[10px] text-gh-text-muted whitespace-nowrap">{(servicioEditando?.frecuenciaPago || 'mensual') === 'mensual' ? 'Mensual' : 'Anual'}</span>
+                      </button>
+                    </div>
+                    <span className="text-xs font-semibold text-gh-text text-center">${((servicioEditando?.precio || 0) * (servicioEditando?.mesesPago || 0)).toFixed(2)}</span>
                     <div className="flex gap-2 justify-center">
                       <button
                         aria-label="Guardar servicio opcional"
                         onClick={guardarEditarServicioOpcional}
-                        className="w-full px-3 py-2 bg-gh-success text-white rounded-md hover:bg-[#1f7935] transition-colors text-xs font-semibold"
+                        className="p-2 bg-gh-success text-white rounded-md hover:bg-[#1f7935] transition-colors"
                         disabled={!(servicioEditando?.nombre.trim() && (servicioEditando?.precio || 0) > 0)}
                       >
-                        <FaCheck />
+                        <FaCheck size={12} />
                       </button>
                       <button
                         aria-label="Cancelar edición servicio opcional"
                         onClick={cancelarEditarServicioOpcional}
-                        className="w-full px-3 py-2 bg-gh-border text-gh-text-muted rounded-md hover:bg-gh-border-light transition-colors text-xs font-semibold"
+                        className="p-2 bg-gh-border text-gh-text-muted rounded-md hover:bg-gh-border-light transition-colors"
                       >
-                        <FaTimes />
+                        <FaTimes size={12} />
                       </button>
                     </div>
                   </>
@@ -500,21 +578,30 @@ export default function OfertaTab({
                     <span className="text-gh-text-muted text-xs">${serv.precio.toFixed(2)}</span>
                     <span className="text-gh-text-muted text-xs">{serv.mesesGratis}m</span>
                     <span className="text-gh-text-muted text-xs">{serv.mesesPago}m</span>
+                    <span className="text-xs">
+                      <span className={`inline-block px-2 py-1 rounded text-[10px] font-medium ${
+                        (serv.frecuenciaPago || 'mensual') === 'anual'
+                          ? 'bg-gh-success/10 text-gh-success'
+                          : 'bg-gh-border/50 text-gh-text-muted'
+                      }`}>
+                        {(serv.frecuenciaPago || 'mensual') === 'anual' ? 'Anual' : 'Mensual'}
+                      </span>
+                    </span>
                     <span className="text-gh-text-muted text-xs">${(serv.precio * serv.mesesPago).toFixed(2)}</span>
                     <div className="flex gap-2 justify-center">
                       <button
                         aria-label="Editar servicio opcional"
                         onClick={() => abrirEditarServicioOpcional(serv)}
-                        className="px-3 py-2 bg-gh-info text-white rounded-md hover:bg-[#388bfd] transition-colors text-xs"
+                        className="p-2 bg-gh-info text-white rounded-md hover:bg-[#388bfd] transition-colors"
                       >
-                        <FaEdit />
+                        <FaEdit size={12} />
                       </button>
                       <button
                         aria-label="Eliminar servicio opcional"
                         onClick={() => eliminarServicioOpcional(serv.id)}
-                        className="px-3 py-2 bg-gh-warning text-white rounded-md hover:bg-[#d0981a] transition-colors text-xs"
+                        className="p-2 bg-gh-warning text-white rounded-md hover:bg-[#d0981a] transition-colors"
                       >
-                        <FaTrash />
+                        <FaTrash size={12} />
                       </button>
                     </div>
                   </>
@@ -528,7 +615,7 @@ export default function OfertaTab({
           <h3 className="text-sm font-semibold text-gh-text uppercase tracking-wide flex items-center gap-2">
             <FaPlus size={14} /> Agregar Nuevo Servicio Opcional
           </h3>
-          <div className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-3 items-end">
+          <div className="grid md:grid-cols-[2fr,0.8fr,0.8fr,0.8fr,0.8fr,auto] gap-3 items-end">
             <div>
               <label htmlFor="servOpcNombre" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
                 Nombre
@@ -591,6 +678,31 @@ export default function OfertaTab({
                 }}
                 className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs text-gh-text outline-none transition"
               />
+            </div>
+            <div>
+              <label htmlFor="nuevoServicioOpcionalFrecuencia" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+                Forma de Pago
+              </label>
+              <button
+                id="nuevoServicioOpcionalFrecuencia"
+                type="button"
+                onClick={() =>
+                  setNuevoServicio({
+                    ...nuevoServicio,
+                    frecuenciaPago: nuevoServicio.frecuenciaPago === 'mensual' ? 'anual' : 'mensual',
+                  })
+                }
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md hover:border-gh-success/50 transition-colors h-[38px] w-full"
+              >
+                <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+                  nuevoServicio.frecuenciaPago === 'anual' ? 'bg-gh-success' : 'bg-gh-border'
+                }`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                    nuevoServicio.frecuenciaPago === 'anual' ? 'translate-x-4' : 'translate-x-0.5'
+                  }`} />
+                </div>
+                <span className="text-xs text-gh-text">{nuevoServicio.frecuenciaPago === 'mensual' ? 'Mensual' : 'Anual'}</span>
+              </button>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}

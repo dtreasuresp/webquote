@@ -70,6 +70,37 @@ module.exports = {
         '2xl': '24px',
         '3xl': '30px',
       },
+      keyframes: {
+        codeSymbol1: {
+          '0%, 100%': { opacity: '0', transform: 'scale(0.8) translateY(5px)' },
+          '50%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        codeSymbol2: {
+          '0%, 100%': { opacity: '0', transform: 'scale(0.8) translateY(5px)' },
+          '33%': { opacity: '0', transform: 'scale(0.8) translateY(5px)' },
+          '66%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        codeSymbol3: {
+          '0%, 66%': { opacity: '0', transform: 'scale(0.8) translateY(5px)' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(200%)' },
+        },
+        progress: {
+          '0%': { width: '0%' },
+          '50%': { width: '70%' },
+          '100%': { width: '100%' },
+        },
+      },
+      animation: {
+        'code-symbol-1': 'codeSymbol1 2s ease-in-out infinite',
+        'code-symbol-2': 'codeSymbol2 2s ease-in-out infinite',
+        'code-symbol-3': 'codeSymbol3 2s ease-in-out infinite',
+        'shimmer': 'shimmer 5s ease-in-out infinite',
+        'progress': 'progress 5s ease-in-out infinite',
+      },
     },
   },
   plugins: [],

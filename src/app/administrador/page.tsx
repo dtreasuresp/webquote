@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
-import { FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown, FaSave, FaFileAlt, FaGlobe, FaHeadset, FaPercent, FaPalette, FaHistory, FaGift, FaCog, FaUser, FaBriefcase } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown, FaSave, FaFileAlt, FaGlobe, FaHeadset, FaPercent, FaPalette, FaHistory, FaGift, FaCog, FaUser, FaBriefcase, FaTags, FaExclamationTriangle, FaEye } from 'react-icons/fa'
 import Link from 'next/link'
 import Navigation from '@/components/layout/Navigation'
 import TabsModal from '@/components/layout/TabsModal'
@@ -19,8 +19,8 @@ import { jsPDF } from 'jspdf'
 import { obtenerSnapshotsCompleto, crearSnapshot, actualizarSnapshot, eliminarSnapshot } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
 import { compararQuotations, validarQuotation } from '@/lib/utils/validation'
-import type { ServicioBase, GestionConfig, Package, Servicio, OtroServicio, PackageSnapshot, QuotationConfig, UserPreferences, DialogConfig } from '@/lib/types'
-import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
+import type { ServicioBase, GestionConfig, Package, Servicio, OtroServicio, PackageSnapshot, QuotationConfig, UserPreferences, DialogConfig, ConfigDescuentos, TipoDescuento } from '@/lib/types'
+import { calcularPreviewDescuentos, getDefaultConfigDescuentos } from '@/lib/utils/discountCalculator'
 import type { TabItem } from '@/components/layout/TabsModal'
 
 // UI Components
@@ -60,7 +60,8 @@ export default function Administrador() {
     precio: number
     mesesGratis: number
     mesesPago: number
-  }>({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
+    frecuenciaPago: 'mensual' | 'anual'
+  }>({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12, frecuenciaPago: 'mensual' })
 
   const [editandoServicioBaseId, setEditandoServicioBaseId] = useState<string | null>(null)
   const [servicioBaseEditando, setServicioBaseEditando] = useState<ServicioBase | null>(null)
@@ -87,11 +88,13 @@ export default function Administrador() {
     precio: number
     mesesGratis: number
     mesesPago: number
+    frecuenciaPago: 'mensual' | 'anual'
   }>({ 
     nombre: '', 
     precio: 0,
     mesesGratis: 0,
-    mesesPago: 12
+    mesesPago: 12,
+    frecuenciaPago: 'mensual'
   })
   const [editandoServicioId, setEditandoServicioId] = useState<string | null>(null)
   const [servicioEditando, setServicioEditando] = useState<Servicio | null>(null)
@@ -535,7 +538,8 @@ export default function Administrador() {
 
   // Calcular costo inicial para un snapshot
   const calcularCostoInicialSnapshot = (snapshot: PackageSnapshot) => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     
     // Servicios base del mes 1 (Hosting, Mailbox, Dominio - sin Gestión)
     const serviciosBaseMes1 = snapshot.serviciosBase.reduce((sum, s) => {
@@ -551,7 +555,8 @@ export default function Administrador() {
 
   // Calcular costo año 1 para un snapshot
   const calcularCostoAño1Snapshot = (snapshot: PackageSnapshot) => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     // Año 1: se facturan los meses de pago para cada servicio base
     const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => {
       return sum + (s.precio * s.mesesPago)
@@ -588,9 +593,10 @@ export default function Administrador() {
         precio: nuevoServicioBase.precio,
         mesesGratis: nuevoServicioBase.mesesGratis,
         mesesPago: nuevoServicioBase.mesesPago,
+        frecuenciaPago: nuevoServicioBase.frecuenciaPago,
       }
       setServiciosBase([...serviciosBase, nuevoServ])
-      setNuevoServicioBase({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
+      setNuevoServicioBase({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12, frecuenciaPago: 'mensual' })
     }
   }
 
@@ -658,13 +664,14 @@ export default function Administrador() {
         precio: nuevoServicio.precio,
         mesesGratis,
         mesesPago,
+        frecuenciaPago: nuevoServicio.frecuenciaPago,
       }
       setServiciosOpcionales(prev => {
         const existente = prev.find(s => s.nombre.toLowerCase() === nuevoServ.nombre.toLowerCase())
         if (existente) return prev.map(s => s.id === existente.id ? { ...nuevoServ, id: existente.id } : s)
         return [...prev, nuevoServ]
       })
-      setNuevoServicio({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12 })
+      setNuevoServicio({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12, frecuenciaPago: 'mensual' })
     }
   }
 
@@ -740,26 +747,8 @@ export default function Administrador() {
           descuento: paqueteActual.descuento,
           tipo: paqueteActual.tipo || '',
           descripcion: paqueteActual.descripcion || 'Paquete personalizado para empresas.',
-          descuentosGenerales: {
-            aplicarAlDesarrollo: false,
-            aplicarAServiciosBase: false,
-            aplicarAOtrosServicios: false,
-            porcentaje: 0,
-          },
-          descuentosPorServicio: {
-            aplicarAServiciosBase: false,
-            aplicarAOtrosServicios: false,
-            serviciosBase: serviciosBase.map(s => ({
-              servicioId: s.id,
-              aplicarDescuento: false,
-              porcentajeDescuento: 0,
-            })),
-            otrosServicios: otrosServiciosUnificados.map((s, idx) => ({
-              servicioId: `otro-${idx}`,
-              aplicarDescuento: false,
-              porcentajeDescuento: 0,
-            })),
-          },
+          // Sistema de descuentos reinventado
+          configDescuentos: getDefaultConfigDescuentos(),
         },
         otrosServicios: otrosServiciosUnificados,
         costos: {
@@ -883,9 +872,9 @@ export default function Administrador() {
    * FASE 10: Función interna para abrir el modal sin verificación
    */
   const abrirModalEditarInterno = (quotation: QuotationConfig, modo: 'editar' | 'ver') => {
-    // 1. Cargar snapshots de esta quotation
+    // 1. Cargar snapshots de esta quotation (solo activos)
     const snapshotsFiltrados = snapshots.filter(
-      s => s.quotationConfigId === quotation.id
+      s => s.quotationConfigId === quotation.id && s.activo !== false
     )
 
     // 2. Guardar contexto
@@ -896,31 +885,13 @@ export default function Administrador() {
     if (snapshotsFiltrados.length > 0) {
       const firstSnapshot = snapshotsFiltrados[0]
 
-      // Inicializar descuentos si no existen
+      // Inicializar configDescuentos si no existe (nuevo sistema)
       const snapshotConDescuentos = {
         ...firstSnapshot,
         paquete: {
           ...firstSnapshot.paquete,
-          descuentosGenerales: firstSnapshot.paquete.descuentosGenerales || {
-            aplicarAlDesarrollo: false,
-            aplicarAServiciosBase: false,
-            aplicarAOtrosServicios: false,
-            porcentaje: 0,
-          },
-          descuentosPorServicio: firstSnapshot.paquete.descuentosPorServicio || {
-            aplicarAServiciosBase: false,
-            aplicarAOtrosServicios: false,
-            serviciosBase: firstSnapshot.serviciosBase.map(s => ({
-              servicioId: s.id,
-              aplicarDescuento: false,
-              porcentajeDescuento: 0,
-            })),
-            otrosServicios: firstSnapshot.otrosServicios.map((s, idx) => ({
-              servicioId: s.id || `otro-servicio-${idx}`,
-              aplicarDescuento: false,
-              porcentajeDescuento: 0,
-            })),
-          },
+          // Usar configDescuentos del snapshot o inicializar con defaults
+          configDescuentos: firstSnapshot.paquete.configDescuentos || getDefaultConfigDescuentos(),
         },
       }
 
@@ -1093,10 +1064,12 @@ export default function Administrador() {
         toast.success('✓ Cotización actualizada')
       }
 
-      // Cerrar modal y limpiar estados
-      setShowModalEditar(false)
-      setSnapshotEditando(null)
-      setQuotationEstadoAntes(null)
+      // Cerrar modal solo si la preferencia está activa
+      if (userPreferences?.cerrarModalAlGuardar) {
+        setShowModalEditar(false)
+        setSnapshotEditando(null)
+        setQuotationEstadoAntes(null)
+      }
       setSnapshotOriginalJson(JSON.stringify(snapshotActualizado))
     } catch (error) {
       console.error('Error al guardar edición:', error)
@@ -1208,8 +1181,9 @@ export default function Administrador() {
       case 'otros-servicios':
         return JSON.stringify(snapshotEditando.otrosServicios) !== JSON.stringify(original.otrosServicios)
       case 'descuentos':
-        return JSON.stringify(snapshotEditando.paquete.descuentosGenerales) !== JSON.stringify(original.paquete.descuentosGenerales) ||
-               JSON.stringify(snapshotEditando.paquete.descuentosPorServicio) !== JSON.stringify(original.paquete.descuentosPorServicio)
+        // Usar configDescuentos para comparación (nuevo sistema)
+        return JSON.stringify(snapshotEditando.paquete.configDescuentos) !== JSON.stringify(original.paquete.configDescuentos) ||
+               snapshotEditando.paquete.descuento !== original.paquete.descuento
       default:
         return false
     }
@@ -1368,39 +1342,22 @@ export default function Administrador() {
           action: async () => {
             try {
               await eliminarSnapshot(id)
-              setSnapshots(snapshots.filter(s => s.id !== id))
               
-              // Llamar refresh global para notificar a todos los componentes
+              // Actualizar estado local inmediatamente para reflejar el cambio en la UI
+              setSnapshots(prev => prev.filter(s => s.id !== id))
+              
+              // También actualizar snapshotsModalActual si el modal está abierto
+              setSnapshotsModalActual(prev => prev.filter(s => s.id !== id))
+              
+              // Llamar refresh global para notificar a todos los componentes externos
               await refreshSnapshots()
               
-              mostrarDialogoGenerico({
-                tipo: 'success',
-                titulo: '¡Listo!',
-                icono: '✅',
-                mensaje: 'Paquete eliminado correctamente.',
-                botones: [
-                  {
-                    label: 'Entendido',
-                    action: () => {},
-                    style: 'primary'
-                  }
-                ]
-              })
+              // Toast de éxito
+              toast.success('✅ Paquete eliminado de la base de datos')
             } catch (error) {
               console.error('Error al eliminar snapshot:', error)
-              mostrarDialogoGenerico({
-                tipo: 'error',
-                titulo: 'Error al eliminar',
-                icono: '❌',
-                mensaje: 'Ocurrió un error al eliminar el paquete. Por favor intenta de nuevo.',
-                botones: [
-                  {
-                    label: 'Entendido',
-                    action: () => {},
-                    style: 'primary'
-                  }
-                ]
-              })
+              // Toast de error
+              toast.error('❌ Error al eliminar el paquete')
             }
           },
           style: 'danger'
@@ -1861,11 +1818,15 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
       yPos += 5
     }
 
-    // Sección Paquete
+    // Sección Paquete - Usar el nuevo sistema de descuentos
+    const preview = calcularPreviewDescuentos(snapshot)
     const paqueteContent = [
       `• Costo desarrollo: $${snapshot.paquete.desarrollo.toFixed(2)}`,
-      `• Descuento aplicado: ${snapshot.paquete.descuento}%`,
-      `• Total neto: $${(snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)).toFixed(2)}`,
+      ...(preview.desarrolloConDescuento < snapshot.paquete.desarrollo 
+        ? [`• Descuento aplicado: ${((1 - preview.desarrolloConDescuento / snapshot.paquete.desarrollo) * 100).toFixed(1)}%`]
+        : []
+      ),
+      `• Total neto: $${preview.desarrolloConDescuento.toFixed(2)}`,
     ]
     crearSeccion('📦 PAQUETE', paqueteContent)
 
@@ -2127,7 +2088,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-all flex items-center gap-2 text-xs font-semibold border border-white/50 backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0f]"
+                  className="px-4 py-2 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-all flex items-center gap-2 text-xs font-semibold border border-white/50 backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117]"
                 >
                   <FaArrowLeft /> Volver
                 </motion.button>
@@ -2223,6 +2184,9 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                 calcularCostoAño2Snapshot={calcularCostoAño2Snapshot}
                 actualizarSnapshot={actualizarSnapshot}
                 refreshSnapshots={refreshSnapshots}
+                toast={toast}
+                mostrarDialogoGenerico={mostrarDialogoGenerico}
+                cotizacionConfig={cotizacionConfig}
               />
             )}
 
@@ -2269,97 +2233,106 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
         </motion.div>
       </div>
 
-      {/* Modal Editar Snapshot - NUEVA ARQUITECTURA 3-FILA */}
+      {/* Modal Editar Snapshot - DISEÑO GITHUB MODERNO */}
       <AnimatePresence>
         {showModalEditar && quotationEnModal && snapshotEditando && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-4 p-4"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex flex-col items-center pt-8 px-4 pb-4 overflow-y-auto scrollbar-hide"
             onClick={handleCerrarModalEditar}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gh-bg rounded-md border border-gh-border max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden"
+              initial={{ scale: 0.95, opacity: 0, y: -10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: -10 }}
+              transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              className="bg-gradient-to-b from-[#161b22] to-[#0d1117] rounded-xl border border-[#30363d] max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/5 flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
               aria-labelledby="modal-editar-titulo"
             >
-              {/* Header Fijo */}
-              <div className="flex-shrink-0 bg-gh-bg-secondary text-gh-text py-3 px-5 flex justify-between items-center border-b border-gh-border">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 id="modal-editar-titulo" className="text-lg font-bold flex items-center gap-2">
-                      <FaEdit size={14} /> {snapshotEditando.nombre}
-                    </h2>
-                    {readOnly && (
-                      <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">📖 Solo lectura</span>
-                    )}
+              {/* Header Premium con gradiente */}
+              <div className="flex-shrink-0 bg-gradient-to-r from-[#161b22] via-[#1c2128] to-[#161b22] text-[#c9d1d9] py-4 px-6 flex justify-between items-center border-b border-[#30363d] relative overflow-hidden">
+                {/* Efecto de brillo sutil */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent" />
+                
+                <div className="relative z-10 flex items-center gap-4">
+                  {/* Icono con fondo */}
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#238636] to-[#2ea043] flex items-center justify-center shadow-lg shadow-[#238636]/20">
+                    <FaEdit size={18} className="text-white" />
                   </div>
-                  <p className="text-xs text-gh-text-muted mt-0.5">
-                    {readOnly ? 'Visualizar configuración' : 'Editar configuración'}
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <h2 id="modal-editar-titulo" className="text-lg font-bold text-white tracking-tight">
+                        {snapshotEditando.nombre}
+                      </h2>
+                      {readOnly && (
+                        <span className="text-[10px] bg-[#388bfd]/20 text-[#58a6ff] px-2.5 py-1 rounded-full border border-[#388bfd]/30 font-medium flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#58a6ff] animate-pulse" />
+                          Solo lectura
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#8b949e] mt-0.5 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#238636]" />
+                      {readOnly ? 'Visualizando configuración del paquete' : 'Editando configuración del paquete'}
+                    </p>
+                  </div>
                 </div>
+                
                 <button
                   aria-label="Cerrar modal edición"
                   onClick={handleCerrarModalEditar}
-                  className="text-gh-text-muted hover:text-gh-text text-2xl transition-all hover:scale-110"
+                  className="relative z-10 text-[#8b949e] hover:text-white text-lg transition-all p-2 rounded-lg hover:bg-white/10 active:scale-95"
                 >
                   <FaTimes />
                 </button>
               </div>
 
-              {/* FILA 1: Cotización (Información General) */}
-              <div className="flex-shrink-0 border-b border-gh-border">
-                <TabsModal
-                  tabs={[
-                    {
-                      id: 'cotizacion',
-                      label: 'Cotización',
-                      icon: <FaFileAlt />,
-                      content: (
-                        <div className="p-4 bg-gh-bg">
-                          <p className="text-xs text-gh-text-muted">Información de la cotización</p>
-                        </div>
-                      ),
-                    },
-                  ]}
-                  activeTab={activeTabFila1}
-                  onTabChange={setActiveTabFila1}
-                />
-              </div>
-
-              {/* FILA 2: Paquetes Dinámicos (Lista de Snapshots) */}
-              <div className="flex-shrink-0 border-b border-gh-border bg-gh-bg">
-                <div className="overflow-x-auto">
-                  <div className="flex gap-1 p-2">
-                    {snapshotsModalActual.map((snapshot) => (
-                      <button
+              {/* Barra de navegación de Paquetes - Estilo Pills moderno */}
+              <div className="flex-shrink-0 bg-[#0d1117]/80 backdrop-blur-sm border-b border-[#30363d] px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold text-[#8b949e] uppercase tracking-wider mr-2 flex-shrink-0">Paquetes:</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {snapshotsModalActual.map((snapshot, index) => (
+                      <motion.button
                         key={snapshot.id}
                         onClick={() => {
                           setSnapshotEditando(snapshot)
                           setActiveTabFila2(snapshot.id)
                         }}
-                        className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-all ${
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`relative px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                           activeTabFila2 === snapshot.id
-                            ? 'bg-gh-text text-gh-bg'
-                            : 'bg-gh-bg-secondary text-gh-text hover:bg-gh-border'
+                            ? 'bg-gradient-to-r from-[#238636] to-[#2ea043] text-white shadow-lg shadow-[#238636]/25'
+                            : 'bg-[#21262d] text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#30363d] border border-[#30363d]'
                         }`}
                       >
-                        {snapshot.nombre}
-                      </button>
+                        {activeTabFila2 === snapshot.id && (
+                          <motion.div
+                            layoutId="activePackageIndicator"
+                            className="absolute inset-0 bg-gradient-to-r from-[#238636] to-[#2ea043] rounded-lg"
+                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                          />
+                        )}
+                        <span className="relative z-10 flex items-center gap-2">
+                          <span className="text-base">{snapshot.paquete?.emoji || '📦'}</span>
+                          {snapshot.nombre}
+                        </span>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* FILA 3: Contenido Editable (TABs de Edición) */}
-              <div ref={modalScrollContainerRef} className="flex-1 overflow-y-auto modal-scroll-container">
+              {/* Contenido Principal con scroll */}
+              <div ref={modalScrollContainerRef} className="flex-1 overflow-y-auto modal-scroll-container bg-[#0d1117]">
                 <TabsModal
+                  tabsPerRow={5}
                   tabs={[
                     {
                       id: 'descripcion',
@@ -2367,72 +2340,72 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                       icon: <FaFileAlt />,
                       hasChanges: pestañaTieneCambios('descripcion'),
                       content: (
-                        <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-300px)]">
+                        <div className="space-y-6">
                           {/* Fila 1: nombre, tipo, emoji, tagline, tiempo de entrega, costo desarrollo */}
                           <div className="grid grid-cols-1 md:grid-cols-6 gap-2">
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Nombre</label>
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Nombre</label>
                               <input
                                 type="text"
                                 value={snapshotEditando.nombre}
                                 onChange={(e) => setSnapshotEditando({ ...snapshotEditando, nombre: e.target.value })}
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                 ref={nombrePaqueteInputRef}
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Tipo</label>
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Tipo</label>
                               <input
                                 type="text"
                                 value={snapshotEditando.paquete.tipo || ''}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tipo: e.target.value}})}
                                 placeholder="Básico"
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Emoji</label>
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Emoji</label>
                               <input
                                 type="text"
                                 value={snapshotEditando.paquete.emoji || ''}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, emoji: e.target.value}})}
                                 placeholder=""
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Tagline</label>
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Tagline</label>
                               <input
                                 type="text"
                                 value={snapshotEditando.paquete.tagline || ''}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tagline: e.target.value}})}
                                 placeholder="Presencia digital confiable"
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Tiempo Entrega</label>
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Tiempo Entrega</label>
                               <input
                                 type="text"
                                 value={snapshotEditando.paquete.tiempoEntrega || ''}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, tiempoEntrega: e.target.value}})}
                                 placeholder="14 días"
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Costo Desarrollo</label>
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Costo Desarrollo</label>
                               <input
                                 type="number"
                                 value={snapshotEditando.paquete.desarrollo}
                                 onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, desarrollo: Number.parseFloat(e.target.value) || 0}})}
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                 min="0"
                               />
                             </div>
@@ -2440,31 +2413,31 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
 
                           {/* Fila 2: Descripción */}
                           <div>
-                            <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Descripción del Paquete</label>
+                            <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Descripción del Paquete</label>
                             <textarea
                               value={snapshotEditando.paquete.descripcion || ''}
                               onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, descripcion: e.target.value}})}
                               placeholder="Paquete personalizado para empresas..."
                               disabled={readOnly}
-                              className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                              className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                               rows={3}
                             />
                           </div>
 
                           {/* Vista Previa del Hero */}
-                          <div className="bg-[#111] p-4 rounded-lg border border-[#333]">
-                            <h3 className="text-xs font-bold text-[#ededed] mb-2">Vista Previa del Hero</h3>
-                            <div className="bg-black text-[#ededed] p-4 rounded-lg text-center border border-[#333]">
+                          <div className="bg-[#161b22] p-4 rounded-md border border-[#30363d]">
+                            <h3 className="text-xs font-bold text-[#c9d1d9] mb-2">Vista Previa del Hero</h3>
+                            <div className="bg-[#0d1117] text-[#c9d1d9] p-4 rounded-md text-center border border-[#30363d]">
                               <div className="text-5xl mb-3">{snapshotEditando.paquete.emoji || ''}</div>
-                              <div className="text-sm font-bold text-[#888888] mb-2">{snapshotEditando.paquete.tipo || 'Tipo'}</div>
-                              <h2 className="text-3xl font-bold mb-3 text-[#ededed]">{snapshotEditando.nombre || 'Nombre del Paquete'}</h2>
-                              <p className="text-lg text-[#888888] mb-4">{snapshotEditando.paquete.tagline || 'Tagline descriptivo'}</p>
-                              <div className="bg-[#222] rounded-lg p-4 inline-block border border-[#333]">
-                                <div className="text-4xl font-bold text-[#ededed]">${snapshotEditando.costos?.inicial || 0} USD</div>
-                                <div className="text-sm text-[#888888]">Inversión inicial</div>
+                              <div className="text-sm font-bold text-[#8b949e] mb-2">{snapshotEditando.paquete.tipo || 'Tipo'}</div>
+                              <h2 className="text-3xl font-bold mb-3 text-[#c9d1d9]">{snapshotEditando.nombre || 'Nombre del Paquete'}</h2>
+                              <p className="text-lg text-[#8b949e] mb-4">{snapshotEditando.paquete.tagline || 'Tagline descriptivo'}</p>
+                              <div className="bg-[#21262d] rounded-md p-4 inline-block border border-[#30363d]">
+                                <div className="text-4xl font-bold text-[#c9d1d9]">${snapshotEditando.costos?.inicial || 0} USD</div>
+                                <div className="text-sm text-[#8b949e]">Inversión inicial</div>
                               </div>
                               {snapshotEditando.paquete.tiempoEntrega && (
-                                <div className="mt-4 text-sm text-[#888888]">⏱️ {snapshotEditando.paquete.tiempoEntrega}</div>
+                                <div className="mt-4 text-sm text-[#8b949e]">⏱️ {snapshotEditando.paquete.tiempoEntrega}</div>
                               )}
                             </div>
                           </div>
@@ -2477,15 +2450,15 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         icon: <FaGlobe />,
                         hasChanges: pestañaTieneCambios('servicios-base'),
                         content: (
-                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                          <div className="space-y-6">
                             {/* Servicios Base - Lista */}
                             <div>
-                              <h3 className="text-xs text-[#ededed] mb-2">Servicios Base</h3>
+                              <h3 className="text-xs text-[#c9d1d9] mb-2">Servicios Base</h3>
                               <div className="space-y-2">
                                 {snapshotEditando.serviciosBase?.map((servicio, index) => (
-                                  <div key={servicio.id} className="grid md:grid-cols-[2fr,1fr,1fr,1fr] gap-2 p-2 bg-[#111] border border-[#333] rounded-lg">
+                                  <div key={servicio.id} className="grid md:grid-cols-[2fr,1fr,1fr,1fr] gap-2 p-3 bg-[#161b22] border border-[#30363d] rounded-md">
                                     <div>
-                                      <label className="block text-[10px] text-[#ededed] mb-0.5">Nombre</label>
+                                      <label className="block text-[10px] text-[#c9d1d9] mb-0.5">Nombre</label>
                                       <input
                                         type="text"
                                         value={servicio.nombre}
@@ -2495,11 +2468,11 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                           setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
                                         }}
                                         disabled={readOnly}
-                                        className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                        className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                       />
                                     </div>
                                     <div>
-                                      <label className="block text-[10px] text-[#ededed] mb-0.5">Precio</label>
+                                      <label className="block text-[10px] text-[#c9d1d9] mb-0.5">Precio</label>
                                       <input
                                         type="number"
                                         value={servicio.precio}
@@ -2509,12 +2482,12 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                           setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
                                         }}
                                         disabled={readOnly}
-                                        className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                        className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                         min="0"
                                       />
                                     </div>
                                     <div>
-                                      <label className="block text-[10px] text-[#ededed] mb-0.5">Gratis</label>
+                                      <label className="block text-[10px] text-[#c9d1d9] mb-0.5">Gratis</label>
                                       <input
                                         type="number"
                                         value={servicio.mesesGratis}
@@ -2526,13 +2499,13 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                           setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
                                         }}
                                         disabled={readOnly}
-                                        className={`w-full px-3 py-2 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-sm text-[#ededed]`}
+                                        className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                         min="0"
                                         max="12"
                                       />
                                     </div>
                                     <div>
-                                      <label className="block text-[10px] text-[#ededed] mb-0.5">Pago</label>
+                                      <label className="block text-[10px] text-[#c9d1d9] mb-0.5">Pago</label>
                                       <input
                                         type="number"
                                         value={servicio.mesesPago}
@@ -2543,7 +2516,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                           setSnapshotEditando({...snapshotEditando, serviciosBase: nuevosServicios})
                                         }}
                                         disabled={readOnly}
-                                        className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                        className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                         min="1"
                                         max="12"
                                       />
@@ -2554,21 +2527,21 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                             </div>
 
                             {/* Vista Previa de Montos - Servicios Base */}
-                            <div className="mt-4 p-3 bg-black border border-[#333] rounded">
-                              <h4 className="text-[10px] font-bold text-[#ededed] mb-2">Vista Previa</h4>
+                            <div className="mt-4 p-3 bg-[#0d1117] border border-[#30363d] rounded-md">
+                              <h4 className="text-[10px] font-bold text-[#c9d1d9] mb-2">Vista Previa</h4>
                               <div className="space-y-1">
                                 {snapshotEditando.serviciosBase?.map((servicio) => {
                                   const subtotal = servicio.precio * servicio.mesesPago
                                   return (
                                     <div key={servicio.id} className="flex justify-between text-xs">
-                                      <span className="text-[#888888]">{servicio.nombre} (${servicio.precio} × {servicio.mesesPago} meses)</span>
-                                      <span className="font-medium text-[#ededed]">${subtotal.toFixed(2)}</span>
+                                      <span className="text-[#8b949e]">{servicio.nombre} (${servicio.precio} × {servicio.mesesPago} meses)</span>
+                                      <span className="font-medium text-[#c9d1d9]">${subtotal.toFixed(2)}</span>
                                     </div>
                                   )
                                 })}
-                                <div className="border-t border-[#333] pt-2 mt-2 flex justify-between">
-                                  <span className="font-bold text-[#ededed] text-xs">TOTAL AÑO 1</span>
-                                  <span className="font-bold text-[#ededed] text-base">
+                                <div className="border-t border-[#30363d] pt-2 mt-2 flex justify-between">
+                                  <span className="font-bold text-[#c9d1d9] text-xs">TOTAL AÑO 1</span>
+                                  <span className="font-bold text-[#3fb950] text-base">
                                     ${snapshotEditando.serviciosBase?.reduce((sum, s) => sum + (s.precio * s.mesesPago), 0).toFixed(2)}
                                   </span>
                                 </div>
@@ -2583,16 +2556,16 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         icon: <FaHeadset />,
                         hasChanges: pestañaTieneCambios('otros-servicios'),
                         content: (
-                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                          <div className="space-y-6">
                             {/* Otros Servicios - Lista */}
                             <div>
-                              <h3 className="text-xs text-[#ededed] mb-2">Otros Servicios</h3>
+                              <h3 className="text-xs text-[#c9d1d9] mb-2">Otros Servicios</h3>
                               {snapshotEditando.otrosServicios.length > 0 ? (
                                 <div className="space-y-2">
                                   {snapshotEditando.otrosServicios.map((servicio, idx) => (
-                                    <div key={idx} className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-2 p-2 bg-[#111] border border-[#333] rounded-lg items-end">
+                                    <div key={idx} className="grid md:grid-cols-[2fr,1fr,1fr,1fr,auto] gap-2 p-3 bg-[#161b22] border border-[#30363d] rounded-md items-end">
                                       <div>
-                                        <label className="block text-[10px] text-[#ededed] mb-0.5">Nombre</label>
+                                        <label className="block text-[10px] text-[#c9d1d9] mb-0.5">Nombre</label>
                                         <input
                                           type="text"
                                           value={servicio.nombre}
@@ -2602,11 +2575,11 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                             setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                           }}
                                           disabled={readOnly}
-                                          className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                          className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                         />
                                       </div>
                                       <div>
-                                        <label className="block text-[10px] text-[#ededed] mb-0.5">Precio</label>
+                                        <label className="block text-[10px] text-[#c9d1d9] mb-0.5">Precio</label>
                                         <input
                                           type="number"
                                           value={servicio.precio}
@@ -2616,12 +2589,12 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                             setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                           }}
                                           disabled={readOnly}
-                                          className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                          className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                           min="0"
                                         />
                                       </div>
                                       <div>
-                                        <label className="block text-[10px] text-[#ededed] mb-0.5">Gratis</label>
+                                        <label className="block text-[10px] text-[#c9d1d9] mb-0.5">Gratis</label>
                                         <input
                                           type="number"
                                           value={servicio.mesesGratis}
@@ -2633,13 +2606,13 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                             setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                           }}
                                           disabled={readOnly}
-                                          className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                          className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                           min="0"
                                           max="12"
                                         />
                                       </div>
                                       <div>
-                                        <label className="block text-[10px] text-[#ededed] mb-0.5">Pago</label>
+                                        <label className="block text-[10px] text-[#c9d1d9] mb-0.5">Pago</label>
                                         <input
                                           type="number"
                                           value={servicio.mesesPago}
@@ -2650,7 +2623,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                             setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                           }}
                                           disabled={readOnly}
-                                          className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                          className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                           min="1"
                                           max="12"
                                         />
@@ -2660,15 +2633,15 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                           const actualizado = snapshotEditando.otrosServicios.filter((_, i) => i !== idx)
                                           setSnapshotEditando({...snapshotEditando, otrosServicios: actualizado})
                                         }}
-                                        className="w-8 h-8 bg-[#111] border border-[#333] text-[#888888] hover:text-[#ededed] hover:bg-[#222] transition-colors flex items-center justify-center"
+                                        className="w-8 h-8 bg-[#21262d] border border-[#30363d] text-[#8b949e] hover:text-[#f85149] hover:border-[#f85149] rounded-md transition-colors flex items-center justify-center"
                                       >
-                                        <FaTrash size={14} />
+                                        <FaTrash size={12} />
                                       </button>
                                     </div>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-[#888888] text-sm mb-3">Sin otros servicios agregados</p>
+                                <p className="text-[#8b949e] text-sm mb-3">Sin otros servicios agregados</p>
                               )}
                               <button
                                 onClick={() => {
@@ -2680,29 +2653,29 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                     ]
                                   })
                                 }}
-                                className="mt-2 px-3 py-1.5 bg-[#ededed] text-black hover:bg-white transition-colors flex items-center gap-2 font-semibold text-xs"
+                                className="mt-2 px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded-md transition-colors flex items-center gap-2 font-medium text-xs"
                               >
-                                <FaPlus /> Agregar Servicio
+                                <FaPlus size={10} /> Agregar Servicio
                               </button>
                             </div>
 
                             {/* Vista Previa de Montos - Otros Servicios */}
                             {snapshotEditando.otrosServicios.length > 0 && (
-                              <div className="mt-4 p-3 bg-black border border-[#333] rounded">
-                                <h4 className="text-[10px] font-bold text-[#ededed] mb-2">Vista Previa</h4>
+                              <div className="mt-4 p-3 bg-[#0d1117] border border-[#30363d] rounded-md">
+                                <h4 className="text-[10px] font-bold text-[#c9d1d9] mb-2">Vista Previa</h4>
                                 <div className="space-y-1">
                                   {snapshotEditando.otrosServicios.map((servicio, idx) => {
                                     const subtotal = servicio.precio * servicio.mesesPago
                                     return (
                                       <div key={idx} className="flex justify-between text-xs">
-                                        <span className="text-[#888888]">{servicio.nombre || `Servicio ${idx + 1}`} (${servicio.precio} × {servicio.mesesPago} meses)</span>
-                                        <span className="font-medium text-[#ededed]">${subtotal.toFixed(2)}</span>
+                                        <span className="text-[#8b949e]">{servicio.nombre || `Servicio ${idx + 1}`} (${servicio.precio} × {servicio.mesesPago} meses)</span>
+                                        <span className="font-medium text-[#c9d1d9]">${subtotal.toFixed(2)}</span>
                                       </div>
                                     )
                                   })}
-                                  <div className="border-t border-[#333] pt-2 mt-2 flex justify-between">
-                                    <span className="font-bold text-[#ededed] text-xs">TOTAL AÑO 1</span>
-                                    <span className="font-bold text-[#ededed] text-base">
+                                  <div className="border-t border-[#30363d] pt-2 mt-2 flex justify-between">
+                                    <span className="font-bold text-[#c9d1d9] text-xs">TOTAL AÑO 1</span>
+                                    <span className="font-bold text-[#3fb950] text-base">
                                       ${snapshotEditando.otrosServicios.reduce((sum, s) => sum + (s.precio * s.mesesPago), 0).toFixed(2)}
                                     </span>
                                   </div>
@@ -2717,17 +2690,17 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         label: 'Opciones de Pago',
                         icon: '',
                         content: (
-                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                          <div className="space-y-6">
                 
                 {/* Opciones de Pago */}
                 <div>
-                  <h3 className="text-xs font-bold text-[#ededed] mb-2 flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-[#c9d1d9] mb-2 flex items-center gap-2">
                     <FaCreditCard /> Opciones de Pago
                   </h3>
 
                   {/* Desarrollo en la misma sección */}
                   <div className="mb-4">
-                    <label className="block text-[10px] font-semibold text-[#ededed] mb-1">
+                    <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-1">
                       Desarrollo del sitio web
                     </label>
                     <input
@@ -2743,15 +2716,15 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         })
                       }
                       disabled={readOnly}
-                      className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                      className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                       min="0"
                     />
                   </div>
 
                   {/* Lista de Opciones de Pago */}
-                  <div className="mt-4 p-3 bg-black border border-[#333] rounded">
+                  <div className="mt-4 p-3 bg-[#0d1117] border border-[#30363d] rounded-md">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-[10px] font-bold text-[#ededed] mb-2 flex items-center gap-2">
+                      <h4 className="text-[10px] font-bold text-[#c9d1d9] mb-2 flex items-center gap-2">
                         Esquema de Pagos (Debe sumar 100%)
                       </h4>
                       {(() => {
@@ -2759,10 +2732,10 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         const totalPorcentaje = opcionesPago.reduce((sum, op) => sum + (op.porcentaje || 0), 0)
                         const esValido = totalPorcentaje === 100
                         return (
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                             esValido 
-                              ? 'bg-black border-[#333] text-[#ededed]' 
-                              : 'bg-red-900/20 border-red-900 text-red-400'
+                              ? 'bg-[#238636]/20 border-[#238636] text-[#3fb950]' 
+                              : 'bg-[#da3633]/20 border-[#da3633] text-[#f85149]'
                           }`}>
                             Total: {totalPorcentaje}% {esValido ? '✓' : '⚠️'}
                           </span>
@@ -2775,10 +2748,10 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => (
                           <div
                             key={idx}
-                            className="bg-black border border-[#333] rounded p-2 grid md:grid-cols-[2fr,1fr,3fr,auto] gap-2 items-end"
+                            className="bg-[#161b22] border border-[#30363d] rounded-md p-3 grid md:grid-cols-[2fr,1fr,3fr,auto] gap-2 items-end"
                           >
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">
                                 Nombre
                               </label>
                               <input
@@ -2796,12 +2769,12 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                   })
                                 }}
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                 placeholder="Ej: Inicial"
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">
                                 %
                               </label>
                               <input
@@ -2822,14 +2795,14 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                   })
                                 }}
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                 min="0"
                                 max="100"
                                 placeholder="30"
                               />
                             </div>
                             <div>
-                              <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">
+                              <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">
                                 Descripción
                               </label>
                               <input
@@ -2847,7 +2820,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                   })
                                 }}
                                 disabled={readOnly}
-                                className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                 placeholder="Ej: Al firmar contrato"
                               />
                             </div>
@@ -2864,7 +2837,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                                   },
                                 })
                               }}
-                              className="w-7 h-7 text-[#888888] hover:text-[#ededed] hover:bg-[#222] rounded transition-colors flex items-center justify-center"
+                              className="w-7 h-7 text-[#8b949e] hover:text-[#f85149] hover:bg-[#21262d] rounded-md transition-colors flex items-center justify-center"
                               title="Eliminar opción"
                             >
                               <FaTrash size={10} />
@@ -2873,7 +2846,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         ))}
                       </div>
                     ) : (
-                      <p className="text-[#888888] text-xs mb-4 italic">
+                      <p className="text-[#8b949e] text-xs mb-4 italic">
                         Sin opciones de pago configuradas.
                       </p>
                     )}
@@ -2895,7 +2868,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                           },
                         })
                       }}
-                      className="px-3 py-1.5 bg-[#ededed] text-black hover:bg-white transition-colors flex items-center gap-2 font-semibold text-xs"
+                      className="px-3 py-1.5 bg-[#238636] hover:bg-[#2ea043] text-white rounded-md transition-colors flex items-center gap-2 font-medium text-xs"
                     >
                       <FaPlus size={10} /> Agregar Opción
                     </button>
@@ -2903,25 +2876,25 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
 
                   {/* Vista Previa de Montos */}
                   {(snapshotEditando.paquete.opcionesPago || []).length > 0 && snapshotEditando.paquete.desarrollo > 0 && (
-                    <div className="mt-4 p-3 bg-black border border-[#333] rounded">
-                      <h4 className="text-[10px] font-bold text-[#ededed] mb-2">Vista Previa</h4>
+                    <div className="mt-4 p-3 bg-[#0d1117] border border-[#30363d] rounded-md">
+                      <h4 className="text-[10px] font-bold text-[#c9d1d9] mb-2">Vista Previa</h4>
                       <div className="space-y-1">
                         {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => {
                           const monto = (snapshotEditando.paquete.desarrollo * (opcion.porcentaje || 0)) / 100
                           return (
                             <div key={idx} className="flex justify-between text-xs">
-                              <span className="text-[#888888]">
+                              <span className="text-[#8b949e]">
                                 {opcion.nombre || `Pago ${idx + 1}`} ({opcion.porcentaje}%)
                               </span>
-                              <span className="font-medium text-[#ededed]">
+                              <span className="font-medium text-[#c9d1d9]">
                                 ${monto.toFixed(2)}
                               </span>
                             </div>
                           )
                         })}
-                        <div className="border-t border-[#333] pt-2 mt-2 flex justify-between">
-                          <span className="font-bold text-[#ededed] text-xs">TOTAL</span>
-                          <span className="font-bold text-[#ededed] text-base">
+                        <div className="border-t border-[#30363d] pt-2 mt-2 flex justify-between">
+                          <span className="font-bold text-[#c9d1d9] text-xs">TOTAL</span>
+                          <span className="font-bold text-[#3fb950] text-base">
                             ${snapshotEditando.paquete.desarrollo.toFixed(2)}
                           </span>
                         </div>
@@ -2938,504 +2911,512 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         icon: <FaPercent />,
                         hasChanges: pestañaTieneCambios('descuentos'),
                         content: (
-                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-                            {/* DESCUENTOS GENERALES */}
-                            <div>
-                              <h3 className="text-xs font-bold text-[#ededed] mb-2 flex items-center gap-2">
-                                Descuentos Generales
+                          <div className="space-y-4">
+                            {/* SECCIÓN 1: Tipo de Descuento (mutuamente excluyentes) */}
+                            <div className="bg-[#161b22] border border-[#30363d] rounded-md p-3">
+                              <h3 className="text-xs font-bold text-[#c9d1d9] mb-3 flex items-center gap-2">
+                                <FaTags size={10} className="text-[#58a6ff]" />
+                                Tipo de Descuento
                               </h3>
-
-                              {/* Checkboxes para aplicar descuentos */}
-                              <div className="space-y-2 mb-3 bg-black border border-[#333] rounded p-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
+                              <div className="grid grid-cols-3 gap-2">
+                                {/* Opción: Ninguno */}
+                                <label className={`flex items-center gap-2 p-2 rounded-md cursor-pointer border transition-all ${
+                                  (snapshotEditando.paquete.configDescuentos?.tipoDescuento || 'ninguno') === 'ninguno'
+                                    ? 'bg-[#21262d] border-[#58a6ff]'
+                                    : 'border-[#30363d] hover:bg-[#21262d]'
+                                }`}>
                                   <input
-                                    type="checkbox"
-                                    checked={snapshotEditando.paquete.descuentosGenerales?.aplicarAlDesarrollo || false}
-                                    onChange={(e) =>
-                                      setSnapshotEditando({
-                                        ...snapshotEditando,
-                                        paquete: {
-                                          ...snapshotEditando.paquete,
-                                          descuentosGenerales: {
-                                            ...snapshotEditando.paquete.descuentosGenerales,
-                                            aplicarAlDesarrollo: e.target.checked,
-                                          },
+                                    type="radio"
+                                    name="tipoDescuento"
+                                    checked={(snapshotEditando.paquete.configDescuentos?.tipoDescuento || 'ninguno') === 'ninguno'}
+                                    onChange={() => setSnapshotEditando({
+                                      ...snapshotEditando,
+                                      paquete: {
+                                        ...snapshotEditando.paquete,
+                                        configDescuentos: {
+                                          ...snapshotEditando.paquete.configDescuentos!,
+                                          tipoDescuento: 'ninguno',
                                         },
-                                      })
-                                    }
-                                    className="w-3.5 h-3.5 accent-white cursor-pointer"
+                                      },
+                                    })}
+                                    disabled={readOnly}
+                                    className="accent-[#58a6ff]"
                                   />
-                                  <span className="text-[10px] font-medium text-[#ededed]">Aplicar a Desarrollo</span>
+                                  <span className="text-xs text-[#c9d1d9]">❌ Ninguno</span>
                                 </label>
 
-                                <label className="flex items-center gap-2 cursor-pointer">
+                                {/* Opción: Granulares */}
+                                <label className={`flex items-center gap-2 p-2 rounded-md cursor-pointer border transition-all ${
+                                  snapshotEditando.paquete.configDescuentos?.tipoDescuento === 'granular'
+                                    ? 'bg-[#21262d] border-[#f0883e]'
+                                    : 'border-[#30363d] hover:bg-[#21262d]'
+                                }`}>
                                   <input
-                                    type="checkbox"
-                                    checked={snapshotEditando.paquete.descuentosGenerales?.aplicarAServiciosBase || false}
-                                    onChange={(e) =>
-                                      setSnapshotEditando({
-                                        ...snapshotEditando,
-                                        paquete: {
-                                          ...snapshotEditando.paquete,
-                                          descuentosGenerales: {
-                                            ...snapshotEditando.paquete.descuentosGenerales,
-                                            aplicarAServiciosBase: e.target.checked,
-                                          },
+                                    type="radio"
+                                    name="tipoDescuento"
+                                    checked={snapshotEditando.paquete.configDescuentos?.tipoDescuento === 'granular'}
+                                    onChange={() => setSnapshotEditando({
+                                      ...snapshotEditando,
+                                      paquete: {
+                                        ...snapshotEditando.paquete,
+                                        configDescuentos: {
+                                          ...snapshotEditando.paquete.configDescuentos!,
+                                          tipoDescuento: 'granular',
                                         },
-                                      })
-                                    }
-                                    className="w-3.5 h-3.5 accent-white cursor-pointer"
+                                      },
+                                    })}
+                                    disabled={readOnly}
+                                    className="accent-[#f0883e]"
                                   />
-                                  <span className="text-[10px] font-medium text-[#ededed]">Aplicar a Servicios Base</span>
+                                  <span className="text-xs text-[#c9d1d9]">🎯 Granulares</span>
                                 </label>
 
-                                <label className="flex items-center gap-2 cursor-pointer">
+                                {/* Opción: General */}
+                                <label className={`flex items-center gap-2 p-2 rounded-md cursor-pointer border transition-all ${
+                                  snapshotEditando.paquete.configDescuentos?.tipoDescuento === 'general'
+                                    ? 'bg-[#21262d] border-[#3fb950]'
+                                    : 'border-[#30363d] hover:bg-[#21262d]'
+                                }`}>
                                   <input
-                                    type="checkbox"
-                                    checked={snapshotEditando.paquete.descuentosGenerales?.aplicarAOtrosServicios || false}
-                                    onChange={(e) =>
-                                      setSnapshotEditando({
-                                        ...snapshotEditando,
-                                        paquete: {
-                                          ...snapshotEditando.paquete,
-                                          descuentosGenerales: {
-                                            ...snapshotEditando.paquete.descuentosGenerales,
-                                            aplicarAOtrosServicios: e.target.checked,
-                                          },
+                                    type="radio"
+                                    name="tipoDescuento"
+                                    checked={snapshotEditando.paquete.configDescuentos?.tipoDescuento === 'general'}
+                                    onChange={() => setSnapshotEditando({
+                                      ...snapshotEditando,
+                                      paquete: {
+                                        ...snapshotEditando.paquete,
+                                        configDescuentos: {
+                                          ...snapshotEditando.paquete.configDescuentos!,
+                                          tipoDescuento: 'general',
                                         },
-                                      })
-                                    }
-                                    className="w-3.5 h-3.5 accent-white cursor-pointer"
+                                      },
+                                    })}
+                                    disabled={readOnly}
+                                    className="accent-[#3fb950]"
                                   />
-                                  <span className="text-[10px] font-medium text-[#ededed]">Aplicar a Otros Servicios</span>
+                                  <span className="text-xs text-[#c9d1d9]">📊 General</span>
                                 </label>
                               </div>
+                              <p className="text-[9px] text-[#8b949e] mt-2">
+                                Granulares: % individual por servicio | General: Un % para todo
+                              </p>
+                            </div>
 
-                              {/* Campos de porcentaje */}
-                              <div className="grid md:grid-cols-3 gap-2">
+                            {/* SECCIÓN 2: Configuración Condicional */}
+                            {snapshotEditando.paquete.configDescuentos?.tipoDescuento === 'general' && (
+                              <div className="bg-[#161b22] border border-[#3fb950]/50 rounded-md p-3">
+                                <h3 className="text-xs font-bold text-[#c9d1d9] mb-3 flex items-center gap-2">
+                                  <FaPercent size={10} className="text-[#3fb950]" />
+                                  Descuento General
+                                </h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-[10px] text-[#8b949e] mb-1">Porcentaje</label>
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="number"
+                                        value={snapshotEditando.paquete.configDescuentos?.descuentoGeneral?.porcentaje || 0}
+                                        onChange={(e) => setSnapshotEditando({
+                                          ...snapshotEditando,
+                                          paquete: {
+                                            ...snapshotEditando.paquete,
+                                            configDescuentos: {
+                                              ...snapshotEditando.paquete.configDescuentos!,
+                                              descuentoGeneral: {
+                                                ...snapshotEditando.paquete.configDescuentos!.descuentoGeneral!,
+                                                porcentaje: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                              },
+                                            },
+                                          },
+                                        })}
+                                        disabled={readOnly}
+                                        className="flex-1 px-2 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d] focus:border-[#3fb950] focus:outline-none text-sm font-mono text-[#c9d1d9]"
+                                        min="0" max="100"
+                                      />
+                                      <span className="text-[#8b949e]">%</span>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] text-[#8b949e] mb-1">Aplicar a:</label>
+                                    <div className="space-y-1">
+                                      {[
+                                        { key: 'desarrollo', label: '💻 Desarrollo' },
+                                        { key: 'serviciosBase', label: '🔧 Servicios Base' },
+                                        { key: 'otrosServicios', label: '➕ Otros Servicios' },
+                                      ].map(({ key, label }) => (
+                                        <label key={key} className="flex items-center gap-2 cursor-pointer text-xs text-[#c9d1d9]">
+                                          <input
+                                            type="checkbox"
+                                            checked={snapshotEditando.paquete.configDescuentos?.descuentoGeneral?.aplicarA?.[key as 'desarrollo' | 'serviciosBase' | 'otrosServicios'] || false}
+                                            onChange={(e) => setSnapshotEditando({
+                                              ...snapshotEditando,
+                                              paquete: {
+                                                ...snapshotEditando.paquete,
+                                                configDescuentos: {
+                                                  ...snapshotEditando.paquete.configDescuentos!,
+                                                  descuentoGeneral: {
+                                                    ...snapshotEditando.paquete.configDescuentos!.descuentoGeneral!,
+                                                    aplicarA: {
+                                                      ...snapshotEditando.paquete.configDescuentos!.descuentoGeneral!.aplicarA,
+                                                      [key]: e.target.checked,
+                                                    },
+                                                  },
+                                                },
+                                              },
+                                            })}
+                                            disabled={readOnly}
+                                            className="w-3.5 h-3.5 accent-[#3fb950]"
+                                          />
+                                          {label}
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {snapshotEditando.paquete.configDescuentos?.tipoDescuento === 'granular' && (
+                              <div className="bg-[#161b22] border border-[#f0883e]/50 rounded-md p-3">
+                                <h3 className="text-xs font-bold text-[#c9d1d9] mb-3 flex items-center gap-2">
+                                  <FaTags size={10} className="text-[#f0883e]" />
+                                  Descuentos Granulares por Servicio
+                                </h3>
+                                <div className="space-y-3">
+                                  {/* Desarrollo */}
+                                  <div>
+                                    <h4 className="text-[10px] text-[#8b949e] mb-1 uppercase tracking-wider">Desarrollo</h4>
+                                    <div className="flex items-center justify-between p-2 bg-[#0d1117] rounded border border-[#30363d]">
+                                      <span className="text-xs text-[#c9d1d9]">💻 Costo de Desarrollo</span>
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type="number"
+                                          value={snapshotEditando.paquete.configDescuentos?.descuentosGranulares?.desarrollo || 0}
+                                          onChange={(e) => setSnapshotEditando({
+                                            ...snapshotEditando,
+                                            paquete: {
+                                              ...snapshotEditando.paquete,
+                                              configDescuentos: {
+                                                ...snapshotEditando.paquete.configDescuentos!,
+                                                descuentosGranulares: {
+                                                  ...snapshotEditando.paquete.configDescuentos!.descuentosGranulares!,
+                                                  desarrollo: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                                },
+                                              },
+                                            },
+                                          })}
+                                          disabled={readOnly}
+                                          className="w-16 px-2 py-1 bg-[#161b22] border border-[#30363d] rounded text-xs font-mono text-[#c9d1d9]"
+                                          min="0" max="100"
+                                        />
+                                        <span className="text-[10px] text-[#8b949e]">%</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Servicios Base */}
+                                  {snapshotEditando.serviciosBase.length > 0 && (
+                                    <div>
+                                      <h4 className="text-[10px] text-[#8b949e] mb-1 uppercase tracking-wider">Servicios Base</h4>
+                                      <div className="space-y-1">
+                                        {snapshotEditando.serviciosBase.map((servicio) => (
+                                          <div key={servicio.id} className="flex items-center justify-between p-2 bg-[#0d1117] rounded border border-[#30363d]">
+                                            <span className="text-xs text-[#c9d1d9]">🔧 {servicio.nombre}</span>
+                                            <div className="flex items-center gap-2">
+                                              <input
+                                                type="number"
+                                                value={snapshotEditando.paquete.configDescuentos?.descuentosGranulares?.serviciosBase?.[servicio.id] || 0}
+                                                onChange={(e) => setSnapshotEditando({
+                                                  ...snapshotEditando,
+                                                  paquete: {
+                                                    ...snapshotEditando.paquete,
+                                                    configDescuentos: {
+                                                      ...snapshotEditando.paquete.configDescuentos!,
+                                                      descuentosGranulares: {
+                                                        ...snapshotEditando.paquete.configDescuentos!.descuentosGranulares!,
+                                                        serviciosBase: {
+                                                          ...snapshotEditando.paquete.configDescuentos!.descuentosGranulares?.serviciosBase,
+                                                          [servicio.id]: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                                        },
+                                                      },
+                                                    },
+                                                  },
+                                                })}
+                                                disabled={readOnly}
+                                                className="w-16 px-2 py-1 bg-[#161b22] border border-[#30363d] rounded text-xs font-mono text-[#c9d1d9]"
+                                                min="0" max="100"
+                                              />
+                                              <span className="text-[10px] text-[#8b949e]">%</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Otros Servicios (Opcionales) */}
+                                  {snapshotEditando.otrosServicios && snapshotEditando.otrosServicios.length > 0 && (
+                                    <div>
+                                      <h4 className="text-[10px] text-[#8b949e] mb-1 uppercase tracking-wider">Servicios Opcionales</h4>
+                                      <div className="space-y-1">
+                                        {snapshotEditando.otrosServicios.map((servicio, idx) => {
+                                          const servicioKey = servicio.id || `otro-${idx}`
+                                          return (
+                                            <div key={servicioKey} className="flex items-center justify-between p-2 bg-[#0d1117] rounded border border-[#30363d]">
+                                              <span className="text-xs text-[#c9d1d9]">✨ {servicio.nombre}</span>
+                                              <div className="flex items-center gap-2">
+                                                <input
+                                                  type="number"
+                                                  value={snapshotEditando.paquete.configDescuentos?.descuentosGranulares?.otrosServicios?.[servicioKey] || 0}
+                                                  onChange={(e) => setSnapshotEditando({
+                                                    ...snapshotEditando,
+                                                    paquete: {
+                                                      ...snapshotEditando.paquete,
+                                                      configDescuentos: {
+                                                        ...snapshotEditando.paquete.configDescuentos!,
+                                                        descuentosGranulares: {
+                                                          ...snapshotEditando.paquete.configDescuentos!.descuentosGranulares!,
+                                                          otrosServicios: {
+                                                            ...snapshotEditando.paquete.configDescuentos!.descuentosGranulares?.otrosServicios,
+                                                            [servicioKey]: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                                          },
+                                                        },
+                                                      },
+                                                    },
+                                                  })}
+                                                  disabled={readOnly}
+                                                  className="w-16 px-2 py-1 bg-[#161b22] border border-[#30363d] rounded text-xs font-mono text-[#c9d1d9]"
+                                                  min="0" max="100"
+                                                />
+                                                <span className="text-[10px] text-[#8b949e]">%</span>
+                                              </div>
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* SECCIÓN 3: Descuentos Finales */}
+                            <div className="bg-[#161b22] border border-[#58a6ff]/50 rounded-md p-3">
+                              <h3 className="text-xs font-bold text-[#c9d1d9] mb-3 flex items-center gap-2">
+                                <FaGift size={10} className="text-[#58a6ff]" />
+                                Descuentos Finales
+                              </h3>
+                              <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                  <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">
-                                    Descuento General (%)
+                                  <label className="block text-[10px] text-[#8b949e] mb-1">
+                                    Pago Único (solo desarrollo)
                                   </label>
-                                  <input
-                                    type="number"
-                                    value={snapshotEditando.paquete.descuentosGenerales?.porcentaje || 0}
-                                    onChange={(e) =>
-                                      setSnapshotEditando({
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="number"
+                                      value={snapshotEditando.paquete.configDescuentos?.descuentoPagoUnico || 0}
+                                      onChange={(e) => setSnapshotEditando({
                                         ...snapshotEditando,
                                         paquete: {
                                           ...snapshotEditando.paquete,
-                                          descuentosGenerales: {
-                                            ...snapshotEditando.paquete.descuentosGenerales,
-                                            porcentaje: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                          configDescuentos: {
+                                            ...snapshotEditando.paquete.configDescuentos!,
+                                            descuentoPagoUnico: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
                                           },
                                         },
-                                      })
-                                    }
-                                    disabled={readOnly}
-                                    className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
-                                    min="0"
-                                    max="100"
-                                    placeholder="0"
-                                  />
+                                      })}
+                                      disabled={readOnly}
+                                      className="flex-1 px-2 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none text-sm font-mono text-[#c9d1d9]"
+                                      min="0" max="100"
+                                    />
+                                    <span className="text-[#8b949e]">%</span>
+                                  </div>
+                                  <p className="text-[8px] text-[#8b949e] mt-1">Aplica al desarrollo si paga todo de una vez</p>
                                 </div>
                                 <div>
-                                  <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">
-                                    Descuento por Pago Único (%)
+                                  <label className="block text-[10px] text-[#8b949e] mb-1">
+                                    Descuento Directo (al total final)
                                   </label>
-                                  <input
-                                    type="number"
-                                    value={snapshotEditando.paquete.descuentoPagoUnico || 0}
-                                    onChange={(e) =>
-                                      setSnapshotEditando({
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="number"
+                                      value={snapshotEditando.paquete.configDescuentos?.descuentoDirecto || 0}
+                                      onChange={(e) => setSnapshotEditando({
                                         ...snapshotEditando,
                                         paquete: {
                                           ...snapshotEditando.paquete,
-                                          descuentoPagoUnico: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                          configDescuentos: {
+                                            ...snapshotEditando.paquete.configDescuentos!,
+                                            descuentoDirecto: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)),
+                                          },
                                         },
-                                      })
-                                    }
-                                    disabled={readOnly}
-                                    className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
-                                    min="0"
-                                    max="100"
-                                    placeholder="0"
-                                  />
-                                  <p className="text-[10px] text-[#888888] mt-1">
-                                    Se aplica si el cliente paga el desarrollo completo por adelantado.
-                                  </p>
-                                </div>
-                                <div>
-                                  <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">
-                                    Descuento Directo (%)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={snapshotEditando.paquete.descuento}
-                                    onChange={(e) => setSnapshotEditando({...snapshotEditando, paquete: {...snapshotEditando.paquete, descuento: Math.max(0, Math.min(100, Number.parseFloat(e.target.value) || 0))}})}
-                                    disabled={readOnly}
-                                    className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
-                                    min="0"
-                                    max="100"
-                                  />
+                                      })}
+                                      disabled={readOnly}
+                                      className="flex-1 px-2 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none text-sm font-mono text-[#c9d1d9]"
+                                      min="0" max="100"
+                                    />
+                                    <span className="text-[#8b949e]">%</span>
+                                  </div>
+                                  <p className="text-[8px] text-[#8b949e] mt-1">Se aplica DESPUÉS de todos los demás descuentos</p>
                                 </div>
                               </div>
                             </div>
 
-                            {/* DESCUENTOS POR TIPO DE SERVICIO */}
-                            <div>
-                              <h3 className="text-xs font-bold text-[#ededed] mb-2 flex items-center gap-2">
-                                Descuentos por Tipo de Servicio
-                              </h3>
-
-                              {/* Checkboxes para habilitar descuentos por tipo */}
-                              <div className="space-y-2 mb-3 bg-black border border-[#333] rounded p-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={snapshotEditando.paquete.descuentosPorServicio?.aplicarAServiciosBase || false}
-                                    onChange={(e) =>
-                                      setSnapshotEditando({
-                                        ...snapshotEditando,
-                                        paquete: {
-                                          ...snapshotEditando.paquete,
-                                          descuentosPorServicio: {
-                                            ...snapshotEditando.paquete.descuentosPorServicio,
-                                            aplicarAServiciosBase: e.target.checked,
-                                          },
-                                        },
-                                      })
-                                    }
-                                    className="w-3.5 h-3.5 accent-white cursor-pointer"
-                                  />
-                                  <span className="text-[10px] font-medium text-[#ededed]">Aplicar Descuentos Independientes a Servicios Base</span>
-                                </label>
-
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={snapshotEditando.paquete.descuentosPorServicio?.aplicarAOtrosServicios || false}
-                                    onChange={(e) =>
-                                      setSnapshotEditando({
-                                        ...snapshotEditando,
-                                        paquete: {
-                                          ...snapshotEditando.paquete,
-                                          descuentosPorServicio: {
-                                            ...snapshotEditando.paquete.descuentosPorServicio,
-                                            aplicarAOtrosServicios: e.target.checked,
-                                          },
-                                        },
-                                      })
-                                    }
-                                    className="w-3.5 h-3.5 accent-white cursor-pointer"
-                                  />
-                                  <span className="text-[10px] font-medium text-[#ededed]">Aplicar Descuentos Independientes a Otros Servicios</span>
-                                </label>
-                              </div>
-
-                              {/* Servicios Base con Tree Expandible */}
-                              {snapshotEditando.paquete.descuentosPorServicio?.aplicarAServiciosBase && (
-                                <div className="mb-3">
-                                  <motion.button
-                                    onClick={() => setExpandidosDescuentos({
-                                      ...expandidosDescuentos,
-                                      serviciosBase: !expandidosDescuentos.serviciosBase
-                                    })}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="w-full flex items-center justify-between p-2 bg-[#111] hover:bg-[#222] border border-[#333] rounded transition-colors mb-1 group"
-                                  >
-                                    <div className="flex items-center gap-2 text-left">
-                                      <span className="text-xs font-bold text-[#ededed]">Servicios Base</span>
-                                    </div>
-                                    <motion.div
-                                      animate={{ rotate: expandidosDescuentos.serviciosBase ? 180 : 0 }}
-                                      transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
-                                      className="flex-shrink-0"
-                                    >
-                                      <FaChevronDown size={12} className="text-[#888888]" />
-                                    </motion.div>
-                                  </motion.button>
-                                  
-                                  <AnimatePresence>
-                                    {expandidosDescuentos.serviciosBase && (
-                                      <motion.div
-                                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                        animate={{ opacity: 1, height: 'auto', marginTop: 4 }}
-                                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                        transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
-                                        className="overflow-hidden"
-                                      >
-                                        <div className="space-y-1 bg-black border border-[#333] rounded p-2">
-                                          {snapshotEditando.serviciosBase.map((servicio) => {
-                                            const descuento = snapshotEditando.paquete.descuentosPorServicio?.serviciosBase?.find(d => d.servicioId === servicio.id)
-                                            return (
-                                              <div key={servicio.id} className="flex gap-2 items-center pb-1 border-b border-[#333] last:border-b-0 last:pb-0">
-                                                <div className="flex-1">
-                                                  <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                      type="checkbox"
-                                                      checked={descuento?.aplicarDescuento || false}
-                                                      onChange={(e) => {
-                                                        const updated = { ...snapshotEditando }
-                                                        if (updated.paquete.descuentosPorServicio?.serviciosBase) {
-                                                          const idx = updated.paquete.descuentosPorServicio.serviciosBase.findIndex(d => d.servicioId === servicio.id)
-                                                          if (idx >= 0) {
-                                                            updated.paquete.descuentosPorServicio.serviciosBase[idx].aplicarDescuento = e.target.checked
-                                                          }
-                                                        }
-                                                        setSnapshotEditando(updated)
-                                                      }}
-                                                      className="w-3.5 h-3.5 accent-white cursor-pointer"
-                                                    />
-                                                    <span className="text-[10px] font-medium text-[#ededed]">{servicio.nombre}</span>
-                                                  </label>
-                                                </div>
-                                                {descuento?.aplicarDescuento && (
-                                                  <input
-                                                    type="number"
-                                                    value={descuento.porcentajeDescuento}
-                                                    onChange={(e) => {
-                                                      const updated = { ...snapshotEditando }
-                                                      if (updated.paquete.descuentosPorServicio?.serviciosBase) {
-                                                        const idx = updated.paquete.descuentosPorServicio.serviciosBase.findIndex(d => d.servicioId === servicio.id)
-                                                        if (idx >= 0) {
-                                                          updated.paquete.descuentosPorServicio.serviciosBase[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
-                                                        }
-                                                      }
-                                                      setSnapshotEditando(updated)
-                                                    }}
-                                                    disabled={readOnly}
-                                                    className={`w-16 px-2 py-1 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
-                                                    min="0"
-                                                    max="100"
-                                                    placeholder="0%"
-                                                  />
-                                                )}
-                                              </div>
-                                            )
-                                          })}
-                                        </div>
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-                              )}
-
-                              {/* Otros Servicios con Tree Expandible */}
-                              {snapshotEditando.paquete.descuentosPorServicio?.aplicarAOtrosServicios && (
-                                <div>
-                                  <motion.button
-                                    onClick={() => setExpandidosDescuentos({
-                                      ...expandidosDescuentos,
-                                      otrosServicios: !expandidosDescuentos.otrosServicios
-                                    })}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="w-full flex items-center justify-between p-2 bg-[#111] hover:bg-[#222] border border-[#333] rounded transition-colors mb-1 group"
-                                  >
-                                    <div className="flex items-center gap-2 text-left">
-                                      <span className="text-xs font-bold text-[#ededed]">Otros Servicios</span>
-                                    </div>
-                                    <motion.div
-                                      animate={{ rotate: expandidosDescuentos.otrosServicios ? 180 : 0 }}
-                                      transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
-                                      className="flex-shrink-0"
-                                    >
-                                      <FaChevronDown size={12} className="text-[#888888]" />
-                                    </motion.div>
-                                  </motion.button>
-                                  
-                                  <AnimatePresence>
-                                    {expandidosDescuentos.otrosServicios && (
-                                      <motion.div
-                                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                        animate={{ opacity: 1, height: 'auto', marginTop: 4 }}
-                                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                        transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 30 }}
-                                        className="overflow-hidden"
-                                      >
-                                        <div className="space-y-1 bg-black border border-[#333] rounded p-2">
-                                          {snapshotEditando.otrosServicios.map((servicio, idx) => {
-                                            const descuento = snapshotEditando.paquete.descuentosPorServicio?.otrosServicios?.[idx]
-                                            return (
-                                              <div key={idx} className="flex gap-2 items-center pb-1 border-b border-[#333] last:border-b-0 last:pb-0">
-                                                <div className="flex-1">
-                                                  <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                      type="checkbox"
-                                                      checked={descuento?.aplicarDescuento || false}
-                                                      onChange={(e) => {
-                                                        const updated = { ...snapshotEditando }
-                                                        if (updated.paquete.descuentosPorServicio?.otrosServicios) {
-                                                          updated.paquete.descuentosPorServicio.otrosServicios[idx].aplicarDescuento = e.target.checked
-                                                        }
-                                                        setSnapshotEditando(updated)
-                                                      }}
-                                                      className="w-3.5 h-3.5 accent-white cursor-pointer"
-                                                    />
-                                                    <span className="text-[10px] font-medium text-[#ededed]">{servicio.nombre}</span>
-                                                  </label>
-                                                </div>
-                                                {descuento?.aplicarDescuento && (
-                                                  <input
-                                                    type="number"
-                                                    value={descuento.porcentajeDescuento}
-                                                    onChange={(e) => {
-                                                      const updated = { ...snapshotEditando }
-                                                      if (updated.paquete.descuentosPorServicio?.otrosServicios) {
-                                                        updated.paquete.descuentosPorServicio.otrosServicios[idx].porcentajeDescuento = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0))
-                                                      }
-                                                      setSnapshotEditando(updated)
-                                                    }}
-                                                    disabled={readOnly}
-                                                    className={`w-16 px-2 py-1 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
-                                                    min="0"
-                                                    max="100"
-                                                    placeholder="0%"
-                                                  />
-                                                )}
-                                              </div>
-                                            )
-                                          })}
-                                        </div>
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* VISTA PREVIA DE MONTOS COMPLETA */}
+                            {/* VISTA PREVIA DETALLADA */}
                             {snapshotEditando && (
-                              <div className="mt-4 p-3 bg-black border border-[#333] rounded">
-                                <h4 className="text-[10px] font-bold text-[#ededed] mb-2">
-                                  Vista Previa de Montos Completa
+                              <div className="p-3 bg-[#0d1117] border border-[#30363d] rounded-md">
+                                <h4 className="text-[10px] font-bold text-[#c9d1d9] mb-3 flex items-center gap-2">
+                                  <FaEye size={10} className="text-[#58a6ff]" />
+                                  Vista Previa de Costos
                                 </h4>
-
                                 {(() => {
                                   const preview = calcularPreviewDescuentos(snapshotEditando)
-
+                                  const tipoDesc = preview.tipoDescuentoAplicado
+                                  const hayDescuentos = tipoDesc && tipoDesc !== 'ninguno'
+                                  
                                   return (
-                                    <div className="space-y-1">
+                                    <div className="space-y-3">
                                       {/* Desarrollo */}
-                                      {preview.desarrollo > 0 && (
-                                        <div className="bg-[#111] border border-[#333] rounded p-2">
-                                          <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[10px] font-medium text-[#ededed]">Desarrollo</span>
-                                            <div className="flex gap-2 items-center">
-                                              {preview.desarrollo !== preview.desarrolloConDescuento && (
-                                                <span className="line-through text-[#888888] text-[10px]">
-                                                  ${preview.desarrollo.toFixed(2)}
-                                                </span>
-                                              )}
-                                              <span className={`font-bold text-base ${preview.desarrollo !== preview.desarrolloConDescuento ? 'text-[#ededed]' : 'text-[#ededed]'}`}>
-                                                ${preview.desarrolloConDescuento.toFixed(2)}
-                                              </span>
-                                            </div>
-                                          </div>
-                                          {preview.desarrollo !== preview.desarrolloConDescuento && (
-                                            <div className="text-xs text-[#ededed] font-semibold">
-                                              Ahorro: ${(preview.desarrollo - preview.desarrolloConDescuento).toFixed(2)} ({(((preview.desarrollo - preview.desarrolloConDescuento) / preview.desarrollo) * 100).toFixed(1)}%)
-                                            </div>
-                                          )}
+                                      <div className="border-b border-[#30363d] pb-2">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[10px] text-[#8b949e] uppercase tracking-wider">💻 Desarrollo</span>
+                                          {preview.desarrolloConDescuento < preview.desarrollo ? (
+                                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#238636]/20 text-[#3fb950]">
+                                              -{((1 - preview.desarrolloConDescuento / preview.desarrollo) * 100).toFixed(0)}%
+                                            </span>
+                                          ) : null}
                                         </div>
-                                      )}
+                                        <div className="flex items-center justify-between mt-1">
+                                          <span className="text-xs text-[#c9d1d9]">Costo Desarrollo</span>
+                                          <div className="text-right">
+                                            {preview.desarrolloConDescuento < preview.desarrollo ? (
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-xs text-[#8b949e] line-through">${preview.desarrollo.toFixed(2)}</span>
+                                                <span className="text-xs font-bold text-[#3fb950]">${preview.desarrolloConDescuento.toFixed(2)}</span>
+                                              </div>
+                                            ) : (
+                                              <span className="text-xs text-[#c9d1d9]">${preview.desarrollo.toFixed(2)}</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
 
                                       {/* Servicios Base */}
-                                      {preview.serviciosBase.total > 0 && (
-                                        <div className="bg-[#111] border border-[#333] rounded p-2">
-                                          <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[10px] font-medium text-[#ededed]">Servicios Base</span>
-                                            <div className="flex gap-2 items-center">
-                                              {preview.serviciosBase.total !== preview.serviciosBase.conDescuento && (
-                                                <span className="line-through text-[#888888] text-[10px]">
-                                                  ${preview.serviciosBase.total.toFixed(2)}
-                                                </span>
-                                              )}
-                                              <span className={`font-bold text-base ${preview.serviciosBase.total !== preview.serviciosBase.conDescuento ? 'text-[#ededed]' : 'text-[#ededed]'}`}>
-                                                ${preview.serviciosBase.conDescuento.toFixed(2)}
+                                      {preview.serviciosBase.desglose.length > 0 && (
+                                        <div className="border-b border-[#30363d] pb-2">
+                                          <div className="flex items-center justify-between mb-1">
+                                            <span className="text-[10px] text-[#8b949e] uppercase tracking-wider">🔧 Servicios Base</span>
+                                            {preview.serviciosBase.conDescuento < preview.serviciosBase.total ? (
+                                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#238636]/20 text-[#3fb950]">
+                                                -{((1 - preview.serviciosBase.conDescuento / preview.serviciosBase.total) * 100).toFixed(0)}%
                                               </span>
-                                            </div>
+                                            ) : null}
                                           </div>
-                                          {preview.serviciosBase.desglose.length > 0 && (
-                                            <div className="space-y-0.5 text-xs text-[#888888] mb-1 pl-2 border-l border-[#333]">
-                                              {preview.serviciosBase.desglose.map((item, idx) => (
-                                                <div key={idx} className="flex justify-between">
-                                                  <span>{item.nombre}</span>
-                                                  <span className="font-medium">
-                                                    ${item.original.toFixed(2)} → ${item.conDescuento.toFixed(2)}
-                                                  </span>
+                                          <div className="space-y-1 pl-2">
+                                            {preview.serviciosBase.desglose.map((s, idx) => (
+                                              <div key={idx} className="flex items-center justify-between text-[11px]">
+                                                <span className="text-[#c9d1d9]">{s.nombre}</span>
+                                                <div className="text-right">
+                                                  {s.descuentoAplicado > 0 ? (
+                                                    <div className="flex items-center gap-2">
+                                                      <span className="text-[#8b949e] line-through">${s.original.toFixed(2)}</span>
+                                                      <span className="font-medium text-[#3fb950]">${s.conDescuento.toFixed(2)}</span>
+                                                      <span className="text-[9px] text-[#f0883e]">(-{s.descuentoAplicado}%)</span>
+                                                    </div>
+                                                  ) : (
+                                                    <span className="text-[#c9d1d9]">${s.original.toFixed(2)}</span>
+                                                  )}
                                                 </div>
-                                              ))}
-                                            </div>
-                                          )}
-                                          {preview.serviciosBase.total !== preview.serviciosBase.conDescuento && (
-                                            <div className="text-xs text-[#ededed] font-semibold">
-                                              Ahorro: ${(preview.serviciosBase.total - preview.serviciosBase.conDescuento).toFixed(2)} ({(((preview.serviciosBase.total - preview.serviciosBase.conDescuento) / preview.serviciosBase.total) * 100).toFixed(1)}%)
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-
-                                      {/* Otros Servicios */}
-                                      {preview.otrosServicios.total > 0 && (
-                                        <div className="bg-[#111] border border-[#333] rounded p-2">
-                                          <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[10px] font-medium text-[#ededed]">Otros Servicios</span>
-                                            <div className="flex gap-2 items-center">
-                                              {preview.otrosServicios.total !== preview.otrosServicios.conDescuento && (
-                                                <span className="line-through text-[#888888] text-[10px]">
-                                                  ${preview.otrosServicios.total.toFixed(2)}
-                                                </span>
-                                              )}
-                                              <span className={`font-bold text-base ${preview.otrosServicios.total !== preview.otrosServicios.conDescuento ? 'text-[#ededed]' : 'text-[#ededed]'}`}>
-                                                ${preview.otrosServicios.conDescuento.toFixed(2)}
-                                              </span>
-                                            </div>
-                                          </div>
-                                          {preview.otrosServicios.desglose.length > 0 && (
-                                            <div className="space-y-0.5 text-xs text-[#888888] mb-1 pl-2 border-l border-[#333]">
-                                              {preview.otrosServicios.desglose.map((item, idx) => (
-                                                <div key={idx} className="flex justify-between">
-                                                  <span>{item.nombre}</span>
-                                                  <span className="font-medium">
-                                                    ${item.original.toFixed(2)} → ${item.conDescuento.toFixed(2)}
-                                                  </span>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
-                                          {preview.otrosServicios.total !== preview.otrosServicios.conDescuento && (
-                                            <div className="text-xs text-[#ededed] font-semibold">
-                                              Ahorro: ${(preview.otrosServicios.total - preview.otrosServicios.conDescuento).toFixed(2)} ({(((preview.otrosServicios.total - preview.otrosServicios.conDescuento) / preview.otrosServicios.total) * 100).toFixed(1)}%)
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-
-                                      {/* Total General */}
-                                      <div className="bg-[#111] p-3 border-t border-[#333] rounded-b">
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-xs font-bold text-[#ededed]">Total General</span>
-                                          <div className="flex gap-3 items-center">
-                                            <div className="text-right">
-                                              {preview.totalOriginal !== preview.totalConDescuentos && (
-                                                <div className="line-through text-[#888888] text-[10px]">
-                                                  ${preview.totalOriginal.toFixed(2)}
-                                                </div>
-                                              )}
-                                              <div className={`font-bold text-lg ${preview.totalOriginal !== preview.totalConDescuentos ? 'text-[#ededed]' : 'text-[#ededed]'}`}>
-                                                ${preview.totalConDescuentos.toFixed(2)}
                                               </div>
-                                            </div>
+                                            ))}
                                           </div>
+                                          <div className="flex items-center justify-between mt-1 pt-1 border-t border-[#21262d]">
+                                            <span className="text-[10px] text-[#8b949e]">Subtotal Servicios Base</span>
+                                            <span className="text-xs font-medium text-[#c9d1d9]">${preview.serviciosBase.conDescuento.toFixed(2)}</span>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Otros Servicios (Opcionales) */}
+                                      {preview.otrosServicios.desglose.length > 0 && (
+                                        <div className="border-b border-[#30363d] pb-2">
+                                          <div className="flex items-center justify-between mb-1">
+                                            <span className="text-[10px] text-[#8b949e] uppercase tracking-wider">✨ Servicios Opcionales</span>
+                                            {preview.otrosServicios.conDescuento < preview.otrosServicios.total ? (
+                                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#238636]/20 text-[#3fb950]">
+                                                -{((1 - preview.otrosServicios.conDescuento / preview.otrosServicios.total) * 100).toFixed(0)}%
+                                              </span>
+                                            ) : null}
+                                          </div>
+                                          <div className="space-y-1 pl-2">
+                                            {preview.otrosServicios.desglose.map((s, idx) => (
+                                              <div key={idx} className="flex items-center justify-between text-[11px]">
+                                                <span className="text-[#c9d1d9]">{s.nombre}</span>
+                                                <div className="text-right">
+                                                  {s.descuentoAplicado > 0 ? (
+                                                    <div className="flex items-center gap-2">
+                                                      <span className="text-[#8b949e] line-through">${s.original.toFixed(2)}</span>
+                                                      <span className="font-medium text-[#3fb950]">${s.conDescuento.toFixed(2)}</span>
+                                                      <span className="text-[9px] text-[#f0883e]">(-{s.descuentoAplicado}%)</span>
+                                                    </div>
+                                                  ) : (
+                                                    <span className="text-[#c9d1d9]">${s.original.toFixed(2)}</span>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                          <div className="flex items-center justify-between mt-1 pt-1 border-t border-[#21262d]">
+                                            <span className="text-[10px] text-[#8b949e]">Subtotal Servicios Opcionales</span>
+                                            <span className="text-xs font-medium text-[#c9d1d9]">${preview.otrosServicios.conDescuento.toFixed(2)}</span>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Resumen de Descuentos Aplicados */}
+                                      {hayDescuentos && (
+                                        <div className="bg-[#161b22] rounded p-2 border border-[#30363d]">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <FaPercent size={8} className="text-[#f0883e]" />
+                                            <span className="text-[10px] font-medium text-[#c9d1d9]">
+                                              Descuentos Aplicados ({tipoDesc === 'granular' ? 'Granular' : 'General'})
+                                            </span>
+                                          </div>
+                                          <div className="text-[10px] text-[#8b949e] space-y-0.5">
+                                            {tipoDesc === 'general' && (
+                                              <div>• Descuento general del {snapshotEditando.paquete.configDescuentos?.descuentoGeneral?.porcentaje || 0}%</div>
+                                            )}
+                                            {(snapshotEditando.paquete.configDescuentos?.descuentoPagoUnico || 0) > 0 && (
+                                              <div>• Pago único: {snapshotEditando.paquete.configDescuentos?.descuentoPagoUnico}% al desarrollo</div>
+                                            )}
+                                            {(snapshotEditando.paquete.configDescuentos?.descuentoDirecto || 0) > 0 && (
+                                              <div>• Descuento directo: {snapshotEditando.paquete.configDescuentos?.descuentoDirecto}% al total final</div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Totales Finales */}
+                                      <div className="bg-gradient-to-r from-[#238636]/20 to-[#0d1117] rounded p-2 border border-[#238636]/30">
+                                        <div className="flex items-center justify-between text-xs mb-1">
+                                          <span className="text-[#8b949e]">Subtotal (antes de desc. directo)</span>
+                                          <span className="text-[#c9d1d9]">${preview.subtotalOriginal.toFixed(2)}</span>
+                                        </div>
+                                        {(preview.descuentoDirectoAplicado ?? 0) > 0 && (
+                                          <div className="flex items-center justify-between text-xs mb-1">
+                                            <span className="text-[#8b949e]">Descuento Directo ({preview.descuentoDirectoAplicado}%)</span>
+                                            <span className="text-[#f0883e]">-${(preview.subtotalConDescuentos - preview.totalConDescuentos).toFixed(2)}</span>
+                                          </div>
+                                        )}
+                                        <div className="flex items-center justify-between text-sm font-bold border-t border-[#238636]/30 pt-1 mt-1">
+                                          <span className="text-[#c9d1d9]">💰 Total Final</span>
+                                          <span className="text-[#3fb950] text-base">${preview.totalConDescuentos.toFixed(2)}</span>
                                         </div>
                                         {preview.totalAhorro > 0 && (
-                                          <div className="mt-2 pt-2 border-t border-[#333] flex justify-between items-center">
-                                            <span className="text-[10px] font-semibold text-[#ededed]">🔴 Ahorro Total</span>
-                                            <span className="text-xs font-bold text-[#ededed]">
-                                              ${preview.totalAhorro.toFixed(2)} ({preview.porcentajeAhorro.toFixed(1)}%)
+                                          <div className="flex items-center justify-between text-[10px] mt-1">
+                                            <span className="text-[#238636]">🎉 Ahorro Total</span>
+                                            <span className="text-[#3fb950] font-bold">
+                                              ${preview.totalAhorro.toFixed(2)} ({preview.porcentajeAhorro.toFixed(1)}% OFF)
                                             </span>
                                           </div>
                                         )}
@@ -3455,34 +3436,34 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         icon: <FaFileAlt />,
                         hasChanges: pestañaTieneCambios('cotizacion'),
                         content: (
-                          <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-200px)]">
+                          <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Número</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Número</label>
                                 <input
                                   type="text"
                                   value={cotizacionActual.numero || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, numero: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  className="w-full px-2 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none text-xs text-[#c9d1d9]"
                                   placeholder="CZ-001"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Fecha de Emisión</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Fecha de Emisión</label>
                                 <input
                                   type="date"
                                   value={cotizacionActual.fechaEmision || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, fechaEmision: e.target.value})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  className="w-full px-2 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none text-xs text-[#c9d1d9]"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Tiempo Validez (días)</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Tiempo Validez (días)</label>
                                 <input
                                   type="number"
                                   value={cotizacionActual.tiempoValidez || 30}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, tiempoValidez: Number.parseInt(e.target.value) || 30})}
-                                  className="w-full px-2 py-1.5 bg-black border border-[#333] focus:border-[#666] focus:outline-none text-xs text-[#ededed]"
+                                  className="w-full px-2 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none text-xs text-[#c9d1d9]"
                                   min="1"
                                 />
                               </div>
@@ -3496,60 +3477,60 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         icon: <FaUser />,
                         hasChanges: pestañaTieneCambios('cliente'),
                         content: (
-                          <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-200px)]">
+                          <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Empresa</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Empresa</label>
                                 <input
                                   type="text"
                                   value={cotizacionActual.empresa || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, empresa: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="Nombre de la empresa"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Sector</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Sector</label>
                                 <input
                                   type="text"
                                   value={cotizacionActual.sector || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, sector: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="Industria/Sector"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Ubicación</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Ubicación</label>
                                 <input
                                   type="text"
                                   value={cotizacionActual.ubicacion || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, ubicacion: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="Ciudad/País"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Email Cliente</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Email Cliente</label>
                                 <input
                                   type="email"
                                   value={cotizacionActual.emailCliente || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, emailCliente: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="cliente@empresa.com"
                                 />
                               </div>
                               <div className="md:col-span-2">
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">WhatsApp Cliente</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">WhatsApp Cliente</label>
                                 <input
                                   type="tel"
                                   value={cotizacionActual.whatsappCliente || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, whatsappCliente: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="+34 600 000 000"
                                 />
                               </div>
@@ -3563,60 +3544,60 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         icon: <FaBriefcase />,
                         hasChanges: pestañaTieneCambios('profesional'),
                         content: (
-                          <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-200px)]">
+                          <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Profesional</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Profesional</label>
                                 <input
                                   type="text"
                                   value={cotizacionActual.profesional || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, profesional: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="Nombre del profesional"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Empresa Proveedor</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Empresa Proveedor</label>
                                 <input
                                   type="text"
                                   value={cotizacionActual.empresaProveedor || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, empresaProveedor: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="Nombre de la empresa"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Email</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Email</label>
                                 <input
                                   type="email"
                                   value={cotizacionActual.emailProveedor || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, emailProveedor: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="profesional@empresa.com"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">WhatsApp</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">WhatsApp</label>
                                 <input
                                   type="tel"
                                   value={cotizacionActual.whatsappProveedor || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, whatsappProveedor: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="+34 600 000 000"
                                 />
                               </div>
                               <div className="md:col-span-2">
-                                <label className="block text-[10px] font-semibold text-[#ededed] mb-0.5">Ubicación Proveedor</label>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Ubicación Proveedor</label>
                                 <input
                                   type="text"
                                   value={cotizacionActual.ubicacionProveedor || ''}
                                   onChange={(e) => setCotizacionActual({...cotizacionActual, ubicacionProveedor: e.target.value})}
                                   disabled={readOnly}
-                                  className={`w-full px-2 py-1.5 ${readOnly ? 'bg-[#0a0a0f] text-[#666] cursor-not-allowed' : 'bg-black'} border border-[#333] ${!readOnly && 'focus:border-[#666] focus:outline-none'} text-xs text-[#ededed]`}
+                                  className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="Ciudad/País"
                                 />
                               </div>
@@ -3630,7 +3611,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         icon: <FaFileAlt />,
                         hasChanges: pestañaTieneCambios('contenido'),
                         content: (
-                          <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-300px)]">
+                          <div className="space-y-6">
                             <PaqueteContenidoTab 
                               snapshot={snapshotEditando} 
                               readOnly={readOnly}
@@ -3647,44 +3628,62 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
               </div>
               {/* Fin Contenido Scrollable */}
 
-              {/* Footer Fijo */}
-              <div className="flex-shrink-0 bg-gh-bg-secondary border-t border-gh-border px-6 py-4 flex justify-between items-center">
+              {/* Footer Premium con gradiente */}
+              <div className="flex-shrink-0 bg-gradient-to-r from-[#161b22] via-[#1c2128] to-[#161b22] border-t border-[#30363d] px-6 py-4 flex justify-between items-center relative overflow-hidden">
+                {/* Efecto de línea superior brillante */}
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#30363d] to-transparent" />
+                
                 {/* Indicador de autoguardado a la izquierda */}
                 <div className="flex items-center gap-3">
                   {readOnly && (
-                    <span className="text-sm text-blue-400 bg-blue-500/10 px-3 py-1 rounded-lg flex items-center gap-2">
-                      📖 Modo de solo lectura
+                    <span className="text-sm text-[#58a6ff] bg-gradient-to-r from-[#58a6ff]/15 to-[#388bfd]/10 px-4 py-1.5 rounded-lg flex items-center gap-2 border border-[#388bfd]/20 shadow-inner">
+                      <span className="w-2 h-2 rounded-full bg-[#58a6ff] animate-pulse" />
+                      Modo de solo lectura
                     </span>
                   )}
                   {!readOnly && autoSaveStatus === 'saving' && (
-                    <span className="text-sm text-white animate-pulse">Guardando cambios...</span>
+                    <span className="text-sm text-[#c9d1d9] animate-pulse flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4 text-[#58a6ff]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Guardando cambios...
+                    </span>
                   )}
                   {!readOnly && autoSaveStatus === 'saved' && (
-                    <span className="text-sm text-white/90">✓ Cambios guardados</span>
+                    <motion.span 
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-sm text-[#3fb950] flex items-center gap-2 bg-[#238636]/10 px-3 py-1.5 rounded-lg border border-[#238636]/20"
+                    >
+                      <FaCheck className="text-[#3fb950]" /> Cambios guardados
+                    </motion.span>
                   )}
                   {!readOnly && autoSaveStatus === 'error' && (
-                    <span className="text-sm text-white/90">Error al guardar. Reintentando...</span>
+                    <span className="text-sm text-[#f85149] flex items-center gap-2 bg-[#da3633]/10 px-3 py-1.5 rounded-lg border border-[#da3633]/20">
+                      <FaExclamationTriangle className="text-[#f85149]" /> Error al guardar. Reintentando...
+                    </span>
                   )}
                 </div>
                 {/* Botones a la derecha */}
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   {!readOnly && (
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={{ scale: 1.03, boxShadow: '0 0 20px rgba(35, 134, 54, 0.4)' }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={guardarEdicion}
-                      className="py-2 px-6 bg-white text-[#0a0a0f] rounded-lg hover:bg-white/90 transition-all flex items-center justify-center gap-2 font-semibold"
+                      className="py-2.5 px-8 bg-gradient-to-r from-[#238636] to-[#2ea043] text-white rounded-lg hover:from-[#2ea043] hover:to-[#3fb950] transition-all flex items-center justify-center gap-2 font-semibold shadow-lg shadow-[#238636]/25 border border-[#3fb950]/20"
                     >
-                      <FaCheck /> Guardar
+                      <FaCheck /> Guardar Cambios
                     </motion.button>
                   )}
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.02, backgroundColor: '#30363d' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleCerrarModalEditar}
-                    className="py-1.5 px-4 bg-white/10 text-white/80 rounded-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2 text-xs font-semibold"
+                    className="py-2 px-5 bg-[#21262d] text-[#c9d1d9] rounded-lg hover:text-white border border-[#30363d] transition-all flex items-center justify-center gap-2 text-sm font-medium"
                   >
-                    <FaTimes /> Cancelar
+                    <FaTimes size={12} /> Cerrar
                   </motion.button>
                 </div>
               </div>
@@ -3728,132 +3727,119 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
         )}
       </AnimatePresence>
       
-      {/* DIÁLOGO GENÉRICO - Para todos los tipos de diálogos */}
+      {/* DIÁLOGO GENÉRICO - Diseño estilo GitHub/Vercel */}
       <AnimatePresence>
         {mostrarDialogo && datosDialogo && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]"
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000]"
             onClick={() => setMostrarDialogo(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={(e) => e.stopPropagation()}
-              className={`rounded-lg shadow-2xl p-8 max-w-sm w-full mx-4 border ${
-                datosDialogo.tipo === 'error' 
-                  ? 'bg-red-950/20 border-red-500/30' 
-                  : datosDialogo.tipo === 'advertencia'
-                  ? 'bg-yellow-950/20 border-yellow-500/30'
-                  : datosDialogo.tipo === 'success'
-                  ? 'bg-green-950/20 border-green-500/30'
-                  : datosDialogo.tipo === 'activar'
-                  ? 'bg-gh-bg-secondary border-gh-border'
-                  : 'bg-gh-bg-secondary border-gh-border'
-              }`}
+              className="rounded-lg shadow-xl shadow-black/50 max-w-md w-full mx-4 bg-[#0d1117] border border-[#30363d] overflow-hidden"
             >
-              {/* Header con icono y título */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="text-2xl">{datosDialogo.icono || '✓'}</div>
-                <h3 className={`text-xl font-bold ${
-                  datosDialogo.tipo === 'error'
-                    ? 'text-red-400'
-                    : datosDialogo.tipo === 'advertencia'
-                    ? 'text-yellow-400'
-                    : datosDialogo.tipo === 'success'
-                    ? 'text-green-400'
-                    : 'text-white'
+              {/* Header */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-[#30363d] bg-[#161b22]">
+                <span className={`text-lg ${
+                  datosDialogo.tipo === 'error' ? 'text-[#f85149]'
+                    : datosDialogo.tipo === 'advertencia' ? 'text-[#d29922]'
+                    : datosDialogo.tipo === 'success' ? 'text-[#3fb950]'
+                    : datosDialogo.tipo === 'activar' ? 'text-[#3fb950]'
+                    : 'text-[#8b949e]'
                 }`}>
+                  {datosDialogo.icono || '✓'}
+                </span>
+                <h3 className="text-[#c9d1d9] font-semibold text-base">
                   {datosDialogo.titulo}
                 </h3>
               </div>
 
-              {/* Subtítulo si existe */}
-              {datosDialogo.subtitulo && (
-                <p className="text-xs text-white/60 mb-2">{datosDialogo.subtitulo}</p>
-              )}
+              {/* Body */}
+              <div className="px-4 py-4">
+                {datosDialogo.subtitulo && (
+                  <p className="text-xs text-[#8b949e] mb-2">{datosDialogo.subtitulo}</p>
+                )}
+                <p className="text-[#c9d1d9] text-sm leading-relaxed">{datosDialogo.mensaje}</p>
+              </div>
 
-              {/* Mensaje principal */}
-              <p className="text-white/80 mb-6">{datosDialogo.mensaje}</p>
-
-              {/* Caso especial: tipo 'activar' con opciones duales */}
-              {datosDialogo.tipo === 'activar' && datosDialogo.quotation ? (
-                <div className="flex gap-3">
-                  {datosDialogo.modoAbrir === 'editar' ? (
-                    <>
-                      <button
-                        onClick={() => setMostrarDialogo(false)}
-                        className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors font-semibold"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        onClick={async () => {
-                          if (datosDialogo.quotation) {
-                            await activarYAbrirModal()
-                          }
-                          setMostrarDialogo(false)
-                        }}
-                        className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center gap-2"
-                      >
-                        <FaCheck size={14} /> Activar y Editar
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={async () => {
-                          if (datosDialogo.quotation) {
-                            await abrirSinActivar()
-                          }
-                          setMostrarDialogo(false)
-                        }}
-                        className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors font-semibold"
-                      >
-                        Ver Solo Lectura
-                      </button>
-                      <button
-                        onClick={async () => {
-                          if (datosDialogo.quotation) {
-                            await activarYAbrirModal()
-                          }
-                          setMostrarDialogo(false)
-                        }}
-                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold flex items-center justify-center gap-2"
-                      >
-                        <FaCheck size={14} /> Activar y Editar
-                      </button>
-                    </>
-                  )}
-                </div>
-              ) : (
-                /* Botones genéricos para otros tipos de diálogos */
-                <div className="flex gap-3 flex-wrap">
-                  {datosDialogo.botones.map((boton, idx) => (
+              {/* Footer - Botones */}
+              <div className="flex gap-3 px-4 py-3 border-t border-[#30363d] bg-[#161b22] justify-end">
+                {datosDialogo.modoAbrir === 'editar' ? (
+                  <>
+                    <button
+                      onClick={() => setMostrarDialogo(false)}
+                      className="min-w-[90px] px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-md transition-colors text-sm font-medium border border-[#30363d] whitespace-nowrap"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (datosDialogo.quotation) {
+                          await activarYAbrirModal()
+                        }
+                        setMostrarDialogo(false)
+                      }}
+                      className="min-w-[90px] px-4 py-2 bg-[#238636] hover:bg-[#2ea043] text-white rounded-md transition-colors text-sm font-medium flex items-center justify-center gap-2 whitespace-nowrap"
+                    >
+                      <FaCheck size={12} /> Activar y Editar
+                    </button>
+                  </>
+                ) : datosDialogo.tipo === 'activar' && datosDialogo.quotation ? (
+                  <>
+                    <button
+                      onClick={async () => {
+                        if (datosDialogo.quotation) {
+                          await abrirSinActivar()
+                        }
+                        setMostrarDialogo(false)
+                      }}
+                      className="min-w-[90px] px-4 py-2 bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded-md transition-colors text-sm font-medium border border-[#30363d] whitespace-nowrap"
+                    >
+                      Ver Solo Lectura
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (datosDialogo.quotation) {
+                          await activarYAbrirModal()
+                        }
+                        setMostrarDialogo(false)
+                      }}
+                      className="min-w-[90px] px-4 py-2 bg-[#238636] hover:bg-[#2ea043] text-white rounded-md transition-colors text-sm font-medium flex items-center justify-center gap-2 whitespace-nowrap"
+                    >
+                      <FaCheck size={12} /> Activar y Editar
+                    </button>
+                  </>
+                ) : (
+                  /* Botones genéricos */
+                  datosDialogo.botones.map((boton, idx) => (
                     <button
                       key={idx}
                       onClick={async () => {
                         await boton.action()
                         setMostrarDialogo(false)
                       }}
-                      className={`flex-1 min-w-max px-4 py-2 rounded-lg transition-colors font-semibold ${
+                      className={`min-w-[90px] px-4 py-2 rounded-md transition-colors text-sm font-medium whitespace-nowrap ${
                         boton.style === 'primary'
-                          ? 'bg-white text-black hover:bg-white/90'
+                          ? 'bg-[#238636] hover:bg-[#2ea043] text-white'
                           : boton.style === 'danger'
-                          ? 'bg-red-600 hover:bg-red-700 text-white'
+                          ? 'bg-[#da3633] hover:bg-[#f85149] text-white'
                           : boton.style === 'success'
-                          ? 'bg-green-600 hover:bg-green-700 text-white'
-                          : 'bg-white/10 hover:bg-white/20 text-white'
+                          ? 'bg-[#238636] hover:bg-[#2ea043] text-white'
+                          : 'bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d]'
                       }`}
                     >
                       {boton.label}
                     </button>
-                  ))}
-                </div>
-              )}
+                  ))
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}

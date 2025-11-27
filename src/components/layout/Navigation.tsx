@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import styles from '../../styles/Navigation.module.css'
 
@@ -29,6 +30,10 @@ const sectionStyles: { [key: string]: { overlayClass: string; textClass: string 
   faq: { overlayClass: 'navOverlayFaq', textClass: 'navTextFaq' },
   contacto: { overlayClass: 'navOverlayContacto', textClass: 'navTextContacto' },
 }
+
+// Logos: verde para admin, azul con fondo para el resto
+const LOGO_ADMIN = '/img/logo-webquote_green_txt_white.png'
+const LOGO_DEFAULT = '/img/logo-webquote_blue_backgroud_txt_white.png'
 
 export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -100,17 +105,24 @@ export default function Navigation() {
       >
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-4">
           <div className="flex justify-between items-center">
-            {/* Logo - Responsive */}
+            {/* Logo - Responsive y Dinámico según sección/página */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`font-bold transition-all duration-300 ${
-                isScrolled
-                  ? `text-base md:text-lg lg:text-xl ${styles[activeSectionStyle.textClass]} ${styles.navTextWithShadow}`
-                  : 'text-white text-base md:text-lg lg:text-xl'
-              }`}
+              className="flex items-center"
             >
-              Urbanísima CONSTRUCTORA S.R.L
+              <Link href="/" className="flex items-center">
+                <Image
+                  src={isAdminPage ? LOGO_ADMIN : LOGO_DEFAULT}
+                  alt="WebQuote Logo"
+                  width={180}
+                  height={40}
+                  className={`h-8 md:h-9 lg:h-10 w-auto transition-all duration-300 ${
+                    isScrolled ? 'brightness-100' : 'brightness-100 drop-shadow-lg'
+                  }`}
+                  priority
+                />
+              </Link>
             </motion.div>
 
             {/* Desktop Navigation - xl y mayores */}

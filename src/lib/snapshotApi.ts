@@ -1,7 +1,9 @@
 /**
  * Utilidades para gestionar snapshots a través de la API
+ * @version 2.0 - Sistema de descuentos reinventado con ConfigDescuentos
  */
-import type { ServicioBase } from '@/lib/types'
+import type { ServicioBase, ConfigDescuentos } from '@/lib/types'
+import { getDefaultConfigDescuentos, migrarConfigDescuentosLegacy } from '@/lib/utils/discountCalculator'
 
 
 export interface SnapshotFromDB {
@@ -18,9 +20,14 @@ export interface SnapshotFromDB {
   emoji?: string
   tagline?: string
   tiempoEntrega?: string
-  // Nuevos campos en BD para opciones de pago
+  // Campos para opciones de pago
   opcionesPago?: any
   descuentoPagoUnico?: number
+  // ✅ Sistema de descuentos reinventado - ConfigDescuentos
+  configDescuentos?: ConfigDescuentos | null
+  // @deprecated - Campos legacy para migración, usar configDescuentos
+  descuentosGenerales?: any
+  descuentosPorServicio?: any
   otrosServicios: any[]
   costoInicial: number
   costoAño1: number
@@ -74,9 +81,28 @@ function migrarServiciosLegacy(snapshot: any): ServicioBase[] {
 
 // Convertir de formato frontend (PackageSnapshot) a formato DB (SnapshotFromDB)
 export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 'createdAt' | 'updatedAt'> {
+  // Obtener configDescuentos del snapshot o migrar desde formato legacy
+  // Siempre habrá un valor válido (nuevo, migrado o default)
+  let configDescuentos: ConfigDescuentos
+  
+  if (snapshot.paquete?.configDescuentos) {
+    // Nuevo formato - usar directamente
+    configDescuentos = snapshot.paquete.configDescuentos
+  } else if (snapshot.paquete?.descuentosGenerales || snapshot.paquete?.descuentosPorServicio) {
+    // Formato legacy - migrar
+    configDescuentos = migrarConfigDescuentosLegacy(
+      snapshot.paquete.descuentosGenerales,
+      snapshot.paquete.descuentosPorServicio,
+      snapshot.paquete.descuentoPagoUnico
+    )
+  } else {
+    // Sin descuentos configurados - usar default
+    configDescuentos = getDefaultConfigDescuentos()
+  }
+
   return {
     nombre: snapshot.nombre || '',
-    quotationConfigId: snapshot.quotationConfigId || null, // ✅ Mapear quotationConfigId
+    quotationConfigId: snapshot.quotationConfigId || null,
     serviciosBase: migrarServiciosLegacy(snapshot),
     gestionPrecio: snapshot.gestion?.precio || 0,
     gestionMesesGratis: snapshot.gestion?.mesesGratis || 0,
@@ -88,9 +114,18 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
     emoji: snapshot.paquete?.emoji ?? snapshot.emoji ?? '',
     tagline: snapshot.paquete?.tagline ?? snapshot.tagline ?? '',
     tiempoEntrega: snapshot.paquete?.tiempoEntrega ?? snapshot.tiempoEntrega ?? '',
-    // Mapear opciones de pago desde el objeto paquete del frontend a columnas de BD
+    // Mapear opciones de pago
     opcionesPago: snapshot.paquete?.opcionesPago || [],
-    descuentoPagoUnico: snapshot.paquete?.descuentoPagoUnico ?? snapshot.descuentoPagoUnico ?? 0,
+    descuentoPagoUnico: configDescuentos.descuentoPagoUnico ?? 0,
+    // ✅ Sistema de descuentos reinventado
+    configDescuentos: configDescuentos,
+    // @deprecated - Mantener para compatibilidad con BD existente
+    descuentosGenerales: configDescuentos.tipoDescuento === 'general' 
+      ? configDescuentos.descuentoGeneral 
+      : null,
+    descuentosPorServicio: configDescuentos.tipoDescuento === 'granular'
+      ? configDescuentos.descuentosGranulares
+      : null,
     otrosServicios: snapshot.otrosServicios || [],
     costoInicial: snapshot.costos?.inicial ?? snapshot.costoInicial ?? 0,
     costoAño1: snapshot.costos?.año1 ?? snapshot.costoAño1 ?? 0,
@@ -101,10 +136,59 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
 
 // Convertir datos de DB a formato PackageSnapshot del frontend
 export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
+  // Obtener configDescuentos: preferir el nuevo campo, sino migrar desde legacy
+  let configDescuentos: ConfigDescuentos
+  
+  if (dbSnapshot.configDescuentos) {
+    // Nuevo formato - usar directamente
+    configDescuentos = dbSnapshot.configDescuentos
+  } else if (dbSnapshot.descuentosGenerales || dbSnapshot.descuentosPorServicio) {
+    // Formato legacy - migrar
+    configDescuentos = migrarConfigDescuentosLegacy(
+      dbSnapshot.descuentosGenerales,
+      dbSnapshot.descuentosPorServicio,
+      dbSnapshot.descuentoPagoUnico
+    )
+  } else {
+    // Sin descuentos - usar default
+    configDescuentos = getDefaultConfigDescuentos()
+  }
+
+  // Convertir descuentosGranulares (mapas) a formato legacy (arrays) para descuentosPorServicio
+  const convertirAFormatoLegacy = () => {
+    if (configDescuentos.tipoDescuento !== 'granular') {
+      return {
+        aplicarAServiciosBase: false,
+        aplicarAOtrosServicios: false,
+        serviciosBase: [] as Array<{ servicioId: string; porcentajeDescuento: number; aplicarDescuento: boolean }>,
+        otrosServicios: [] as Array<{ servicioId: string; porcentajeDescuento: number; aplicarDescuento: boolean }>,
+      }
+    }
+    
+    const granulares = configDescuentos.descuentosGranulares
+    const serviciosBaseLegacy = Object.entries(granulares.serviciosBase || {}).map(([servicioId, porcentaje]) => ({
+      servicioId,
+      porcentajeDescuento: porcentaje,
+      aplicarDescuento: porcentaje > 0,
+    }))
+    const otrosServiciosLegacy = Object.entries(granulares.otrosServicios || {}).map(([servicioId, porcentaje]) => ({
+      servicioId,
+      porcentajeDescuento: porcentaje,
+      aplicarDescuento: porcentaje > 0,
+    }))
+    
+    return {
+      aplicarAServiciosBase: serviciosBaseLegacy.some(s => s.aplicarDescuento),
+      aplicarAOtrosServicios: otrosServiciosLegacy.some(s => s.aplicarDescuento),
+      serviciosBase: serviciosBaseLegacy,
+      otrosServicios: otrosServiciosLegacy,
+    }
+  }
+
   return {
     id: dbSnapshot.id,
     nombre: dbSnapshot.nombre,
-    quotationConfigId: dbSnapshot.quotationConfigId || undefined, // ✅ Incluir quotationConfigId
+    quotationConfigId: dbSnapshot.quotationConfigId || undefined,
     serviciosBase: dbSnapshot.serviciosBase || [],
     gestion: {
       precio: dbSnapshot.gestionPrecio,
@@ -119,9 +203,21 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
       emoji: dbSnapshot.emoji || '',
       tagline: dbSnapshot.tagline || '',
       tiempoEntrega: dbSnapshot.tiempoEntrega || '',
-      // Incluir opciones de pago en el objeto paquete para el frontend
+      // Opciones de pago
       opcionesPago: (dbSnapshot.opcionesPago as any[]) || [],
-      descuentoPagoUnico: dbSnapshot.descuentoPagoUnico ?? 0,
+      // ✅ Sistema de descuentos reinventado
+      configDescuentos: configDescuentos,
+      descuentoPagoUnico: configDescuentos.descuentoPagoUnico,
+      // @deprecated - Mantener para compatibilidad legacy (formato antiguo con arrays)
+      descuentosGenerales: configDescuentos.tipoDescuento === 'general' 
+        ? configDescuentos.descuentoGeneral 
+        : {
+            aplicarAlDesarrollo: false,
+            aplicarAServiciosBase: false,
+            aplicarAOtrosServicios: false,
+            porcentaje: 0,
+          },
+      descuentosPorServicio: convertirAFormatoLegacy(),
     },
     otrosServicios: dbSnapshot.otrosServicios,
     costos: {

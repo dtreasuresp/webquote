@@ -125,9 +125,9 @@ export function useModalEdition(
    * Función interna para abrir el modal sin verificación
    */
   const abrirModalEditarInterno = (quotation: QuotationConfig, modo: 'editar' | 'ver') => {
-    // 1. Cargar snapshots de esta quotation
+    // 1. Cargar snapshots de esta quotation (solo activos)
     const snapshotsFiltrados = props.snapshots.filter(
-      s => s.quotationConfigId === quotation.id
+      s => s.quotationConfigId === quotation.id && s.activo !== false
     )
 
     // 2. Guardar contexto

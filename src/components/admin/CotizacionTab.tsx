@@ -43,11 +43,32 @@ export default function CotizacionTab({
     <div className="p-6 space-y-6">
       {cargandoCotizacion ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="inline-block animate-spin mb-4">
-              <FaCalculator className="text-gh-success text-3xl" />
+          <div className="text-center max-w-md mx-auto">
+            {/* Símbolos de Código Animados */}
+            <div className="relative h-24 mb-6 flex items-center justify-center gap-4">
+              <span className="text-5xl font-mono font-bold text-gh-success animate-code-symbol-1">
+                {"{ }"}
+              </span>
+              <span className="text-5xl font-mono font-bold text-gh-success animate-code-symbol-2">
+                {"< >"}
+              </span>
+              <span className="text-5xl font-mono font-bold text-gh-success animate-code-symbol-3">
+                {"[ ]"}
+              </span>
             </div>
-            <p className="text-gh-text-muted">Cargando cotización...</p>
+            
+            {/* Texto Principal */}
+            <p className="text-gh-text text-base font-medium mb-2">Cargando cotización...</p>
+            
+            {/* Barra de Progreso */}
+            <div className="relative w-full h-1.5 bg-gh-bg-secondary rounded-full overflow-hidden mb-3">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gh-success to-transparent animate-shimmer" 
+                   style={{ width: '50%', backgroundSize: '200% 100%' }}></div>
+              <div className="absolute top-0 left-0 h-full w-full bg-gh-success/30 animate-progress"></div>
+            </div>
+            
+            {/* Subtexto */}
+            <p className="text-gh-text-muted text-sm animate-pulse">Preparando datos...</p>
           </div>
         </div>
       ) : (

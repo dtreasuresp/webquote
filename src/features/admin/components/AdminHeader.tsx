@@ -25,23 +25,17 @@ export default function AdminHeader({
   hasChanges = false,
   quoteName = 'Nueva Cotización',
 }: AdminHeaderProps) {
-  const { showToast } = useToast()
+  const { success: toastSuccess, error: toastError } = useToast()
   const [showMenu, setShowMenu] = useState(false)
 
   const handleSave = async () => {
     try {
       if (onSave) {
         await onSave()
-        showToast({
-          message: 'Cotización guardada exitosamente',
-          type: 'success',
-        })
+        toastSuccess('Cotización guardada exitosamente')
       }
     } catch (error) {
-      showToast({
-        message: 'Error al guardar la cotización',
-        type: 'error',
-      })
+      toastError('Error al guardar la cotización')
     }
   }
 
@@ -49,16 +43,10 @@ export default function AdminHeader({
     try {
       if (onPdfExport) {
         await onPdfExport()
-        showToast({
-          message: 'PDF generado exitosamente',
-          type: 'success',
-        })
+        toastSuccess('PDF generado exitosamente')
       }
     } catch (error) {
-      showToast({
-        message: 'Error al generar PDF',
-        type: 'error',
-      })
+      toastError('Error al generar PDF')
     }
   }
 
@@ -189,10 +177,7 @@ export default function AdminHeader({
                 <button
                   onClick={() => {
                     // TODO: Implement duplicate functionality
-                    showToast({
-                      message: 'Función de duplicar cotización',
-                      type: 'info',
-                    })
+                    toastSuccess('Función de duplicar cotización')
                     setShowMenu(false)
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gh-bg-tertiary transition-colors first:rounded-t-lg text-gh-text-primary"
@@ -202,10 +187,7 @@ export default function AdminHeader({
                 <button
                   onClick={() => {
                     // TODO: Implement share functionality
-                    showToast({
-                      message: 'Función de compartir cotización',
-                      type: 'info',
-                    })
+                    toastSuccess('Función de compartir cotización')
                     setShowMenu(false)
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gh-bg-tertiary transition-colors text-gh-text-primary"
@@ -215,10 +197,7 @@ export default function AdminHeader({
                 <button
                   onClick={() => {
                     // TODO: Implement print functionality
-                    showToast({
-                      message: 'Función de imprimir cotización',
-                      type: 'info',
-                    })
+                    toastSuccess('Función de imprimir cotización')
                     setShowMenu(false)
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gh-bg-tertiary transition-colors text-gh-text-primary"
@@ -228,10 +207,7 @@ export default function AdminHeader({
                 <button
                   onClick={() => {
                     // TODO: Implement history functionality
-                    showToast({
-                      message: 'Función de historial de cambios',
-                      type: 'info',
-                    })
+                    toastSuccess('Función de historial de cambios')
                     setShowMenu(false)
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-gh-bg-tertiary transition-colors last:rounded-b-lg text-gh-text-primary border-t border-gh-border-color"

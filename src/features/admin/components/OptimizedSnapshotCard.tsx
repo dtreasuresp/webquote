@@ -11,7 +11,7 @@ import { motion } from 'framer-motion'
 import { FaEdit, FaTrash, FaDownload, FaExchangeAlt } from 'react-icons/fa'
 import type { PackageSnapshot } from '@/lib/types'
 
-interface OptimizedSnapshotCardProps {
+export interface OptimizedSnapshotCardProps {
   snapshot: PackageSnapshot
   index: number
   isSelected?: boolean
