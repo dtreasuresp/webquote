@@ -2161,6 +2161,26 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                 normalizarMeses={normalizarMeses}
                 serviciosOpcionalesValidos={serviciosOpcionalesValidos}
                 todoEsValido={!!todoEsValido}
+                // Props para PaquetesContent (sidebar integrado)
+                snapshots={snapshots}
+                setSnapshots={setSnapshots}
+                cargandoSnapshots={cargandoSnapshots}
+                errorSnapshots={errorSnapshots}
+                abrirModalEditar={(snapshot) => {
+                  const quotation = quotations.find(q => q.id === snapshot.quotationConfigId)
+                  if (quotation) {
+                    abrirModalEditar(quotation)
+                  }
+                }}
+                handleEliminarSnapshot={handleEliminarSnapshot}
+                calcularCostoInicialSnapshot={calcularCostoInicialSnapshot}
+                calcularCostoAño1Snapshot={calcularCostoAño1Snapshot}
+                calcularCostoAño2Snapshot={calcularCostoAño2Snapshot}
+                actualizarSnapshot={actualizarSnapshot}
+                refreshSnapshots={refreshSnapshots}
+                toast={{ success: (m) => toast.success(m), error: (m) => toast.error(m), info: (m) => toast.info(m), warning: (m) => toast.warning(m) }}
+                mostrarDialogoGenerico={mostrarDialogoGenerico}
+                cotizacionConfig={cotizacionConfig}
               />
             )}
 
