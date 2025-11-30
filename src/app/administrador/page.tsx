@@ -25,12 +25,34 @@ import type { TabItem } from '@/components/layout/TabsModal'
 // UI Components
 import KPICards from '@/features/admin/components/KPICards'
 
+// Sistema de Caché y Sincronización
+import { useQuotationCache } from '@/hooks/useQuotationCache'
+import { SyncStatusIndicator } from '@/features/admin/components/SyncStatusIndicator'
+
 export default function Administrador() {
   // Obtener función de refresh global
   const refreshSnapshots = useSnapshotsRefresh()
   
   // Hook para notificaciones toast
   const toast = useToast()
+
+  // ==================== SISTEMA DE CACHÉ Y SINCRONIZACIÓN ====================
+  // Estado para el ID de cotización actual (se establece al seleccionar/crear cotización)
+  const [quotationId, setQuotationId] = useState<string | null>(null)
+  
+  // Hook para caché local con sincronización entre pestañas
+  const {
+    syncStatus,
+    isDirty: hasUnsavedChanges,
+    pendingConflict: conflictInfo,
+    isOnline,
+    resolveConflict,
+    saveToServer: forceSync
+  } = useQuotationCache({
+    quotationId,
+    enabled: !!quotationId,
+    autoSaveInterval: 5000
+  })
 
   // ==================== ESTADOS COTIZACIÓN ====================
   const [cotizacionConfig, setCotizacionConfig] = useState<QuotationConfig | null>(null)
@@ -2182,6 +2204,18 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
   return (
     <div className="relative min-h-screen bg-gh-bg text-gh-text">
       <Navigation />
+      
+      {/* Indicador de estado de sincronización - posición fija esquina inferior derecha */}
+      <div className="fixed bottom-4 right-4 z-50 bg-gh-bg/90 backdrop-blur-sm rounded-lg border border-gh-border p-2 shadow-lg">
+        <SyncStatusIndicator
+          status={syncStatus}
+          isOnline={isOnline}
+          isDirty={hasUnsavedChanges}
+          showText={true}
+          size="md"
+        />
+      </div>
+      
       <div className="max-w-7xl mx-auto py-8 px-4 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
