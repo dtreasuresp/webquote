@@ -1,147 +1,166 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaWhatsapp, FaEnvelope, FaPhone, FaMapMarkerAlt, FaCheckCircle } from 'react-icons/fa'
+import { FaMapMarkerAlt, FaWhatsapp, FaEnvelope, FaPhone } from 'react-icons/fa'
+import type { ContactoInfo, VisibilidadConfig } from '@/lib/types'
 
-export default function Contacto() {
+interface ContactoProps {
+  readonly data?: ContactoInfo
+  readonly visibilidad?: VisibilidadConfig
+}
+
+export default function Contacto({ data, visibilidad }: ContactoProps) {
+  // Si la sección está oculta o no hay datos, no renderizar nada
+  if (visibilidad?.contacto === false || !data) {
+    return null
+  }
+
+  // Usar datos de BD
+  const contacto = data
+
+  // Generar URLs para WhatsApp y email
+  const whatsappUrl = `https://wa.me/${contacto.whatsapp?.replaceAll(/\D/g, '')}?text=Hola,%20estoy%20interesado%20en%20la%20propuesta`
+  const emailUrl = `mailto:${contacto.email}?subject=Consulta sobre Propuesta&body=Hola, me interesa conocer más detalles sobre...`
+  const telUrl = `tel:${contacto.telefono?.replaceAll(/[^0-9+]/g, '')}`
+  const mapsQuery = encodeURIComponent(`${contacto.direccion}, ${contacto.ciudad}`)
+
   return (
-    <section id="contacto" className="py-12 px-4 bg-gradient-to-br from-secondary via-secondary-light to-secondary-dark text-white">
-      <div className="max-w-7xl mx-auto">
+    <section id="contacto" className="py-6 md:py-8 px-4 bg-light-bg font-github border-t border-light-border">
+      <div className="max-w-5xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
         >
-          {/* Call to Action Principal + Canales de Comunicación Integrados */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-sm text-white p-8 rounded-xl shadow-lg border border-white/20 mb-8"
-          >
-            <h3 className="text-3xl md:text-4xl font-bold mb-3 text-white text-center">
-              ¿Listo para Transformar tu Presencia Digital?
-            </h3>
-            <p className="text-sm mb-6 text-gray-100 max-w-3xl mx-auto text-center">
-              Tienes toda la información necesaria para tomar una decisión informada. 
-              Nuestro equipo está preparado para comenzar tu proyecto.
-            </p>
-
-            {/* Canales de Comunicación Integrados */}
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
-              <motion.a
-                whileHover={{ y: -3 }}
-                href="https://wa.me/5358569291?text=Hola,%20estoy%20interesado%20en%20la%20propuesta"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white/10 backdrop-blur-sm text-white p-5 rounded-lg shadow-md hover:shadow-lg hover:bg-white/20 transition-all group border border-white/20"
-              >
-                <h4 className="text-sm font-bold mb-1 text-white">WhatsApp</h4>
-                <p className="text-gray-200 mb-1 text-xs">Respuesta inmediata</p>
-                <p className="font-semibold text-xs text-gray-100">+535 856 9291</p>
-                <div className="mt-3 pt-3 border-t border-white/20">
-                  <span className="inline-block bg-primary text-white px-3 py-1.5 rounded text-xs font-medium group-hover:bg-primary/90 transition-colors">
-                    Iniciar Chat →
-                  </span>
-                </div>
-              </motion.a>
-
-              <motion.a
-                whileHover={{ y: -3 }}
-                href="mailto:dgtecnova@gmail.com?subject=Consulta sobre Propuesta&body=Hola, me interesa conocer más detalles sobre..."
-                className="bg-white/10 backdrop-blur-sm text-white p-5 rounded-lg shadow-md hover:shadow-lg hover:bg-white/20 transition-all group border border-white/20"
-              >
-                <h4 className="text-sm font-bold mb-1 text-white">Correo Electrónico</h4>
-                <p className="text-gray-200 mb-1 text-xs">Comunicación formal</p>
-                <p className="font-semibold text-xs break-all text-gray-100">dgtecnova@gmail.com</p>
-                <div className="mt-3 pt-3 border-t border-white/20">
-                  <span className="inline-block bg-primary text-white px-3 py-1.5 rounded text-xs font-medium group-hover:bg-primary/90 transition-colors">
-                    Enviar Email →
-                  </span>
-                </div>
-              </motion.a>
-
-              <motion.a
-                whileHover={{ y: -3 }}
-                href="tel:+5358569291"
-                className="bg-white/10 backdrop-blur-sm text-white p-5 rounded-lg shadow-md hover:shadow-lg hover:bg-white/20 transition-all group border border-white/20"
-              >
-                <h4 className="text-sm font-bold mb-1 text-white">Línea Directa</h4>
-                <p className="text-gray-200 mb-1 text-xs">Atención personalizada</p>
-                <p className="font-semibold text-xs text-gray-100">+535 856 9291</p>
-                <div className="mt-3 pt-3 border-t border-white/20">
-                  <span className="inline-block bg-primary text-white px-3 py-1.5 rounded text-xs font-medium group-hover:bg-primary/90 transition-colors">
-                    Llamar Ahora →
-                  </span>
-                </div>
-              </motion.a>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-success-bg rounded-full mb-4">
+              <FaWhatsapp className="text-light-success" size={20} />
             </div>
-
-            <p className="text-center text-gray-200 text-xs">
-              Elige el canal que prefieras. Estamos disponibles para responder tus consultas.
+            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+              {contacto.titulo || '¿Listo para comenzar?'}
+            </h2>
+            <p className="text-sm text-light-text-secondary">
+              {contacto.subtitulo || 'Elige el canal que prefieras para contactarnos'}
             </p>
-          </motion.div>
+          </div>
 
-          {/* Información de Ubicación */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-white/10 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-white/20"
-          >
-            <h3 className="text-lg font-bold text-center mb-4 text-white">Nuestra oficina está aquí</h3>
+          {/* Canales de Comunicación */}
+          <div className="grid sm:grid-cols-3 gap-4 mb-10">
+            {/* WhatsApp */}
+            <motion.a
+              whileHover={{ y: -2 }}
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-light-bg rounded-lg border border-light-border p-5 hover:border-light-success hover:shadow-sm transition-all group"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-light-success-bg rounded-full flex items-center justify-center">
+                  <FaWhatsapp className="text-light-success" size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-light-text">WhatsApp</h3>
+                  <p className="text-xs text-light-text-muted">Respuesta inmediata</p>
+                </div>
+              </div>
+              <p className="text-sm font-medium text-light-text mb-3">{contacto.whatsapp}</p>
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-light-success group-hover:underline">
+                Iniciar chat →
+              </span>
+            </motion.a>
+
+            {/* Email */}
+            <motion.a
+              whileHover={{ y: -2 }}
+              href={emailUrl}
+              className="bg-light-bg rounded-lg border border-light-border p-5 hover:border-light-accent hover:shadow-sm transition-all group"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-light-info-bg rounded-full flex items-center justify-center">
+                  <FaEnvelope className="text-light-accent" size={16} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-light-text">Email</h3>
+                  <p className="text-xs text-light-text-muted">Comunicación formal</p>
+                </div>
+              </div>
+              <p className="text-sm font-medium text-light-text mb-3 break-all">{contacto.email}</p>
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-light-accent group-hover:underline">
+                Enviar email →
+              </span>
+            </motion.a>
+
+            {/* Teléfono */}
+            <motion.a
+              whileHover={{ y: -2 }}
+              href={telUrl}
+              className="bg-light-bg rounded-lg border border-light-border p-5 hover:border-light-text-secondary hover:shadow-sm transition-all group"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-light-bg-tertiary rounded-full flex items-center justify-center">
+                  <FaPhone className="text-light-text-secondary" size={14} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-light-text">Teléfono</h3>
+                  <p className="text-xs text-light-text-muted">Atención directa</p>
+                </div>
+              </div>
+              <p className="text-sm font-medium text-light-text mb-3">{contacto.telefono}</p>
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-light-text-secondary group-hover:underline">
+                Llamar ahora →
+              </span>
+            </motion.a>
+          </div>
+
+          {/* Ubicación */}
+          <div className="rounded-lg border border-light-border overflow-hidden bg-light-bg mb-10">
+            <div className="bg-light-bg-secondary px-5 py-3 border-b border-light-border">
+              <h3 className="text-sm font-semibold text-light-text flex items-center gap-2">
+                <FaMapMarkerAlt className="text-light-text-secondary" size={14} />
+                Ubicación
+              </h3>
+            </div>
             
-            <div className="bg-white rounded-lg overflow-hidden shadow-xl mb-4">
-              <div className="aspect-[6/2] w-full">
-                <iframe
-                  className="w-full h-full border-0"
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                  src={`https://www.google.com/maps?q=${encodeURIComponent('Arroyo & Lindero, Centro Habana, La Habana, Cuba')}&output=embed`}
-                  title="Ubicación DGTECNOVA"
-                />
-              </div>
+            {/* Mapa */}
+            <div className="aspect-[3/1] w-full bg-light-bg-tertiary">
+              <iframe
+                className="w-full h-full border-0"
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps?q=${mapsQuery}&output=embed`}
+                title={`Ubicación ${contacto.empresaNombre}`}
+              />
             </div>
-
-            <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10">
-              <div className="flex items-start gap-3 justify-center">
-                <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FaMapMarkerAlt className="text-white text-sm" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm mb-1">
-                    <strong className="font-bold text-primary">Arroyo 203</strong>{' '}
-                    <span className="text-gray-200">entre Lindero y Nueva del Pilar</span>
-                  </p>
-                  <p className="text-gray-300 mb-1.5 text-xs">Centro Habana, La Habana, CUBA</p>
-                  <div className="inline-block bg-primary/20 px-2 py-1 rounded border border-primary">
-                    <p className="text-xs font-medium text-primary">⏰ Cita previa</p>
-                  </div>
-                </div>
-              </div>
+            
+            {/* Dirección */}
+            <div className="p-5">
+              <p className="text-sm text-light-text font-medium mb-1">{contacto.direccion}</p>
+              <p className="text-xs text-light-text-secondary">{contacto.ciudad}</p>
+              <span className="inline-flex items-center mt-3 px-2 py-1 bg-light-warning-bg text-light-warning text-xs font-medium rounded">
+                ⏰ Con cita previa
+              </span>
             </div>
-          </motion.div>
+          </div>
 
           {/* Footer */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="mt-8 text-center text-gray-300 border-t border-white/10 pt-4"
-          >
-            <p className="text-xs mb-1 text-gray-100">
-              Daniel Treasure Espinosa | CEO DGTECNOVA
-            </p>
-            <p className="text-xs text-gray-300">
-              Propuesta actualizada: 15 de noviembre de 2025 | Versión: 1.0
-            </p>
-            <p className="text-xs text-gray-500">
-              © 2025 DGTECNOVA. Todos los derechos reservados.
-            </p>
-          </motion.div>
         </motion.div>
+      </div>
+
+      {/* Footer con fondo diferenciado - ocupa todo el ancho inferior */}
+      <div className="mt-6 pt-5 pb-3 bg-light-bg-secondary border-t border-light-border">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <p className="text-sm text-light-text font-medium mb-1">
+            {contacto.nombreCeo} | CEO {contacto.empresaNombre}
+          </p>
+          <p className="text-xs text-light-text-secondary mb-2">
+            Propuesta actualizada: {contacto.fechaPropuesta} • Versión {contacto.versionPropuesta}
+          </p>
+          <p className="text-xs text-light-text-muted">
+            {contacto.copyright}
+          </p>
+        </div>
       </div>
     </section>
   )

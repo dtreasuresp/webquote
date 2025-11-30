@@ -3,7 +3,7 @@ export { default as AdminHeader } from './AdminHeader'
 export type { AdminHeaderProps } from './AdminHeader'
 
 export { default as DialogoGenerico } from './DialogoGenerico'
-export type { DialogoGenericoProps } from './DialogoGenerico'
+export type { DialogoGenericoProps, DialogTab } from './DialogoGenerico'
 
 // Shared Components
 export { Button, Badge, IconButton } from './SharedComponents'

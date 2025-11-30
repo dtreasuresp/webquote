@@ -5,7 +5,14 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import '../styles/globals.css'
 import '../styles/modal-scroll.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  fallback: ['system-ui', 'arial', 'sans-serif'],
+  preload: true,
+  adjustFontFallback: true,
+})
 
 export const metadata: Metadata = {
   title: 'Propuesta de Diseño Web - Urbanísima Constructora S.R.L',
@@ -19,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className="scroll-smooth">
-      <body className={inter.className}>
+    <html lang="es" className={`scroll-smooth ${inter.variable}`}>
+      <body className={`${inter.className} antialiased`}>
         {children}
         <Analytics />
         <SpeedInsights />

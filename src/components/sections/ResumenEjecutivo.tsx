@@ -1,316 +1,254 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaCheckCircle, FaShieldAlt, FaClock, FaUsers } from 'react-icons/fa'
+import { FaCheckCircle, FaTimesCircle, FaArrowRight, FaFileAlt } from 'react-icons/fa'
+import type { ResumenEjecutivoTextos, VisibilidadConfig } from '@/lib/types'
 
-export default function ResumenEjecutivo() {
+interface ResumenEjecutivoProps {
+  readonly data?: ResumenEjecutivoTextos
+  readonly visibilidad?: VisibilidadConfig
+  readonly nombreCliente?: string
+  readonly nombreProveedor?: string
+}
+
+export default function ResumenEjecutivo({ data, visibilidad, nombreCliente = 'Urbanísima Constructora S.R.L', nombreProveedor = 'DGTECNOVA' }: ResumenEjecutivoProps) {
+  // Si no hay datos, no renderizar nada
+  if (!data) {
+    return null
+  }
+
+  // Usar datos de BD
+  const introduccion = data.parrafoIntroduccion || ''
+  const beneficios = data.beneficiosPrincipales || []
+  const diferencias = data.diferenciasClave?.items || []
+  const modeloBeneficios = data.diferenciasClave?.beneficiosModelo || []
+  const responsabilidades = data.responsabilidadesProveedor || { contenido: [], tecnico: [], comunicacion: [] }
+  const clienteNoHace = data.clienteNoHace || []
+  const flujoComunicacion = data.flujoComunicacion || []
+
+  // Helpers para visibilidad (default: visible)
+  const isVisible = (key: keyof VisibilidadConfig) => visibilidad?.[key] !== false
+
   return (
-    <section id="resumen" className="py-20 px-4 bg-white">
-      <div className="max-w-7xl mx-auto">
+    <section id="resumen" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+      <div className="max-w-5xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900">
-            Presentación del proyecto
-          </h2>
-
-          <div className="prose prose-lg max-w-none">
-            <p className="text-xl text-gray-700 mb-8 leading-relaxed">
-              Tenemos el placer de presentar esta propuesta profesional para el desarrollo de tu sitio web corporativo. Luego de analizar detalladamente tus respuestas del cuestionario y las necesidades específicas de Urbanísima Constructora S.R.L, ofrecemos una <strong className="text-primary">solución dinámica</strong> que te permitirá:
-            </p>
-
-            {/* Beneficios Principales */}
-            <div className="grid md:grid-cols-2 gap-6 my-12">
-              {[
-                'Mostrar profesionalmente tu catálogo de 10 servicios/productos',
-                'Actualizar contenido fácilmente sin necesidad de programador',
-                'Posicionarte como empresa confiable en tu sector',
-                'Captar clientes a través de WhatsApp, llamadas y contactos',
-                'Administrar todo desde un panel intuitivo',
-                'Crecer sin limitaciones técnicas',
-              ].map((benefit, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-start gap-3 bg-accent/10 p-4 rounded-lg border-l-4 border-accent"
-                >
-                  <FaCheckCircle className="text-accent flex-shrink-0" size={20} />
-                  <span className="text-secondary">{benefit}</span>
-                </motion.div>
-              ))}
-            </div>
-
-            <p className="text-lg text-gray-700 mb-6">
-              La propuesta está diseñada en <strong className="text-primary">3 paquetes de inversión</strong> para que elijas según tus necesidades y presupuesto, todas con calidad profesional garantizada.
-            </p>
-
-            {/* Diferencias Claves */}
-            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border-l-8 border-primary p-8 rounded-lg my-12">
-              <h3 className="text-2xl font-bold mb-6 text-secondary">
-                DIFERENCIAS CLAVES
-              </h3>
-              <p className="text-lg text-gray-700 mb-6">
-                A diferencia de otras propuestas donde el cliente gestiona su propio sitio, en este caso has solicitado que <strong className="text-primary">nosotros nos encargamos de toda la administración y gestión del sitio web</strong>. Esto significa que:
-              </p>
-              
-              <div className="grid md:grid-cols-2 gap-4 mb-6">
-                {[
-                  '✅ El cliente accede al panel administrativo con permisos limitados',
-                  '✅ El cliente puede solicitar cambios vía email, WhatsApp o llamada',
-                  '✅ El proveedor realiza las actualizaciones y te informa su finalización',
-                  '✅ El cliente ve el sitio web público para verificar los cambios',
-                  '✅ Se garantiza máxima seguridad y profesionalismo',
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start gap-2 text-secondary font-semibold">
-                    <span>{item}</span>
-                  </div>
-                ))}
+          {/* Título e Introducción (controlados por tituloSeccion) */}
+          {isVisible('tituloSeccion') && (
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-light-info-bg rounded-full mb-4">
+                <FaFileAlt className="text-light-accent" size={20} />
               </div>
+              <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+                {data?.tituloSeccion || 'Presentación del Proyecto'}
+              </h2>
+              {data?.subtitulo && (
+                <p className="text-sm text-light-text-muted mb-2">
+                  {data.subtitulo}
+                </p>
+              )}
+              <p className="text-sm text-light-text-secondary max-w-3xl mx-auto">
+                {introduccion}
+              </p>
+            </div>
+          )}
 
-              <p className="text-lg text-gray-700 mb-4">Este modelo es:</p>
-              <div className="grid md:grid-cols-2 gap-3">
-                {[
-                  '🔴 Más seguro',
-                  '🔴 Ofrece mejor mantenimiento',
-                  '🟠 Permite mayor flexibilidad',
-                  '🟠 Asegura actualizaciones constantes',
-                  '🟡 Facilita la gestión de cambios',
-                  '🟡 Reduce la carga del cliente',
-                  '🟢 Mejora la experiencia del usuario final',
-                  '🟢 Aumenta la satisfacción del cliente',
-                ].map((benefit, index) => (
-                  <div key={index} className="bg-white p-3 rounded-lg shadow-sm text-secondary font-medium">
-                    {benefit}
-                  </div>
+          {/* Beneficios Principales */}
+          {isVisible('beneficiosPrincipales') && (
+            <div className="mb-12">
+              <div className="grid sm:grid-cols-2 gap-3">
+                {beneficios.map((benefit, index) => (
+                  <motion.div
+                    key={`benefit-${benefit.slice(0, 30).replaceAll(' ', '-')}-${index}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.05 }}
+                    className="flex items-start gap-3 p-4 bg-light-success-bg/50 rounded-md border border-light-success/20"
+                  >
+                    <FaCheckCircle className="text-light-success flex-shrink-0 mt-0.5" size={16} />
+                    <span className="text-sm text-light-text">{benefit}</span>
+                  </motion.div>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Responsabilidades */}
-            <p className="text-lg text-gray-700 mb-6">
-              Teniendo en cuenta lo anterior, las <strong className="text-primary">responsabilidades</strong> de ambas partes son las siguientes:
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-8 my-12">
-              
-              {/* Lo que NOSOTROS hacemos */}
-              <div className="bg-accent/10 p-8 rounded-2xl border-0 border-accent ">
-                <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
-                  <FaCheckCircle className="text-accent" />
-                  NOSOTROS NOS ENCARGAMOS DE:
-                </h3>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-bold text-secondary mb-3">Todo el contenido:</h4>
-                    <ul className="space-y-2 text-gray-700">
-                      <li>✓ Actualizar productos/servicios</li>
-                      <li>✓ Cambiar precios y disponibilidad</li>
-                      <li>✓ Agregar nuevas fotos</li>
-                      <li>✓ Subir videos entregados por el cliente o escogidos</li>
-                      <li>✓ Escribir o publicar artículos de blog</li>
-                      <li>✓ Actualizar información de contacto</li>
-                      <li>✓ Cambiar banners y promociones</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 className="font-bold text-secondary mb-3">La parte técnica:</h4>
-                    <ul className="space-y-2 text-gray-700">
-                      <li>✓ Actualizaciones de la plataforma web</li>
-                      <li>✓ Actualizaciones de componentes</li>
-                      <li>✓ Salvas automáticas</li>
-                      <li>✓ Seguridad y monitoreo</li>
-                      <li>✓ Corrección de errores técnicos</li>
-                      <li>✓ Optimización de velocidad</li>
-                      <li>✓ Configuración de SEO para que te encuentren en internet</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 className="font-bold text-secondary mb-3">Comunicarnos contigo:</h4>
-                    <ul className="space-y-2 text-gray-700">
-                      <li>✓ Reporte de los cambios realizados cuando no son iniciados por ti</li>
-                      <li>✓ Sugerencias de mejoras</li>
-                      <li>✓ Análisis de tráfico y conversiones</li>
-                      <li>✓ Respondemos en un plazo de 30 minutos hasta 6 horas</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Lo que el cliente NO hace */}
-              <div className="bg-primary/10 p-8 rounded-2xl border-0 border-primary">
-                <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
-                  <span>❌</span>
-                  NO TIENES QUE PREOCUPARTE DE:
-                </h3>
-                
-                <ul className="space-y-3 text-gray-700">
-                  <li>Ingresar al panel administrativo, a menos que sea para demostraciones o control de negocios</li>
-                  <li>Instalar complementos</li>
-                  <li>Hacer salvas</li>
-                  <li>Actualizar la plataforma</li>
-                  <li>Preocuparte de la seguridad</li>
-                  <li>Tomar decisiones técnicas</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Flujo de Comunicación */}
-            <div className="bg-gradient-to-br from-secondary/5 to-secondary/10 p-8 md:p-12 rounded-2xl border-0 border-accent my-12">
-              <h3 className="text-3xl font-bold mb-4 text-center text-secondary">
-                FLUJO DE COMUNICACIÓN CLIENTE - PROVEEDOR
-              </h3>
-              <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-                Proceso simple y transparente de gestión de cambios
+          {/* Párrafo Paquetes */}
+          {isVisible('parrafoPaquetes') && (
+            <div className="mb-12 p-4 bg-light-bg-secondary rounded-md border border-light-border">
+              <p className="text-sm text-light-text-secondary">
+                {data?.parrafoPaquetes || 'La propuesta está diseñada en 3 paquetes de inversión para que elijas según tus necesidades y presupuesto, todas con calidad profesional garantizada.'}
               </p>
-              
-              {/* Timeline Container */}
-              <div className="max-w-4xl mx-auto">
-                <div className="relative">
-                  {/* Barra vertical dorada */}
-                  <div className="absolute left-8 md:left-12 top-0 bottom-0 w-1 bg-gradient-to-b from-accent via-accent to-accent"></div>
-                  
-                  {/* Steps */}
-                  <div className="space-y-8">
-                    <TimelineStep 
-                      step={1}
-                      icon="👤"
-                      title="Solicitud de un cambio"
-                      description="Quiero agregar un nuevo servicio con estas fotos"
-                      color="primary"
-                      delay={0}
-                    />
-                    <TimelineStep 
-                      step={2}
-                      icon="📧"
-                      title="Recepción del cambio"
-                      description="Recibimos el email, WhatsApp o tu llamada y confirmamos"
-                      color="accent"
-                      delay={0.1}
-                    />
-                    <TimelineStep 
-                      step={3}
-                      icon="🔧"
-                      title="Acceso al sistema"
-                      description="Entramos al panel administrativo"
-                      color="accent"
-                      delay={0.2}
-                    />
-                    <TimelineStep 
-                      step={4}
-                      icon="✏️"
-                      title="Edición"
-                      description="Agregamos el servicio, fotos y contenido solicitado por ti"
-                      color="accent"
-                      delay={0.3}
-                    />
-                    <TimelineStep 
-                      step={5}
-                      icon="🎯"
-                      title="Optimización SEO"
-                      description="Optimizamos el contenido para que los buscadores en internet lo encuentren"
-                      color="accent"
-                      delay={0.4}
-                    />
-                    <TimelineStep 
-                      step={6}
-                      icon="✅"
-                      title="Notificación"
-                      description="Te notificamos cuando el trabajo esté listo y publicado"
-                      color="accent"
-                      delay={0.5}
-                    />
-                    <TimelineStep 
-                      step={7}
-                      icon="🎉"
-                      title="Cliente verifica"
-                      description="Vas al sitio actualizado en vivo y confirmas si estás de acuerdo"
-                      color="primary"
-                      delay={0.6}
-                    />
+            </div>
+          )}
+
+          {/* Diferencias Claves */}
+          {isVisible('diferenciasClave') && (
+            <div className="mb-12 rounded-lg border border-light-border overflow-hidden">
+              <div className="bg-light-bg-secondary px-5 py-3 border-b border-light-border">
+                <h3 className="text-sm font-semibold text-light-text uppercase tracking-wide">
+                  {data?.diferenciasClave?.tituloSeccion || 'Diferencias Clave'}
+                </h3>
+              </div>
+              <div className="p-5">
+                <p className="text-sm text-light-text-secondary mb-4">
+                  {data?.diferenciasClave?.parrafoIntroduccion || 'A diferencia de otras propuestas donde el cliente gestiona su propio sitio, en este caso has solicitado que nosotros nos encargamos de toda la administración y gestión del sitio web.'}
+                </p>
+                
+                <div className="space-y-2 mb-6">
+                  {diferencias.map((item, index) => (
+                    <div key={`dif-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} className="flex items-start gap-2 text-sm">
+                      <FaCheckCircle className="text-light-success flex-shrink-0 mt-0.5" size={14} />
+                      <span className="text-light-text">{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-4 border-t border-light-border">
+                  <p className="text-xs font-semibold text-light-text-secondary uppercase tracking-wide mb-3">
+                    Beneficios del modelo
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {modeloBeneficios.map((benefit, index) => (
+                      <span 
+                        key={`modelo-${benefit.slice(0, 20).replaceAll(' ', '-')}-${index}`} 
+                        className="inline-flex items-center px-2.5 py-1 bg-light-info-bg text-light-accent text-xs font-medium rounded-full"
+                      >
+                        {benefit}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Leyenda */}
-              <div className="flex flex-wrap justify-center gap-6 mt-12 pt-8 border-t border-gray-300">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-primary"></div>
-                  <span className="text-sm font-semibold text-gray-700">Cliente (Urbanísima Constructora S.R.L)</span>
+          {/* Responsabilidades Grid */}
+          <div className="grid md:grid-cols-2 gap-6 mb-12">
+            {/* Lo que NOSOTROS hacemos */}
+            {isVisible('responsabilidadesProveedor') && (
+              <div className="rounded-lg border border-light-border overflow-hidden">
+                <div className="bg-light-success-bg px-5 py-3 border-b border-light-success/20">
+                  <h3 className="text-sm font-semibold text-light-success flex items-center gap-2">
+                    <FaCheckCircle size={14} />
+                    Nosotros nos encargamos de
+                  </h3>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full bg-accent"></div>
-                  <span className="text-sm font-semibold text-gray-700">Nosotros (DGTECNOVA)</span>
+                <div className="p-5">
+                  <ul className="space-y-2">
+                    {[
+                      ...responsabilidades.contenido,
+                      ...responsabilidades.tecnico,
+                      ...responsabilidades.comunicacion,
+                    ].map((item, index) => (
+                      <li key={`resp-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} className="flex items-start gap-2 text-sm text-light-text">
+                        <span className="text-light-success mt-0.5">✓</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Lo que el cliente NO hace */}
+            {isVisible('clienteNoHace') && (
+              <div className="rounded-lg border border-light-border overflow-hidden">
+                <div className="bg-light-danger-bg px-5 py-3 border-b border-light-danger/20">
+                  <h3 className="text-sm font-semibold text-light-danger flex items-center gap-2">
+                    <FaTimesCircle size={14} />
+                    No tienes que preocuparte de
+                  </h3>
+                </div>
+                <div className="p-5">
+                  <ul className="space-y-2">
+                    {clienteNoHace.map((item, index) => (
+                      <li key={`nohace-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} className="flex items-start gap-2 text-sm text-light-text">
+                        <span className="text-light-danger mt-0.5">✕</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Flujo de Comunicación */}
+          {isVisible('flujoComunicacion') && (
+            <div className="rounded-lg border border-light-border overflow-hidden">
+              <div className="bg-light-bg-secondary px-5 py-3 border-b border-light-border">
+                <h3 className="text-sm font-semibold text-light-text uppercase tracking-wide">
+                  Flujo de Comunicación
+                </h3>
+                <p className="text-xs text-light-text-muted mt-1">
+                  Proceso simple y transparente de gestión de cambios
+                </p>
+              </div>
+              <div className="p-5">
+                <div className="space-y-4">
+                  {flujoComunicacion.map((step, index) => (
+                    <motion.div
+                      key={`flujo-${step.paso}-${step.titulo.slice(0, 20).replaceAll(' ', '-')}`}
+                      initial={{ opacity: 0, x: -10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex items-start gap-4"
+                    >
+                      {/* Número de paso */}
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white ${
+                        step.actor === 'cliente' ? 'bg-light-accent' : 'bg-light-success'
+                      }`}>
+                        {step.paso}
+                      </div>
+                      
+                      {/* Contenido */}
+                      <div className="flex-1 pb-4 border-b border-light-border last:border-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-lg">{step.icono}</span>
+                          <h4 className="text-sm font-semibold text-light-text">{step.titulo}</h4>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            step.actor === 'cliente' 
+                              ? 'bg-light-info-bg text-light-accent' 
+                              : 'bg-light-success-bg text-light-success'
+                          }`}>
+                            {step.actor === 'cliente' ? nombreCliente : nombreProveedor}
+                          </span>
+                        </div>
+                        <p className="text-sm text-light-text-secondary">{step.descripcion}</p>
+                      </div>
+                      
+                      {/* Flecha */}
+                      {index < flujoComunicacion.length - 1 && (
+                        <FaArrowRight className="text-light-border-muted hidden md:block mt-2" size={12} />
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Leyenda */}
+                <div className="flex flex-wrap gap-4 mt-6 pt-4 border-t border-light-border">
+                  <div className="flex items-center gap-2 text-xs text-light-text-secondary">
+                    <div className="w-3 h-3 rounded-full bg-light-accent" />
+                    Cliente ({nombreCliente})
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-light-text-secondary">
+                    <div className="w-3 h-3 rounded-full bg-light-success" />
+                    Nosotros ({nombreProveedor})
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
     </section>
-  )
-}
-
-function TimelineStep({ 
-  step, 
-  icon, 
-  title, 
-  description, 
-  color, 
-  delay 
-}: { 
-  step: number; 
-  icon: string; 
-  title: string; 
-  description: string; 
-  color: string; 
-  delay: number 
-}) {
-  const colorClasses = 
-    color === 'primary'
-      ? 'border-primary bg-gradient-to-r from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/15' 
-      : color === 'accent'
-      ? 'border-accent bg-gradient-to-r from-accent/5 to-accent/10 hover:from-accent/10 hover:to-accent/15'
-      : 'border-secondary bg-gradient-to-r from-secondary/5 to-secondary/10 hover:from-secondary/10 hover:to-secondary/15'
-
-  const badgeClasses = 
-    color === 'primary'
-      ? 'bg-primary text-white shadow-lg shadow-primary/30' 
-      : color === 'accent'
-      ? 'bg-accent text-white shadow-lg shadow-accent/30'
-      : 'bg-secondary text-white shadow-lg shadow-secondary/30'
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -30 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay, duration: 0.5 }}
-      className="relative flex items-start gap-6 pl-16 md:pl-24"
-    >
-      {/* Badge numerado sobre la barra */}
-      <div className={`${badgeClasses} w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl absolute left-2 md:left-6 top-0 z-10 ring-4 ring-white`}>
-        {step}
-      </div>
-
-      {/* Card del paso */}
-      <div className={`${colorClasses} border-2 rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] flex-1 bg-white`}>
-        <div className="flex items-start gap-4">
-          <div className="text-5xl flex-shrink-0">{icon}</div>
-          <div className="flex-1">
-            <h4 className="font-bold text-secondary text-lg mb-2">{title}</h4>
-            <p className="text-gray-600 leading-relaxed">{description}</p>
-          </div>
-        </div>
-      </div>
-    </motion.div>
   )
 }

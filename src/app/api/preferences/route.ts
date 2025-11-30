@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
           cerrarModalAlGuardar: false,
           mostrarConfirmacionGuardado: true,
           validarDatosAntes: true,
+          limpiarFormulariosAlCrear: true,
         },
       })
     }
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
         cerrarModalAlGuardar: body.cerrarModalAlGuardar,
         mostrarConfirmacionGuardado: body.mostrarConfirmacionGuardado,
         validarDatosAntes: body.validarDatosAntes,
+        limpiarFormulariosAlCrear: body.limpiarFormulariosAlCrear,
         updatedAt: new Date(),
       },
       create: {
@@ -62,6 +64,7 @@ export async function POST(request: NextRequest) {
         cerrarModalAlGuardar: body.cerrarModalAlGuardar ?? false,
         mostrarConfirmacionGuardado: body.mostrarConfirmacionGuardado ?? true,
         validarDatosAntes: body.validarDatosAntes ?? true,
+        limpiarFormulariosAlCrear: body.limpiarFormulariosAlCrear ?? true,
       },
     })
 

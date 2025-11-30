@@ -1,5 +1,6 @@
 // Mock para desarrollo - simula las funciones serverless
-// En desarrollo, se guardará en localStorage como fallback
+// NO usa localStorage - mantiene datos solo en memoria durante la sesión
+// Para persistencia real, usar la API de snapshots
 
 export interface SnapshotFromDB {
   id: string
@@ -23,23 +24,19 @@ export interface SnapshotFromDB {
   updatedAt: string
 }
 
-const STORAGE_KEY = 'snapshots_dev_mock'
+// Almacenamiento en memoria (solo para desarrollo/testing)
+let memorySnapshots: SnapshotFromDB[] = []
 
 export function getLocalSnapshots(): SnapshotFromDB[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : []
-  } catch {
-    return []
-  }
+  return memorySnapshots
 }
 
 export function saveLocalSnapshots(snapshots: SnapshotFromDB[]): void {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshots))
-  } catch {}
+  memorySnapshots = [...snapshots]
+}
+
+export function clearLocalSnapshots(): void {
+  memorySnapshots = []
 }
 
 export function createId(): string {

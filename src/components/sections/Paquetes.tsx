@@ -1,8 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaStar } from 'react-icons/fa'
-import useSnapshots from '@/lib/hooks/useSnapshots'
+import { FaStar, FaBox } from 'react-icons/fa'
+import useSnapshots from '@/features/admin/hooks/useSnapshots'
 import type { OtroServicioSnapshot } from '@/lib/types'
 
 function slugify(nombre: string): string {
@@ -178,29 +178,32 @@ export default function Paquetes() {
   }
 
   return (
-    <section id="paquetes" className="py-20 px-4 bg-gradient-to-br from-secondary via-secondary-light to-neutral-900 min-h-[900px]">
-      <div className="max-w-7xl mx-auto">
+    <section id="paquetes" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+      <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
-            ¿Qué ofrecemos?
-          </h1>
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-primary">
-            DGTECNOVA te presenta los siguientes paquetes de Servicios
-          </h2>
-          <p className="text-center text-xl text-neutral-200 mb-12">
-            Hemos diseñado opciones que se ajustan a diferentes necesidades y presupuestos
-          </p>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-accent/10 rounded-full mb-4">
+              <FaBox className="text-light-accent" size={20} />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+              Paquetes de Servicios
+            </h2>
+            <p className="text-sm text-light-text-secondary">
+              Opciones diseñadas para diferentes necesidades y presupuestos
+            </p>
+          </div>
 
-          <div className={`grid ${activos.length <= 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-8`}>
+          <div className={`grid ${activos.length <= 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-6`}>
             {loading && (
               <>
                 {['skel-1', 'skel-2', 'skel-3'].map((id) => (
-                  <div key={id} className="rounded-2xl bg-white/10 border border-white/10 p-8 animate-pulse h-96" />
+                  <div key={id} className="rounded-md bg-light-bg border border-light-border p-6 animate-pulse h-96" />
                 ))}
               </>
             )}
@@ -219,14 +222,16 @@ export default function Paquetes() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.3 }}
-            className="mt-16 bg-gradient-to-r from-primary via-primary-dark to-secondary text-white p-12 rounded-2xl shadow-2xl border-2 border-accent"
+            className="mt-12 bg-light-bg border border-light-border p-8 rounded-md"
           >
-            <h3 className="text-3xl font-bold mb-8">🎁 ¿QUÉ ESTÁ INCLUIDO SIEMPRE?</h3>
-            <p className="text-xl mb-8">
+            <h3 className="text-xl font-semibold mb-6 text-light-text flex items-center gap-2">
+              <span>🎁</span> ¿QUÉ ESTÁ INCLUIDO SIEMPRE?
+            </h3>
+            <p className="text-light-text-secondary mb-6">
               Independientemente del paquete que elijas, todos incluyen 3 meses gratis de Hosting y Mailbox, 6 meses de Dominio y 1 mes gratis de gestión de contenidos. También ofrecemos actualizaciones planificadas libres de costo en dependencia del paquete contratado. Además de lo anterior siempre recibes:
             </p>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
                   title: '🔒 SEGURIDAD',
@@ -263,12 +268,12 @@ export default function Paquetes() {
                   ]
                 },
               ].map((section) => (
-                <div key={section.title}>
-                  <h4 className="text-2xl font-bold mb-4">{section.title}</h4>
+                <div key={section.title} className="bg-light-bg-secondary rounded-md p-4 border border-light-border">
+                  <h4 className="font-semibold mb-3 text-light-text">{section.title}</h4>
                   <ul className="space-y-2">
                     {section.items.map((item) => (
-                      <li key={`${section.title}-${item}`} className="flex items-start gap-3">
-                        <span className="text-accent mt-1 font-bold">✓</span>
+                      <li key={`${section.title}-${item}`} className="flex items-start gap-2 text-sm text-light-text-secondary">
+                        <span className="text-light-success mt-0.5">✓</span>
                         <span>{item}</span>
                       </li>
                     ))}
@@ -291,38 +296,38 @@ function PaqueteCard({
   const getCardStyles = () => {
     if (data.colorScheme === 'dorado') {
       return {
-        container: 'bg-white border-4 border-accent shadow-2xl shadow-accent/50 scale-105',
-        badge: 'bg-gradient-to-r from-accent to-accent-dark',
-        priceBox: 'bg-gradient-to-br from-accent/10 to-accent-light/20 border-l-4 border-accent',
-        priceText: 'text-accent-dark',
-        button: 'bg-gradient-to-r from-accent to-accent-dark text-white hover:from-accent-dark hover:to-accent shadow-lg',
+        container: 'bg-light-bg border-2 border-light-warning shadow-md',
+        badge: 'bg-light-warning text-white',
+        priceBox: 'bg-light-warning/5 border-l-2 border-light-warning',
+        priceText: 'text-light-warning',
+        button: 'bg-light-warning text-white hover:bg-amber-600',
       }
     }
     if (data.colorScheme === 'rojo') {
       return {
-        container: 'bg-white border-2 border-red-500 shadow-lg',
+        container: 'bg-light-bg border border-light-danger/50',
         badge: '',
-        priceBox: 'bg-gradient-to-br from-red-500/10 to-red-500/5 border-l-4 border-red-500',
-        priceText: 'text-red-600',
-        button: 'bg-red-600 text-white hover:bg-red-700',
+        priceBox: 'bg-light-danger/5 border-l-2 border-light-danger',
+        priceText: 'text-light-danger',
+        button: 'bg-light-danger text-white hover:bg-red-700',
       }
     }
     if (data.colorScheme === 'negro') {
       return {
-        container: 'bg-white border-2 border-neutral-900 shadow-lg',
+        container: 'bg-light-bg border border-light-text/30',
         badge: '',
-        priceBox: 'bg-gradient-to-br from-neutral-900/10 to-neutral-900/5 border-l-4 border-neutral-900',
-        priceText: 'text-neutral-900',
-        button: 'bg-neutral-900 text-white hover:bg-neutral-800',
+        priceBox: 'bg-light-bg-tertiary border-l-2 border-light-text',
+        priceText: 'text-light-text',
+        button: 'bg-light-text text-white hover:bg-gray-800',
       }
     }
     // neutro
     return {
-      container: 'bg-white border-2 border-neutral-300 shadow-lg',
+      container: 'bg-light-bg border border-light-border',
       badge: '',
-      priceBox: 'bg-gradient-to-br from-neutral-300/10 to-neutral-300/5 border-l-4 border-neutral-300',
-      priceText: 'text-neutral-700',
-      button: 'bg-neutral-700 text-white hover:bg-neutral-800',
+      priceBox: 'bg-light-bg-secondary border-l-2 border-light-border',
+      priceText: 'text-light-text-secondary',
+      button: 'bg-light-accent text-white hover:bg-blue-700',
     }
   }
 
@@ -333,58 +338,58 @@ function PaqueteCard({
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
-      whileHover={{ y: -10 }}
-      transition={{ duration: 0.3 }}
-      className={`relative rounded-2xl overflow-hidden transition-all ${styles.container}`}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      className={`relative rounded-md overflow-hidden transition-all ${styles.container}`}
     >
-      {/* Reservar espacio para badge (10px height) */}
-      <div className="h-[44px] relative">
+      {/* Reservar espacio para badge */}
+      <div className="h-[40px] relative">
         {data.recomendado && (
-          <div className={`absolute top-0 left-0 right-0 ${styles.badge} text-white py-2 text-center font-bold flex items-center justify-center gap-2 z-10`}>
-            <FaStar /> ⭐ RECOMENDADO
+          <div className={`absolute top-0 left-0 right-0 ${styles.badge} py-2 text-center text-sm font-semibold flex items-center justify-center gap-2 z-10`}>
+            <FaStar className="text-xs" /> RECOMENDADO
           </div>
         )}
       </div>
 
-      <div className="p-6 h-full flex flex-col">
-        <div className="text-center mb-4 min-h-[120px] flex flex-col justify-center">
-          <span className="text-4xl">{data.icon}</span>
+      <div className="p-5 h-full flex flex-col">
+        <div className="text-center mb-4 min-h-[100px] flex flex-col justify-center">
+          <span className="text-3xl">{data.icon}</span>
           {data.tipo ? (
-            <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{data.tipo}</p>
+            <p className="mt-2 text-xs font-medium tracking-wide text-light-text-secondary uppercase">{data.tipo}</p>
           ) : (
-            <p className="mt-2 text-xs font-semibold tracking-wide text-neutral-500">{data.nivelProfesional}</p>
+            <p className="mt-2 text-xs font-medium tracking-wide text-light-text-secondary">{data.nivelProfesional}</p>
           )}
-          <h3 className="text-2xl font-bold text-secondary mt-2">{data.nombre}</h3>
-          <p className={`${styles.priceText} font-bold text-lg`}>{data.subtitulo}</p>
+          <h3 className="text-lg font-semibold text-light-text mt-2">{data.nombre}</h3>
+          <p className={`${styles.priceText} font-semibold text-sm`}>{data.subtitulo}</p>
         </div>
 
-        <p className="text-neutral-700 text-center mb-4 flex-grow min-h-[48px]">{data.description}</p>
+        <p className="text-light-text-secondary text-sm text-center mb-4 flex-grow min-h-[40px]">{data.description}</p>
 
-        <div className={`${styles.priceBox} p-3 rounded-lg mb-4`}>
-          <p className="text-sm text-neutral-600">Pago Inicial</p>
-          <p className={`text-3xl font-bold ${styles.priceText}`}>${data.pagoInicial} USD</p>
+        <div className={`${styles.priceBox} p-3 rounded-md mb-4`}>
+          <p className="text-xs text-light-text-secondary">Pago Inicial</p>
+          <p className={`text-2xl font-bold ${styles.priceText}`}>${data.pagoInicial} USD</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 mb-4 flex-grow">
+        <div className="grid grid-cols-1 gap-2 mb-4 flex-grow">
           {data.features.map((feature) => (
             <div key={`feat-${feature.category}`} className="text-sm">
-              <p className="font-semibold text-secondary text-xs leading-tight">{feature.category}</p>
-              <p className="text-neutral-600 text-xs">{feature.items[0]}</p>
+              <p className="font-medium text-light-text text-xs leading-tight">{feature.category}</p>
+              <p className="text-light-text-secondary text-xs">{feature.items[0]}</p>
             </div>
           ))}
 
           {data.gestion && (
-            <div key="gestion" className="text-sm border-t border-neutral-200 pt-3 mt-3">
-              <p className="font-semibold text-secondary text-xs leading-tight">Gestión Mensual</p>
-              <p className="text-neutral-600 text-xs">${data.gestion.precioMensual} USD/mes</p>
+            <div key="gestion" className="text-sm border-t border-light-border pt-2 mt-2">
+              <p className="font-medium text-light-text text-xs leading-tight">Gestión Mensual</p>
+              <p className="text-light-text-secondary text-xs">${data.gestion.precioMensual} USD/mes</p>
             </div>
           )}
 
           {data.serviciosOpcionales && data.serviciosOpcionales.length > 0 && (
-            <div key="opcionales" className="text-sm border-t border-neutral-200 pt-3 mt-3">
-              <p className="font-semibold text-secondary text-xs leading-tight">Servicios Opcionales</p>
+            <div key="opcionales" className="text-sm border-t border-light-border pt-2 mt-2">
+              <p className="font-medium text-light-text text-xs leading-tight">Servicios Opcionales</p>
               {data.serviciosOpcionales.map((srv) => (
-                <p key={srv.nombre} className="text-neutral-600 text-xs">
+                <p key={srv.nombre} className="text-light-text-secondary text-xs">
                   {srv.nombre}: ${srv.precio} USD
                 </p>
               ))}
@@ -392,20 +397,20 @@ function PaqueteCard({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-200">
+        <div className="grid grid-cols-2 gap-4 pt-3 border-t border-light-border">
           <div className="text-center">
-            <p className={`text-2xl font-bold ${styles.priceText}`}>{data.pages}</p>
-            <p className="text-xs text-neutral-600">Páginas</p>
+            <p className={`text-xl font-bold ${styles.priceText}`}>{data.pages}</p>
+            <p className="text-xs text-light-text-secondary">Páginas</p>
           </div>
           <div className="text-center">
-            <p className={`text-2xl font-bold ${styles.priceText}`}>{data.timelineWeeks}</p>
-            <p className="text-xs text-neutral-600">Semanas</p>
+            <p className={`text-xl font-bold ${styles.priceText}`}>{data.timelineWeeks}</p>
+            <p className="text-xs text-light-text-secondary">Semanas</p>
           </div>
         </div>
 
         <a
           href={data.href}
-          className={`mt-4 py-2.5 px-4 rounded-lg font-bold text-center transition-all ${styles.button}`}
+          className={`mt-4 py-2 px-4 rounded-md font-medium text-sm text-center transition-colors ${styles.button}`}
         >
           Ver Detalles
         </a>

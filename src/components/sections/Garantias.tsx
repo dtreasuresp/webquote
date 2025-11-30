@@ -1,151 +1,162 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
+import { FaCheckCircle, FaTimesCircle, FaShieldAlt, FaExclamationTriangle, FaBalanceScale } from 'react-icons/fa'
+import type { VisibilidadConfig } from '@/lib/types'
 
-export default function Garantias() {
+export interface PoliticaCancelacion {
+  title: string
+  detail: string
+}
+
+export interface TituloSubtituloGarantias {
+  titulo: string
+  subtitulo: string
+}
+
+export interface GarantiasData {
+  tituloSubtitulo?: TituloSubtituloGarantias
+  proveedorGarantiza?: string[]
+  clienteResponsable?: string[]
+  politicasCancelacion?: PoliticaCancelacion[]
+  siIncumpleProveedor?: string[]
+}
+
+interface GarantiasProps {
+  readonly data?: GarantiasData
+  readonly visibilidad?: VisibilidadConfig
+}
+
+export default function Garantias({ data, visibilidad }: GarantiasProps) {
+  // Si no hay datos, no renderizar nada
+  if (!data) {
+    return null
+  }
+
+  // Helper para verificar visibilidad
+  const isVisible = (key: keyof VisibilidadConfig) => visibilidad?.[key] !== false
+  
+  // Usar datos de BD (si algún array está vacío, la sección correspondiente simplemente no mostrará items)
+  const proveedorGarantiza = data.proveedorGarantiza || []
+  const clienteResponsable = data.clienteResponsable || []
+  const politicasCancelacion = data.politicasCancelacion || []
+  const siIncumple = data.siIncumpleProveedor || []
+  
+  // Títulos dinámicos
+  const titulo = data.tituloSubtitulo?.titulo || 'Garantías y Responsabilidades'
+  const subtitulo = data.tituloSubtitulo?.subtitulo || 'Compromisos claros de ambas partes'
+
   return (
-    <section id="garantias" className="py-20 px-4 bg-white">
-      <div className="max-w-7xl mx-auto">
+    <section id="garantias" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+      <div className="max-w-5xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900">
-            Garantías y Responsabilidades
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
-            {/* Proveedor Responsable */}
-            <div className="bg-accent/10 p-8 rounded-2xl border-0 border-accent">
-              <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
-                <FaCheckCircle className="text-accent" />
-                EL PROVEEDOR GARANTIZA:
-              </h3>
-              <ul className="space-y-3">
-                {[
-                  'Mantener el 99.9% de tiempo activo',
-                  'Seguridad SSL/HTTPS garantizada y gratis',
-                  'Backups automáticos',
-                  'Actualizaciones de seguridad',
-                  'Soporte técnico',
-                  'Cambios realizados puntualmente',
-                  'Diseño profesional de tu sitio',
-                  'Hosting, dominio y correo funcionando',
-                  'Cumplimiento de normativas legales',
-                  'Protección de datos y privacidad',
-                  'Soporte post-lanzamiento',
-                  'Período de garantía definido (30 a 90 días según paquete)',
-                ].map((item) => (
-                  <li key={`garantia-${item}`} className="flex items-start gap-3 text-gray-800">
-                    <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-success-bg rounded-full mb-4">
+              <FaShieldAlt className="text-light-success" size={20} />
             </div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+              {titulo}
+            </h2>
+            <p className="text-sm text-light-text-secondary">
+              {subtitulo}
+            </p>
+          </div>
+
+          {/* Grid de Garantías */}
+          <div className="grid md:grid-cols-2 gap-6 mb-10">
+            {/* Proveedor Garantiza */}
+            {isVisible('garantiasProveedor') && (
+              <div className="rounded-lg border border-light-border overflow-hidden">
+                <div className="bg-light-success-bg px-5 py-3 border-b border-light-success/20">
+                  <h3 className="text-sm font-semibold text-light-success flex items-center gap-2">
+                    <FaCheckCircle size={14} />
+                    El proveedor garantiza
+                  </h3>
+                </div>
+                <div className="p-5 bg-light-bg">
+                  <ul className="space-y-2">
+                    {proveedorGarantiza.map((item, index) => (
+                      <li key={`proveedor-${item.slice(0, 30)}-${index}`} className="flex items-start gap-2 text-sm text-light-text">
+                        <span className="text-light-success mt-0.5 flex-shrink-0">✓</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
 
             {/* Cliente Responsable */}
-            <div className="bg-neutral-50 p-8 rounded-2xl border-0 border-neutral-300">
-              <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
-                <FaTimesCircle className="text-primary" />
-                EL CLIENTE ES RESPONSABLE DE:
-              </h3>
-              <ul className="space-y-3">
-                {[
-                  'Pagar las inversiones acordadas a tiempo',
-                  'Proporcionar contenidos/fotos necesarios',
-                  'Aprobar diseños y funcionalidades',
-                  'Usar el sitio legalmente',
-                  'Notificar si hay problemas',
-                  'Solicitar cambios dentro del alcance acordado',
-                  'Mantener la confidencialidad de accesos',
-                  'No transferir el sitio sin nuestro consentimiento', 
-                  'Cumplir con las políticas de uso',
-                  'Respetar los términos de servicio',
-                  'Seguir las recomendaciones de seguridad',
-                ].map((item) => (
-                  <li key={`responsable-${item}`} className="flex items-start gap-3 text-gray-800">
-                    <FaTimesCircle className="text-primary mt-1 flex-shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {isVisible('garantiasCliente') && (
+              <div className="rounded-lg border border-light-border overflow-hidden">
+                <div className="bg-light-bg-secondary px-5 py-3 border-b border-light-border">
+                  <h3 className="text-sm font-semibold text-light-text flex items-center gap-2">
+                    <FaTimesCircle size={14} className="text-light-text-secondary" />
+                    El cliente es responsable de
+                  </h3>
+                </div>
+                <div className="p-5 bg-light-bg">
+                  <ul className="space-y-2">
+                    {clienteResponsable.map((item, index) => (
+                      <li key={`cliente-${item.slice(0, 30)}-${index}`} className="flex items-start gap-2 text-sm text-light-text">
+                        <span className="text-light-text-muted mt-0.5 flex-shrink-0">•</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Políticas de Cancelación */}
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-8 rounded-2xl border-0 border-red-300 mb-16">
-            <h3 className="text-2xl font-bold mb-6 text-red-900">
-              📋 POLÍTICAS DE CANCELACIÓN
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                {
-                  title: 'Si el cliente cancela los servicios de gestión después del lanzamiento',
-                  detail: 'El proveedor puede ofrecer soporte y mantenimiento según lo acordado.',
-                },
-                {
-                  title: 'Si el cliente cancela antes del lanzamiento',
-                  detail: 'Se aplicarán cargos proporcionales según el trabajo realizado hasta la fecha.',
-                },
-                {                  
-                  title: 'Si el proveedor cancela el contrato antes del lanzamiento',
-                  detail: 'El cliente recibirá un reembolso proporcional por los servicios no prestados.',
-                }, 
-                {
-                  title: 'Si hay incumplimiento de términos por cualquiera de las partes',
-                  detail: 'Se seguirán los procedimientos acordados.',
-                },
-                {
-                  title: 'Notificación de cancelación',
-                  detail: 'Debe hacerse con al menos 15 días de anticipación.',
-                },
-                {
-                  title: 'Devolución de materiales',
-                  detail: 'El cliente debe devolver cualquier material proporcionado por el proveedor y viceversa.',
-                },
-                {
-                  title: 'Si el cliente cancela todos los servicios después del lanzamiento',
-                  detail: 'El proveedor puede ofrecer un plan de transición para asegurar la continuidad del sitio.',
-                }
-              ].map((policy) => (
-                <div key={`policy-${policy.title}`} className="border-l-4 border-red-500 pl-4">
-                  <p className="font-bold text-gray-900">{policy.title}</p>
-                  <p className="text-gray-700 text-sm">{policy.detail}</p>
+          {isVisible('politicasCancelacion') && (
+            <div className="rounded-lg border border-light-border overflow-hidden mb-10">
+              <div className="bg-light-warning-bg px-5 py-3 border-b border-light-warning/20">
+                <h3 className="text-sm font-semibold text-light-warning flex items-center gap-2">
+                  <FaExclamationTriangle size={14} />
+                  Políticas de Cancelación
+                </h3>
+              </div>
+              <div className="p-5 bg-light-bg">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {politicasCancelacion.map((policy, index) => (
+                    <div key={`policy-${policy.title.slice(0, 30)}-${index}`} className="p-3 bg-light-bg-secondary rounded-md border-l-2 border-light-warning/50">
+                      <p className="text-sm font-medium text-light-text mb-1">{policy.title}</p>
+                      <p className="text-xs text-light-text-secondary">{policy.detail}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Si Incumple el Proveedor */}
-          <div className="bg-gradient-to-r from-secondary/10 to-neutral-100 p-8 rounded-2xl border-0 border-secondary mb-16">
-            <h3 className="text-2xl font-bold mb-6 text-secondary">
-              ⚖️ SI EL PROVEEDOR INCUMPLE
-            </h3>
-            <div className="space-y-3">
-              {[
-                'Procede a compensación al cliente por inactividad (descuento de hasta un 40% en el próximo mes)',
-                'Corrección inmediata sin costo adicional',
-                'Reembolso parcial según el impacto',
-                'Revisión de los términos del contrato',
-                'Terminación del contrato si persisten incumplimientos',
-                'Notificación formal por escrito',
-                'Plazo de 15 días para subsanar el incumplimiento',
-                'Acceso a soporte prioritario',
-                'Informe detallado de acciones correctivas',
-                'Garantía extendida en caso de fallos recurrentes',
-                'Suspensión temporal del servicio si es necesario',
-              ].map((item) => (
-                <div key={`accion-${item}`} className="flex items-start gap-3 text-gray-800">
-                  <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
-                  <span>{item}</span>
-                </div>
-              ))}
+          {isVisible('siIncumpleProveedor') && (
+            <div className="rounded-lg border border-light-border overflow-hidden">
+              <div className="bg-light-info-bg px-5 py-3 border-b border-light-accent/20">
+                <h3 className="text-sm font-semibold text-light-accent flex items-center gap-2">
+                  <FaBalanceScale size={14} />
+                  Si el proveedor incumple
+                </h3>
+              </div>
+              <div className="p-5 bg-light-bg">
+                <ul className="grid sm:grid-cols-2 gap-2">
+                  {siIncumple.map((item, index) => (
+                    <li key={`incumple-${item.slice(0, 30)}-${index}`} className="flex items-start gap-2 text-sm text-light-text">
+                      <span className="text-light-accent mt-0.5 flex-shrink-0">→</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
+          )}
         </motion.div>
       </div>
     </section>

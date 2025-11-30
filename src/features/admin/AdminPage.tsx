@@ -1,12 +1,18 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { FaArrowLeft } from 'react-icons/fa'
 import Link from 'next/link'
 import Navigation from '@/components/layout/Navigation'
 import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
-import { useSnapshotsRefresh } from '@/lib/hooks/useSnapshots'
+import { useSnapshotsRefresh } from '@/features/admin/hooks/useSnapshots'
+
+// Sistema de caché
+import { useQuotationCache } from '@/hooks'
+import { SyncStatusIndicator } from '@/features/admin/components/SyncStatusIndicator'
+import type { ConflictInfo, ConflictResolution } from '@/lib/cache/types'
+import { FaExclamationTriangle, FaCloud, FaDesktop, FaCodeBranch } from 'react-icons/fa'
 
 // Hooks del admin
 import { useAdminState, useAdvancedValidation, useEventTracking } from './hooks'
@@ -62,6 +68,7 @@ function AdminPageContent() {
   } = useAdvancedValidation()
 
   // ==================== HOOKS DE TRACKING ====================
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { 
     trackCotizacionCreated, 
     trackPaqueteCreated,
@@ -69,6 +76,51 @@ function AdminPageContent() {
     startTracking,
     endTracking 
   } = useEventTracking()
+
+  // ==================== SISTEMA DE CACHÉ ====================
+  
+  // Callback para manejar conflictos
+  const handleConflict = useCallback((conflict: ConflictInfo) => {
+    setShowConflictModal(true)
+  }, [])
+
+  // Callback cuando otra pestaña actualiza
+  const handleRemoteUpdate = useCallback(() => {
+    setDialogoConfig({
+      tipo: 'info',
+      titulo: 'Actualización Remota',
+      descripcion: 'Los datos han sido actualizados desde otra pestaña.',
+      accion: () => setShowDialogoConfirmacion(false),
+    })
+    setShowDialogoConfirmacion(true)
+  }, [])
+
+  // Hook principal de caché
+  const {
+    quotation: cachedQuotation,
+    snapshots: cachedSnapshots,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading: isCacheLoading,
+    isDirty: isCacheDirty,
+    syncStatus,
+    isOnline,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    error: cacheError,
+    pendingConflict,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    updateQuotation: updateCachedQuotation,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    saveToServer,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    refreshFromServer,
+    resolveConflict,
+  } = useQuotationCache({
+    quotationId: cotizacionConfig?.id || null,
+    enabled: !!cotizacionConfig?.id,
+    autoSaveInterval: 5000, // 5 segundos
+    onConflict: handleConflict,
+    onRemoteUpdate: handleRemoteUpdate,
+  })
 
   // ==================== ESTADO LOCAL ====================
   
@@ -78,6 +130,7 @@ function AdminPageContent() {
   const [isPdfGenerating, setIsPdfGenerating] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [showDialogoConfirmacion, setShowDialogoConfirmacion] = useState(false)
+  const [showConflictModal, setShowConflictModal] = useState(false)
   const [dialogoConfig, setDialogoConfig] = useState({
     tipo: 'info' as 'info' | 'warning' | 'error' | 'success',
     titulo: '',
@@ -103,28 +156,103 @@ function AdminPageContent() {
       }
     }
 
-    cargarDatos()
+    // Cargar configuración desde la BD (API) - solo si no hay caché
+    const cargarConfiguracionBD = async () => {
+      // Si ya tenemos datos del caché, usarlos
+      if (cachedQuotation) {
+        setCotizacionConfig(cachedQuotation)
+        if (cachedQuotation.serviciosBaseTemplate) {
+          setServiciosBase(cachedQuotation.serviciosBaseTemplate)
+        }
+        if (cachedQuotation.serviciosOpcionalesTemplate) {
+          // Mapear OtroServicio[] a Servicio[] asegurando que id exista
+          const serviciosConId = cachedQuotation.serviciosOpcionalesTemplate.map((s, idx) => ({
+            ...s,
+            id: s.id || `opcional-${idx}`
+          }))
+          setServiciosOpcionales(serviciosConId)
+        }
+        return
+      }
 
-    // Cargar configuración desde localStorage
-    const configGuardada = localStorage.getItem('configuracionAdministrador')
-    if (configGuardada) {
       try {
-        const config = JSON.parse(configGuardada)
-        if (config.cotizacionConfig) setCotizacionConfig(config.cotizacionConfig)
-        if (config.serviciosBase) setServiciosBase(config.serviciosBase)
-        if (config.gestion) setGestion(config.gestion)
-        if (config.paqueteActual) setPaqueteActual(config.paqueteActual)
-        if (config.serviciosOpcionales) setServiciosOpcionales(config.serviciosOpcionales)
-      } catch (e) {
-        console.error('Error cargando configuración:', e)
+        const response = await fetch('/api/quotation-config')
+        if (response.ok) {
+          const config = await response.json()
+          if (config) {
+            setCotizacionConfig(config)
+            // Cargar templates desde la configuración de BD
+            if (config.serviciosBaseTemplate) {
+              setServiciosBase(config.serviciosBaseTemplate)
+            }
+            if (config.serviciosOpcionalesTemplate) {
+              setServiciosOpcionales(config.serviciosOpcionalesTemplate)
+            }
+            // Cargar gestión y paquete si están en editorState
+            if (config.editorState) {
+              const editorState = config.editorState as { gestion?: typeof gestion; paqueteActual?: typeof paqueteActual }
+              if (editorState.gestion) setGestion(editorState.gestion)
+              if (editorState.paqueteActual) setPaqueteActual(editorState.paqueteActual)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando configuración desde BD:', error)
       }
     }
-  }, [])
 
-  // Detectar cambios
+    cargarDatos()
+    cargarConfiguracionBD()
+  }, [cachedQuotation])
+
+  // Sincronizar snapshots desde caché
+  useEffect(() => {
+    if (cachedSnapshots && cachedSnapshots.length > 0) {
+      setSnapshots(cachedSnapshots)
+    }
+  }, [cachedSnapshots, setSnapshots])
+
+  // Detectar cambios - combinar con estado del caché
   useEffect(() => {
     setHasChanges(true)
   }, [cotizacionConfig, serviciosBase, paqueteActual, serviciosOpcionales])
+
+  // Mostrar modal de conflicto cuando hay uno pendiente
+  useEffect(() => {
+    if (pendingConflict) {
+      setShowConflictModal(true)
+    }
+  }, [pendingConflict])
+
+  // Handler para resolver conflictos
+  const handleResolveConflict = async (resolution: ConflictResolution) => {
+    setShowConflictModal(false)
+    await resolveConflict(resolution)
+    
+    if (resolution !== 'cancel') {
+      // Determinar mensaje según la resolución
+      const getResolutionMessage = (res: ConflictResolution): string => {
+        switch (res) {
+          case 'keep-local':
+            return 'Se mantuvieron tus cambios locales.'
+          case 'keep-server':
+            return 'Se cargaron los datos del servidor.'
+          case 'merge':
+            return 'Los cambios fueron fusionados.'
+          default:
+            return 'Conflicto resuelto.'
+        }
+      }
+      
+      setDialogoConfig({
+        tipo: 'success',
+        titulo: 'Conflicto Resuelto',
+        descripcion: getResolutionMessage(resolution),
+        accion: () => setShowDialogoConfirmacion(false),
+      })
+      setShowDialogoConfirmacion(true)
+    }
+  }
 
   // ==================== HANDLERS ====================
 
@@ -152,16 +280,36 @@ function AdminPageContent() {
         return
       }
 
-      const configActual = {
-        cotizacionConfig,
-        serviciosBase,
-        gestion,
-        paqueteActual,
-        serviciosOpcionales,
-        timestamp: new Date().toISOString(),
+      // Preparar datos para guardar en BD
+      const configParaBD = {
+        ...cotizacionConfig,
+        serviciosBaseTemplate: serviciosBase,
+        serviciosOpcionalesTemplate: serviciosOpcionales,
+        editorState: {
+          gestion,
+          paqueteActual,
+          timestamp: new Date().toISOString(),
+        },
       }
-      localStorage.setItem('configuracionAdministrador', JSON.stringify(configActual))
-      localStorage.setItem('paquetesSnapshots', JSON.stringify(snapshots))
+
+      // Guardar en BD via API
+      const url = cotizacionConfig?.id 
+        ? `/api/quotation-config/${cotizacionConfig.id}` 
+        : '/api/quotation-config'
+      const method = cotizacionConfig?.id ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(configParaBD),
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al guardar en la base de datos')
+      }
+
+      const configGuardada = await response.json()
+      setCotizacionConfig(configGuardada)
       
       await refreshSnapshots()
       setHasChanges(false)
@@ -169,7 +317,7 @@ function AdminPageContent() {
       setDialogoConfig({
         tipo: 'success',
         titulo: 'Guardado',
-        descripcion: 'Configuración y paquetes guardados correctamente',
+        descripcion: 'Configuración y paquetes guardados correctamente en la base de datos',
         accion: () => setShowDialogoConfirmacion(false),
       })
       setShowDialogoConfirmacion(true)
@@ -254,9 +402,21 @@ function AdminPageContent() {
         onSettings={handleSettings}
         isSaving={isSaving}
         isPdfGenerating={isPdfGenerating}
-        hasChanges={hasChanges}
+        hasChanges={hasChanges || isCacheDirty}
         quoteName={cotizacionConfig?.numero || 'Nueva Cotización'}
       />
+
+      {/* Indicador de Estado de Sincronización - Fixed bottom right */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <SyncStatusIndicator
+          status={syncStatus}
+          isOnline={isOnline}
+          isDirty={isCacheDirty}
+          isLoading={isCacheLoading}
+          showText={true}
+          size="md"
+        />
+      </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-20 px-4 pt-32">
@@ -369,6 +529,115 @@ function AdminPageContent() {
         }
       >
         <p className="text-gh-text-secondary">{dialogoConfig.descripcion}</p>
+      </DialogoGenerico>
+
+      {/* Modal de Conflictos - Usando DialogoGenerico directamente */}
+      <DialogoGenerico
+        isOpen={showConflictModal && !!pendingConflict}
+        onClose={() => setShowConflictModal(false)}
+        title="Conflicto de sincronización"
+        description="Los datos han sido modificados en otra sesión"
+        icon={FaExclamationTriangle}
+        variant="premium"
+        type="warning"
+        size="md"
+        closeOnEscape={true}
+        closeOnBackdropClick={false}
+        footer={
+          <button
+            onClick={() => handleResolveConflict('cancel')}
+            className="px-4 py-2 text-sm text-gh-text-secondary hover:text-gh-text transition-colors"
+          >
+            Cancelar y decidir después
+          </button>
+        }
+      >
+        {pendingConflict && (
+          <div className="space-y-4">
+            {/* Versiones */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-gh-accent-blue/10 rounded-lg border border-gh-accent-blue/30">
+                <div className="flex items-center gap-2 mb-1">
+                  <FaDesktop className="w-4 h-4 text-gh-accent-blue" />
+                  <span className="text-sm font-medium text-gh-accent-blue">Tu versión local</span>
+                </div>
+                <p className="text-xs text-gh-accent-blue/80">Versión {pendingConflict.localVersion}</p>
+                <p className="text-xs text-gh-accent-blue/60 mt-1">
+                  Editada: {new Date(pendingConflict.localUpdatedAt).toLocaleString('es-ES')}
+                </p>
+              </div>
+              <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                <div className="flex items-center gap-2 mb-1">
+                  <FaCloud className="w-4 h-4 text-purple-400" />
+                  <span className="text-sm font-medium text-purple-400">Versión del servidor</span>
+                </div>
+                <p className="text-xs text-purple-400/80">Versión {pendingConflict.serverVersion}</p>
+                <p className="text-xs text-purple-400/60 mt-1">
+                  Guardada: {new Date(pendingConflict.serverUpdatedAt).toLocaleString('es-ES')}
+                </p>
+              </div>
+            </div>
+
+            {/* Campos en conflicto */}
+            {pendingConflict.conflictingFields.length > 0 && (
+              <div className="p-3 bg-gh-bg-tertiary rounded-lg">
+                <p className="text-sm font-medium text-gh-text mb-2">Campos modificados:</p>
+                <ul className="text-sm text-gh-text-secondary space-y-1">
+                  {pendingConflict.conflictingFields.map(field => (
+                    <li key={field} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-gh-accent-orange rounded-full" />
+                      {field}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Opciones de resolución */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gh-text">¿Cómo deseas resolver el conflicto?</p>
+              
+              <button
+                onClick={() => handleResolveConflict('keep-local')}
+                className="w-full p-3 text-left border border-gh-border rounded-lg hover:border-gh-accent-blue hover:bg-gh-accent-blue/10 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <FaDesktop className="w-5 h-5 text-gh-text-secondary group-hover:text-gh-accent-blue" />
+                  <div>
+                    <p className="font-medium text-gh-text group-hover:text-gh-accent-blue">Mantener mis cambios</p>
+                    <p className="text-xs text-gh-text-secondary">Sobrescribir la versión del servidor con tus cambios locales</p>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleResolveConflict('keep-server')}
+                className="w-full p-3 text-left border border-gh-border rounded-lg hover:border-purple-400 hover:bg-purple-500/10 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <FaCloud className="w-5 h-5 text-gh-text-secondary group-hover:text-purple-400" />
+                  <div>
+                    <p className="font-medium text-gh-text group-hover:text-purple-400">Usar versión del servidor</p>
+                    <p className="text-xs text-gh-text-secondary">Descartar tus cambios y usar la versión más reciente</p>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handleResolveConflict('merge')}
+                className="w-full p-3 text-left border border-gh-border rounded-lg hover:border-gh-accent-green hover:bg-gh-accent-green/10 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <FaCodeBranch className="w-5 h-5 text-gh-text-secondary group-hover:text-gh-accent-green" />
+                  <div>
+                    <p className="font-medium text-gh-text group-hover:text-gh-accent-green">Fusionar cambios</p>
+                    <p className="text-xs text-gh-text-secondary">Intentar combinar ambas versiones automáticamente</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
       </DialogoGenerico>
     </div>
   )

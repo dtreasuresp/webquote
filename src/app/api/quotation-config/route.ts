@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { generateNextQuotationNumber, updateQuotationVersion } from '@/lib/utils/quotationNumber'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-// Generar número de cotización: #NNN.YY.HHSS
-const generarNumeroCotizacion = (): string => {
-  const ahora = new Date()
-  const numero = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
-  const año = ahora.getFullYear().toString().slice(-2)
-  const hh = ahora.getHours().toString().padStart(2, '0')
-  const ss = ahora.getSeconds().toString().padStart(2, '0')
-  return `#${numero}.${año}.${hh}${ss}`
-}
 
 // Calcular fecha vencimiento: fechaEmision + tiempoValidez (días)
 const calcularFechaVencimiento = (fechaEmision: Date, dias: number): Date => {
@@ -53,7 +44,13 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
-    const numeroGenerado = generarNumeroCotizacion()
+    // Obtener último número para generar el siguiente
+    const ultimaCotizacion = await prisma.quotationConfig.findFirst({
+      orderBy: { createdAt: 'desc' },
+      select: { numero: true }
+    })
+    const numeroGenerado = generateNextQuotationNumber(ultimaCotizacion?.numero || null)
+    
     const fechaEmision = new Date(data.fechaEmision || new Date())
     const fechaVencimiento = calcularFechaVencimiento(fechaEmision, data.tiempoValidez || 30)
 
@@ -78,6 +75,17 @@ export async function POST(request: NextRequest) {
         tiempoVigenciaUnidad: data.tiempoVigenciaUnidad || 'meses',
         heroTituloMain: data.heroTituloMain || 'PROPUESTA DE COTIZACIÓN',
         heroTituloSub: data.heroTituloSub || 'PÁGINA CATÁLOGO DINÁMICA',
+        // Templates reutilizables
+        serviciosBaseTemplate: data.serviciosBaseTemplate || null,
+        serviciosOpcionalesTemplate: data.serviciosOpcionalesTemplate || null,
+        opcionesPagoTemplate: data.opcionesPagoTemplate || null,
+        configDescuentosTemplate: data.configDescuentosTemplate || null,
+        descripcionesPaqueteTemplates: data.descripcionesPaqueteTemplates || null,
+        metodoPagoPreferido: data.metodoPagoPreferido || '',
+        notasPago: data.notasPago || '',
+        estilosConfig: data.estilosConfig || null,
+        // Contenido General Dinámico
+        contenidoGeneral: data.contenidoGeneral || null,
       },
     })
 
@@ -100,7 +108,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT: Actualizar cotización existente
+// PUT: Actualizar cotización existente (mantiene número, incrementa versión)
 export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -111,16 +119,31 @@ export async function PUT(request: NextRequest) {
     }
 
     const data = await request.json()
-
-    const numeroGenerado = generarNumeroCotizacion()
+    
+    // Obtener cotización actual para mantener número e incrementar versión
+    const cotizacionActual = await prisma.quotationConfig.findUnique({
+      where: { id },
+      select: { numero: true, versionNumber: true }
+    })
+    
+    if (!cotizacionActual) {
+      return NextResponse.json({ error: 'Cotización no encontrada' }, { status: 404 })
+    }
+    
+    // Usar la versión que viene del frontend (ya incrementada) o mantener la actual
+    const nuevaVersion = data.versionNumber || cotizacionActual.versionNumber || 1
+    
+    // Actualizar versión en el número de cotización usando utilidad
+    const numeroActualizado = updateQuotationVersion(cotizacionActual.numero, nuevaVersion)
+    
     const fechaEmision = new Date(data.fechaEmision || new Date())
     const fechaVencimiento = calcularFechaVencimiento(fechaEmision, data.tiempoValidez || 30)
 
     const cotizacion = await prisma.quotationConfig.update({
       where: { id },
       data: {
-        numero: numeroGenerado,
-        versionNumber: data.versionNumber || 1,
+        numero: numeroActualizado,
+        versionNumber: nuevaVersion,
         fechaEmision,
         tiempoValidez: data.tiempoValidez || 30,
         fechaVencimiento,

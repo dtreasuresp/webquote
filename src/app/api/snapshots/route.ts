@@ -45,6 +45,9 @@ export async function POST(request: NextRequest) {
           descuentoPagoUnico: data.descuentoPagoUnico || 0,
           // Sistema de descuentos
           configDescuentos: data.configDescuentos || null,
+          // Método de pago y notas (condicional para compatibilidad)
+          ...(data.metodoPagoPreferido !== undefined && { metodoPagoPreferido: data.metodoPagoPreferido }),
+          ...(data.notasPago !== undefined && { notasPago: data.notasPago }),
           descuentosGenerales: data.descuentosGenerales || null,
           descuentosPorServicio: data.descuentosPorServicio || null,
           otrosServicios: data.otrosServicios || [],
@@ -95,6 +98,9 @@ export async function PUT(request: NextRequest) {
         descuentoPagoUnico: data.descuentoPagoUnico || 0,
         // Sistema de descuentos
         configDescuentos: data.configDescuentos || null,
+        // Método de pago y notas (condicional para compatibilidad)
+        ...(data.metodoPagoPreferido !== undefined && { metodoPagoPreferido: data.metodoPagoPreferido }),
+        ...(data.notasPago !== undefined && { notasPago: data.notasPago }),
         descuentosGenerales: data.descuentosGenerales || null,
         descuentosPorServicio: data.descuentosPorServicio || null,
         otrosServicios: data.otrosServicios || [],

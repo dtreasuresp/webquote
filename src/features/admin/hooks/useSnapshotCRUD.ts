@@ -89,6 +89,52 @@ export function useSnapshotCRUD(
     return serviciosBaseCosto + otrosServiciosTotal
   }
 
+  // Función para detectar si ya existe un paquete con los mismos datos
+  const sonDatosIgualesAPaqueteExistente = (): PackageSnapshot | null => {
+    const datosActuales = {
+      nombre: props.paqueteActual.nombre.trim().toLowerCase(),
+      desarrollo: props.paqueteActual.desarrollo,
+      descuento: props.paqueteActual.descuento,
+      tipo: props.paqueteActual.tipo?.trim().toLowerCase() || '',
+      descripcion: props.paqueteActual.descripcion?.trim().toLowerCase() || '',
+      serviciosBase: props.serviciosBase
+        .map(s => ({ id: s.id, nombre: s.nombre, precio: s.precio, mesesGratis: s.mesesGratis, mesesPago: s.mesesPago }))
+        .sort((a, b) => a.id.localeCompare(b.id)),
+      serviciosOpcionales: props.serviciosOpcionales
+        .map(s => ({ nombre: s.nombre, precio: s.precio, mesesGratis: s.mesesGratis, mesesPago: s.mesesPago }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre))
+    }
+
+    for (const snapshot of props.snapshots) {
+      const datosSnapshot = {
+        nombre: snapshot.nombre.trim().toLowerCase(),
+        desarrollo: snapshot.paquete.desarrollo,
+        descuento: snapshot.paquete.descuento,
+        tipo: snapshot.paquete.tipo?.trim().toLowerCase() || '',
+        descripcion: snapshot.paquete.descripcion?.trim().toLowerCase() || '',
+        serviciosBase: snapshot.serviciosBase
+          .map(s => ({ id: s.id, nombre: s.nombre, precio: s.precio, mesesGratis: s.mesesGratis, mesesPago: s.mesesPago }))
+          .sort((a, b) => a.id.localeCompare(b.id)),
+        serviciosOpcionales: (snapshot.otrosServicios || [])
+          .map(s => ({ nombre: s.nombre, precio: s.precio, mesesGratis: s.mesesGratis, mesesPago: s.mesesPago }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      }
+
+      if (
+        datosActuales.nombre === datosSnapshot.nombre &&
+        datosActuales.desarrollo === datosSnapshot.desarrollo &&
+        datosActuales.descuento === datosSnapshot.descuento &&
+        datosActuales.tipo === datosSnapshot.tipo &&
+        datosActuales.descripcion === datosSnapshot.descripcion &&
+        JSON.stringify(datosActuales.serviciosBase) === JSON.stringify(datosSnapshot.serviciosBase) &&
+        JSON.stringify(datosActuales.serviciosOpcionales) === JSON.stringify(datosSnapshot.serviciosOpcionales)
+      ) {
+        return snapshot
+      }
+    }
+    return null
+  }
+
   const crearPaqueteSnapshot = async (): Promise<void> => {
     if (!props.cotizacionConfig?.id) {
       props.toast.error('Cotización no cargada - Primero debes crear o cargar una cotización antes de agregar paquetes.')
@@ -112,6 +158,35 @@ export function useSnapshotCRUD(
       return
     }
 
+    // Verificar si ya existe un paquete con los mismos datos
+    const paqueteDuplicado = sonDatosIgualesAPaqueteExistente()
+    if (paqueteDuplicado) {
+      return new Promise<void>((resolve) => {
+        props.mostrarDialogoGenerico({
+          tipo: 'warning',
+          titulo: 'Paquete duplicado',
+          icono: '⚠️',
+          mensaje: `Ya existe un paquete con estos mismos datos: "${paqueteDuplicado.nombre}". ¿Deseas crear otro paquete idéntico?`,
+          botones: [
+            { label: 'Cancelar', action: () => resolve(), style: 'secondary' },
+            { 
+              label: 'Crear de todas formas', 
+              action: async () => {
+                await ejecutarCreacionPaquete()
+                resolve()
+              }, 
+              style: 'primary' 
+            }
+          ]
+        })
+      })
+    }
+
+    await ejecutarCreacionPaquete()
+  }
+
+  // Función auxiliar para ejecutar la creación del paquete
+  const ejecutarCreacionPaquete = async (): Promise<void> => {
     try {
       const otrosServiciosUnificados: OtroServicio[] = props.serviciosOpcionales.map(s => ({
         nombre: s.nombre,

@@ -5,6 +5,22 @@
 @layer base {
   html, body {
     @apply bg-gh-bg-absolute text-gh-text min-h-screen;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Asegurar que los modales fixed cubran toda la viewport */
+  html {
+    overflow-x: hidden;
+  }
+
+  /* Forzar la fuente Inter en todos los elementos */
+  * {
+    font-family: inherit;
   }
 }
 

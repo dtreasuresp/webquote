@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { FaSave, FaFileDownload, FaPlus, FaCog, FaEllipsisV } from 'react-icons/fa'
-import { useToast } from '@/lib/hooks/useToast'
+import { useToast } from '@/features/admin/hooks/useToast'
 
 export interface AdminHeaderProps {
   onSave?: () => Promise<void>

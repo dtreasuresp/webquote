@@ -49,6 +49,32 @@ model QuotationConfig {
   activo              Boolean   @default(true)
   isGlobal            Boolean   @default(false)
   
+  // ==================== TEMPLATES REUTILIZABLES ====================
+  // Servicios Base template (JSON Array)
+  serviciosBaseTemplate       Json?
+  // Servicios Opcionales template (JSON Array)
+  serviciosOpcionalesTemplate Json?
+  // Opciones de Pago template (JSON Array)
+  opcionesPagoTemplate        Json?
+  // Configuración de Descuentos template (JSON)
+  configDescuentosTemplate    Json?
+  // Descripciones de Paquete templates (JSON Array)
+  descripcionesPaqueteTemplates Json?
+  // Método de pago preferido a nivel de cotización
+  metodoPagoPreferido         String?   @default("")
+  // Notas de pago a nivel de cotización
+  notasPago                   String?   @default("")
+  // Configuración de estilos (JSON)
+  estilosConfig               Json?
+  
+  // ==================== CONTENIDO GENERAL DINÁMICO ====================
+  // Contenido editable: FAQ, Garantías, Contacto, Resumen, Términos
+  contenidoGeneral            Json?
+  
+  // ==================== ESTADO DEL EDITOR ====================
+  // Estado de secciones colapsadas/expandidas y otras preferencias del editor
+  editorState                 Json?
+  
   // Relaciones
   snapshots           PackageSnapshot[]
   
@@ -90,6 +116,11 @@ model PackageSnapshot {
   // ✅ NUEVO SISTEMA DE DESCUENTOS - ConfigDescuentos completo
   configDescuentos    Json?
   
+  // Método de pago preferido para este paquete
+  metodoPagoPreferido String?   @default("")
+  // Notas de pago para este paquete
+  notasPago           String?
+  
   // @deprecated - Descuentos Generales (JSON) - mantener para compatibilidad
   descuentosGenerales Json?
   
@@ -125,6 +156,9 @@ model UserPreferences {
   cerrarModalAlGuardar        Boolean  @default(false)
   mostrarConfirmacionGuardado Boolean  @default(true)
   validarDatosAntes           Boolean  @default(true)
+  
+  // Preferencia para limpiar formularios al crear nueva cotización
+  limpiarFormulariosAlCrear   Boolean  @default(true)
   
   // Control
   createdAt                   DateTime @default(now())

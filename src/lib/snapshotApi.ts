@@ -25,6 +25,10 @@ export interface SnapshotFromDB {
   descuentoPagoUnico?: number
   // ✅ Sistema de descuentos reinventado - ConfigDescuentos
   configDescuentos?: ConfigDescuentos | null
+  // Método de pago preferido
+  metodoPagoPreferido?: string
+  // Notas de pago
+  notasPago?: string | null
   // @deprecated - Campos legacy para migración, usar configDescuentos
   descuentosGenerales?: any
   descuentosPorServicio?: any
@@ -119,6 +123,9 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
     descuentoPagoUnico: configDescuentos.descuentoPagoUnico ?? 0,
     // ✅ Sistema de descuentos reinventado
     configDescuentos: configDescuentos,
+    // Método de pago preferido y notas
+    metodoPagoPreferido: snapshot.paquete?.metodoPagoPreferido || '',
+    notasPago: snapshot.paquete?.notasPago || null,
     // @deprecated - Mantener para compatibilidad con BD existente
     descuentosGenerales: configDescuentos.tipoDescuento === 'general' 
       ? configDescuentos.descuentoGeneral 
@@ -208,6 +215,9 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
       // ✅ Sistema de descuentos reinventado
       configDescuentos: configDescuentos,
       descuentoPagoUnico: configDescuentos.descuentoPagoUnico,
+      // Método de pago preferido y notas
+      metodoPagoPreferido: dbSnapshot.metodoPagoPreferido || '',
+      notasPago: dbSnapshot.notasPago || '',
       // @deprecated - Mantener para compatibilidad legacy (formato antiguo con arrays)
       descuentosGenerales: configDescuentos.tipoDescuento === 'general' 
         ? configDescuentos.descuentoGeneral 

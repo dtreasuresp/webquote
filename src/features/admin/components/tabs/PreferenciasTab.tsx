@@ -83,6 +83,46 @@ export default function PreferenciasTab({
               <p className="text-xs text-gh-text-muted mt-1">Valida todos los datos antes de permitir guardar</p>
             </div>
           </label>
+
+          <label className="flex items-center gap-3 cursor-pointer p-4 hover:bg-gh-bg-secondary rounded-md border border-gh-border transition-colors">
+            <input
+              type="checkbox"
+              checked={userPreferences?.limpiarFormulariosAlCrear ?? true}
+              onChange={(e) => {
+                if (userPreferences) {
+                  setUserPreferences({
+                    ...userPreferences,
+                    limpiarFormulariosAlCrear: e.target.checked
+                  })
+                }
+              }}
+              className="w-4 h-4 accent-gh-success cursor-pointer rounded"
+            />
+            <div>
+              <span className="text-sm font-medium text-gh-text block">Limpiar formularios al crear nueva cotización</span>
+              <p className="text-xs text-gh-text-muted mt-1">Reinicia servicios, descuentos y opciones de pago al crear una nueva cotización. Desactiva para mantener templates.</p>
+            </div>
+          </label>
+
+          <label className="flex items-center gap-3 cursor-pointer p-4 hover:bg-gh-bg-secondary rounded-md border border-gh-border transition-colors">
+            <input
+              type="checkbox"
+              checked={userPreferences?.mantenerDatosAlCrearCotizacion ?? false}
+              onChange={(e) => {
+                if (userPreferences) {
+                  setUserPreferences({
+                    ...userPreferences,
+                    mantenerDatosAlCrearCotizacion: e.target.checked
+                  })
+                }
+              }}
+              className="w-4 h-4 accent-gh-success cursor-pointer rounded"
+            />
+            <div>
+              <span className="text-sm font-medium text-gh-text block">Mantener datos al crear cotización</span>
+              <p className="text-xs text-gh-text-muted mt-1">Al crear una nueva cotización, mantiene los datos guardados como template (servicios, descripciones, pagos) en lugar de iniciar vacío.</p>
+            </div>
+          </label>
         </div>
 
         <div className="mt-8 pt-6 border-t border-gh-border flex gap-3 justify-end">

@@ -1,63 +1,54 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaCheck, FaLightbulb } from 'react-icons/fa'
+import { FaExchangeAlt, FaCheck, FaLightbulb } from 'react-icons/fa'
+import type { DinamicoVsEstaticoData } from '@/lib/types'
 
-export default function DinamicoVsEstatico() {
+interface DinamicoVsEstaticoProps {
+  readonly data?: DinamicoVsEstaticoData
+}
+
+export default function DinamicoVsEstatico({ data }: DinamicoVsEstaticoProps) {
+  // Si no hay datos, no renderizar la sección
+  if (!data) return null
+  
+  const dinamicoData = data
+
   return (
-    <section id="dinamico-vs-estatico" className="py-20 px-4 bg-white">
-      <div className="max-w-7xl mx-auto">
+    <section id="dinamico-vs-estatico" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+      <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-gray-900">
-            Sitios Dinámicos vs Sitios Estáticos
-          </h2>
-          <p className="text-center text-xl text-gray-600 mb-12">
-            Este es un punto crucial para entender por qué recomendamos un sitio web dinámico.
-          </p>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-info-bg rounded-full mb-4">
+              <FaExchangeAlt className="text-light-accent" size={20} />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+              {dinamicoData.titulo}
+            </h2>
+            <p className="text-sm text-light-text-secondary">
+              {dinamicoData.subtitulo}
+            </p>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="grid md:grid-cols-2 gap-6 mb-10">
             {/* Sitios Estáticos */}
             <ComparisonCard 
-              title="🔴 SITIOS ESTÁTICOS"
+              title={dinamicoData.sitioEstatico.title}
               color="static"
-              items={[
-                { label: '¿Qué son?', value: 'Páginas web fijas que no cambian a menos que alguien modifique el código HTML/CSS directamente. El contenido es idéntico para todos los visitantes.' },
-                { 
-                  label: 'Características',
-                  list: [
-                    'Contenido fijo (no cambia automáticamente)',
-                    'Páginas HTML simples',
-                    'No tienen base de datos',
-                    'Muy rápidos (cargan en milisegundos)',
-                    'Difíciles de actualizar (requieren programador cada vez)',
-                  ]
-                },
-              ]}
+              items={dinamicoData.sitioEstatico.items}
             />
 
             {/* Sitios Dinámicos */}
             <ComparisonCard 
-              title="🔵 SITIOS DINÁMICOS"
+              title={dinamicoData.sitioDinamico.title}
               color="dynamic"
-              items={[
-                { label: '¿Qué son?', value: 'Sitios web cuyo contenido SÍ cambia automáticamente según lo que necesites. El servidor procesa solicitudes en tiempo real y muestra información personalizada de una base de datos.' },
-                { 
-                  label: 'Características',
-                  list: [
-                    'Contenido que cambia dinámicamente',
-                    'Tienen base de datos (MySQL)',
-                    'Servidor procesa solicitudes en tiempo real',
-                    'Panel de administración intuitivo',
-                    'Fáciles de actualizar (usuario no técnico)',
-                    'Más funcionalidad',
-                  ]
-                },
-              ]}
+              items={dinamicoData.sitioDinamico.items}
             />
           </div>
 
@@ -66,32 +57,21 @@ export default function DinamicoVsEstatico() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-12 bg-gradient-to-r from-primary via-primary-dark to-secondary text-white p-12 rounded-2xl shadow-2xl border-2 border-accent"
+            className="mt-10 bg-light-bg border border-light-border p-8 rounded-md"
           >
-            <h3 className="text-3xl font-bold mb-6 flex items-center gap-3">
-              <FaLightbulb className="text-accent" />
-              ¿CUÁL RECOMENDAMOS PARA Urbanísima Constructora S.R.L?
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-light-text">
+              <FaLightbulb className="text-light-warning" />
+              {dinamicoData.recomendacion.titulo}
             </h3>
-            <p className="text-xl mb-6 font-semibold">
-              NUESTRA RECOMENDACIÓN: <span className="text-2xl text-accent">SITIO DINÁMICO</span>
+            <p className="text-light-text-secondary mb-6">
+              {dinamicoData.recomendacion.subtitulo} <span className="text-lg font-semibold text-light-accent">{dinamicoData.recomendacion.tipo}</span>
             </p>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              {[
-                'Actualizaciones frecuentes: Tu catálogo cambia según tus necesidades (nuevos servicios, precios, disponibilidad)',
-                'Bajo nivel de tecnicismo: El sitio dinámico gestiona contenido desde interfaz intuitiva',
-                'Posibilidad de crear blog para marketing: Excelente para SEO y posicionamiento',
-                'Crecimiento sin límites: Si quieres vender online en el futuro',
-                'Independencia: Si en algún momento deseas cambiar de proveedor o si quieres gestionar tú mismo el sitio',
-                'Mejor inversión a largo plazo: Aunque el costo inicial y los pagos recurrentes son mayores, es más rentable con el tiempo',
-                'Profesionalismo: Transmite imagen más profesional y moderna',
-                'Funcionalidades avanzadas: Permite realizar búsqueda, filtros e integración con redes sociales',
-                'Optimización: Mejores prácticas para posicionamiento en Google',
-                'Seguridad: Actualizaciones y parches regulares para proteger tu sitio',
-              ].map((reason) => (
-                <div key={reason} className="flex items-start gap-3 bg-white/20 p-4 rounded-lg">
-                  <FaCheck className="text-accent mt-1 flex-shrink-0" />
-                  <span>{reason}</span>
+            <div className="grid md:grid-cols-2 gap-3">
+              {dinamicoData.recomendacion.razones.map((reason) => (
+                <div key={`reason-${reason.slice(0, 30).replaceAll(' ', '-')}`} className="flex items-start gap-2 bg-light-bg-secondary p-3 rounded-md text-sm">
+                  <FaCheck className="text-light-success mt-0.5 flex-shrink-0" />
+                  <span className="text-light-text-secondary">{reason}</span>
                 </div>
               ))}
             </div>
@@ -112,31 +92,30 @@ function ComparisonCard({
   color: 'static' | 'dynamic'
   items: Array<{ label: string; value?: string; list?: string[] }>
 }>) {
-  const bgColor = color === 'static' ? 'bg-neutral-50' : 'bg-accent/10'
-  const borderColor = color === 'static' ? 'border-neutral-400' : 'border-accent'
-  const textColor = 'text-secondary'
-  const iconColor = color === 'static' ? 'text-neutral-600' : 'text-accent'
+  const bgColor = color === 'static' ? 'bg-light-bg-secondary' : 'bg-light-accent/5'
+  const borderColor = color === 'static' ? 'border-light-border' : 'border-light-accent/30'
+  const iconColor = color === 'static' ? 'text-light-text-secondary' : 'text-light-accent'
 
   return (
     <motion.div
       initial={{ opacity: 0, x: color === 'static' ? -20 : 20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
-      className={`${bgColor} p-8 rounded-2xl border-0 ${borderColor}`}
+      className={`${bgColor} p-6 rounded-md border ${borderColor}`}
     >
-      <h3 className={`text-2xl font-bold mb-6 ${textColor}`}>{title}</h3>
-      <div className="space-y-6">
-        {items.map((item) => (
-          <div key={item.label}>
-            <p className={`font-bold ${textColor} mb-2`}>{item.label}</p>
+      <h3 className="text-lg font-semibold mb-4 text-light-text">{title}</h3>
+      <div className="space-y-4">
+        {items.map((item, idx) => (
+          <div key={`item-${item.label}-${idx}`}>
+            <p className="font-medium text-light-text text-sm mb-1">{item.label}</p>
             {item.value && (
-              <p className="text-gray-700 mb-2">{item.value}</p>
+              <p className="text-light-text-secondary text-sm mb-2">{item.value}</p>
             )}
             {item.list && (
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 {item.list.map((listItem) => (
-                  <li key={listItem} className="flex items-start gap-2 text-gray-700">
-                    <span className={`mt-1 ${iconColor}`}>•</span>
+                  <li key={`list-${listItem.slice(0, 30).replaceAll(' ', '-')}`} className="flex items-start gap-2 text-light-text-secondary text-sm">
+                    <span className={`mt-0.5 ${iconColor}`}>•</span>
                     <span>{listItem}</span>
                   </li>
                 ))}
