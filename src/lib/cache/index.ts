@@ -34,3 +34,6 @@ export * as tabSync from './tabSync'
 // Sync manager
 export * as syncManager from './syncManager'
 export type { SyncResult, ConflictCallback } from './syncManager'
+
+// Local cache for offline mode
+export * as localCache from './localCache'

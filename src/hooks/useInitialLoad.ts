@@ -19,6 +19,7 @@ export type InitialLoadPhase =
   | 'updating-analytics'
   | 'synced'
   | 'offline-cached'
+  | 'offline-empty'  // Nueva fase: sin conexión Y sin datos en cache
   | 'merging'
   | 'comparing'
   | 'error'
@@ -53,6 +54,8 @@ export interface UseInitialLoadOptions {
   loadConfig?: () => Promise<void>
   /** Callback para actualizar analytics */
   updateAnalytics?: () => Promise<void>
+  /** Función para verificar si hay datos en cache local */
+  hasCachedData?: () => boolean
 }
 
 export interface UseInitialLoadReturn extends InitialLoadState {
@@ -233,8 +236,18 @@ export function useInitialLoad(options: UseInitialLoadOptions = {}): UseInitialL
           
         } else {
           // === FASE 6: Sin conexión, usar caché ===
-          console.log('📦 [useInitialLoad] Fase 6: Offline cached')
-          updateState({ phase: 'offline-cached', progress: 30 })
+          console.log('📦 [useInitialLoad] Fase 6: Offline - verificando cache...')
+          
+          // Verificar si hay datos en cache
+          const hasCache = optionsRef.current.hasCachedData?.() ?? false
+          
+          if (hasCache) {
+            console.log('📦 [useInitialLoad] Cache disponible, cargando datos locales...')
+            updateState({ phase: 'offline-cached', progress: 30 })
+          } else {
+            console.log('⚠️ [useInitialLoad] Sin cache disponible')
+            updateState({ phase: 'offline-empty', progress: 30 })
+          }
           
           // Intentar cargar datos de todas formas (pueden venir de caché local)
           const opts = optionsRef.current
@@ -249,8 +262,11 @@ export function useInitialLoad(options: UseInitialLoadOptions = {}): UseInitialL
             await Promise.allSettled(loadPromises)
           }
           
+          // Re-verificar después de intentar cargar
+          const finalPhase = hasCache ? 'offline-cached' : 'offline-empty'
+          
           updateState({ 
-            phase: 'offline-cached', 
+            phase: finalPhase, 
             progress: 100, 
             isComplete: true 
           })

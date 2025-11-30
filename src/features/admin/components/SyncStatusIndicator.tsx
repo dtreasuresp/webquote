@@ -111,6 +111,14 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     pulse: false,
     spin: false
   },
+  'offline-empty': {
+    icon: FaExclamationTriangle,
+    color: 'text-red-500',
+    bgColor: 'bg-red-50',
+    text: 'Sin conexión y sin datos en cache',
+    pulse: true,
+    spin: false
+  },
   'merging': {
     icon: FaCodeBranch,
     color: 'text-purple-500',

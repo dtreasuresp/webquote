@@ -52,6 +52,7 @@ const PHASE_TEXTS: Record<LoadingPhase, string> = {
   'updating-analytics': 'Actualizando analítica...',
   'synced': 'Sincronizado con BD',
   'offline-cached': 'Sin conexión a BD. Mostrando datos locales',
+  'offline-empty': 'Sin conexión y sin datos en cache',
   'merging': 'Fusionando datos...',
   'comparing': 'Comparando diferencias...',
   'error': 'Error de sincronización'
@@ -91,7 +92,8 @@ export function useLoadingPhase(options: UseLoadingPhaseOptions = {}): UseLoadin
     }
 
     // Prioridad 1: Fase de carga inicial (si no ha completado)
-    if (initialLoadPhase !== 'synced' && initialLoadPhase !== 'offline-cached' && initialLoadPhase !== 'error') {
+    const finalPhases = ['synced', 'offline-cached', 'offline-empty', 'error']
+    if (!finalPhases.includes(initialLoadPhase)) {
       return initialLoadPhase
     }
 
@@ -115,6 +117,10 @@ export function useLoadingPhase(options: UseLoadingPhaseOptions = {}): UseLoadin
 
     // Prioridad 4: Estado final basado en conexión
     if (!isConnected) {
+      // Si la fase inicial ya determinó offline-empty, mantenerla
+      if (initialLoadPhase === 'offline-empty') {
+        return 'offline-empty'
+      }
       return 'offline-cached'
     }
 
@@ -129,7 +135,7 @@ export function useLoadingPhase(options: UseLoadingPhaseOptions = {}): UseLoadin
   const phase = determinePhase()
   const phaseText = PHASE_TEXTS[phase] || 'Cargando...'
   const isActiveLoading = ACTIVE_LOADING_PHASES.has(phase)
-  const isInitialLoadComplete = phase === 'synced' || phase === 'offline-cached' || phase === 'error'
+  const isInitialLoadComplete = phase === 'synced' || phase === 'offline-cached' || phase === 'offline-empty' || phase === 'error'
 
   // Función para forzar una fase (útil para merging, comparing, etc.)
   const setPhase = useCallback((newPhase: LoadingPhase) => {
@@ -138,7 +144,7 @@ export function useLoadingPhase(options: UseLoadingPhaseOptions = {}): UseLoadin
 
   // Limpiar override cuando cambia la fase inicial a un estado final
   useEffect(() => {
-    if (initialLoadPhase === 'synced' || initialLoadPhase === 'offline-cached') {
+    if (initialLoadPhase === 'synced' || initialLoadPhase === 'offline-cached' || initialLoadPhase === 'offline-empty') {
       // Solo limpiar si el override no es un estado de acción del usuario
       if (overridePhase && !['merging', 'comparing'].includes(overridePhase)) {
         setOverridePhase(null)

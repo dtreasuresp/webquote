@@ -33,6 +33,13 @@ import { useLoadingPhase } from '@/features/admin/hooks/useLoadingPhase'
 import { useConnectionRecovery, type DataDifference } from '@/features/admin/hooks/useConnectionRecovery'
 import { useOfflineStatus } from '@/hooks/useOfflineStatus'
 import { useInitialLoad } from '@/hooks/useInitialLoad'
+import { 
+  cacheSnapshots, getCachedSnapshots,
+  cacheQuotations, getCachedQuotations,
+  cachePreferences, getCachedPreferences,
+  cacheConfig, getCachedConfig,
+  updateCacheMetadata, hasCachedData
+} from '@/lib/cache/localCache'
 
 // Analytics y Tracking
 import { AnalyticsDashboard } from '@/features/admin/components/AnalyticsDashboard'
@@ -92,14 +99,26 @@ export default function Administrador() {
 
   // ==================== SISTEMA DE CARGA INICIAL UNIFICADO ====================
   // Funciones de carga extraídas para uso con useInitialLoad
+  // AHORA CON SOPORTE DE CACHÉ LOCAL PARA MODO OFFLINE
+  
   const loadSnapshotsCallback = async () => {
     try {
       console.log('📦 [loadSnapshotsCallback] Cargando snapshots desde BD...')
       const snapshotsDelServidor = await obtenerSnapshotsCompleto()
       console.log('📦 [loadSnapshotsCallback] Snapshots cargados:', snapshotsDelServidor.length)
       setSnapshots(snapshotsDelServidor)
+      // ✅ Guardar en cache local para modo offline
+      cacheSnapshots(snapshotsDelServidor)
+      console.log('💾 [loadSnapshotsCallback] Snapshots guardados en cache local')
     } catch (error) {
       console.error('Error cargando snapshots:', error)
+      // ✅ Intentar cargar desde cache local si BD falla
+      const cachedData = getCachedSnapshots<typeof snapshots>()
+      if (cachedData) {
+        console.log('📦 [loadSnapshotsCallback] Usando snapshots desde cache local')
+        setSnapshots(cachedData)
+        return // No relanzar error si tenemos cache
+      }
       throw error
     }
   }
@@ -112,9 +131,19 @@ export default function Administrador() {
       if (data.success) {
         console.log('📋 [loadQuotationsCallback] Quotations cargadas:', data.data?.length || 0)
         setQuotations(data.data || [])
+        // ✅ Guardar en cache local para modo offline
+        cacheQuotations(data.data || [])
+        console.log('💾 [loadQuotationsCallback] Quotations guardados en cache local')
       }
     } catch (error) {
       console.error('Error cargando quotations:', error)
+      // ✅ Intentar cargar desde cache local si BD falla
+      const cachedData = getCachedQuotations<typeof quotations>()
+      if (cachedData) {
+        console.log('📋 [loadQuotationsCallback] Usando quotations desde cache local')
+        setQuotations(cachedData)
+        return
+      }
       throw error
     }
   }
@@ -127,9 +156,21 @@ export default function Administrador() {
       if (data.success) {
         console.log('⚙️ [loadPreferencesCallback] Preferencias cargadas:', data.data ? 'Sí' : 'No')
         setUserPreferences(data.data || null)
+        // ✅ Guardar en cache local para modo offline
+        if (data.data) {
+          cachePreferences(data.data)
+          console.log('💾 [loadPreferencesCallback] Preferencias guardadas en cache local')
+        }
       }
     } catch (error) {
       console.error('Error cargando preferences:', error)
+      // ✅ Intentar cargar desde cache local si BD falla
+      const cachedData = getCachedPreferences<typeof userPreferences>()
+      if (cachedData) {
+        console.log('⚙️ [loadPreferencesCallback] Usando preferencias desde cache local')
+        setUserPreferences(cachedData)
+        return
+      }
       throw error
     }
   }
@@ -144,6 +185,10 @@ export default function Administrador() {
           
           // ✅ CARGAR LA COTIZACIÓN ACTIVA (esto es lo que faltaba!)
           setCotizacionConfig(config)
+          
+          // ✅ Guardar en cache local para modo offline
+          cacheConfig(config)
+          console.log('💾 [loadConfigCallback] Config guardado en cache local')
           
           // Cargar templates desde la configuración de BD
           if (config.serviciosBaseTemplate) {
@@ -184,6 +229,20 @@ export default function Administrador() {
       }
     } catch (error) {
       console.error('Error cargando configuración desde BD:', error)
+      // ✅ Intentar cargar desde cache local si BD falla
+      const cachedConfig = getCachedConfig<QuotationConfig>()
+      if (cachedConfig) {
+        console.log('📋 [loadConfigCallback] Usando config desde cache local')
+        setCotizacionConfig(cachedConfig)
+        // También restaurar templates desde cache
+        if (cachedConfig.serviciosBaseTemplate) {
+          setServiciosBase(cachedConfig.serviciosBaseTemplate as ServicioBase[])
+        }
+        if (cachedConfig.serviciosOpcionalesTemplate) {
+          setServiciosOpcionales(cachedConfig.serviciosOpcionalesTemplate as Servicio[])
+        }
+        return
+      }
       throw error
     }
   }
@@ -195,16 +254,25 @@ export default function Administrador() {
     loadQuotations: loadQuotationsCallback,
     loadPreferences: loadPreferencesCallback,
     loadConfig: loadConfigCallback,
+    hasCachedData: hasCachedData, // ✅ Función para verificar si hay cache local
     onComplete: (isConnected) => {
       if (isConnected) {
         console.log('✅ Carga inicial completada - Conectado a BD')
+        // ✅ Actualizar metadatos de sincronización exitosa
+        updateCacheMetadata(true)
       } else {
         console.log('📦 Carga inicial completada - Modo offline')
+        // Los datos se cargaron desde cache local
+        if (hasCachedData()) {
+          toast.info('📦 Trabajando con datos en cache local (modo offline)')
+        }
       }
       setCargandoSnapshots(false)
     },
     onError: (error) => {
       console.error('❌ Error en carga inicial:', error)
+      // ✅ Actualizar metadatos de sincronización fallida
+      updateCacheMetadata(false)
       setErrorSnapshots(error)
       setCargandoSnapshots(false)
     }
