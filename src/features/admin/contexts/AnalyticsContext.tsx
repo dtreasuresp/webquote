@@ -1,6 +1,7 @@
 'use client'
 
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import type { LoadingPhase } from '../hooks/useLoadingPhase'
 
 /**
  * PHASE 13: Analytics y Tracking
@@ -41,6 +42,7 @@ export interface AnalyticsState {
   startTime: Date
   totalEvents: number
   totalActions: number
+  loadingPhase?: 'idle' | 'cache' | 'analyzing' | 'syncing' | 'validating' | 'synced'
 }
 
 export interface AnalyticsContextType {
@@ -53,6 +55,7 @@ export interface AnalyticsContextType {
   getActionsByComponent: (component: string) => UserAction[]
   clearAnalytics: () => void
   exportAnalytics: () => AnalyticsState
+  setLoadingPhase: (phase: LoadingPhase) => void
 }
 
 const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefined)
@@ -68,11 +71,20 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
     events: [],
     metrics: [],
     userActions: [],
-    sessionId: generateSessionId(),
+    sessionId: '', // Inicializar vacío para evitar hydration mismatch
     startTime: new Date(),
     totalEvents: 0,
     totalActions: 0,
+    loadingPhase: 'idle',
   })
+
+  // Generar sessionId solo en cliente, después del montaje
+  useEffect(() => {
+    setState((prev) => ({
+      ...prev,
+      sessionId: generateSessionId(),
+    }))
+  }, [])
 
   const trackEvent = useCallback((eventType: string, metadata?: Record<string, unknown>) => {
     const eventData: EventData = {
@@ -154,6 +166,13 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
     return { ...state }
   }, [state])
 
+  const setLoadingPhase = useCallback((phase: LoadingPhase) => {
+    setState((prev) => ({
+      ...prev,
+      loadingPhase: phase,
+    }))
+  }, [])
+
   const value = React.useMemo<AnalyticsContextType>(() => ({
     state,
     trackEvent,
@@ -164,6 +183,7 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
     getActionsByComponent,
     clearAnalytics,
     exportAnalytics,
+    setLoadingPhase,
   }), [
     state,
     trackEvent,
@@ -174,6 +194,7 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
     getActionsByComponent,
     clearAnalytics,
     exportAnalytics,
+    setLoadingPhase,
   ])
 
   return (

@@ -305,14 +305,16 @@ export default function ContenidoTab({
   const [activeItem, setActiveItem] = useState<SeccionActiva>('resumen')
   
   // Ref para almacenar el contenido original al cargar (para comparación)
-  const contenidoOriginalRef = useRef<ContenidoGeneral | null>(null)
+  // IMPORTANTE: Inicializar de forma SÍNCRONA para evitar flash de "Cambios sin guardar" en primer render
+  const getInitialContenido = (): ContenidoGeneral => {
+    return JSON.parse(JSON.stringify(cotizacionConfig?.contenidoGeneral || {}))
+  }
+  const contenidoOriginalRef = useRef<ContenidoGeneral>(getInitialContenido())
   
-  // Guardar snapshot del contenido original cuando cambia cotizacionConfig
+  // Actualizar el ref cuando cambia de cotización (no en cada render)
   useEffect(() => {
-    if (cotizacionConfig?.contenidoGeneral && !contenidoOriginalRef.current) {
-      contenidoOriginalRef.current = JSON.parse(JSON.stringify(cotizacionConfig.contenidoGeneral))
-    }
-  }, [cotizacionConfig?.id]) // Solo al cambiar de cotización
+    contenidoOriginalRef.current = JSON.parse(JSON.stringify(cotizacionConfig?.contenidoGeneral || {}))
+  }, [cotizacionConfig?.id]) // Solo al cambiar de cotización, NO cuando cambia contenidoGeneral
 
   // Sidebar items
   const sidebarItems = [
@@ -565,7 +567,7 @@ export default function ContenidoTab({
   // Helper para obtener los datos originales de una sección (desde BD)
   const getDatosOriginales = (seccion: SeccionActiva): unknown => {
     const original = contenidoOriginalRef.current
-    if (!original) return null
+    // El ref siempre tiene un valor (al menos {} vacío), nunca null
     
     switch (seccion) {
       case 'resumen': return original.textos?.resumenEjecutivo || defaultResumenEjecutivo

@@ -19,7 +19,7 @@ const navItems = [
 ]
 
 // Logos: verde para admin, azul con fondo para el resto
-const LOGO_ADMIN = '/img/logo-webquote_green_txt_white.png'
+const LOGO_ADMIN = '/img/logo-webquote_green_txt_white.svg'
 const LOGO_DEFAULT = '/img/logo-webquote_blue_backgroud_txt_white.png'
 const LOGO_DARK = '/img/logo-webquote_blue_txt_black.png' // Logo para fondo claro
 
@@ -80,7 +80,8 @@ export default function Navigation() {
                   alt="WebQuote Logo"
                   width={160}
                   height={36}
-                  className="h-8 md:h-9 w-auto transition-all duration-300"
+                  className="transition-all duration-300"
+                  style={{ width: 'auto', height: '36px', maxHeight: '36px' }}
                   priority
                 />
               </Link>

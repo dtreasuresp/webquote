@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { ServicioBase, Servicio, Package, PackageSnapshot, QuotationConfig, DialogConfig, OpcionPago, ConfigDescuentos, DescripcionPaqueteTemplate } from '@/lib/types'
 import AdminSidebar from '@/features/admin/components/AdminSidebar'
 import { FaBox, FaCubes, FaPuzzlePiece, FaLayerGroup, FaDollarSign } from 'react-icons/fa'
@@ -9,6 +9,7 @@ import ServiciosBaseContent from '@/features/admin/components/content/oferta/Ser
 import ServiciosOpcionalesContent from '@/features/admin/components/content/oferta/ServiciosOpcionalesContent'
 import PaquetesContent from '@/features/admin/components/content/oferta/PaquetesContent'
 import FinancieroContent from '@/features/admin/components/content/oferta/FinancieroContent'
+import { useEventTracking } from '@/features/admin/hooks'
 
 interface ToastHandler {
   success: (message: string) => void
@@ -147,6 +148,14 @@ export default function OfertaTab({
   setDescripcionesTemplate,
 }: Readonly<OfertaTabProps>) {
   const [activeItem, setActiveItem] = useState<'paquete' | 'servicios-base' | 'servicios-opcionales' | 'financiero' | 'paquetes'>('paquete')
+  
+  // Tracking de navegación
+  const { trackOfertaSectionViewed } = useEventTracking()
+  
+  const handleSectionChange = useCallback((id: string) => {
+    setActiveItem(id as typeof activeItem)
+    trackOfertaSectionViewed(id)
+  }, [trackOfertaSectionViewed])
 
   const items = [
     { id: 'paquete', label: 'Descripción', icon: FaBox },
@@ -161,7 +170,7 @@ export default function OfertaTab({
       <AdminSidebar
         items={items.map(i => ({ id: i.id, label: i.label, icon: i.icon, badge: 'badge' in i ? i.badge : undefined }))}
         activeItem={activeItem}
-        onItemClick={(id) => setActiveItem(id as typeof activeItem)}
+        onItemClick={handleSectionChange}
       />
 
       <div className="flex-1">

@@ -34,11 +34,14 @@ import type {
 } from '@/lib/types'
 import type { GarantiasData } from '@/components/sections/Garantias'
 import { generateCSSVariables, applyCSSVariables } from '@/lib/utils/colorSystem'
+import { AnalyticsProvider } from '@/features/admin/contexts'
+import { useEventTracking } from '@/features/admin/hooks'
 
 function HomeContent() {
   const searchParams = useSearchParams()
   const [cotizacion, setCotizacion] = useState<QuotationConfig | null>(null)
   const [loading, setLoading] = useState(true)
+  const { trackProposalViewed, trackOfertaSectionViewed } = useEventTracking()
   
   // Cargar cotización activa al montar
   useEffect(() => {
@@ -70,6 +73,43 @@ function HomeContent() {
       return () => clearTimeout(timer)
     }
   }, [searchParams])
+
+  // Track proposal viewed
+  useEffect(() => {
+    if (cotizacion?.id && typeof trackProposalViewed === 'function') {
+      try {
+        trackProposalViewed(cotizacion.id, cotizacion.numero)
+      } catch (error) {
+        console.warn('⚠️ Analytics tracking error (proposal_viewed):', error)
+      }
+    }
+  }, [cotizacion?.id, cotizacion?.numero, trackProposalViewed])
+
+  // Track section visibility
+  useEffect(() => {
+    if (!cotizacion?.id || typeof trackOfertaSectionViewed !== 'function') return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.id
+            try {
+              trackOfertaSectionViewed(sectionId)
+            } catch (error) {
+              console.warn(`⚠️ Analytics error for section ${sectionId}:`, error)
+            }
+          }
+        })
+      },
+      { threshold: 0.25 }
+    )
+
+    const sections = document.querySelectorAll('section[id]')
+    sections.forEach(section => observer.observe(section))
+
+    return () => observer.disconnect()
+  }, [cotizacion?.id, trackOfertaSectionViewed])
 
   // Extraer datos del contenidoGeneral
   const contenido = cotizacion?.contenidoGeneral
@@ -203,7 +243,9 @@ function HomeContent() {
 export default function Home() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-light-bg font-github" />}>
-      <HomeContent />
+      <AnalyticsProvider>
+        <HomeContent />
+      </AnalyticsProvider>
     </Suspense>
   )
 }

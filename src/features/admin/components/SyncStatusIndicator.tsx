@@ -1,19 +1,36 @@
 /**
  * Indicador visual del estado de sincronización
+ * 
+ * FLUJO VISUAL:
+ * 1. welcome - "¡Bienvenido!" (icono de saludo)
+ * 2. checking-connection - "Verificando conexión a BD..." (spinner)
+ * 3. syncing-from-db - "Sincronizando datos de BD a local..." (sync icon)
+ * 4. updating-analytics - "Actualizando analítica..." (spinner)
+ * 5. synced - "Sincronizado con BD ✓" (check verde)
+ * 6. offline-cached - "Sin conexión a BD. Mostrando datos locales" (amber)
+ * 7. merging - "Fusionando datos..." (merge icon)
+ * 8. comparing - "Comparando diferencias..." (compare icon)
+ * 9. error - "Error de sincronización" (error icon)
  */
 
-'use client'
+"use client"
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { 
   FaCloud, 
   FaCloudUploadAlt, 
   FaSync, 
   FaExclamationTriangle, 
   FaCheck,
-  FaSpinner
+  FaSpinner,
+  FaDatabase,
+  FaExchangeAlt,
+  FaCodeBranch,
+  FaWifi
 } from 'react-icons/fa'
+import { MdWavingHand } from 'react-icons/md'
 import type { SyncStatus } from '@/lib/cache/types'
+import type { LoadingPhase } from '../hooks/useLoadingPhase'
 
 export interface SyncStatusIndicatorProps {
   /** Estado de sincronización */
@@ -30,6 +47,94 @@ export interface SyncStatusIndicatorProps {
   showText?: boolean
   /** Tamaño del indicador */
   size?: 'sm' | 'md' | 'lg'
+  /** Fase de carga visual (nueva API unificada) */
+  loadingPhase?: LoadingPhase
+}
+
+interface StatusConfig {
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+  bgColor: string
+  text: string
+  pulse: boolean
+  spin: boolean
+  strikethrough?: boolean
+}
+
+// Configuración de estados visuales por fase
+const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
+  'welcome': {
+    icon: MdWavingHand,
+    color: 'text-yellow-500',
+    bgColor: 'bg-yellow-50',
+    text: '¡Bienvenido!',
+    pulse: false,
+    spin: false
+  },
+  'checking-connection': {
+    icon: FaWifi,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-50',
+    text: 'Verificando conexión a BD...',
+    pulse: false,
+    spin: true
+  },
+  'syncing-from-db': {
+    icon: FaDatabase,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-50',
+    text: 'Sincronizando datos de BD a local...',
+    pulse: false,
+    spin: true
+  },
+  'updating-analytics': {
+    icon: FaSync,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-50',
+    text: 'Actualizando analítica...',
+    pulse: false,
+    spin: true
+  },
+  'synced': {
+    icon: FaCheck,
+    color: 'text-green-500',
+    bgColor: 'bg-green-50',
+    text: 'Sincronizado con BD',
+    pulse: false,
+    spin: false
+  },
+  'offline-cached': {
+    icon: FaCloud,
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-50',
+    text: 'Sin conexión a BD. Mostrando datos locales',
+    pulse: false,
+    spin: false
+  },
+  'merging': {
+    icon: FaCodeBranch,
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-50',
+    text: 'Fusionando datos...',
+    pulse: false,
+    spin: true
+  },
+  'comparing': {
+    icon: FaExchangeAlt,
+    color: 'text-orange-500',
+    bgColor: 'bg-orange-50',
+    text: 'Comparando diferencias...',
+    pulse: false,
+    spin: true
+  },
+  'error': {
+    icon: FaExclamationTriangle,
+    color: 'text-red-500',
+    bgColor: 'bg-red-50',
+    text: 'Error de sincronización',
+    pulse: true,
+    spin: false
+  }
 }
 
 export function SyncStatusIndicator({
@@ -39,8 +144,14 @@ export function SyncStatusIndicator({
   isLoading = false,
   lastSaved = null,
   showText = true,
-  size = 'md'
+  size = 'md',
+  loadingPhase = 'welcome'
 }: Readonly<SyncStatusIndicatorProps>) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  
   const sizeClasses = {
     sm: 'w-3 h-3',
     md: 'w-4 h-4',
@@ -50,7 +161,13 @@ export function SyncStatusIndicator({
   const iconSize = sizeClasses[size]
 
   // Determinar estado visual
-  const getStatusConfig = () => {
+  const getStatusConfig = (): StatusConfig => {
+    // Prioridad 1: Si hay una fase de carga definida, usarla
+    if (loadingPhase && PHASE_CONFIGS[loadingPhase]) {
+      return PHASE_CONFIGS[loadingPhase]
+    }
+
+    // Prioridad 2: Estado de no online sin loadingPhase
     if (!isOnline) {
       return {
         icon: FaCloud,
@@ -63,6 +180,7 @@ export function SyncStatusIndicator({
       }
     }
 
+    // Prioridad 3: isLoading genérico
     if (isLoading) {
       return {
         icon: FaSpinner,
@@ -74,16 +192,10 @@ export function SyncStatusIndicator({
       }
     }
 
+    // Prioridad 4: Estado de sync de cotización específica
     switch (status) {
       case 'synced':
-        return {
-          icon: FaCheck,
-          color: 'text-green-500',
-          bgColor: 'bg-green-50',
-          text: 'Sincronizado',
-          pulse: false,
-          spin: false
-        }
+        return PHASE_CONFIGS['synced']
       
       case 'pending':
         return {
@@ -96,14 +208,7 @@ export function SyncStatusIndicator({
         }
       
       case 'syncing':
-        return {
-          icon: FaSync,
-          color: 'text-blue-500',
-          bgColor: 'bg-blue-50',
-          text: 'Sincronizando...',
-          pulse: false,
-          spin: true
-        }
+        return PHASE_CONFIGS['syncing-from-db']
       
       case 'conflict':
         return {
@@ -116,14 +221,7 @@ export function SyncStatusIndicator({
         }
       
       case 'error':
-        return {
-          icon: FaExclamationTriangle,
-          color: 'text-red-500',
-          bgColor: 'bg-red-50',
-          text: 'Error de sincronización',
-          pulse: false,
-          spin: false
-        }
+        return PHASE_CONFIGS['error']
       
       default:
         if (isDirty) {
@@ -147,7 +245,12 @@ export function SyncStatusIndicator({
     }
   }
 
-  const config = getStatusConfig()
+  // En SSR usamos un estado visual estable para evitar mismatches.
+  // En CSR (tras mount) usamos el estado real.
+  const config = mounted
+    ? getStatusConfig()
+    : PHASE_CONFIGS['welcome']
+  
   const Icon = config.icon
 
   const formatLastSaved = () => {
@@ -179,7 +282,7 @@ export function SyncStatusIndicator({
             ${iconSize} 
             ${config.color}
             ${config.spin ? 'animate-spin' : ''}
-          `} 
+          `}
         />
       </div>
       
@@ -188,7 +291,7 @@ export function SyncStatusIndicator({
           <span className={`text-sm font-medium ${config.color}`}>
             {config.text}
           </span>
-          {lastSaved && status === 'synced' && (
+          {mounted && lastSaved && loadingPhase === 'synced' && (
             <span className="text-xs text-gray-400">
               Guardado {formatLastSaved()}
             </span>

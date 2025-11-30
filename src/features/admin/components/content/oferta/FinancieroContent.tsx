@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   FaDollarSign, 
@@ -21,6 +21,7 @@ import {
   ConfigDescuentos,
   TipoDescuento 
 } from '@/lib/types'
+import { useEventTracking } from '@/features/admin/hooks'
 
 export interface FinancieroContentProps {
   // Desarrollo
@@ -80,6 +81,13 @@ export default function FinancieroContent({
   serviciosBase,
   serviciosOpcionales,
 }: Readonly<FinancieroContentProps>) {
+  // Hook de tracking
+  const { 
+    trackDescuentoConfigured, 
+    trackOpcionPagoAdded, 
+    trackOpcionPagoRemoved 
+  } = useEventTracking()
+
   // Validaciones
   const totalPorcentajePagos = opcionesPago.reduce((sum, op) => sum + (op.porcentaje || 0), 0)
   const esquemaPagosValido = totalPorcentajePagos === 100
@@ -88,10 +96,11 @@ export default function FinancieroContent({
                           configDescuentos.descuentoDirecto > 0
   const tieneMetodoPago = metodoPagoPreferido && metodoPagoPreferido.trim() !== ''
 
-  // Helpers para actualizar configDescuentos
-  const updateTipoDescuento = (tipo: TipoDescuento) => {
+  // Helpers para actualizar configDescuentos con tracking
+  const updateTipoDescuento = useCallback((tipo: TipoDescuento) => {
     setConfigDescuentos({ ...configDescuentos, tipoDescuento: tipo })
-  }
+    trackDescuentoConfigured(tipo, 0)
+  }, [configDescuentos, setConfigDescuentos, trackDescuentoConfigured])
 
   const updateDescuentoGeneral = (field: string, value: number | boolean) => {
     if (field === 'porcentaje') {
@@ -99,6 +108,7 @@ export default function FinancieroContent({
         ...configDescuentos,
         descuentoGeneral: { ...configDescuentos.descuentoGeneral, porcentaje: value as number }
       })
+      trackDescuentoConfigured('general', value as number)
     } else {
       setConfigDescuentos({
         ...configDescuentos,
@@ -116,6 +126,7 @@ export default function FinancieroContent({
         ...configDescuentos,
         descuentosGranulares: { ...configDescuentos.descuentosGranulares, desarrollo: valor }
       })
+      trackDescuentoConfigured('granular', valor)
     } else if (id) {
       setConfigDescuentos({
         ...configDescuentos,
@@ -124,13 +135,16 @@ export default function FinancieroContent({
           [categoria]: { ...configDescuentos.descuentosGranulares[categoria], [id]: valor }
         }
       })
+      trackDescuentoConfigured('granular', valor)
     }
   }
 
-  // Opciones de pago CRUD
-  const agregarOpcionPago = () => {
-    setOpcionesPago([...opcionesPago, { nombre: '', porcentaje: 0, descripcion: '' }])
-  }
+  // Opciones de pago CRUD con tracking
+  const agregarOpcionPago = useCallback(() => {
+    const nuevaOpcion = { nombre: '', porcentaje: 0, descripcion: '' }
+    setOpcionesPago([...opcionesPago, nuevaOpcion])
+    trackOpcionPagoAdded(opcionesPago.length + 1)
+  }, [opcionesPago, setOpcionesPago, trackOpcionPagoAdded])
 
   const actualizarOpcionPago = (index: number, field: keyof OpcionPago, value: string | number) => {
     const nuevas = [...opcionesPago]
@@ -138,9 +152,11 @@ export default function FinancieroContent({
     setOpcionesPago(nuevas)
   }
 
-  const eliminarOpcionPago = (index: number) => {
+  const eliminarOpcionPago = useCallback((index: number) => {
+    const opcionEliminada = opcionesPago[index]
     setOpcionesPago(opcionesPago.filter((_, i) => i !== index))
-  }
+    trackOpcionPagoRemoved(opcionEliminada?.nombre || `Opción ${index + 1}`)
+  }, [opcionesPago, setOpcionesPago, trackOpcionPagoRemoved])
 
   // Cálculos para Vista Previa
   const calcularVistaPrevia = () => {

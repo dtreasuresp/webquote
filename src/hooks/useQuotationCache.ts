@@ -78,7 +78,9 @@ export function useQuotationCache(
   // Estados
   const [quotation, setQuotation] = useState<QuotationConfig | null>(null)
   const [snapshots, setSnapshots] = useState<PackageSnapshot[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  // CRÍTICO: isLoading debe ser false si no hay quotationId o no está habilitado
+  // De lo contrario, el indicador de carga se queda atascado indefinidamente
+  const [isLoading, setIsLoading] = useState(false)
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pendingConflict, setPendingConflict] = useState<ConflictInfo | null>(null)
@@ -155,6 +157,13 @@ export function useQuotationCache(
         const cachedSnapshots = snapshotCache.getSnapshots(quotationId)
         setSnapshots(cachedSnapshots)
         
+        // Si estamos offline y hay caché, usar caché sin intentar sincronizar
+        if (!isOnline) {
+          setIsLoading(false)
+          loadingRef.current = false
+          return
+        }
+        
         // Si hay caché y hay cambios locales, no recargar del servidor
         if (cachedData.metadata.isDirty) {
           setIsLoading(false)
@@ -163,8 +172,44 @@ export function useQuotationCache(
         }
       }
 
-      // 2. Si estamos online, sincronizar con servidor en background
+      // 2. Si estamos online y no hay caché, intentar cargar del servidor
       if (isOnline) {
+        // Si hay caché pero NO hay cambios locales, sincronizar en background
+        // pero establecer isLoading a false inmediatamente
+        if (cachedData && !cachedData.metadata.isDirty) {
+          setIsLoading(false)
+          loadingRef.current = false
+          
+          // Sincronizar en background sin bloquear la UI
+          syncManager.pullFromServer(quotationId).then(result => {
+            if (result.success && result.quotation) {
+              setQuotation(result.quotation)
+              setSyncStatus('synced')
+              
+              // También cargar snapshots del servidor
+              fetch(`/api/snapshots?quotationId=${quotationId}`)
+                .then(snapshotsResponse => {
+                  if (snapshotsResponse.ok) {
+                    return snapshotsResponse.json()
+                  }
+                })
+                .then(serverSnapshots => {
+                  if (serverSnapshots) {
+                    setSnapshots(serverSnapshots)
+                    snapshotCache.saveSnapshots(quotationId, serverSnapshots)
+                  }
+                })
+                .catch(snapshotError => {
+                  console.debug('Error cargando snapshots del servidor, usando caché:', snapshotError)
+                })
+            }
+          }).catch(err => {
+            console.debug('Error sincronizando en background:', err)
+          })
+          return
+        }
+        
+        // Si NO hay caché, cargar del servidor (bloqueante)
         const result = await syncManager.pullFromServer(quotationId)
         
         if (result.success && result.quotation) {
@@ -180,7 +225,6 @@ export function useQuotationCache(
               snapshotCache.saveSnapshots(quotationId, serverSnapshots)
             }
           } catch (snapshotError) {
-            // Ignorar error de snapshots, usar caché
             console.debug('Error cargando snapshots del servidor, usando caché:', snapshotError)
           }
         } else if (!cachedData) {

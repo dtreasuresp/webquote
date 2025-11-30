@@ -15,13 +15,10 @@ if (!resolvedUrl) {
   throw new Error('No se encontró ninguna variable de conexión PostgreSQL (DATABASE_URL / STORAGE_*).')
 }
 
-// Debug logging intentionally removed to avoid sensitive output in dev.
-// If further diagnostics are needed, enable this in a local branch only.
-
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: ['query'],
+    log: process.env.NODE_ENV === 'production' ? [] : ['error', 'warn'],
     datasources: {
       db: { url: resolvedUrl }
     }

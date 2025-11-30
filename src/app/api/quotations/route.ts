@@ -7,6 +7,8 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(request: NextRequest) {
   try {
+    await prisma.$queryRaw`SELECT 1`
+    
     const quotations = await prisma.quotationConfig.findMany({
       include: {
         snapshots: {
@@ -21,7 +23,14 @@ export async function GET(request: NextRequest) {
       data: quotations,
     })
   } catch (error) {
-    console.error('Error fetching quotations:', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Error fetching quotations:', msg)
+    if (msg.includes('ECONNREFUSED') || msg.includes('connect')) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection failed' },
+        { status: 503 }
+      )
+    }
     return NextResponse.json(
       { success: false, error: 'Error fetching quotations' },
       { status: 500 }

@@ -15,9 +15,14 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Propuesta de Diseño Web - Urbanísima Constructora S.R.L',
-  description: 'Página Catálogo Dinámica - Urbanísima Constructora S.R.L. Propuesta profesional de desarrollo web con 3 opciones de inversión.',
-  keywords: 'diseño web, construcción, Urbanísima, página web, catálogo dinámico',
+  title: 'WebQuote - Cotizaciones Online',
+  description: 'Crea y gestiona cotizaciones online de forma rápida y sencilla con WebQuote. Ideal para profesionales y empresas que buscan eficiencia y organización en sus procesos de venta.',
+  keywords: 'cotizaciones online, gestión de cotizaciones, eficiencia, organización, profesionales, empresas',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({

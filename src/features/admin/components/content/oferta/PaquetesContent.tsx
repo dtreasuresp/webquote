@@ -5,6 +5,7 @@ import { FaCalculator, FaEdit, FaTrash, FaLayerGroup } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import { PackageSnapshot, QuotationConfig, DialogConfig } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
+import { useEventTracking } from '@/features/admin/hooks'
 
 interface ToastHandler {
   success: (message: string) => void
@@ -47,6 +48,9 @@ export default function PaquetesContent({
   cotizacionConfig,
 }: Readonly<PaquetesContentProps>) {
   const [procesandoId, setProcesandoId] = useState<string | null>(null)
+  
+  // Hook de tracking
+  const { trackSnapshotActivated, trackSnapshotDeactivated, trackPaqueteDeleted, trackModalOpened } = useEventTracking()
 
   const esUltimoPaqueteActivo = (snapshotId: string): boolean => {
     const paquetesActivos = snapshots.filter(
@@ -101,6 +105,14 @@ export default function PaquetesContent({
       const guardado = await actualizarSnapshot(actualizado.id, actualizado)
       setSnapshots(snapshots.map(s => s.id === snapshot.id ? guardado : s))
       await refreshSnapshots()
+      
+      // Tracking de activación/desactivación
+      if (nuevoEstado) {
+        trackSnapshotActivated(snapshot.id, snapshot.nombre)
+      } else {
+        trackSnapshotDeactivated(snapshot.id, snapshot.nombre)
+      }
+      
       toast.success(nuevoEstado ? '✅ Paquete activado' : '✅ Paquete desactivado')
     } catch (err) {
       console.error('Error al cambiar estado activo:', err)

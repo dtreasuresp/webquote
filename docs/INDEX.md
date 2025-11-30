@@ -1,191 +1,385 @@
-# 📚 Índice de Documentación - WebQuote
+# 📁 ESTRUCTURA DEL PROYECTO - WEBQUOTE
 
-Última actualización: 25 de noviembre de 2025
+## 🎯 Descripción General
 
-## 🎯 Estructura General
+**WebQuote** es una aplicación Next.js 14+ para gestionar propuestas de cotización con capacidades offline, sincronización en tiempo real y análisis de datos.
+
+**Branch:** `feature/oferta-sidebar-navigation`  
+**Status:** 🟢 En desarrollo activo  
+**Última actualización:** 30 de noviembre de 2025
+
+---
+
+## 📂 Estructura de Directorios
+
+### Raíz del Proyecto
+
+```
+webquote/
+├── 📄 Archivos de Configuración (EN RAÍZ - Requeridos por Next.js)
+│  ├── next.config.js               # Configuración de Next.js
+│  ├── tailwind.config.js           # Configuración de Tailwind CSS
+│  ├── postcss.config.js            # Configuración de PostCSS
+│  ├── tsconfig.json                # Configuración de TypeScript
+│  ├── .eslintrc.json               # Configuración de ESLint
+│  ├── package.json                 # Dependencias del proyecto
+│  └── .npmrc                       # Configuración de NPM
+│
+├── 🔧 Archivos de Entorno (git-ignored)
+│  ├── .env                         # Variables de entorno
+│  ├── .env.local                   # Variables locales
+│  ├── .env.vercel                  # Variables de Vercel
+│  └── .vercelignore                # Archivos ignorados
+│
+├── 📚 Documentación Principal
+│  ├── README.md                    # Introducción y guía de inicio
+│  ├── CODE_OF_CONDUCT.md           # Código de conducta
+│  ├── LICENSE                      # Licencia del proyecto
+│  └── CONTRIBUTING.md              # Guía de contribución
+│
+├── 📁 Directorios Principales
+│  ├── src/                         # ⭐ CÓDIGO FUENTE
+│  ├── docs/                        # 📖 DOCUMENTACIÓN DEL PROYECTO
+│  ├── prisma/                      # 🗄️ BD Y MIGRACIONES
+│  ├── public/                      # 🖼️ ARCHIVOS PÚBLICOS
+│  ├── tests/                       # ✅ TESTS Y PRUEBAS
+│  ├── scripts/                     # 🚀 SCRIPTS DE UTILIDAD
+│  ├── scripts-util/                # 🛠️ SCRIPTS DE VALIDACIÓN
+│  ├── netlify/                     # 🌐 CONFIGURACIÓN NETLIFY
+│  ├── .github/                     # 👨‍💼 CONFIGURACIÓN GITHUB
+│  ├── node_modules/                # 📦 DEPENDENCIAS (git-ignored)
+│  ├── .next/                       # 🔨 BUILD (git-ignored)
+│  └── .vercel/                     # ☁️ VERCEL (git-ignored)
+│
+└── 🔧 Despliegue
+   ├── netlify.toml                # Configuración de Netlify
+   └── vercel.json                 # Configuración de Vercel
+```
+
+---
+
+## 🔴 CÓDIGO FUENTE - `/src`
+
+```
+src/
+├── app/                              # 📱 App Router de Next.js 14+
+│  ├── administrador/
+│  │  ├── page.tsx                    # 🎛️ Panel Admin Principal (4267 líneas)
+│  │  └── layout.tsx                  # Layout del admin
+│  ├── layout.tsx                     # Layout raíz
+│  ├── page.tsx                       # Página de inicio
+│  └── api/                           # ✅ API Routes
+│     └── quotation-config/           # API para cotizaciones
+│
+├── components/                       # 🧩 COMPONENTES REUTILIZABLES
+│  ├── layout/
+│  │  ├── Navigation.tsx              # Barra de navegación
+│  │  ├── TabsModal.tsx               # Modal genérico
+│  │  ├── Toast.tsx                   # Sistema de notificaciones
+│  │  └── ...
+│  └── ...
+│
+├── features/                         # 🎯 FEATURES POR DOMINIO
+│  └── admin/                         # Feature: Panel Administrativo
+│     ├── components/
+│     │  ├── tabs/                    # Todos los tabs del panel
+│     │  │  ├── CotizacionTab.tsx
+│     │  │  ├── OfertaTab.tsx
+│     │  │  ├── AnalyticsTab.tsx      # ✨ Tab de Analytics
+│     │  │  └── ...
+│     │  ├── AnalyticsDashboard.tsx   # 📊 Dashboard de analytics
+│     │  ├── SyncStatusIndicator.tsx  # ✨ Indicador de sincronización
+│     │  └── DialogoGenerico.tsx      # ✨ Modal de conflictos
+│     ├── hooks/
+│     │  ├── useLoadingPhase.ts       # ✨ Estados visuales (CORREGIDO)
+│     │  ├── useConnectionRecovery.ts # ✨ Detección reconexión
+│     │  └── ...
+│     ├── contexts/
+│     │  └── AnalyticsContext.ts      # Contexto de analytics
+│     └── ...
+│
+├── hooks/                            # ⚙️ HOOKS GLOBALES
+│  ├── useQuotationCache.ts           # ✨ Gestión caché offline
+│  ├── useOfflineStatus.ts            # ✨ Detecta online/offline
+│  └── ...
+│
+├── lib/                              # 📚 UTILIDADES Y CORE
+│  ├── cache/                         # 💾 SISTEMA DE CACHÉ
+│  │  ├── index.ts                    # Entrada principal
+│  │  ├── quotationCache.ts           # Gestión de caché
+│  │  ├── syncManager.ts              # Gestor sincronización
+│  │  └── types.ts                    # Tipos del sistema
+│  ├── types/                         # 📝 TIPOS GLOBALES
+│  ├── utils/                         # 🛠️ UTILIDADES
+│  │  ├── validation.ts
+│  │  ├── discountCalculator.ts
+│  │  └── ...
+│  └── ...
+│
+├── styles/                           # 🎨 ESTILOS GLOBALES
+│  └── globals.css
+│
+└── img/                              # 🖼️ IMÁGENES
+```
+
+---
+
+## 📖 DOCUMENTACIÓN - `/docs`
 
 ```
 docs/
-├── INDEX.md                          ← Estás aquí
-├── MASTER_INDEX.md                   ← Índice maestro detallado
-├── INDICE_DOCUMENTACION_PHASES_8-10.md
-├── phases/                           ← Documentación de FASES
-│   ├── PHASE_7_*.md
-│   ├── PHASE_11_*.md
-│   ├── PHASE_12_*.md
-│   ├── PHASE_14_*.md
-│   ├── PHASE_15_*.md
-│   ├── PLAN_PHASES_11-15.md
-│   └── RESUMEN_*.md
-├── reports/                          ← Reportes y estados del proyecto
-│   ├── STATUS_*.md
-│   ├── PROJECT_STATUS.md
-│   ├── RESUMEN_*.md
-│   ├── IMPLEMENTACION_*.md
-│   ├── PROYECTO_*.md
-│   ├── PUNTOS_CLAVE_*.md
-│   └── *.txt (logs, auditorías)
-├── audits/                           ← Auditorías y checklists
-│   ├── AUDITORIA_*.md
-│   └── CHECKLIST_*.md
-├── architecture/                     ← Arquitectura y referencias técnicas
-│   ├── ARQUITECTURA_*.md
-│   └── REFERENCIA_*.md
-├── propuestas/                       ← Propuestas comerciales
-│   ├── PROPUESTA_*.md
-│   ├── resumen_ejecutivo_*.md
-│   └── _PROPUESTA_FINAL_*.md
-├── deployment/                       ← Guías de deployment
-│   ├── NETLIFY_DEPLOY.md
-│   ├── VERCEL_DEPLOY.md
-│   └── SNAPSHOTS_REFRESH_*.md
-├── especificaciones/                 ← Especificaciones técnicas
-├── refactorizacion/                  ← Documentación de refactorización
-│   ├── GUIA_INTEGRACION_*.md
-│   ├── INVENTARIO_*.md
-│   └── más...
-└── README.md                         ← Documentación general del proyecto
+├── INDEX.md                          # ← Estás aquí
+├── README.md                         # Documentación general
+├── project-docs/                     # 📋 Documentación del Proyecto
+│  ├── BEFORE_AFTER_CÓDIGO.md
+│  ├── DETALLES_REFACTORIZACIÓN_PAGE.md
+│  ├── EXPLICACION_ANALYTICS_EVENTS.md
+│  ├── REFACTORIZACIÓN_PAGE.md
+│  └── PENDIENTE_AHORA.md
+│
+├── reports/                          # 📊 Reportes y Validaciones
+│  ├── PRUEBAS_FINAL_REPORT.md        # ✅ Reporte final (24/24 tests)
+│  ├── SYSTEM_VALIDATION_OFFLINE_SYNC.md
+│  └── PRUEBAS_RESUMEN_VISUAL.txt
+│
+├── phases/                           # 🚀 Documentación de Fases
+│  ├── PHASE_7_DELIVERY_SUMMARY.md
+│  ├── PHASE_11_ADVANCED_VALIDATION.md
+│  ├── PHASE_12_SNAPSHOT_IMPROVEMENTS.md
+│  ├── PHASE_14_PERFORMANCE_OPTIMIZATION.md
+│  ├── PHASE_15_TESTING_PLAN.md
+│  ├── PLAN_PHASES_11-15.md
+│  └── RESUMEN_IMPLEMENTACION_FASES_11_15.md
+│
+├── architecture/                     # 🏗️ Arquitectura
+│  ├── ARCHITECTURE_CURRENT_STATE.md
+│  ├── ADMIN_PANEL_DESIGN_SYSTEM.md
+│  ├── ANALYTICS_ARQUITECTURA.md
+│  └── ...
+│
+├── audits/                           # ✓ Auditorías
+│  ├── AUDITORIA_FASE_10_COMPLETA.md
+│  ├── CHECKLIST_FINAL_FASES_11_15.md
+│  └── CHECKLIST_PHASE_10_COMPLETITUD.md
+│
+├── propuestas/                       # 💼 Propuestas Comerciales
+│  ├── PROPUESTA_COMERCIAL_2025_FINAL.md
+│  ├── PROPUESTA_2025_Version1.md
+│  └── _PROPUESTA_FINAL_URBANISMA_CONSTRUCTORA_2025_v1.md
+│
+├── deployment/                       # 🌐 Guides de Despliegue
+│  ├── NETLIFY_DEPLOY.md
+│  ├── VERCEL_DEPLOY.md
+│  └── SNAPSHOTS_REFRESH_IMPLEMENTATION.md
+│
+├── especificaciones/                 # 📋 Especificaciones
+├── refactorizacion/                  # 🔄 Documentación Refactorización
+├── sessions/                         # 📝 Registros de Sesiones
+└── testing/                          # ✅ Testing
 ```
 
 ---
 
-## 📖 Guía Rápida por Sección
+## 🗄️ BASE DE DATOS - `/prisma`
 
-### 🚀 FASES DE DESARROLLO
-
-| Fase | Archivos | Estado |
-|------|----------|--------|
-| **PHASE 7** | `phases/PHASE_7_*.md` | ✅ Completada |
-| **PHASE 11** | `phases/PHASE_11_ADVANCED_VALIDATION.md` | ✅ Completada |
-| **PHASE 12** | `phases/PHASE_12_SNAPSHOT_IMPROVEMENTS.md` | ✅ Completada |
-| **PHASE 13** | `phases/RESUMEN_IMPLEMENTACION_FASES_12-14.md` | ✅ Completada |
-| **PHASE 14** | `phases/PHASE_14_PERFORMANCE_OPTIMIZATION.md` | ✅ Completada |
-| **PHASE 15** | `phases/PHASE_15_TESTING_PLAN.md` | 🔄 En progreso |
-
-**Ver plan:** `phases/PLAN_PHASES_11-15.md`
-
-### 📊 REPORTES Y ESTADO
-
-**Últimos reportes:**
-- `reports/STATUS_FINAL_PHASES_8-10.md` - Estado final de phases 8-10
-- `reports/PROJECT_STATUS.md` - Estado actual del proyecto
-- `reports/RESUMEN_IMPLEMENTACION_FASES_11_15.md` - Resumen de últimas phases
-- `reports/RESUMEN_TECNICO_FINAL.md` - Resumen técnico completo
-
-### 🔐 AUDITORÍAS Y CHECKLISTS
-
-- `audits/AUDITORIA_FASE_10_COMPLETA.md` - Auditoría FASE 10
-- `audits/CHECKLIST_FINAL_FASES_11_15.md` - Checklist final
-- `audits/CHECKLIST_PHASE_10_COMPLETITUD.md` - Verificación completitud
-
-### 🏗️ ARQUITECTURA
-
-- `architecture/ARQUITECTURA_VISUAL_PHASES_8-10.md` - Diagramas de arquitectura
-- `architecture/REFERENCIA_RAPIDA_PHASES_8-10.md` - Referencia rápida
-- Más en `architecture/`
-
-### 💼 PROPUESTAS
-
-- `propuestas/PROPUESTA_COMERCIAL_2025_FINAL.md` - Propuesta final
-- `propuestas/resumen_ejecutivo_urbanisma.md` - Resumen ejecutivo
-- Más en `propuestas/`
-
-### 🌐 DEPLOYMENT
-
-Guías de deployment en diferentes plataformas:
-- `deployment/NETLIFY_DEPLOY.md` - Deploy a Netlify
-- `deployment/VERCEL_DEPLOY.md` - Deploy a Vercel
-- `deployment/SNAPSHOTS_REFRESH_IMPLEMENTATION.md` - Refresh de snapshots
+```
+prisma/
+├── schema.prisma                     # 📋 Esquema principal de BD
+├── seed.ts                           # 🌱 Script de seeding
+├── migrate-payment-options.ts        # 📊 Migración opciones de pago
+├── migrate-servicios-base.ts         # 📊 Migración servicios base
+├── backups/                          # 💾 Copias de seguridad
+└── migrations/                       # 📜 Historial de migraciones
+```
 
 ---
 
-## 🎓 ¿Dónde Empezar?
+## 🛠️ SCRIPTS Y UTILIDADES
 
-### Para principiantes 👶
-1. Lee: `README.md`
-2. Lee: `docs/MASTER_INDEX.md`
-3. Lee: `reports/STATUS_FINAL_PHASES_8-10.md`
+### `/scripts` - Scripts del Proyecto
+```
+scripts/
+├── backup-and-migrate.ts             # Backup + migración
+├── backup-data.js                    # Backup de datos
+├── backup-sql.js                     # Backup SQL
+├── build-and-migrate.sh              # Build + migración
+├── check-contenido.js                # Verificación de contenido
+├── diagnose-db.ts                    # Diagnóstico de BD
+├── fix-relationships.ts              # Reparación de relaciones
+├── restore-data.ts                   # Restauración de datos
+├── test-neon.js                      # Test de Neon
+└── test-prisma.js                    # Test de Prisma
+```
 
-### Para desarrolladores 👨‍💻
-1. Lee: `architecture/REFERENCIA_RAPIDA_PHASES_8-10.md`
-2. Examina: `phases/` para entender evolución
-3. Revisa: `refactorizacion/` para patrones
-
-### Para project managers 📋
-1. Lee: `propuestas/` para contexto comercial
-2. Revisa: `reports/` para estado
-3. Consulta: `audits/` para verificación
-
-### Para deployments 🚀
-1. Lee: `deployment/NETLIFY_DEPLOY.md` o `VERCEL_DEPLOY.md`
-2. Revisa: `deployment/SNAPSHOTS_REFRESH_IMPLEMENTATION.md`
-
----
-
-## 📌 Archivos Importantes
-
-| Archivo | Propósito |
-|---------|-----------|
-| `README.md` | Bienvenida y visión general |
-| `MASTER_INDEX.md` | Índice detallado y completo |
-| `phases/PLAN_PHASES_11-15.md` | Roadmap de fases 11-15 |
-| `reports/PROJECT_STATUS.md` | Estado actual del proyecto |
-| `architecture/REFERENCIA_TECNICA_ARQUITECTURA.md` | Referencia técnica |
+### `/scripts-util` - Scripts de Validación
+```
+scripts-util/
+└── validation-script.js              # ✅ Script de validación (24 tests)
+```
 
 ---
 
-## 🔗 Navegación Rápida
+## ✅ TESTS - `/tests`
 
-- [Fases de Desarrollo](./phases/)
-- [Reportes y Estado](./reports/)
-- [Auditorías](./audits/)
-- [Arquitectura](./architecture/)
-- [Propuestas](./propuestas/)
-- [Deployment](./deployment/)
-- [Refactorización](./refactorizacion/)
+```
+tests/
+└── offline-sync.test.ts              # ✅ Tests offline→online
+```
 
 ---
 
-## 📝 Convenciones de Nombres
+## 📱 RECURSOS PÚBLICOS - `/public`
 
-- `PHASE_*.md` - Documentación de fases específicas
-- `RESUMEN_*.md` - Resúmenes y summaries
-- `STATUS_*.md` - Reportes de estado
-- `ARQUITECTURA_*.md` - Documentación arquitectónica
-- `PROPUESTA_*.md` - Propuestas comerciales
-- `CHECKLIST_*.md` - Listas de verificación
-- `AUDITORIA_*.md` - Reportes de auditoría
+```
+public/
+└── img/                              # Imágenes y assets estáticos
+```
 
 ---
 
-## 🎯 Estado del Proyecto
+## 🌐 DESPLIEGUE
 
-**Última actualización:** 25 de noviembre de 2025
+### Netlify
+```
+netlify/
+└── functions/                        # Funciones serverless
+```
+**Config:** `netlify.toml` (en raíz)
 
-### Completado ✅
-- PHASE 7: Delivery inicial
-- PHASE 8-10: Refactorización del panel
-- PHASE 11: Validación avanzada
-- PHASE 12: Mejoras de snapshots
-- PHASE 13: Analytics e tracking
-- PHASE 14: Optimización de rendimiento
-
-### En Progreso 🔄
-- PHASE 15: Testing completo
-
-### Próximo 📅
-- Deployment a producción
-- Monitoreo y mantenimiento
+### Vercel
+**Config:** `vercel.json` (en raíz)
 
 ---
 
-## 💡 Tips
+## 🔑 ARCHIVOS CRÍTICOS EN RAÍZ
 
-1. **Busca documentos por fecha** en los nombres (PHASE_*_FINAL_PHASES_8-10 = fases 8-10)
-2. **Revisa RESUMEN_*.md primero** si quieres una visión rápida
-3. **Usa MASTER_INDEX.md** para búsquedas detalladas
-4. **Los commits de git** están documentados en reportes
+| Archivo | Propósito | ⚠️ |
+|---------|-----------|---|
+| `package.json` | Dependencias NPM | Esencial |
+| `next.config.js` | Configuración Next.js | ⚠️ NO MOVER |
+| `tsconfig.json` | Configuración TypeScript | ⚠️ NO MOVER |
+| `tailwind.config.js` | Configuración Tailwind | ⚠️ NO MOVER |
+| `.eslintrc.json` | Configuración ESLint | ⚠️ NO MOVER |
+| `postcss.config.js` | Configuración PostCSS | ⚠️ NO MOVER |
+| `.env.local` | Variables de entorno | 🔐 Secreto |
+| `README.md` | Guía del proyecto | Documentación |
+| `LICENSE` | Licencia | Legal |
+
+⚠️ = Estos archivos DEBEN estar en raíz para que Next.js/Tools los encuentren
 
 ---
 
-**🔍 ¿No encuentras lo que buscas?** Consulta `MASTER_INDEX.md` para un índice más detallado.
+## ✨ SISTEMA OFFLINE→ONLINE
+
+### Componentes Clave
+
+**Hooks (Sistema Offline):**
+- `useQuotationCache.ts` - Gestión de caché con verificación offline
+- `useOfflineStatus.ts` - Detecta estado online/offline en tiempo real
+- **`useLoadingPhase.ts`** - ✅ CORREGIDO - Mapea estado a fases visuales
+- `useConnectionRecovery.ts` - Detecta reconexión offline→online y compara datos
+
+**Componentes:**
+- `SyncStatusIndicator.tsx` - Indicador visual en esquina superior
+- `DialogoGenerico.tsx` - Modal de resolución de conflictos
+
+**Estados Visuales:**
+- 🟢 Sincronizado (online)
+- 📦 Datos del caché (offline)
+- 🔄 Sincronizando
+- ⚠️ Error
+
+**Resolución de Conflictos:**
+- 📦 **Usar Caché** - Mantener datos locales
+- 🔄 **Usar BD** - Reemplazar con datos del servidor
+- ✨ **Fusionar** - Combinar datos inteligentemente
+
+---
+
+## 🔧 ESTADO DEL DESARROLLO
+
+### ✅ Completado
+- Hydration errors - RESUELTO
+- Visual loading sequence - IMPLEMENTADO
+- Analytics styling - UNIFORMIZADO
+- Offline→Online system - COMPLETO
+- Tests (24/24) - TODOS PASANDO
+- **useLoadingPhase.ts - CORREGIDO** (30/11/2025)
+- Organización de archivos - COMPLETA
+
+### 🔴 CRÍTICO RESUELTO
+**Problema:** 500 error en `/administrador`  
+**Causa:** Syntax error en `useLoadingPhase.ts` (duplicate dependency array)  
+**Solución:** ✅ CORREGIDO  
+**Status:** Ready to test
+
+### ⏳ En Progreso
+- Verificación de compilación
+- Testing del sistema completo
+
+---
+
+## 🚀 CÓMO NAVEGAR
+
+### Para Entender la Arquitectura
+1. Lee: `/src/app/administrador/page.tsx` (controlador principal)
+2. Lee: `/src/features/admin/` (dominio de admin)
+3. Lee: `/src/lib/cache/` (sistema de caché)
+
+### Para Probar Offline
+```bash
+npm run dev
+# Abre: http://localhost:3000/administrador
+# DevTools → Network → Offline
+# Edita datos y experimenta
+```
+
+### Para Ver Tests
+```bash
+node scripts-util/validation-script.js
+# Lee: docs/reports/PRUEBAS_FINAL_REPORT.md
+```
+
+### Para Contribuir
+1. Lee: `CONTRIBUTING.md`
+2. Lee: `CODE_OF_CONDUCT.md`
+3. Revisa: `docs/project-docs/`
+
+---
+
+## 📊 ESTADÍSTICAS
+
+- **Líneas de Código:** ~15,000+
+- **Hooks Custom:** 10+
+- **Componentes:** 30+
+- **Tests Pasando:** 24/24 ✅
+- **Tipos TypeScript:** 50+
+- **Branch Actual:** `feature/oferta-sidebar-navigation`
+
+---
+
+## 📝 Tech Stack
+
+- **Framework:** Next.js 14+ (App Router)
+- **Frontend:** React 18+ con TypeScript
+- **Styling:** Tailwind CSS + temas personalizados
+- **BD:** Prisma ORM + PostgreSQL (Neon)
+- **Cache:** localStorage + IndexedDB
+- **Offline:** Sistema híbrido localStorage→online sync
+- **Despliegue:** Vercel + Netlify (redundancia)
+
+---
+
+## 🎓 Recursos Rápidos
+
+- [Fases de Desarrollo](./phases/) - Roadmap del proyecto
+- [Reportes](./reports/) - Estado y validaciones
+- [Arquitectura](./architecture/) - Diseño técnico
+- [Auditorías](./audits/) - Verificaciones
+- [Propuestas](./propuestas/) - Contexto comercial
+
+---
+
+**✅ Status Actual:** Sistema offline→online implementado y validado  
+**⏰ Actualización:** 30 de noviembre de 2025  
+**🔀 Branch:** `feature/oferta-sidebar-navigation`

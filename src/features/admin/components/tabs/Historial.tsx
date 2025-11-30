@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaChevronDown, FaEdit, FaTrash, FaEye, FaToggleOn, FaToggleOff } from 'react-icons/fa'
 import type { QuotationConfig, PackageSnapshot } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
+import { useEventTracking } from '@/features/admin/hooks'
 
 interface HistorialProps {
   snapshots: PackageSnapshot[]
@@ -24,16 +25,54 @@ export default function Historial({
   onViewProposal,
 }: HistorialProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  
+  // Hook de tracking
+  const { 
+    trackHistorialViewed, 
+    trackCotizacionExpanded, 
+    trackCotizacionCollapsed,
+    trackProposalViewed,
+    trackCotizacionActivated,
+    trackCotizacionDeactivated,
+    trackCotizacionDeleted
+  } = useEventTracking()
+  
+  // Trackear cuando se visualiza el historial
+  useEffect(() => {
+    trackHistorialViewed(quotations.length)
+  }, [quotations.length, trackHistorialViewed])
 
-  const toggleExpanded = (id: string) => {
+  const toggleExpanded = useCallback((id: string, numero?: string) => {
     const newSet = new Set(expandedIds)
     if (newSet.has(id)) {
       newSet.delete(id)
+      trackCotizacionCollapsed(id)
     } else {
       newSet.add(id)
+      trackCotizacionExpanded(id, numero)
     }
     setExpandedIds(newSet)
-  }
+  }, [expandedIds, trackCotizacionExpanded, trackCotizacionCollapsed])
+  
+  // Handlers con tracking
+  const handleViewProposal = useCallback((quotation: QuotationConfig) => {
+    trackProposalViewed(quotation.id, quotation.numero)
+    onViewProposal?.(quotation)
+  }, [onViewProposal, trackProposalViewed])
+  
+  const handleToggleActive = useCallback((quotationId: string, status: { activo: boolean; isGlobal: boolean }, numero?: string) => {
+    if (status.isGlobal) {
+      trackCotizacionActivated(quotationId, numero)
+    } else {
+      trackCotizacionDeactivated(quotationId, numero)
+    }
+    onToggleActive?.(quotationId, status)
+  }, [onToggleActive, trackCotizacionActivated, trackCotizacionDeactivated])
+  
+  const handleDelete = useCallback((quotationId: string) => {
+    trackCotizacionDeleted(quotationId)
+    onDelete?.(quotationId)
+  }, [onDelete, trackCotizacionDeleted])
 
   if (quotations.length === 0) {
     return (
@@ -108,7 +147,7 @@ export default function Historial({
                       {quotation.isGlobal ? 'Activa' : 'Inactiva'}
                     </div>
                     <motion.button
-                      onClick={() => toggleExpanded(quotation.id)}
+                      onClick={() => toggleExpanded(quotation.id, quotation.numero)}
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       className="text-gh-text-muted hover:text-gh-text transition-colors p-1 rounded hover:bg-gh-border"
                     >
@@ -292,7 +331,7 @@ export default function Historial({
                           </button>
 
                           <button
-                            onClick={() => onViewProposal?.(quotation)}
+                            onClick={() => handleViewProposal(quotation)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-md border border-purple-500/30 transition-colors"
                             title="Ver propuesta"
                           >
@@ -300,7 +339,7 @@ export default function Historial({
                           </button>
 
                           <button
-                            onClick={() => onDelete?.(quotation.id)}
+                            onClick={() => handleDelete(quotation.id)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold rounded-md border border-red-500/30 transition-colors"
                             title="Eliminar cotización"
                           >
@@ -309,10 +348,10 @@ export default function Historial({
 
                           <button
                             onClick={() =>
-                              onToggleActive?.(quotation.id, {
+                              handleToggleActive(quotation.id, {
                                 activo: !quotation.activo,
                                 isGlobal: !quotation.isGlobal
-                              })
+                              }, quotation.numero)
                             }
                             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors ${
                               quotation.isGlobal

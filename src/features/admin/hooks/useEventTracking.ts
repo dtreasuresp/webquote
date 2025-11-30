@@ -9,8 +9,37 @@ import { useAnalytics } from '../contexts/AnalyticsContext'
  */
 
 export function useEventTracking() {
-  const { trackEvent, trackAction } = useAnalytics()
+  let trackEvent: (name: string, payload?: Record<string, any>) => void = () => {}
+  let trackAction: (name: string, payload?: Record<string, any>) => void = () => {}
+  try {
+    const analytics = useAnalytics()
+    trackEvent = analytics.trackEvent
+    trackAction = analytics.trackAction
+  } catch {
+    // Si no está dentro de AnalyticsProvider, usar no-ops para evitar crash
+  }
+
   const startTimeRef = useRef<number>(0)
+  const lastViewTsRef = useRef<Map<string, number>>(new Map())
+  const debounceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+
+  const shouldThrottle = (key: string, ttlMs: number) => {
+    const now = Date.now()
+    const last = lastViewTsRef.current.get(key) || 0
+    if (now - last < ttlMs) return true
+    lastViewTsRef.current.set(key, now)
+    return false
+  }
+
+  const debounce = (key: string, delayMs: number, fn: () => void) => {
+    const existing = debounceTimersRef.current.get(key)
+    if (existing) clearTimeout(existing)
+    const t = setTimeout(() => {
+      fn()
+      debounceTimersRef.current.delete(key)
+    }, delayMs)
+    debounceTimersRef.current.set(key, t)
+  }
 
   const startTracking = useCallback(() => {
     startTimeRef.current = Date.now()
@@ -21,7 +50,7 @@ export function useEventTracking() {
     trackAction(action, component, duration, success, error)
   }, [trackAction])
 
-  // Eventos comunes
+  // ==================== EVENTOS DE COTIZACIÓN ====================
   const trackCotizacionCreated = useCallback((metadata?: Record<string, unknown>) => {
     trackEvent('cotizacion_created', {
       type: 'cotizacion',
@@ -43,6 +72,21 @@ export function useEventTracking() {
     })
   }, [trackEvent])
 
+  const trackCotizacionActivated = useCallback((cotizacionId: string, numero?: string) => {
+    trackEvent('cotizacion_activated', {
+      cotizacionId,
+      numero,
+    })
+  }, [trackEvent])
+
+  const trackCotizacionDeactivated = useCallback((cotizacionId: string, numero?: string) => {
+    trackEvent('cotizacion_deactivated', {
+      cotizacionId,
+      numero,
+    })
+  }, [trackEvent])
+
+  // ==================== EVENTOS DE PAQUETES/SNAPSHOTS ====================
   const trackPaqueteCreated = useCallback((metadata?: Record<string, unknown>) => {
     trackEvent('paquete_created', {
       type: 'paquete',
@@ -71,6 +115,20 @@ export function useEventTracking() {
     })
   }, [trackEvent])
 
+  const trackSnapshotActivated = useCallback((snapshotId: string, nombre: string) => {
+    trackEvent('snapshot_activated', {
+      snapshotId,
+      nombre,
+    })
+  }, [trackEvent])
+
+  const trackSnapshotDeactivated = useCallback((snapshotId: string, nombre: string) => {
+    trackEvent('snapshot_deactivated', {
+      snapshotId,
+      nombre,
+    })
+  }, [trackEvent])
+
   const trackSnapshotCompared = useCallback((snapshot1Id: string, snapshot2Id: string) => {
     trackEvent('snapshot_compared', {
       snapshot1Id,
@@ -84,6 +142,132 @@ export function useEventTracking() {
     })
   }, [trackEvent])
 
+  // ==================== EVENTOS DE SERVICIOS BASE ====================
+  const trackServicioBaseCreated = useCallback((nombre: string, precio: number) => {
+    trackEvent('servicio_base_created', {
+      nombre,
+      precio,
+    })
+  }, [trackEvent])
+
+  const trackServicioBaseEdited = useCallback((id: string, nombre?: string) => {
+    trackEvent('servicio_base_edited', {
+      id,
+      nombre,
+    })
+  }, [trackEvent])
+
+  const trackServicioBaseDeleted = useCallback((id: string, nombre?: string) => {
+    trackEvent('servicio_base_deleted', {
+      id,
+      nombre,
+    })
+  }, [trackEvent])
+
+  // ==================== EVENTOS DE SERVICIOS OPCIONALES ====================
+  const trackServicioOpcionalCreated = useCallback((nombre: string, precio: number) => {
+    trackEvent('servicio_opcional_created', {
+      nombre,
+      precio,
+    })
+  }, [trackEvent])
+
+  const trackServicioOpcionalEdited = useCallback((id: string, nombre?: string) => {
+    trackEvent('servicio_opcional_edited', {
+      id,
+      nombre,
+    })
+  }, [trackEvent])
+
+  const trackServicioOpcionalDeleted = useCallback((id: string, nombre?: string) => {
+    trackEvent('servicio_opcional_deleted', {
+      id,
+      nombre,
+    })
+  }, [trackEvent])
+
+  // ==================== EVENTOS DE NAVEGACIÓN OFERTA ====================
+  const trackOfertaSectionViewed = useCallback((section: string) => {
+    const key = `view_oferta_section_${section}`
+    if (shouldThrottle(key, 2000)) return
+    trackEvent('oferta_section_viewed', {
+      section,
+    })
+  }, [trackEvent])
+
+  // ==================== EVENTOS FINANCIEROS ====================
+  const trackDescuentoConfigured = useCallback((tipo: string, porcentaje: number) => {
+    const key = `fin_desc_${tipo}`
+    debounce(key, 400, () => {
+      trackEvent('descuento_configured', {
+        tipo,
+        porcentaje,
+      })
+    })
+  }, [trackEvent])
+
+  const trackOpcionPagoAdded = useCallback((nombreOrIndex: string | number, porcentaje?: number) => {
+    const nombre = typeof nombreOrIndex === 'string' ? nombreOrIndex : `Cuota ${nombreOrIndex}`
+    const key = `fin_pago_add_${nombre}`
+    if (shouldThrottle(key, 2000)) return
+    trackEvent('opcion_pago_added', {
+      nombre,
+      porcentaje: porcentaje || 0,
+    })
+  }, [trackEvent])
+
+  const trackOpcionPagoRemoved = useCallback((nombre: string) => {
+    const key = `fin_pago_remove_${nombre}`
+    if (shouldThrottle(key, 2000)) return
+    trackEvent('opcion_pago_removed', {
+      nombre,
+    })
+  }, [trackEvent])
+
+  // ==================== EVENTOS DE TEMPLATES ====================
+  const trackTemplateUsed = useCallback((templateId: string, templateNombre?: string) => {
+    trackEvent('template_used', {
+      templateId,
+      templateNombre,
+    })
+  }, [trackEvent])
+
+  // ==================== EVENTOS DE HISTORIAL ====================
+  const trackHistorialViewed = useCallback((totalCotizaciones: number) => {
+    const key = 'view_historial'
+    if (shouldThrottle(key, 60000)) return
+    trackEvent('historial_viewed', {
+      totalCotizaciones,
+    })
+  }, [trackEvent])
+
+  const trackAdminTabViewed = useCallback((tab: string) => {
+    const key = `view_admin_tab_${tab}`
+    if (shouldThrottle(key, 60000)) return
+    trackEvent('admin_tab_viewed', { tab })
+  }, [trackEvent])
+
+  const trackCotizacionExpanded = useCallback((cotizacionId: string, numero?: string) => {
+    trackEvent('cotizacion_expanded', {
+      cotizacionId,
+      numero,
+    })
+  }, [trackEvent])
+
+  const trackCotizacionCollapsed = useCallback((cotizacionId: string) => {
+    trackEvent('cotizacion_collapsed', {
+      cotizacionId,
+    })
+  }, [trackEvent])
+
+  const trackProposalViewed = useCallback((cotizacionId: string, numero?: string) => {
+    trackEvent('proposal_viewed', {
+      cotizacionId,
+      numero,
+    })
+  }, [trackEvent])
+
+  // ==================== EVENTOS GENERALES ====================
   const trackPdfGenerated = useCallback((type: string, itemId: string) => {
     trackEvent('pdf_generated', {
       type,
@@ -148,19 +332,9 @@ export function useEventTracking() {
   }, [trackEvent])
 
   return {
+    // General
     startTracking,
     endTracking,
-    trackCotizacionCreated,
-    trackCotizacionEdited,
-    trackCotizacionDeleted,
-    trackPaqueteCreated,
-    trackPaqueteEdited,
-    trackPaqueteDeleted,
-    trackSnapshotCreated,
-    trackSnapshotCompared,
-    trackSnapshotTimelineViewed,
-    trackPdfGenerated,
-    trackFormValidationError,
     trackTabSwitch,
     trackModalOpened,
     trackModalClosed,
@@ -168,5 +342,45 @@ export function useEventTracking() {
     trackSearchExecuted,
     trackExportInitiated,
     trackExportCompleted,
+    trackPdfGenerated,
+    trackFormValidationError,
+    // Cotizaciones
+    trackCotizacionCreated,
+    trackCotizacionEdited,
+    trackCotizacionDeleted,
+    trackCotizacionActivated,
+    trackCotizacionDeactivated,
+    // Paquetes/Snapshots
+    trackPaqueteCreated,
+    trackPaqueteEdited,
+    trackPaqueteDeleted,
+    trackSnapshotCreated,
+    trackSnapshotActivated,
+    trackSnapshotDeactivated,
+    trackSnapshotCompared,
+    trackSnapshotTimelineViewed,
+    // Servicios Base
+    trackServicioBaseCreated,
+    trackServicioBaseEdited,
+    trackServicioBaseDeleted,
+    // Servicios Opcionales
+    trackServicioOpcionalCreated,
+    trackServicioOpcionalEdited,
+    trackServicioOpcionalDeleted,
+    // Navegación Oferta
+    trackOfertaSectionViewed,
+    // Admin Tabs
+    trackAdminTabViewed,
+    // Financiero
+    trackDescuentoConfigured,
+    trackOpcionPagoAdded,
+    trackOpcionPagoRemoved,
+    // Templates
+    trackTemplateUsed,
+    // Historial
+    trackHistorialViewed,
+    trackCotizacionExpanded,
+    trackCotizacionCollapsed,
+    trackProposalViewed,
   }
 }

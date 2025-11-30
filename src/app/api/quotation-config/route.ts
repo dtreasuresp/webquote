@@ -15,6 +15,8 @@ const calcularFechaVencimiento = (fechaEmision: Date, dias: number): Date => {
 // GET: Obtener la cotización más reciente
 export async function GET(request: NextRequest) {
   try {
+    await prisma.$queryRaw`SELECT 1`
+    
     const cotizacion = await prisma.quotationConfig.findFirst({
       orderBy: { createdAt: 'desc' },
     })
@@ -31,9 +33,16 @@ export async function GET(request: NextRequest) {
       updatedAt: cotizacion.updatedAt.toISOString(),
     })
   } catch (error) {
-    console.error('Error en GET /api/quotation-config:', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Error en GET /api/quotation-config:', msg)
+    if (msg.includes('ECONNREFUSED') || msg.includes('connect')) {
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 503 }
+      )
+    }
     return NextResponse.json(
-      { error: 'Error al obtener cotización', details: error instanceof Error ? error.message : String(error) },
+      { error: 'Error al obtener cotización' },
       { status: 500 }
     )
   }
@@ -111,16 +120,32 @@ export async function POST(request: NextRequest) {
 // PUT: Actualizar cotización existente (mantiene número, incrementa versión)
 export async function PUT(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
+    // Verificar conexión primero
+    await prisma.$queryRaw`SELECT 1`
 
-    if (!id) {
-      return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
+    // Priorizar cotización activa/global; si no hay, tomar la más reciente
+    let cotizacion = await prisma.quotationConfig.findFirst({
+      where: {
+        OR: [{ isGlobal: true }, { activo: true }],
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+
+    if (!cotizacion) {
+      cotizacion = await prisma.quotationConfig.findFirst({
+        orderBy: { createdAt: 'desc' },
+      })
     }
 
     const data = await request.json()
     
     // Obtener cotización actual para mantener número e incrementar versión
+    const id = cotizacion?.id
+
+    if (!id) {
+      return NextResponse.json({ error: 'Cotización activa no encontrada' }, { status: 404 })
+    }
+
     const cotizacionActual = await prisma.quotationConfig.findUnique({
       where: { id },
       select: { numero: true, versionNumber: true }
@@ -139,7 +164,7 @@ export async function PUT(request: NextRequest) {
     const fechaEmision = new Date(data.fechaEmision || new Date())
     const fechaVencimiento = calcularFechaVencimiento(fechaEmision, data.tiempoValidez || 30)
 
-    const cotizacion = await prisma.quotationConfig.update({
+    const cotizacionActualizada = await prisma.quotationConfig.update({
       where: { id },
       data: {
         numero: numeroActualizado,
@@ -147,29 +172,29 @@ export async function PUT(request: NextRequest) {
         fechaEmision,
         tiempoValidez: data.tiempoValidez || 30,
         fechaVencimiento,
-        presupuesto: data.presupuesto || '',
-        moneda: data.moneda || 'USD',
-        empresa: data.empresa || '',
-        sector: data.sector || '',
-        ubicacion: data.ubicacion || '',
-        profesional: data.profesional || '',
-        empresaProveedor: data.empresaProveedor || '',
-        emailProveedor: data.emailProveedor || '',
-        whatsappProveedor: data.whatsappProveedor || '',
-        ubicacionProveedor: data.ubicacionProveedor || '',
-        tiempoVigenciaValor: data.tiempoVigenciaValor || 12,
-        tiempoVigenciaUnidad: data.tiempoVigenciaUnidad || 'meses',
-        heroTituloMain: data.heroTituloMain || 'PROPUESTA DE COTIZACIÓN',
-        heroTituloSub: data.heroTituloSub || 'PÁGINA CATÁLOGO DINÁMICA',
+        presupuesto: data.presupuesto ?? cotizacion?.presupuesto ?? '',
+        moneda: data.moneda ?? cotizacion?.moneda ?? 'USD',
+        empresa: data.empresa ?? cotizacion?.empresa ?? '',
+        sector: data.sector ?? cotizacion?.sector ?? '',
+        ubicacion: data.ubicacion ?? cotizacion?.ubicacion ?? '',
+        profesional: data.profesional ?? cotizacion?.profesional ?? '',
+        empresaProveedor: data.empresaProveedor ?? cotizacion?.empresaProveedor ?? '',
+        emailProveedor: data.emailProveedor ?? cotizacion?.emailProveedor ?? '',
+        whatsappProveedor: data.whatsappProveedor ?? cotizacion?.whatsappProveedor ?? '',
+        ubicacionProveedor: data.ubicacionProveedor ?? cotizacion?.ubicacionProveedor ?? '',
+        tiempoVigenciaValor: data.tiempoVigenciaValor ?? cotizacion?.tiempoVigenciaValor ?? 12,
+        tiempoVigenciaUnidad: data.tiempoVigenciaUnidad ?? cotizacion?.tiempoVigenciaUnidad ?? 'meses',
+        heroTituloMain: data.heroTituloMain ?? cotizacion?.heroTituloMain ?? 'PROPUESTA DE COTIZACIÓN',
+        heroTituloSub: data.heroTituloSub ?? cotizacion?.heroTituloSub ?? 'PÁGINA CATÁLOGO DINÁMICA',
       },
     })
 
     return NextResponse.json({
-      ...cotizacion,
-      fechaEmision: cotizacion.fechaEmision.toISOString(),
-      fechaVencimiento: cotizacion.fechaVencimiento.toISOString(),
-      createdAt: cotizacion.createdAt.toISOString(),
-      updatedAt: cotizacion.updatedAt.toISOString(),
+      ...cotizacionActualizada,
+      fechaEmision: cotizacionActualizada.fechaEmision.toISOString(),
+      fechaVencimiento: cotizacionActualizada.fechaVencimiento.toISOString(),
+      createdAt: cotizacionActualizada.createdAt.toISOString(),
+      updatedAt: cotizacionActualizada.updatedAt.toISOString(),
     })
   } catch (error) {
     console.error('Error en PUT /api/quotation-config:', error)

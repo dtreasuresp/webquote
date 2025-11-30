@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import { FaCheck, FaTimes, FaEdit, FaTrash, FaPlus, FaPuzzlePiece } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import { Servicio } from '@/lib/types'
+import { useEventTracking } from '@/features/admin/hooks'
 
 export interface ServiciosOpcionalesContentProps {
   serviciosOpcionales: Servicio[]
@@ -40,6 +41,32 @@ export default function ServiciosOpcionalesContent({
   serviciosOpcionalesValidos,
   todoEsValido,
 }: Readonly<ServiciosOpcionalesContentProps>) {
+  // Hook de tracking
+  const { 
+    trackServicioOpcionalCreated, 
+    trackServicioOpcionalEdited, 
+    trackServicioOpcionalDeleted 
+  } = useEventTracking()
+
+  // Handlers con tracking
+  const handleAgregar = useCallback(() => {
+    agregarServicioOpcional()
+    if (nuevoServicio.nombre.trim() && nuevoServicio.precio > 0) {
+      trackServicioOpcionalCreated(nuevoServicio.nombre.trim(), nuevoServicio.precio)
+    }
+  }, [agregarServicioOpcional, nuevoServicio.nombre, nuevoServicio.precio, trackServicioOpcionalCreated])
+
+  const handleGuardarEdicion = useCallback(() => {
+    guardarEditarServicioOpcional()
+    if (servicioEditando) {
+      trackServicioOpcionalEdited(servicioEditando.id, servicioEditando.nombre)
+    }
+  }, [guardarEditarServicioOpcional, servicioEditando, trackServicioOpcionalEdited])
+
+  const handleEliminar = useCallback((id: string, nombre: string) => {
+    trackServicioOpcionalDeleted(id, nombre)
+    eliminarServicioOpcional(id)
+  }, [eliminarServicioOpcional, trackServicioOpcionalDeleted])
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -142,7 +169,7 @@ export default function ServiciosOpcionalesContent({
                   <div className="flex gap-2 justify-center">
                     <button
                       aria-label="Guardar servicio opcional"
-                      onClick={guardarEditarServicioOpcional}
+                      onClick={handleGuardarEdicion}
                       className="p-2 bg-gh-success text-white rounded-md hover:bg-[#1f7935] transition-colors"
                       disabled={!(servicioEditando?.nombre.trim() && (servicioEditando?.precio || 0) > 0)}
                     >
@@ -183,7 +210,7 @@ export default function ServiciosOpcionalesContent({
                     </button>
                     <button
                       aria-label="Eliminar servicio opcional"
-                      onClick={() => eliminarServicioOpcional(serv.id)}
+                      onClick={() => handleEliminar(serv.id, serv.nombre)}
                       className="p-2 bg-gh-warning text-white rounded-md hover:bg-[#d0981a] transition-colors"
                     >
                       <FaTrash size={12} />
@@ -293,7 +320,7 @@ export default function ServiciosOpcionalesContent({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={agregarServicioOpcional}
+            onClick={handleAgregar}
             disabled={!(nuevoServicio.nombre.trim() && nuevoServicio.precio > 0)}
             className={`px-6 py-2.5 rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
               nuevoServicio.nombre.trim() && nuevoServicio.precio > 0

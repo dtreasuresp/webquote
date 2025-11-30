@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback } from 'react'
 import { FaCheck, FaTimes, FaEdit, FaTrash, FaPlus, FaCubes } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import { ServicioBase } from '@/lib/types'
+import { useEventTracking } from '@/features/admin/hooks'
 
 export interface ServiciosBaseContentProps {
   serviciosBase: ServicioBase[]
@@ -34,6 +35,32 @@ export default function ServiciosBaseContent({
   cancelarEditarServicioBase,
   eliminarServicioBase,
 }: Readonly<ServiciosBaseContentProps>) {
+  // Hook de tracking
+  const { 
+    trackServicioBaseCreated, 
+    trackServicioBaseEdited, 
+    trackServicioBaseDeleted 
+  } = useEventTracking()
+
+  // Handlers con tracking
+  const handleAgregar = useCallback(() => {
+    agregarServicioBase()
+    if (nuevoServicioBase.nombre && nuevoServicioBase.precio > 0) {
+      trackServicioBaseCreated(nuevoServicioBase.nombre, nuevoServicioBase.precio)
+    }
+  }, [agregarServicioBase, nuevoServicioBase.nombre, nuevoServicioBase.precio, trackServicioBaseCreated])
+
+  const handleGuardarEdicion = useCallback(() => {
+    guardarEditarServicioBase()
+    if (servicioBaseEditando) {
+      trackServicioBaseEdited(servicioBaseEditando.id, servicioBaseEditando.nombre)
+    }
+  }, [guardarEditarServicioBase, servicioBaseEditando, trackServicioBaseEdited])
+
+  const handleEliminar = useCallback((id: string, nombre: string) => {
+    trackServicioBaseDeleted(id, nombre)
+    eliminarServicioBase(id)
+  }, [eliminarServicioBase, trackServicioBaseDeleted])
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -146,7 +173,7 @@ export default function ServiciosBaseContent({
                   <div className="flex gap-2 justify-center">
                     <button
                       aria-label="Guardar servicio base"
-                      onClick={guardarEditarServicioBase}
+                      onClick={handleGuardarEdicion}
                       className="p-2 bg-gh-success text-white rounded-md hover:bg-[#1f7935] transition-colors"
                     >
                       <FaCheck size={12} />
@@ -188,7 +215,7 @@ export default function ServiciosBaseContent({
                     </button>
                     <button
                       aria-label={`Eliminar servicio base ${servicio.nombre}`}
-                      onClick={() => eliminarServicioBase(servicio.id)}
+                      onClick={() => handleEliminar(servicio.id, servicio.nombre)}
                       className="p-2 bg-gh-warning text-white rounded-md hover:bg-[#d0981a] transition-colors"
                     >
                       <FaTrash size={12} />
@@ -314,7 +341,7 @@ export default function ServiciosBaseContent({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={agregarServicioBase}
+            onClick={handleAgregar}
             disabled={!nuevoServicioBase.nombre || nuevoServicioBase.precio <= 0}
             className={`px-6 py-2.5 rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
               nuevoServicioBase.nombre && nuevoServicioBase.precio > 0

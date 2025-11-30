@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
-import { FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown, FaSave, FaFileAlt, FaGlobe, FaHeadset, FaPercent, FaPalette, FaHistory, FaGift, FaCog, FaUser, FaBriefcase, FaTags, FaExclamationTriangle, FaEye, FaBook } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaDownload, FaArrowLeft, FaEdit, FaTimes, FaCheck, FaCreditCard, FaChevronDown, FaSave, FaFileAlt, FaGlobe, FaHeadset, FaPercent, FaPalette, FaHistory, FaGift, FaCog, FaUser, FaBriefcase, FaTags, FaExclamationTriangle, FaEye, FaBook, FaChartLine } from 'react-icons/fa'
 import Link from 'next/link'
 import Navigation from '@/components/layout/Navigation'
 import TabsModal from '@/components/layout/TabsModal'
@@ -24,10 +24,22 @@ import type { TabItem } from '@/components/layout/TabsModal'
 
 // UI Components
 import KPICards from '@/features/admin/components/KPICards'
+import DialogoGenerico from '@/features/admin/components/DialogoGenerico'
 
 // Sistema de Caché y Sincronización
 import { useQuotationCache } from '@/hooks/useQuotationCache'
 import { SyncStatusIndicator } from '@/features/admin/components/SyncStatusIndicator'
+import { useLoadingPhase } from '@/features/admin/hooks/useLoadingPhase'
+import { useConnectionRecovery, type DataDifference } from '@/features/admin/hooks/useConnectionRecovery'
+import { useOfflineStatus } from '@/hooks/useOfflineStatus'
+import { useInitialLoad } from '@/hooks/useInitialLoad'
+
+// Analytics y Tracking
+import { AnalyticsDashboard } from '@/features/admin/components/AnalyticsDashboard'
+import { OfertaAnalyticsSection } from '@/features/admin/components/OfertaAnalyticsSection'
+import { HistorialAnalyticsSection } from '@/features/admin/components/HistorialAnalyticsSection'
+import { AnalyticsProvider } from '@/features/admin/contexts'
+import { useEventTracking } from '@/features/admin/hooks'
 
 export default function Administrador() {
   // Obtener función de refresh global
@@ -40,23 +52,216 @@ export default function Administrador() {
   // Estado para el ID de cotización actual (se establece al seleccionar/crear cotización)
   const [quotationId, setQuotationId] = useState<string | null>(null)
   
+  // Detectar estado de conexión
+  const { isOnline, wasOffline } = useOfflineStatus()
+  
   // Hook para caché local con sincronización entre pestañas
   const {
     syncStatus,
     isDirty: hasUnsavedChanges,
     pendingConflict: conflictInfo,
-    isOnline,
+    isOnline: cacheIsOnline,
+    isLoading,
     resolveConflict,
-    saveToServer: forceSync
+    saveToServer: forceSync,
+    quotation: cachedQuotation,
+    refreshFromServer
   } = useQuotationCache({
     quotationId,
     enabled: !!quotationId,
     autoSaveInterval: 5000
   })
 
+  // Detectar recuperación de conexión y diferencias
+  const connectionRecovery = useConnectionRecovery({
+    isOnline,
+    wasOffline,
+    quotationId,
+    enabled: !!quotationId,
+    onRecovery: (state) => {
+      if (state.wasOfflineNow && state.hasDifferences) {
+        // Se encontraron diferencias, mostrar modal
+        setShowConnectionRecoveryDialog(true)
+      } else if (state.wasOfflineNow && !state.hasDifferences) {
+        // Sin diferencias, mostrar toast y sincronizar
+        toast.success('✅ Conexión restablecida, datos sincronizados')
+        refreshFromServer()
+      }
+    }
+  })
+
+  // ==================== SISTEMA DE CARGA INICIAL UNIFICADO ====================
+  // Funciones de carga extraídas para uso con useInitialLoad
+  const loadSnapshotsCallback = async () => {
+    try {
+      console.log('📦 [loadSnapshotsCallback] Cargando snapshots desde BD...')
+      const snapshotsDelServidor = await obtenerSnapshotsCompleto()
+      console.log('📦 [loadSnapshotsCallback] Snapshots cargados:', snapshotsDelServidor.length)
+      setSnapshots(snapshotsDelServidor)
+    } catch (error) {
+      console.error('Error cargando snapshots:', error)
+      throw error
+    }
+  }
+
+  const loadQuotationsCallback = async () => {
+    try {
+      console.log('📋 [loadQuotationsCallback] Cargando quotations desde BD...')
+      const response = await fetch('/api/quotations')
+      const data = await response.json()
+      if (data.success) {
+        console.log('📋 [loadQuotationsCallback] Quotations cargadas:', data.data?.length || 0)
+        setQuotations(data.data || [])
+      }
+    } catch (error) {
+      console.error('Error cargando quotations:', error)
+      throw error
+    }
+  }
+
+  const loadPreferencesCallback = async () => {
+    try {
+      console.log('⚙️ [loadPreferencesCallback] Cargando preferencias desde BD...')
+      const response = await fetch('/api/preferences')
+      const data = await response.json()
+      if (data.success) {
+        console.log('⚙️ [loadPreferencesCallback] Preferencias cargadas:', data.data ? 'Sí' : 'No')
+        setUserPreferences(data.data || null)
+      }
+    } catch (error) {
+      console.error('Error cargando preferences:', error)
+      throw error
+    }
+  }
+
+  const loadConfigCallback = async () => {
+    try {
+      const response = await fetch('/api/quotation-config')
+      if (response.ok) {
+        const config = await response.json()
+        if (config) {
+          console.log('📋 [loadConfigCallback] Configuración cargada:', config.id, config.numero)
+          
+          // ✅ CARGAR LA COTIZACIÓN ACTIVA (esto es lo que faltaba!)
+          setCotizacionConfig(config)
+          
+          // Cargar templates desde la configuración de BD
+          if (config.serviciosBaseTemplate) {
+            setServiciosBase(config.serviciosBaseTemplate)
+          }
+          if (config.serviciosOpcionalesTemplate) {
+            setServiciosOpcionales(config.serviciosOpcionalesTemplate)
+          }
+          // Cargar templates de descripción de paquete
+          if (config.descripcionesPaqueteTemplates) {
+            setDescripcionesTemplate(config.descripcionesPaqueteTemplates)
+          }
+          // Cargar opciones de pago y configuración financiera
+          if (config.opcionesPagoTemplate) {
+            setOpcionesPagoActual(config.opcionesPagoTemplate)
+          }
+          if (config.configDescuentosTemplate) {
+            setConfigDescuentosActual(config.configDescuentosTemplate)
+          }
+          if (config.metodoPagoPreferido) {
+            setMetodoPagoPreferido(config.metodoPagoPreferido)
+          }
+          if (config.notasPago) {
+            setNotasPago(config.notasPago)
+          }
+          // Cargar gestión y paquete si están en editorState
+          if (config.editorState) {
+            const editorState = config.editorState as { 
+              gestion?: typeof gestion
+              paqueteActual?: typeof paqueteActual 
+            }
+            if (editorState.gestion) setGestion(editorState.gestion)
+            if (editorState.paqueteActual) setPaqueteActual(editorState.paqueteActual)
+          }
+        }
+      } else if (response.status === 404) {
+        console.log('📋 [loadConfigCallback] No hay cotización en BD, se usará estado inicial')
+      }
+    } catch (error) {
+      console.error('Error cargando configuración desde BD:', error)
+      throw error
+    }
+  }
+
+  // Hook de carga inicial - orquesta todo el flujo de carga
+  const initialLoad = useInitialLoad({
+    welcomeDelay: 600,
+    loadSnapshots: loadSnapshotsCallback,
+    loadQuotations: loadQuotationsCallback,
+    loadPreferences: loadPreferencesCallback,
+    loadConfig: loadConfigCallback,
+    onComplete: (isConnected) => {
+      if (isConnected) {
+        console.log('✅ Carga inicial completada - Conectado a BD')
+      } else {
+        console.log('📦 Carga inicial completada - Modo offline')
+      }
+      setCargandoSnapshots(false)
+    },
+    onError: (error) => {
+      console.error('❌ Error en carga inicial:', error)
+      setErrorSnapshots(error)
+      setCargandoSnapshots(false)
+    }
+  })
+
+  // Hook para mapear estado de carga a fase visual
+  // Usa el nuevo sistema unificado de fases
+  const { phase: loadingPhase, phaseText, isActiveLoading, setPhase } = useLoadingPhase({
+    initialLoadPhase: initialLoad.phase,
+    isLoading: isLoading || false,
+    syncStatus,
+    isConnected: initialLoad.isConnected || cacheIsOnline
+  })
+
+  // Estado para el dialog de recuperación de conexión
+  const [showConnectionRecoveryDialog, setShowConnectionRecoveryDialog] = useState(false)
+  const [isResolvingRecovery, setIsResolvingRecovery] = useState(false)
+
+  // Manejar resolución del dialog de recuperación
+  const handleConnectionRecoveryResolve = async (action: 'use-cache' | 'use-server' | 'merge') => {
+    setIsResolvingRecovery(true)
+    try {
+      if (action === 'use-server') {
+        // Usar datos del servidor - descartar cambios locales
+        await refreshFromServer()
+        toast.success('✅ Datos del servidor cargados')
+      } else if (action === 'use-cache') {
+        // Mantener datos del caché - sincronizar a servidor
+        await forceSync()
+        toast.success('✅ Se mantuvieron los datos del caché')
+      } else if (action === 'merge') {
+        // Por ahora merge = use-cache (se puede mejorar)
+        await forceSync()
+        toast.info('ℹ️ Se mantuvieron los datos del caché')
+      }
+      
+      setShowConnectionRecoveryDialog(false)
+    } catch (error) {
+      toast.error('❌ Error al resolver conflicto')
+      console.error(error)
+    } finally {
+      setIsResolvingRecovery(false)
+    }
+  }
+
   // ==================== ESTADOS COTIZACIÓN ====================
   const [cotizacionConfig, setCotizacionConfig] = useState<QuotationConfig | null>(null)
   const [cargandoCotizacion, setCargandoCotizacion] = useState(false)
+
+  // Sincronizar quotationId con cotizacionConfig para activar el sistema de caché
+  useEffect(() => {
+    if (cotizacionConfig?.id) {
+      setQuotationId(cotizacionConfig.id)
+    } else {
+      setQuotationId(null)
+    }
+  }, [cotizacionConfig?.id])
   const [erroresValidacionCotizacion, setErroresValidacionCotizacion] = useState<{
     emailProveedor?: string
     whatsappProveedor?: string
@@ -131,7 +336,8 @@ export default function Administrador() {
   const [serviciosOpcionales, setServiciosOpcionales] = useState<Servicio[]>([])
   const [snapshots, setSnapshots] = useState<PackageSnapshot[]>([])
   const [showModalEditar, setShowModalEditar] = useState(false)
-  const [activePageTab, setActivePageTab] = useState<string>('cotizacion')
+  const [activePageTab, setActivePageTab] = useState<string>('analytics')
+  const { trackAdminTabViewed } = useEventTracking()
   const [snapshotEditando, setSnapshotEditando] = useState<PackageSnapshot | null>(null)
   // Estado para comparar cambios en el modal (versión original serializada)
   const [snapshotOriginalJson, setSnapshotOriginalJson] = useState<string | null>(null)
@@ -217,104 +423,8 @@ export default function Administrador() {
     otrosServicios: false,
   })
 
-  // Cargar snapshots desde la API y configuración desde la BD al montar
-  useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        setCargandoSnapshots(true)
-        setErrorSnapshots(null)
-        
-        // Cargar snapshots desde la API (activos e inactivos)
-        const snapshotsDelServidor = await obtenerSnapshotsCompleto()
-        setSnapshots(snapshotsDelServidor)
-      } catch (error) {
-        console.error('Error cargando snapshots:', error)
-        setErrorSnapshots('Error al cargar los paquetes')
-      } finally {
-        setCargandoSnapshots(false)
-      }
-    }
-
-    cargarDatos()
-
-    // Cargar Quotations desde la API
-    const cargarQuotations = async () => {
-      try {
-        const response = await fetch('/api/quotations')
-        const data = await response.json()
-        if (data.success) {
-          setQuotations(data.data || [])
-        }
-      } catch (error) {
-        console.error('Error cargando quotations:', error)
-      }
-    }
-
-    // Cargar Preferences del usuario
-    const cargarPreferences = async () => {
-      try {
-        const response = await fetch('/api/preferences')
-        const data = await response.json()
-        if (data.success) {
-          setUserPreferences(data.data || null)
-        }
-      } catch (error) {
-        console.error('Error cargando preferences:', error)
-      }
-    }
-
-    cargarQuotations()
-    cargarPreferences()
-
-    // Cargar configuración desde la BD (API quotation-config)
-    const cargarConfiguracionBD = async () => {
-      try {
-        const response = await fetch('/api/quotation-config')
-        if (response.ok) {
-          const config = await response.json()
-          if (config) {
-            // Cargar templates desde la configuración de BD
-            if (config.serviciosBaseTemplate) {
-              setServiciosBase(config.serviciosBaseTemplate)
-            }
-            if (config.serviciosOpcionalesTemplate) {
-              setServiciosOpcionales(config.serviciosOpcionalesTemplate)
-            }
-            // Cargar templates de descripción de paquete
-            if (config.descripcionesPaqueteTemplates) {
-              setDescripcionesTemplate(config.descripcionesPaqueteTemplates)
-            }
-            // Cargar opciones de pago y configuración financiera
-            if (config.opcionesPagoTemplate) {
-              setOpcionesPagoActual(config.opcionesPagoTemplate)
-            }
-            if (config.configDescuentosTemplate) {
-              setConfigDescuentosActual(config.configDescuentosTemplate)
-            }
-            if (config.metodoPagoPreferido) {
-              setMetodoPagoPreferido(config.metodoPagoPreferido)
-            }
-            if (config.notasPago) {
-              setNotasPago(config.notasPago)
-            }
-            // Cargar gestión y paquete si están en editorState
-            if (config.editorState) {
-              const editorState = config.editorState as { 
-                gestion?: typeof gestion
-                paqueteActual?: typeof paqueteActual 
-              }
-              if (editorState.gestion) setGestion(editorState.gestion)
-              if (editorState.paqueteActual) setPaqueteActual(editorState.paqueteActual)
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error cargando configuración desde BD:', error)
-      }
-    }
-    
-    cargarConfiguracionBD()
-  }, [])
+  // NOTA: La carga de datos ahora se maneja por useInitialLoad hook
+  // Se ha eliminado el useEffect manual que cargaba snapshots, quotations, preferences y config
 
   // Ajustar altura del textarea de descripción automáticamente
   useEffect(() => {
@@ -505,55 +615,8 @@ export default function Administrador() {
     actualizarEstadoValidacionTabs()
   }
 
-  // Cargar cotización de la BD al montar
-  useEffect(() => {
-    const cargarCotizacion = async () => {
-      try {
-        setCargandoCotizacion(true)
-        const response = await fetch('/api/quotation-config')
-        if (response.status === 404) {
-          // Si no existe, crear una por defecto
-          console.log('No hay cotización, creando una por defecto...')
-          const responseCrear = await fetch('/api/quotation-config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              version: '1.0',
-              tiempoValidez: 30,
-              presupuesto: 'Menos de $300 USD',
-              moneda: 'USD',
-              empresa: 'Urbanísima Constructora S.R.L',
-              sector: 'Construcción y montaje',
-              ubicacion: 'Calle 12/2da y 3ra, No 36, Ampliación de Marbella, Habana del Este, La Habana, CUBA',
-              profesional: 'Daniel Treasure Espinosa',
-              empresaProveedor: 'DGTECNOVA',
-              email: 'dgtecnova@gmail.com',
-              whatsapp: '+535 856 9291',
-              ubicacionProveedor: 'Arroyo 203, e/ Lindero y Nueva del Pilar, Centro Habana, La Habana, CUBA',
-              tiempoVigenciaValor: 12,
-              tiempoVigenciaUnidad: 'meses',
-              heroTituloMain: 'PROPUESTA DE COTIZACIÓN',
-              heroTituloSub: 'PÁGINA CATÁLOGO DINÁMICA',
-            }),
-          })
-          if (responseCrear.ok) {
-            const data = await responseCrear.json()
-            setCotizacionConfig(data)
-          }
-          return
-        }
-        if (response.ok) {
-          const data = await response.json()
-          setCotizacionConfig(data)
-        }
-      } catch (error) {
-        console.error('Error cargando cotización:', error)
-      } finally {
-        setCargandoCotizacion(false)
-      }
-    }
-    cargarCotizacion()
-  }, [])
+  // Cotización se carga automáticamente desde useQuotationCache hook
+  // No necesitamos useEffect adicional aquí - el cache system maneja offline y online
 
   // Guardar cotización en BD
   // FUNCIÓN ELIMINADA: guardarCotizacion() ha sido unificada en guardarConfiguracionActual()
@@ -1386,12 +1449,19 @@ export default function Administrador() {
     snapshots,
   ])
 
+  // Tracking de vistas de TAB del Administrador (TTL en hook)
+  useEffect(() => {
+    if (typeof trackAdminTabViewed === 'function') {
+      trackAdminTabViewed(activePageTab)
+    }
+  }, [activePageTab, trackAdminTabViewed])
+
   // ==================== USEEFFECT PARA MIGRAR SNAPSHOTS ACTIVOS SIN VINCULACIÓN ====================
   useEffect(() => {
     const migrarSnapshotsSinVinculacion = async () => {
       // Solo ejecutar si hay cotizacionConfig y snapshots cargados
+      // Durante carga inicial, simplemente retornar sin loguear
       if (!cotizacionConfig?.id || !snapshots || snapshots.length === 0) {
-        console.log('⏭️ Saltando migración - cotizacionConfig:', !!cotizacionConfig?.id, 'snapshots:', snapshots?.length)
         return
       }
 
@@ -2076,6 +2146,13 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
   
   const pageTabs: TabItem[] = [
     {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: <FaChartLine size={16} />,
+      content: <div />, // Placeholder
+      hasChanges: false,
+    },
+    {
       id: 'cotizacion',
       label: `Cotización${estadoValidacionTabs.cotizacion === 'ok' ? ' ✓' : ''}`,
       icon: <FaFileAlt size={16} />,
@@ -2202,7 +2279,8 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
   ]
 
   return (
-    <div className="relative min-h-screen bg-gh-bg text-gh-text">
+    <AnalyticsProvider>
+      <div className="relative min-h-screen bg-gh-bg text-gh-text">
       <Navigation />
       
       {/* Indicador de estado de sincronización - posición fija esquina inferior derecha */}
@@ -2213,8 +2291,72 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
           isDirty={hasUnsavedChanges}
           showText={true}
           size="md"
+          loadingPhase={loadingPhase}
         />
       </div>
+
+      {/* Modal de resolución de conflictos de conexión */}
+      {showConnectionRecoveryDialog && connectionRecovery.differences && connectionRecovery.differences.length > 0 && (
+        <DialogoGenerico
+          isOpen={showConnectionRecoveryDialog}
+          onClose={() => setShowConnectionRecoveryDialog(false)}
+          title="✅ Conexión restablecida"
+          description="Se detectaron cambios. Compara los datos del caché con la base de datos."
+          type="info"
+          size="lg"
+          showHeader={true}
+          footer={
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => handleConnectionRecoveryResolve('use-cache')}
+                disabled={isResolvingRecovery}
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-all"
+              >
+                📦 Usar Caché
+              </button>
+              <button
+                onClick={() => handleConnectionRecoveryResolve('use-server')}
+                disabled={isResolvingRecovery}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all"
+              >
+                🔄 Usar BD
+              </button>
+              <button
+                onClick={() => handleConnectionRecoveryResolve('merge')}
+                disabled={isResolvingRecovery}
+                className="px-4 py-2 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover disabled:opacity-50 transition-all"
+              >
+                ✨ Fusionar
+              </button>
+            </div>
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-gh-border">
+                  <th className="text-left p-3 font-semibold text-gh-text-muted bg-gh-bg-secondary">Campo</th>
+                  <th className="text-left p-3 font-semibold text-gh-text-muted bg-gh-bg-secondary">Caché</th>
+                  <th className="text-left p-3 font-semibold text-gh-text-muted bg-gh-bg-secondary">Base de Datos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {connectionRecovery.differences.map((diff, idx) => (
+                  <tr key={idx} className="border-b border-gh-border hover:bg-gh-bg-secondary/50 transition-colors">
+                    <td className="p-3 font-medium text-gh-text">{diff.field}</td>
+                    <td className="p-3 text-amber-600 font-mono break-words max-w-sm">
+                      {typeof diff.cacheValue === 'string' ? diff.cacheValue : JSON.stringify(diff.cacheValue)}
+                    </td>
+                    <td className="p-3 text-blue-600 font-mono break-words max-w-sm">
+                      {typeof diff.serverValue === 'string' ? diff.serverValue : JSON.stringify(diff.serverValue)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogoGenerico>
+      )}
       
       <div className="max-w-7xl mx-auto py-8 px-4 pt-24">
         <motion.div
@@ -2269,9 +2411,6 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
             </div>
           </div>
 
-          {/* KPI Cards */}
-          <KPICards snapshots={snapshots} cargandoSnapshots={cargandoSnapshots} />
-
           {/* Tab Navigation */}
           <div>
             <TabsModal
@@ -2283,12 +2422,28 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
 
           {/* Tab Content - usando componentes */}
           <div className="bg-gh-bg rounded-b-md border-b border-l border-r border-gh-border">
+            {/* TAB 0: ANALYTICS */}
+            {activePageTab === 'analytics' && (
+              <div className="p-6 space-y-8">
+                {/* 1. Dashboard de Analytics completo */}
+                <AnalyticsDashboard />
+                
+                {/* 2. KPI Cards - Resumen de paquetes */}
+                <KPICards snapshots={snapshots} cargandoSnapshots={cargandoSnapshots} />
+                
+                {/* 3. Analítica de Ofertas */}
+                <OfertaAnalyticsSection />
+                
+                {/* 4. Analítica de Historial */}
+                <HistorialAnalyticsSection />
+              </div>
+            )}
+
             {/* TAB 1: COTIZACIÓN */}
             {activePageTab === 'cotizacion' && (
               <CotizacionTab
                 cotizacionConfig={cotizacionConfig}
                 setCotizacionConfig={setCotizacionConfig}
-                cargandoCotizacion={cargandoCotizacion}
                 erroresValidacionCotizacion={erroresValidacionCotizacion}
                 setErroresValidacionCotizacion={setErroresValidacionCotizacion}
                 validarEmail={validarEmail}
@@ -4137,6 +4292,7 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
       
       {/* Toast Notifications */}
       <Toast messages={toast.messages} onRemove={toast.removeToast} />
-    </div>
+      </div>
+    </AnalyticsProvider>
   )
 }

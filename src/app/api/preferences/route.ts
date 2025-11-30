@@ -7,15 +7,13 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(request: NextRequest) {
   try {
-    // Por ahora usamos un userId genérico
-    // En producción, obtenerlo de la sesión del usuario
+    await prisma.$queryRaw`SELECT 1`
+    
     const userId = 'default-user'
-
     let preferences = await prisma.userPreferences.findUnique({
       where: { userId },
     })
 
-    // Si no existe, crear una por defecto
     if (!preferences) {
       preferences = await prisma.userPreferences.create({
         data: {
@@ -33,7 +31,14 @@ export async function GET(request: NextRequest) {
       data: preferences,
     })
   } catch (error) {
-    console.error('Error fetching preferences:', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Error fetching preferences:', msg)
+    if (msg.includes('ECONNREFUSED') || msg.includes('connect')) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection failed' },
+        { status: 503 }
+      )
+    }
     return NextResponse.json(
       { success: false, error: 'Error fetching preferences' },
       { status: 500 }

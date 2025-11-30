@@ -68,7 +68,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
           <FaChartLine className="text-gh-accent-blue text-2xl" />
           <div>
             <h2 className="text-2xl font-bold text-gh-text">Analytics Dashboard</h2>
-            <p className="text-sm text-gh-text-muted">Session ID: {state.sessionId}</p>
+            {state.sessionId && <p className="text-sm text-gh-text-muted">Session ID: {state.sessionId}</p>}
           </div>
         </div>
         <div className="flex gap-2">

@@ -33,6 +33,8 @@ export { default as SnapshotDiffViewer } from './SnapshotDiffViewer'
 
 // Analytics Components (Phase 13)
 export { AnalyticsDashboard } from './AnalyticsDashboard'
+export { OfertaAnalyticsSection } from './OfertaAnalyticsSection'
+export { HistorialAnalyticsSection } from './HistorialAnalyticsSection'
 
 // Performance Optimized Components (Phase 14)
 export { default as OptimizedSnapshotCard } from './OptimizedSnapshotCard'
