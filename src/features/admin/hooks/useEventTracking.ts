@@ -9,8 +9,8 @@ import { useAnalytics } from '../contexts/AnalyticsContext'
  */
 
 export function useEventTracking() {
-  let trackEvent: (name: string, payload?: Record<string, any>) => void = () => {}
-  let trackAction: (name: string, payload?: Record<string, any>) => void = () => {}
+  let trackEvent: (name: string, payload?: Record<string, unknown>) => void = () => {}
+  let trackAction: (action: string, component: string, duration: number, success: boolean, error?: string) => void = () => {}
   try {
     const analytics = useAnalytics()
     trackEvent = analytics.trackEvent

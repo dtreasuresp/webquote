@@ -42,7 +42,7 @@ export interface AnalyticsState {
   startTime: Date
   totalEvents: number
   totalActions: number
-  loadingPhase?: 'idle' | 'cache' | 'analyzing' | 'syncing' | 'validating' | 'synced'
+  loadingPhase?: LoadingPhase
 }
 
 export interface AnalyticsContextType {
@@ -75,7 +75,7 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
     startTime: new Date(),
     totalEvents: 0,
     totalActions: 0,
-    loadingPhase: 'idle',
+    loadingPhase: 'welcome', // Fase inicial del sistema de carga
   })
 
   // Generar sessionId solo en cliente, después del montaje

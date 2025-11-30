@@ -33,6 +33,7 @@ import { useLoadingPhase } from '@/features/admin/hooks/useLoadingPhase'
 import { useConnectionRecovery, type DataDifference } from '@/features/admin/hooks/useConnectionRecovery'
 import { useOfflineStatus } from '@/hooks/useOfflineStatus'
 import { useInitialLoad } from '@/hooks/useInitialLoad'
+import { useConnectionPolling } from '@/hooks/useConnectionPolling'
 import { 
   cacheSnapshots, getCachedSnapshots,
   cacheQuotations, getCachedQuotations,
@@ -94,6 +95,22 @@ export default function Administrador() {
         toast.success('✅ Conexión restablecida, datos sincronizados')
         refreshFromServer()
       }
+    }
+  })
+
+  // Hook para verificación periódica de conexión con intervalo configurable
+  // El intervalo inicial es 30 segundos, se actualiza cuando se cargan las preferencias
+  const connectionPolling = useConnectionPolling({
+    interval: 30000, // 30 segundos por defecto, se actualiza con useEffect
+    enabled: true,
+    onReconnect: () => {
+      console.log('🔄 Conexión restablecida')
+    },
+    onDisconnect: () => {
+      console.log('⚠️ Conexión perdida - Trabajando en modo offline')
+    },
+    onCheck: (connected) => {
+      console.log(`🔍 Verificación de conexión: ${connected ? 'Online' : 'Offline'}`)
     }
   })
 
@@ -420,6 +437,39 @@ export default function Administrador() {
   // ==================== ESTADOS QUOTATIONS Y PREFERENCIAS ====================
   const [quotations, setQuotations] = useState<QuotationConfig[]>([])
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null)
+  
+  // Efecto para actualizar el intervalo de polling y manejar eventos de conexión
+  useEffect(() => {
+    if (userPreferences && connectionPolling.setInterval) {
+      // Calcular intervalo basado en preferencias
+      const valor = userPreferences.intervaloVerificacionConexion || 30
+      const unidad = userPreferences.unidadIntervaloConexion || 'segundos'
+      const nuevoIntervalo = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
+      connectionPolling.setInterval(nuevoIntervalo)
+      console.log(`⏱️ Intervalo de polling actualizado: ${nuevoIntervalo}ms`)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    userPreferences?.intervaloVerificacionConexion, 
+    userPreferences?.unidadIntervaloConexion
+  ])
+
+  // Efecto para manejar notificaciones de conexión basadas en preferencias
+  useEffect(() => {
+    if (connectionPolling.hasReconnected) {
+      // Al recuperar conexión, verificar si debe sincronizar automáticamente
+      if (userPreferences?.sincronizarAlRecuperarConexion !== false) {
+        console.log('🔄 Conexión restablecida - Sincronizando automáticamente...')
+        refreshFromServer()
+      }
+      // Mostrar notificación si está habilitado
+      if (userPreferences?.mostrarNotificacionCacheLocal !== false) {
+        toast.success('✅ Conexión a la base de datos restablecida')
+      }
+      connectionPolling.clearReconnectionFlag()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectionPolling.hasReconnected])
   
   // Estado para la cotización actual (información general)
   const [cotizacionActual, setCotizacionActual] = useState<Partial<QuotationConfig>>({
@@ -2372,7 +2422,6 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
           description="Se detectaron cambios. Compara los datos del caché con la base de datos."
           type="info"
           size="lg"
-          showHeader={true}
           footer={
             <div className="flex gap-3 justify-end">
               <button
@@ -2661,15 +2710,25 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         userId: 'default-user',
+                        // Preferencias generales
                         cerrarModalAlGuardar: userPreferences.cerrarModalAlGuardar,
                         mostrarConfirmacionGuardado: userPreferences.mostrarConfirmacionGuardado,
                         validarDatosAntes: userPreferences.validarDatosAntes,
                         limpiarFormulariosAlCrear: userPreferences.limpiarFormulariosAlCrear ?? true,
+                        mantenerDatosAlCrearCotizacion: userPreferences.mantenerDatosAlCrearCotizacion ?? false,
+                        // Preferencias de sincronización y cache
+                        destinoGuardado: userPreferences.destinoGuardado ?? 'ambos',
+                        intervaloVerificacionConexion: userPreferences.intervaloVerificacionConexion ?? 30,
+                        unidadIntervaloConexion: userPreferences.unidadIntervaloConexion ?? 'segundos',
+                        sincronizarAlRecuperarConexion: userPreferences.sincronizarAlRecuperarConexion ?? true,
+                        mostrarNotificacionCacheLocal: userPreferences.mostrarNotificacionCacheLocal ?? true,
                       })
                     })
                     if (response.ok) {
                       const result = await response.json()
                       setUserPreferences(result.data)
+                      // También guardar en cache local
+                      cachePreferences(result.data)
                       toast.success('✓ Preferencias guardadas correctamente')
                     } else {
                       toast.error('Error al guardar preferencias')

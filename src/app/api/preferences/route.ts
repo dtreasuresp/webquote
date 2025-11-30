@@ -22,6 +22,13 @@ export async function GET(request: NextRequest) {
           mostrarConfirmacionGuardado: true,
           validarDatosAntes: true,
           limpiarFormulariosAlCrear: true,
+          mantenerDatosAlCrearCotizacion: false,
+          // Preferencias de sincronización
+          destinoGuardado: 'ambos',
+          intervaloVerificacionConexion: 30,
+          unidadIntervaloConexion: 'segundos',
+          sincronizarAlRecuperarConexion: true,
+          mostrarNotificacionCacheLocal: true,
         },
       })
     }
@@ -58,18 +65,34 @@ export async function POST(request: NextRequest) {
     const preferences = await prisma.userPreferences.upsert({
       where: { userId },
       update: {
+        // Preferencias generales
         cerrarModalAlGuardar: body.cerrarModalAlGuardar,
         mostrarConfirmacionGuardado: body.mostrarConfirmacionGuardado,
         validarDatosAntes: body.validarDatosAntes,
         limpiarFormulariosAlCrear: body.limpiarFormulariosAlCrear,
+        mantenerDatosAlCrearCotizacion: body.mantenerDatosAlCrearCotizacion,
+        // Preferencias de sincronización
+        destinoGuardado: body.destinoGuardado,
+        intervaloVerificacionConexion: body.intervaloVerificacionConexion,
+        unidadIntervaloConexion: body.unidadIntervaloConexion,
+        sincronizarAlRecuperarConexion: body.sincronizarAlRecuperarConexion,
+        mostrarNotificacionCacheLocal: body.mostrarNotificacionCacheLocal,
         updatedAt: new Date(),
       },
       create: {
         userId,
+        // Preferencias generales
         cerrarModalAlGuardar: body.cerrarModalAlGuardar ?? false,
         mostrarConfirmacionGuardado: body.mostrarConfirmacionGuardado ?? true,
         validarDatosAntes: body.validarDatosAntes ?? true,
         limpiarFormulariosAlCrear: body.limpiarFormulariosAlCrear ?? true,
+        mantenerDatosAlCrearCotizacion: body.mantenerDatosAlCrearCotizacion ?? false,
+        // Preferencias de sincronización
+        destinoGuardado: body.destinoGuardado ?? 'ambos',
+        intervaloVerificacionConexion: body.intervaloVerificacionConexion ?? 30,
+        unidadIntervaloConexion: body.unidadIntervaloConexion ?? 'segundos',
+        sincronizarAlRecuperarConexion: body.sincronizarAlRecuperarConexion ?? true,
+        mostrarNotificacionCacheLocal: body.mostrarNotificacionCacheLocal ?? true,
       },
     })
 

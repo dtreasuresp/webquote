@@ -160,6 +160,21 @@ model UserPreferences {
   // Preferencia para limpiar formularios al crear nueva cotización
   limpiarFormulariosAlCrear   Boolean  @default(true)
   
+  // Mantener datos (templates) al crear nueva cotización
+  mantenerDatosAlCrearCotizacion Boolean @default(false)
+  
+  // ==================== PREFERENCIAS DE SINCRONIZACIÓN ====================
+  // Destino de guardado: 'local' = solo localStorage, 'cloud' = solo BD, 'ambos' = ambos
+  destinoGuardado             String   @default("ambos")
+  // Intervalo de verificación de conexión (valor numérico)
+  intervaloVerificacionConexion Int    @default(30)
+  // Unidad del intervalo: 'segundos' o 'minutos'
+  unidadIntervaloConexion     String   @default("segundos")
+  // Sincronizar automáticamente al recuperar conexión
+  sincronizarAlRecuperarConexion Boolean @default(true)
+  // Mostrar notificación cuando se usa cache local
+  mostrarNotificacionCacheLocal Boolean @default(true)
+  
   // Control
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt

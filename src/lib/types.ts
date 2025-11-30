@@ -282,6 +282,19 @@ export interface UserPreferences {
   // Mantener datos (templates) al crear nueva cotización
   // Si true: mantiene servicios, financiero, contenido. Si false: limpia todo.
   mantenerDatosAlCrearCotizacion?: boolean
+  
+  // ==================== NUEVAS PREFERENCIAS DE SINCRONIZACIÓN ====================
+  /** Destino de guardado: 'local' = solo localStorage, 'cloud' = solo BD, 'ambos' = ambos */
+  destinoGuardado?: 'local' | 'cloud' | 'ambos'
+  /** Intervalo de verificación de conexión en segundos (mínimo 5, máximo 300) */
+  intervaloVerificacionConexion?: number
+  /** Unidad del intervalo: 'segundos' o 'minutos' */
+  unidadIntervaloConexion?: 'segundos' | 'minutos'
+  /** Sincronizar automáticamente al recuperar conexión */
+  sincronizarAlRecuperarConexion?: boolean
+  /** Mostrar notificación cuando se usa cache local */
+  mostrarNotificacionCacheLocal?: boolean
+  
   createdAt: string
   updatedAt: string
 }
