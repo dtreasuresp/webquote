@@ -50,6 +50,55 @@ import { AnalyticsProvider } from '@/features/admin/contexts'
 import { useEventTracking } from '@/features/admin/hooks'
 
 export default function Administrador() {
+  // ==================== AUTENTICACIÓN ====================
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [passwordInput, setPasswordInput] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
+
+  // Verificar autenticación al cargar
+  useEffect(() => {
+    const authToken = sessionStorage.getItem('admin_auth')
+    if (authToken === 'authenticated') {
+      setIsAuthenticated(true)
+    } else {
+      setShowAuthDialog(true)
+    }
+    setAuthChecked(true)
+  }, [])
+
+  // Función para verificar contraseña
+  const handleVerifyPassword = async () => {
+    setIsVerifying(true)
+    setAuthError('')
+    
+    try {
+      const response = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        sessionStorage.setItem('admin_auth', 'authenticated')
+        setIsAuthenticated(true)
+        setShowAuthDialog(false)
+        setPasswordInput('')
+      } else {
+        setAuthError(data.message || 'Contraseña incorrecta')
+      }
+    } catch (error) {
+      console.error('Error verificando contraseña:', error)
+      setAuthError('Error al verificar. Intenta de nuevo.')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
   // Obtener función de refresh global
   const refreshSnapshots = useSnapshotsRefresh()
   
@@ -2451,6 +2500,86 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
       hasChanges: false,
     },
   ]
+
+  // ==================== GUARD DE AUTENTICACIÓN ====================
+  // Mostrar pantalla de carga mientras se verifica
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-gh-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-gh-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gh-text-secondary text-sm">Verificando acceso...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Mostrar dialog de autenticación si no está autenticado
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gh-bg flex items-center justify-center">
+        <DialogoGenerico
+          isOpen={showAuthDialog}
+          onClose={() => {}} // No permitir cerrar sin autenticarse
+          title="🔐 Acceso Restringido"
+          description="Ingresa la contraseña para acceder al panel de administración"
+          type="info"
+          size="sm"
+          footer={
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleVerifyPassword}
+                disabled={isVerifying || !passwordInput.trim()}
+                className="px-4 py-2 bg-gh-accent text-white rounded-lg hover:bg-gh-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+              >
+                {isVerifying ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  <>
+                    <FaCheck size={14} />
+                    Acceder
+                  </>
+                )}
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gh-text mb-2">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value)
+                  setAuthError('')
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && passwordInput.trim()) {
+                    handleVerifyPassword()
+                  }
+                }}
+                placeholder="Ingresa la contraseña"
+                className="w-full px-4 py-2 bg-gh-canvas border border-gh-border rounded-lg focus:border-gh-accent focus:ring-1 focus:ring-gh-accent outline-none transition-all text-gh-text"
+                autoFocus
+              />
+            </div>
+            {authError && (
+              <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 px-3 py-2 rounded-lg">
+                <FaExclamationTriangle size={14} />
+                {authError}
+              </div>
+            )}
+          </div>
+        </DialogoGenerico>
+      </div>
+    )
+  }
 
   return (
     <AnalyticsProvider>
