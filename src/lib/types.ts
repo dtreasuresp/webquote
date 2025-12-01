@@ -237,6 +237,7 @@ export interface PackageSnapshot {
     precioMailbox?: number
     precioDominio?: number
     tiempoEntrega?: string
+    cantidadPaginas?: string  // Ej: "8", "10+", "15" - opcional
     opcionesPago?: OpcionPago[]
     // ✅ NUEVO SISTEMA DE DESCUENTOS
     configDescuentos?: ConfigDescuentos
