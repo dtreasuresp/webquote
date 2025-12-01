@@ -62,6 +62,18 @@ export function useConnectionPolling(
 
   const previousConnectedRef = useRef<boolean>(true)
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Refs para los callbacks para evitar re-renders del efecto
+  const onReconnectRef = useRef(onReconnect)
+  const onDisconnectRef = useRef(onDisconnect)
+  const onCheckRef = useRef(onCheck)
+  
+  // Actualizar refs cuando cambien los callbacks
+  useEffect(() => {
+    onReconnectRef.current = onReconnect
+    onDisconnectRef.current = onDisconnect
+    onCheckRef.current = onCheck
+  }, [onReconnect, onDisconnect, onCheck])
 
   /**
    * Verifica la conexión a la BD
@@ -79,16 +91,16 @@ export function useConnectionPolling(
       // Detectar transición offline → online
       if (!wasConnected && connected) {
         setHasReconnected(true)
-        onReconnect?.()
+        onReconnectRef.current?.()
       }
       
       // Detectar transición online → offline
       if (wasConnected && !connected) {
-        onDisconnect?.()
+        onDisconnectRef.current?.()
       }
       
       previousConnectedRef.current = connected
-      onCheck?.(connected)
+      onCheckRef.current?.(connected)
       
       return connected
     } catch {
@@ -98,7 +110,7 @@ export function useConnectionPolling(
     } finally {
       setIsChecking(false)
     }
-  }, [onReconnect, onDisconnect, onCheck])
+  }, []) // Sin dependencias - usa refs
 
   /**
    * Limpia el flag de reconexión (llamar después de manejar el modal)
@@ -142,13 +154,22 @@ export function useConnectionPolling(
       return
     }
 
-    // Verificación inicial
-    checkConnection()
+    // Limpiar intervalo anterior si existe
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current)
+    }
+
+    // Verificación inicial solo si no hay una verificación reciente
+    if (!lastChecked) {
+      checkConnection()
+    }
 
     // Configurar intervalo
     intervalIdRef.current = setInterval(() => {
       checkConnection()
     }, currentInterval)
+
+    console.log(`⏱️ Polling configurado: cada ${currentInterval / 1000} segundos`)
 
     return () => {
       if (intervalIdRef.current) {
@@ -156,7 +177,7 @@ export function useConnectionPolling(
         intervalIdRef.current = null
       }
     }
-  }, [enabled, isPaused, currentInterval, checkConnection])
+  }, [enabled, isPaused, currentInterval]) // checkConnection removido de dependencias
 
   // También escuchar eventos de navegador online/offline
   useEffect(() => {
@@ -168,7 +189,7 @@ export function useConnectionPolling(
     const handleOffline = () => {
       setIsConnected(false)
       previousConnectedRef.current = false
-      onDisconnect?.()
+      onDisconnectRef.current?.()
     }
 
     window.addEventListener('online', handleOnline)
@@ -178,7 +199,7 @@ export function useConnectionPolling(
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [checkConnection, onDisconnect])
+  }, [checkConnection])
 
   return {
     isConnected,

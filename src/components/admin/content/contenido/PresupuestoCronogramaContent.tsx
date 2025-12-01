@@ -2,12 +2,10 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaCalendarAlt, FaChevronDown, FaChevronUp, FaPlus, FaTrash, FaDollarSign, FaClock, FaBox, FaSort } from 'react-icons/fa'
-import ContentHeader from './ContentHeader'
-import ArrayFieldGH from './ArrayFieldGH'
+import { FaCalendarAlt, FaChevronDown, FaChevronUp, FaPlus, FaTrash, FaDollarSign, FaClock } from 'react-icons/fa'
+import ContentHeader from '@/features/admin/components/content/contenido/ContentHeader'
+import ArrayFieldGH from '@/features/admin/components/content/contenido/ArrayFieldGH'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
-import useSnapshots from '@/features/admin/hooks/useSnapshots'
-import { getPaquetesDesglose, type PaqueteDesglose } from '@/lib/utils/priceRangeCalculator'
 import type { SeccionesColapsadasConfig } from '@/lib/types'
 
 // Tipos para Presupuesto y Cronograma
@@ -53,10 +51,6 @@ export interface PresupuestoCronogramaData {
     descripcion: string
     duracionTotal: string
     fases: FaseCronograma[]
-  }
-  /** Características editables por paquete (clave = nombre del paquete desde snapshots) */
-  caracteristicasPorPaquete?: {
-    [nombrePaquete: string]: string[]
   }
 }
 
@@ -149,8 +143,6 @@ export const defaultPresupuestoCronograma: PresupuestoCronogramaData = {
       },
     ],
   },
-  // Características por paquete (se editan aquí, se combinan con datos de snapshots en página pública)
-  caracteristicasPorPaquete: {},
 }
 
 export default function PresupuestoCronogramaContent({
@@ -166,14 +158,9 @@ export default function PresupuestoCronogramaContent({
   seccionesColapsadas,
   onSeccionColapsadaChange,
 }: PresupuestoCronogramaContentProps) {
-  // Cargar paquetes desde snapshots
-  const { snapshots, loading: loadingSnapshots } = useSnapshots()
-  const paquetesSnapshot = getPaquetesDesglose(snapshots)
-
   // Estado de secciones colapsables viene de props (se persiste al guardar)
   const expandedSections = {
     presupuesto: seccionesColapsadas.presupuesto_presupuesto ?? true,
-    paquetesDinamicos: seccionesColapsadas.presupuesto_paquetesDinamicos ?? true,
     metodosPago: seccionesColapsadas.presupuesto_metodosPago ?? false,
     cronograma: seccionesColapsadas.presupuesto_cronograma ?? false,
   }
@@ -184,46 +171,7 @@ export default function PresupuestoCronogramaContent({
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // Funciones para Características por Paquete (dinámico desde snapshots)
-  // ═══════════════════════════════════════════════════════════════
-  const updateCaracteristicasPaquete = (nombrePaquete: string, caracteristicas: string[]) => {
-    onChange({
-      ...data,
-      caracteristicasPorPaquete: {
-        ...data.caracteristicasPorPaquete,
-        [nombrePaquete]: caracteristicas,
-      },
-    })
-  }
-
-  const getCaracteristicasPaquete = (nombrePaquete: string): string[] => {
-    return data.caracteristicasPorPaquete?.[nombrePaquete] || []
-  }
-
-  // Función para ordenar características
-  const sortCaracteristicas = (nombrePaquete: string, sortType: 'az' | 'za' | 'short' | 'long') => {
-    const caracteristicas = [...getCaracteristicasPaquete(nombrePaquete)]
-    
-    switch (sortType) {
-      case 'az':
-        caracteristicas.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
-        break
-      case 'za':
-        caracteristicas.sort((a, b) => b.localeCompare(a, 'es', { sensitivity: 'base' }))
-        break
-      case 'short':
-        caracteristicas.sort((a, b) => a.length - b.length)
-        break
-      case 'long':
-        caracteristicas.sort((a, b) => b.length - a.length)
-        break
-    }
-    
-    updateCaracteristicasPaquete(nombrePaquete, caracteristicas)
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // Funciones para Rangos de Presupuesto (legacy/manual)
+  // Funciones para Rangos de Presupuesto
   // ═══════════════════════════════════════════════════════════════
   const addRango = () => {
     const newRango: RangoPresupuesto = {
@@ -510,166 +458,6 @@ export default function PresupuestoCronogramaContent({
                   rows={2}
                 />
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* PAQUETES DINÁMICOS (desde Snapshots) - Características Editables */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => toggleSection('paquetesDinamicos')}
-              className="flex items-center gap-2 text-left"
-            >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                <FaBox className="text-gh-accent" /> Paquetes (Características Incluidas)
-              </span>
-              {expandedSections.paquetesDinamicos ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
-            </button>
-            <span className="text-xs text-gh-text-muted bg-gh-bg-tertiary px-2 py-1 rounded">
-              {paquetesSnapshot.length} paquete{paquetesSnapshot.length !== 1 ? 's' : ''} activo{paquetesSnapshot.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-
-          {expandedSections.paquetesDinamicos && (
-            <div className="mt-4 space-y-4 p-4 bg-gh-bg-secondary/50 border border-gh-border/50 rounded-md">
-              {/* Info de contexto */}
-              <div className="p-3 bg-gh-info/10 border border-gh-info/30 rounded-md">
-                <p className="text-xs text-gh-text-muted">
-                  <strong className="text-gh-info">ℹ️ Info:</strong> Los datos de cada paquete (nombre, tagline, tiempo de entrega, servicios y precios) 
-                  se cargan automáticamente desde los <strong>Snapshots</strong>. Aquí solo puedes editar las <strong>características incluidas</strong> que 
-                  se mostrarán en la página pública.
-                </p>
-              </div>
-
-              {loadingSnapshots ? (
-                <div className="space-y-3">
-                  {[1, 2].map((i) => (
-                    <div key={`skeleton-paq-${i}`} className="p-4 bg-gh-bg-tertiary border border-gh-border rounded-md animate-pulse">
-                      <div className="h-5 w-32 bg-gh-bg-secondary rounded mb-3"></div>
-                      <div className="h-4 w-48 bg-gh-bg-secondary rounded mb-2"></div>
-                      <div className="h-4 w-24 bg-gh-bg-secondary rounded"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : paquetesSnapshot.length === 0 ? (
-                <div className="p-4 bg-gh-warning/10 border border-gh-warning/30 rounded-md text-center">
-                  <p className="text-sm text-gh-warning">No hay paquetes activos configurados.</p>
-                  <p className="text-xs text-gh-text-muted mt-1">Ve a la pestaña "Paquetes" para crear o activar paquetes.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {paquetesSnapshot.map((paq) => (
-                    <div key={paq.id} className="p-4 bg-gh-bg-tertiary border border-gh-border rounded-md">
-                      {/* Header del paquete */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-lg">{paq.emoji}</span>
-                            <span className="text-sm font-semibold text-gh-text">{paq.nombre}</span>
-                          </div>
-                          {paq.tagline && (
-                            <p className="text-xs text-gh-text-muted italic">&quot;{paq.tagline}&quot;</p>
-                          )}
-                          {paq.tiempoEntrega && (
-                            <p className="text-xs text-gh-text-muted mt-1">
-                              <FaClock className="inline mr-1" /> {paq.tiempoEntrega}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-gh-success">${paq.desarrollo.toLocaleString()}</p>
-                          <p className="text-xs text-gh-text-muted">Desarrollo</p>
-                        </div>
-                      </div>
-
-                      {/* Servicios Base (solo lectura) */}
-                      {paq.serviciosBase.length > 0 && (
-                        <div className="mb-3 p-2 bg-gh-bg-secondary/50 rounded">
-                          <p className="text-xs font-medium text-gh-text-muted mb-2">Servicios Base:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {paq.serviciosBase.map((srv) => (
-                              <span key={srv.nombre} className="text-xs bg-gh-bg-tertiary px-2 py-1 rounded text-gh-text">
-                                {srv.nombre}: ${srv.precio}/mes ({srv.mesesPago}m)
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Servicios Opcionales (solo lectura) */}
-                      {paq.serviciosOpcionales.length > 0 && (
-                        <div className="mb-3 p-2 bg-gh-bg-secondary/50 rounded">
-                          <p className="text-xs font-medium text-gh-text-muted mb-2">Servicios Opcionales:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {paq.serviciosOpcionales.map((srv) => (
-                              <span key={srv.nombre} className="text-xs bg-gh-warning/20 px-2 py-1 rounded text-gh-text">
-                                {srv.nombre}: ${srv.precio}{srv.mesesPago ? `/mes (${srv.mesesPago}m)` : ''}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Costo Total (solo lectura) */}
-                      <div className="mb-4 p-2 bg-gh-success/10 border border-gh-success/30 rounded flex justify-between items-center">
-                        <span className="text-xs text-gh-text-muted">Total Inicial:</span>
-                        <span className="text-sm font-bold text-gh-success">${paq.costoInicial.toLocaleString()}</span>
-                      </div>
-
-                      {/* Características Incluidas (EDITABLE) */}
-                      <div className="border-t border-gh-border pt-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-medium text-gh-text-muted">✏️ Características Incluidas (editable)</span>
-                          {getCaracteristicasPaquete(paq.nombre).length > 1 && (
-                            <div className="relative group">
-                              <button
-                                className="flex items-center gap-1 px-2 py-1 text-xs bg-gh-bg-secondary border border-gh-border rounded hover:bg-gh-bg-tertiary transition-colors text-gh-text-muted"
-                              >
-                                <FaSort className="text-xs" /> Ordenar
-                              </button>
-                              <div className="absolute right-0 top-full mt-1 w-40 bg-gh-bg-secondary border border-gh-border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                                <button
-                                  onClick={() => sortCaracteristicas(paq.nombre, 'az')}
-                                  className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
-                                >
-                                  🔤 Alfabético A-Z
-                                </button>
-                                <button
-                                  onClick={() => sortCaracteristicas(paq.nombre, 'za')}
-                                  className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
-                                >
-                                  🔤 Alfabético Z-A
-                                </button>
-                                <button
-                                  onClick={() => sortCaracteristicas(paq.nombre, 'short')}
-                                  className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors border-t border-gh-border"
-                                >
-                                  📏 Corto → Largo
-                                </button>
-                                <button
-                                  onClick={() => sortCaracteristicas(paq.nombre, 'long')}
-                                  className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
-                                >
-                                  📏 Largo → Corto
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <ArrayFieldGH
-                          label=""
-                          items={getCaracteristicasPaquete(paq.nombre)}
-                          onChange={(items) => updateCaracteristicasPaquete(paq.nombre, items)}
-                          placeholder="Ej: Diseño responsive, SEO básico..."
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </div>

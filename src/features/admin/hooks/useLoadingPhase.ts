@@ -27,8 +27,12 @@ export interface UseLoadingPhaseOptions {
   isLoading?: boolean
   /** Estado de sincronización de cotización */
   syncStatus?: SyncStatus | null
-  /** Si hay conexión a BD */
+  /** Si hay conexión a BD (de useInitialLoad) */
   isConnected?: boolean
+  /** Si hay conexión según el polling periódico */
+  isPollingConnected?: boolean
+  /** Si se detectó una reconexión (offline → online) */
+  hasReconnected?: boolean
 }
 
 export interface UseLoadingPhaseReturn {
@@ -53,6 +57,7 @@ const PHASE_TEXTS: Record<LoadingPhase, string> = {
   'synced': 'Sincronizado con BD',
   'offline-cached': 'Sin conexión a BD. Mostrando datos locales',
   'offline-empty': 'Sin conexión y sin datos en cache',
+  'reconnecting': 'Conexión restablecida - Sincronizando...',
   'merging': 'Fusionando datos...',
   'comparing': 'Comparando diferencias...',
   'error': 'Error de sincronización'
@@ -63,6 +68,7 @@ const ACTIVE_LOADING_PHASES = new Set<LoadingPhase>([
   'checking-connection',
   'syncing-from-db',
   'updating-analytics',
+  'reconnecting',
   'merging',
   'comparing'
 ])
@@ -79,7 +85,9 @@ export function useLoadingPhase(options: UseLoadingPhaseOptions = {}): UseLoadin
     initialLoadPhase = 'welcome',
     isLoading = false,
     syncStatus = null,
-    isConnected = true
+    isConnected = true,
+    isPollingConnected,
+    hasReconnected = false
   } = options
 
   const [overridePhase, setOverridePhase] = useState<LoadingPhase | null>(null)
@@ -89,6 +97,11 @@ export function useLoadingPhase(options: UseLoadingPhaseOptions = {}): UseLoadin
     // Si hay un override manual, usarlo
     if (overridePhase) {
       return overridePhase
+    }
+
+    // Prioridad 0: Si se detectó reconexión, mostrar fase de reconexión
+    if (hasReconnected) {
+      return 'reconnecting'
     }
 
     // Prioridad 1: Fase de carga inicial (si no ha completado)
@@ -115,8 +128,11 @@ export function useLoadingPhase(options: UseLoadingPhaseOptions = {}): UseLoadin
       return 'syncing-from-db'
     }
 
-    // Prioridad 4: Estado final basado en conexión
-    if (!isConnected) {
+    // Prioridad 4: Estado basado en polling de conexión (tiene prioridad sobre initialLoad después de carga inicial)
+    // isPollingConnected puede ser undefined si no se usa el hook de polling
+    const effectiveConnection = isPollingConnected !== undefined ? isPollingConnected : isConnected
+    
+    if (!effectiveConnection) {
       // Si la fase inicial ya determinó offline-empty, mantenerla
       if (initialLoadPhase === 'offline-empty') {
         return 'offline-empty'
@@ -130,7 +146,7 @@ export function useLoadingPhase(options: UseLoadingPhaseOptions = {}): UseLoadin
 
     // Default: usar la fase de carga inicial
     return initialLoadPhase
-  }, [initialLoadPhase, isLoading, syncStatus, isConnected, overridePhase])
+  }, [initialLoadPhase, isLoading, syncStatus, isConnected, isPollingConnected, hasReconnected, overridePhase])
 
   const phase = determinePhase()
   const phaseText = PHASE_TEXTS[phase] || 'Cargando...'

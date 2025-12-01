@@ -110,6 +110,7 @@ export interface Package {
   precioMailbox?: number
   precioDominio?: number
   tiempoEntrega?: string
+  cantidadPaginas?: string  // Ej: "8", "10+", "15" - opcional, si vacío no se muestra
   opcionesPago?: OpcionPago[]
   
   // ✅ NUEVO SISTEMA DE DESCUENTOS
@@ -575,6 +576,10 @@ export interface PresupuestoCronogramaData {
     descripcion: string
     duracionTotal: string
     fases: FaseCronograma[]
+  }
+  /** Características editables por paquete (clave = nombre del paquete desde snapshots) */
+  caracteristicasPorPaquete?: {
+    [nombrePaquete: string]: string[]
   }
 }
 

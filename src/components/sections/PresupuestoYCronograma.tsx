@@ -1,20 +1,112 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaCalendarAlt, FaDollarSign } from 'react-icons/fa'
+import { FaCalendarAlt, FaDollarSign, FaClock, FaCheck } from 'react-icons/fa'
 import useSnapshots from '@/features/admin/hooks/useSnapshots'
 import { 
-  getDevelopmentRange, 
-  getHostingRange, 
-  getDomainRange, 
-  getMailboxRange, 
-  getManagementRange,
-  getOtherServicesInfo 
+  getPaquetesDesglose,
+  type PaqueteDesglose
 } from '@/lib/utils/priceRangeCalculator'
 import type { PresupuestoCronogramaData } from '@/lib/types'
 
 interface PresupuestoYCronogramaProps {
   readonly data?: PresupuestoCronogramaData
+}
+
+// Componente para renderizar una card de paquete
+interface PaqueteCardProps {
+  readonly paquete: PaqueteDesglose
+  readonly caracteristicas: string[]
+}
+
+function PaqueteCard({ paquete, caracteristicas }: PaqueteCardProps) {
+  return (
+    <div className="bg-light-bg-secondary rounded-lg border border-light-border overflow-hidden flex flex-col h-full">
+      {/* Header del paquete */}
+      <div className="p-4 bg-light-bg-tertiary/30 border-b border-light-border">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xl">{paquete.emoji}</span>
+          <h4 className="text-lg font-semibold text-light-text">{paquete.nombre}</h4>
+        </div>
+        {paquete.tagline && (
+          <p className="text-xs text-light-text-secondary italic">&quot;{paquete.tagline}&quot;</p>
+        )}
+        {paquete.tiempoEntrega && (
+          <p className="text-xs text-light-accent mt-2 flex items-center gap-1">
+            <FaClock className="text-light-accent" /> {paquete.tiempoEntrega}
+          </p>
+        )}
+      </div>
+
+      {/* Contenido */}
+      <div className="p-4 flex-grow space-y-4">
+        {/* Servicios Base */}
+        {paquete.serviciosBase.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-light-text-secondary uppercase mb-2">Servicios Base</p>
+            <div className="space-y-1">
+              {paquete.serviciosBase.map((srv) => (
+                <div key={srv.nombre} className="flex justify-between items-center text-sm">
+                  <span className="text-light-text flex items-center gap-1">
+                    <FaCheck className="text-light-success text-xs" /> {srv.nombre}
+                  </span>
+                  <span className="text-light-text-secondary">
+                    ${srv.precio}/mes <span className="text-xs">({srv.mesesPago}m)</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Servicios Opcionales */}
+        {paquete.serviciosOpcionales.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-light-text-secondary uppercase mb-2">Servicios Opcionales</p>
+            <div className="space-y-1">
+              {paquete.serviciosOpcionales.map((srv) => (
+                <div key={srv.nombre} className="flex justify-between items-center text-sm">
+                  <span className="text-light-text-secondary flex items-center gap-1">
+                    <span className="w-3 h-3 rounded-full border border-light-border inline-block"></span> {srv.nombre}
+                  </span>
+                  <span className="text-light-text-secondary">
+                    ${srv.precio}{srv.mesesPago ? `/mes (${srv.mesesPago}m)` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Características Incluidas */}
+        {caracteristicas.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-light-text-secondary uppercase mb-2">Características Incluidas</p>
+            <ul className="space-y-1">
+              {caracteristicas.map((car, idx) => (
+                <li key={`car-${idx}`} className="text-sm text-light-text flex items-start gap-2">
+                  <FaCheck className="text-light-success text-xs mt-1 flex-shrink-0" />
+                  <span>{car}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Footer con precios */}
+      <div className="p-4 bg-light-success/5 border-t border-light-border mt-auto">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-light-text-secondary">Desarrollo:</span>
+          <span className="text-lg font-bold text-light-accent">${paquete.desarrollo.toLocaleString()}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-semibold text-light-text">Total Inicial:</span>
+          <span className="text-xl font-bold text-light-success">${paquete.costoInicial.toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaProps) {
@@ -23,9 +115,18 @@ export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaP
   
   const presupuestoData = data
   const { snapshots, loading } = useSnapshots()
+  
+  // Obtener datos dinámicos de los paquetes activos
+  const paquetes = getPaquetesDesglose(snapshots)
+
+  // Función para obtener características de un paquete
+  const getCaracteristicas = (nombrePaquete: string): string[] => {
+    return presupuestoData.caracteristicasPorPaquete?.[nombrePaquete] || []
+  }
+
   return (
     <section id="presupuesto" className="py-6 md:py-8 px-4 bg-light-bg font-github">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -45,84 +146,65 @@ export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaP
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-10">
-            {/* Presupuesto */}
-            {presupuestoData.presupuesto.visible !== false && (
-            <div className="bg-light-bg-secondary rounded-md p-6 border border-light-border">
-              <div className="flex items-center gap-2 mb-5">
+          {/* Presupuesto - Cards de Paquetes Dinámicos */}
+          {presupuestoData.presupuesto.visible !== false && (
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-6">
                 <FaDollarSign className="text-light-success text-xl" />
                 <h3 className="text-xl font-semibold text-light-text">{presupuestoData.presupuesto.titulo}</h3>
               </div>
+              
+              {presupuestoData.presupuesto.descripcion && (
+                <p className="text-sm text-light-text-secondary mb-6">{presupuestoData.presupuesto.descripcion}</p>
+              )}
 
-              <div className="space-y-4">
-                {/* Presupuesto Total */}
-                <div className="bg-light-bg rounded-md p-4 border border-light-border">
-                  <p className="text-light-text-secondary text-sm mb-1">Presupuesto disponible por el cliente</p>
-                  <p className="text-2xl font-bold text-light-accent">{presupuestoData.presupuesto.descripcion}</p>
-                  <p className="text-xs text-light-text-secondary mt-2">{presupuestoData.presupuesto.notaImportante}</p>
-                </div>
-
-                {/* Desglose */}
-                <div className="bg-light-bg rounded-md p-4 border border-light-border">
-                  <h4 className="font-medium text-light-text mb-3 text-sm">Desglose por elementos según paquete contratado:</h4>
-                  {loading ? (
-                    <div className="space-y-2">
-                      {['desarrollo', 'hosting', 'dominio', 'mailbox', 'gestion'].map((item) => (
-                        <div key={`skeleton-${item}`} className="flex justify-between items-center py-2 border-b border-light-border">
-                          <div className="h-3 bg-light-bg-tertiary rounded w-24 animate-pulse"></div>
-                          <div className="h-3 bg-light-bg-tertiary rounded w-20 animate-pulse"></div>
-                        </div>
-                      ))}
+              {/* Loading skeleton */}
+              {loading ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={`skeleton-${i}`} className="bg-light-bg-secondary rounded-lg border border-light-border p-4 animate-pulse">
+                      <div className="h-6 bg-light-bg-tertiary rounded w-3/4 mb-4"></div>
+                      <div className="h-4 bg-light-bg-tertiary rounded w-1/2 mb-2"></div>
+                      <div className="h-4 bg-light-bg-tertiary rounded w-2/3 mb-4"></div>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-light-bg-tertiary rounded"></div>
+                        <div className="h-3 bg-light-bg-tertiary rounded"></div>
+                        <div className="h-3 bg-light-bg-tertiary rounded"></div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <BudgetItem label="Desarrollo" value={getDevelopmentRange(snapshots)} />
-                      <BudgetItem label="Hosting" value={getHostingRange(snapshots)} />
-                      <BudgetItem label="Dominio" value={getDomainRange(snapshots)} />
-                      <BudgetItem label="Correo" value={getMailboxRange(snapshots)} />
-                      <BudgetItem label="Gestión" value={getManagementRange(snapshots)} />
-                      {getOtherServicesInfo(snapshots).length > 0 && (
-                        <>
-                          <div className="border-t border-light-border pt-2 mt-2">
-                            <p className="font-medium text-light-text text-xs mb-2">Servicios Adicionales</p>
-                          </div>
-                          {getOtherServicesInfo(snapshots).map((servicio) => (
-                            <BudgetItem
-                              key={servicio.nombre}
-                              label={servicio.nombre}
-                              value={
-                                servicio.precioMin === servicio.precioMax
-                                  ? `$${servicio.precioMin}`
-                                  : `$${servicio.precioMin} - $${servicio.precioMax}`
-                              }
-                            />
-                          ))}
-                        </>
-                      )}
-                    </div>
-                  )}
+                  ))}
                 </div>
+              ) : paquetes.length === 0 ? (
+                <div className="bg-light-warning/10 border border-light-warning/30 rounded-md p-4 text-center">
+                  <p className="text-sm text-light-text-secondary">No hay paquetes configurados</p>
+                </div>
+              ) : (
+                /* Cards de Paquetes */
+                <div className={`grid gap-6 ${paquetes.length === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : paquetes.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
+                  {paquetes.map((paq) => (
+                    <PaqueteCard 
+                      key={paq.id} 
+                      paquete={paq} 
+                      caracteristicas={getCaracteristicas(paq.nombre)} 
+                    />
+                  ))}
+                </div>
+              )}
 
-                {/* Opciones de Pago */}
-                {presupuestoData.metodosPago.visible !== false && (
-                <div className="bg-light-bg rounded-md p-4 border border-light-border">
-                  <h4 className="font-medium text-light-text mb-3 text-sm">{presupuestoData.metodosPago.titulo}:</h4>
-                  <ul className="space-y-1 text-sm text-light-text-secondary">
-                    {presupuestoData.metodosPago.opciones.map((metodo) => (
-                      <li key={`pago-${metodo.nombre.replaceAll(' ', '-')}`} className="flex items-center gap-2">
-                        <span className="text-light-success">✓</span> {metodo.nombre} {metodo.descripcion && `(${metodo.descripcion})`}
-                      </li>
-                    ))}
-                  </ul>
+              {/* Nota importante */}
+              {presupuestoData.presupuesto.notaImportante && (
+                <div className="mt-6 bg-light-warning/10 border-l-2 border-light-warning rounded-md p-3">
+                  <p className="text-xs text-light-text">
+                    <strong>📌 Nota importante:</strong> {presupuestoData.presupuesto.notaImportante}
+                  </p>
                 </div>
-                )}
-              </div>
+              )}
             </div>
-            )}
+          )}
 
-            {/* Cronograma */}
-            {presupuestoData.cronograma.visible !== false && (
-            <div className="bg-light-bg-secondary rounded-md p-6 border border-light-border">
+          {/* Cronograma */}
+          {presupuestoData.cronograma.visible !== false && (
+            <div className="bg-light-bg-secondary rounded-md p-6 border border-light-border mb-10">
               <div className="flex items-center gap-2 mb-5">
                 <FaCalendarAlt className="text-light-accent text-xl" />
                 <h3 className="text-xl font-semibold text-light-text">{presupuestoData.cronograma.titulo}</h3>
@@ -148,7 +230,7 @@ export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaP
                         <p className="text-xs text-light-text-secondary mt-1">
                           {fase.entregables.map((entregable, i) => (
                             <span key={`entregable-${entregable.replaceAll(' ', '-')}`}>
-                              {i > 0 && ' | '}Semana {i + 1}: {entregable}
+                              {i > 0 && ' | '}{entregable}
                             </span>
                           ))}
                         </p>
@@ -159,26 +241,41 @@ export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaP
 
                 <div className="bg-light-warning/10 border-l-2 border-light-warning rounded-md p-3">
                   <p className="text-xs text-light-text">
-                    <strong>📌 Nota importante:</strong> Todas las fechas son estimadas y pueden variar según disponibilidad de recursos del cliente.
+                    <strong>📌 Nota importante:</strong> Todas las fechas son estimadas y pueden variar según complejidad.
                   </p>
                 </div>
               </div>
             </div>
-            )}
-          </div>
+          )}
 
+          {/* Métodos de Pago - Sección Independiente */}
+          {presupuestoData.metodosPago?.visible !== false && (
+          <div className="bg-light-bg-secondary rounded-md p-6 border border-light-border">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-xl">💳</span>
+              <h3 className="text-xl font-semibold text-light-text">{presupuestoData.metodosPago?.titulo || 'Métodos de Pago'}</h3>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {presupuestoData.metodosPago?.opciones?.map((metodo) => (
+                <div key={`pago-${metodo.nombre.replaceAll(' ', '-')}`} className="bg-light-bg rounded-md p-4 border border-light-border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-light-success text-lg">✓</span>
+                    <span className="font-medium text-light-text text-sm">{metodo.nombre}</span>
+                  </div>
+                  {metodo.porcentaje && (
+                    <p className="text-xs text-light-accent font-semibold">{metodo.porcentaje}%</p>
+                  )}
+                  {metodo.descripcion && (
+                    <p className="text-xs text-light-text-secondary mt-1">{metodo.descripcion}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          )}
           
         </motion.div>
       </div>
     </section>
-  )
-}
-
-function BudgetItem({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <div className="flex justify-between items-center py-2 border-b border-light-border">
-      <span className="text-light-text-secondary text-sm">{label}</span>
-      <span className="font-medium text-light-text text-sm">{value}</span>
-    </div>
   )
 }

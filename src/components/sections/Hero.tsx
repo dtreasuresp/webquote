@@ -66,7 +66,7 @@ export default function Hero({ cotizacion }: HeroProps) {
               </div>
               <div className="p-5 space-y-0">
                 <InfoRow label="Cotización" value={cotizacion?.numero || '#004-2025'} />
-                <InfoRow label="Versión" value={cotizacion?.versionNumber?.toString() || '1'} />
+                <InfoRow label="Vigencia del Contrato" value={cotizacion?.tiempoVigenciaValor ? `${cotizacion.tiempoVigenciaValor} ${cotizacion.tiempoVigenciaUnidad || 'meses'}` : '12 meses'} />
                 <InfoRow 
                   label="Fecha de emisión" 
                   value={cotizacion?.fechaEmision ? formatearFechaLarga(cotizacion.fechaEmision) : '13 de noviembre de 2025'} 

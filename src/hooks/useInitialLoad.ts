@@ -20,6 +20,7 @@ export type InitialLoadPhase =
   | 'synced'
   | 'offline-cached'
   | 'offline-empty'  // Nueva fase: sin conexión Y sin datos en cache
+  | 'reconnecting'   // Nueva fase: conexión restablecida, sincronizando
   | 'merging'
   | 'comparing'
   | 'error'

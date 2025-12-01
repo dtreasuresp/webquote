@@ -296,40 +296,53 @@ export default function Administrador() {
   })
 
   // Hook para mapear estado de carga a fase visual
-  // Usa el nuevo sistema unificado de fases
+  // Usa el nuevo sistema unificado de fases con soporte para polling
   const { phase: loadingPhase, phaseText, isActiveLoading, setPhase } = useLoadingPhase({
     initialLoadPhase: initialLoad.phase,
     isLoading: isLoading || false,
     syncStatus,
-    isConnected: initialLoad.isConnected || cacheIsOnline
+    isConnected: initialLoad.isConnected || cacheIsOnline,
+    isPollingConnected: connectionPolling.isConnected,
+    hasReconnected: connectionPolling.hasReconnected
   })
 
   // Estado para el dialog de recuperación de conexión
   const [showConnectionRecoveryDialog, setShowConnectionRecoveryDialog] = useState(false)
   const [isResolvingRecovery, setIsResolvingRecovery] = useState(false)
 
-  // Manejar resolución del dialog de recuperación
+  // Manejar resolución del dialog de recuperación de conexión
   const handleConnectionRecoveryResolve = async (action: 'use-cache' | 'use-server' | 'merge') => {
     setIsResolvingRecovery(true)
+    setPhase('syncing-from-db') // Mostrar estado de sincronización
+    
     try {
       if (action === 'use-server') {
         // Usar datos del servidor - descartar cambios locales
         await refreshFromServer()
-        toast.success('✅ Datos del servidor cargados')
+        toast.success('✅ Datos del servidor cargados - Cambios locales descartados')
       } else if (action === 'use-cache') {
         // Mantener datos del caché - sincronizar a servidor
         await forceSync()
-        toast.success('✅ Se mantuvieron los datos del caché')
+        toast.success('✅ Cambios locales guardados en servidor')
       } else if (action === 'merge') {
-        // Por ahora merge = use-cache (se puede mejorar)
-        await forceSync()
-        toast.info('ℹ️ Se mantuvieron los datos del caché')
+        // Por ahora merge = cargar del servidor pero sin perder cambios locales importantes
+        // TODO: Implementar comparación campo por campo
+        setPhase('comparing')
+        await refreshFromServer()
+        toast.info('ℹ️ Datos del servidor cargados - Revisa tus cambios')
       }
       
       setShowConnectionRecoveryDialog(false)
+      setHasPendingLocalChanges(false)
+      
+      // Limpiar flag de reconexión después de resolver
+      connectionPolling.clearReconnectionFlag()
+      setPhase('synced')
+      
     } catch (error) {
       toast.error('❌ Error al resolver conflicto')
       console.error(error)
+      setPhase('error')
     } finally {
       setIsResolvingRecovery(false)
     }
@@ -438,35 +451,59 @@ export default function Administrador() {
   const [quotations, setQuotations] = useState<QuotationConfig[]>([])
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null)
   
-  // Efecto para actualizar el intervalo de polling y manejar eventos de conexión
+  // Estado para controlar si hay cambios locales pendientes (para modal de reconexión)
+  const [hasPendingLocalChanges, setHasPendingLocalChanges] = useState(false)
+  
+  // Ref para guardar el intervalo inicial (se aplica solo al guardar preferencias)
+  const intervaloInicialRef = useRef<number | null>(null)
+  
+  // Efecto para guardar el intervalo inicial cuando se cargan preferencias por primera vez
   useEffect(() => {
-    if (userPreferences && connectionPolling.setInterval) {
-      // Calcular intervalo basado en preferencias
+    if (userPreferences && intervaloInicialRef.current === null) {
       const valor = userPreferences.intervaloVerificacionConexion || 30
       const unidad = userPreferences.unidadIntervaloConexion || 'segundos'
-      const nuevoIntervalo = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
-      connectionPolling.setInterval(nuevoIntervalo)
-      console.log(`⏱️ Intervalo de polling actualizado: ${nuevoIntervalo}ms`)
+      const intervaloMs = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
+      intervaloInicialRef.current = intervaloMs
+      // Aplicar el intervalo guardado en BD al cargar
+      connectionPolling.setInterval(intervaloMs)
+      console.log(`⏱️ Intervalo inicial de polling aplicado: ${intervaloMs}ms`)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    userPreferences?.intervaloVerificacionConexion, 
-    userPreferences?.unidadIntervaloConexion
-  ])
+  }, [userPreferences?.id]) // Solo cuando cambia el ID (primera carga)
 
-  // Efecto para manejar notificaciones de conexión basadas en preferencias
+  // Efecto para manejar reconexión con lógica inteligente
   useEffect(() => {
     if (connectionPolling.hasReconnected) {
-      // Al recuperar conexión, verificar si debe sincronizar automáticamente
-      if (userPreferences?.sincronizarAlRecuperarConexion !== false) {
-        console.log('🔄 Conexión restablecida - Sincronizando automáticamente...')
-        refreshFromServer()
+      console.log('🔄 Conexión restablecida detectada')
+      
+      // Verificar si hay cambios locales pendientes
+      const hayPendientes = hasUnsavedChanges || hasPendingLocalChanges
+      
+      if (hayPendientes) {
+        // Hay cambios locales - mostrar modal de resolución
+        console.log('⚠️ Hay cambios locales pendientes - mostrando modal de resolución')
+        setShowConnectionRecoveryDialog(true)
+      } else {
+        // No hay cambios locales - sincronizar automáticamente si está habilitado
+        if (userPreferences?.sincronizarAlRecuperarConexion !== false) {
+          console.log('🔄 Sin cambios locales - Sincronizando automáticamente...')
+          refreshFromServer().then(() => {
+            // Limpiar flag de reconexión después de sincronizar
+            connectionPolling.clearReconnectionFlag()
+            setPhase('synced')
+          })
+        } else {
+          // No sincronizar automáticamente - solo limpiar flag
+          console.log('ℹ️ Sincronización automática deshabilitada')
+          connectionPolling.clearReconnectionFlag()
+          setPhase('synced')
+        }
       }
+      
       // Mostrar notificación si está habilitado
       if (userPreferences?.mostrarNotificacionCacheLocal !== false) {
         toast.success('✅ Conexión a la base de datos restablecida')
       }
-      connectionPolling.clearReconnectionFlag()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectionPolling.hasReconnected])
@@ -486,7 +523,7 @@ export default function Administrador() {
     emailProveedor: '',
     whatsappProveedor: '',
     ubicacionProveedor: '',
-    heroTituloMain: 'Mi Propuesta',
+    heroTituloMain: 'Propuesta de Cotización',
     heroTituloSub: 'Cotización personalizada',
   })
   
@@ -1761,7 +1798,7 @@ export default function Administrador() {
           emailProveedor: '',
           whatsappProveedor: '',
           ubicacionProveedor: '',
-          heroTituloMain: 'Mi Propuesta',
+          heroTituloMain: 'Propuesta de Cotización',
           heroTituloSub: 'Cotización personalizada',
           // ✅ Guardar templates si no se limpia
           ...(deberiaLimpiar ? {} : {
@@ -2398,19 +2435,45 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
 
   return (
     <AnalyticsProvider>
-      <div className="relative min-h-screen bg-gh-bg text-gh-text">
+      <div className="relative min-h-screen bg-gh-bg text-gh-text pb-5">
       <Navigation />
       
-      {/* Indicador de estado de sincronización - posición fija esquina inferior derecha */}
-      <div className="fixed bottom-4 right-4 z-50 bg-gh-bg/90 backdrop-blur-sm rounded-lg border border-gh-border p-2 shadow-lg">
-        <SyncStatusIndicator
-          status={syncStatus}
-          isOnline={isOnline}
-          isDirty={hasUnsavedChanges}
-          showText={true}
-          size="md"
-          loadingPhase={loadingPhase}
-        />
+      {/* Barra de estado inferior moderna con glassmorphism */}
+      <div className="fixed bottom-0 left-0 right-0 z-40">
+        <div className="h-[1px] bg-gradient-to-r from-transparent via-gh-border to-transparent" />
+        <div className="h-6 bg-gh-bg/80 backdrop-blur-md flex items-center justify-between px-4 text-[10px] select-none">
+          {/* Lado izquierdo - Estado de conexión */}
+          <div className="flex items-center gap-3">
+            <SyncStatusIndicator
+              status={syncStatus}
+              isOnline={isOnline}
+              isDirty={hasUnsavedChanges}
+              showText={true}
+              size="sm"
+              loadingPhase={loadingPhase}
+              variant="statusbar"
+            />
+            {/* Cotización activa */}
+            {quotationEnModal?.numero && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gh-info/10 border border-gh-info/20">
+                <FaFileAlt className="w-2 h-2 text-gh-info" />
+                <span className="text-gh-info font-medium">{quotationEnModal.numero}</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Lado derecho - Info adicional */}
+          <div className="flex items-center gap-3 text-gh-text-secondary">
+            <div className="flex items-center gap-1.5 opacity-70 hover:opacity-100 transition-opacity cursor-default">
+              <div className="w-1.5 h-1.5 rounded-full bg-gh-success animate-pulse" />
+              <span className="font-medium">Admin</span>
+            </div>
+            <div className="w-px h-3 bg-gh-border" />
+            <span className="tabular-nums opacity-60">
+              {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Modal de resolución de conflictos de conexión */}
@@ -2670,12 +2733,12 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                     throw error
                   }
                 }}
-                onSaveSeccion={async (id: string, seccion: string, datos: unknown, timestamp: string) => {
-                  // API optimizada: solo envía la sección que cambió
+                onSaveSeccion={async (id: string, seccion: string, datos: unknown, timestamp: string, visibilidad?: Record<string, boolean>) => {
+                  // API optimizada: solo envía la sección que cambió + visibilidad
                   const response = await fetch(`/api/quotation-config/${id}/contenido`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ seccion, datos, timestamp })
+                    body: JSON.stringify({ seccion, datos, timestamp, visibilidad })
                   })
                   if (!response.ok) throw new Error('Error al guardar sección')
                   const result = await response.json()
@@ -2729,6 +2792,14 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                       setUserPreferences(result.data)
                       // También guardar en cache local
                       cachePreferences(result.data)
+                      
+                      // APLICAR EL NUEVO INTERVALO DE POLLING AQUÍ (solo al guardar)
+                      const valor = result.data.intervaloVerificacionConexion || 30
+                      const unidad = result.data.unidadIntervaloConexion || 'segundos'
+                      const nuevoIntervalo = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
+                      connectionPolling.setInterval(nuevoIntervalo)
+                      console.log(`⏱️ Intervalo de polling actualizado al guardar: ${nuevoIntervalo}ms`)
+                      
                       toast.success('✓ Preferencias guardadas correctamente')
                     } else {
                       toast.error('Error al guardar preferencias')

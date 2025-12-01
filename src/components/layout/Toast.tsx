@@ -70,7 +70,7 @@ export default function Toast({ messages, onRemove }: ToastProps) {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] space-y-2 pointer-events-none">
+    <div className="fixed bottom-8 right-4 z-[9999] space-y-2 pointer-events-none">
       <AnimatePresence>
         {messages.map((msg) => (
           <motion.div

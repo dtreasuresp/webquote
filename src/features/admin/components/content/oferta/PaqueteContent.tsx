@@ -27,6 +27,7 @@ const PAQUETE_VACIO: Package = {
   tagline: '',
   descripcion: '',
   tiempoEntrega: '',
+  cantidadPaginas: '',
 }
 
 interface ToastHandler {
@@ -602,6 +603,27 @@ export default function PaqueteContent({
               }`}
             />
             <p className="text-gh-text-muted text-xs mt-1">Tiempo estimado de entrega del proyecto</p>
+          </div>
+          <div>
+            <label htmlFor="paqueteCantidadPaginas" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+              Cantidad de Páginas
+            </label>
+            <input
+              id="paqueteCantidadPaginas"
+              type="text"
+              placeholder="Ej: 8, 10+, 15"
+              value={paqueteActual.cantidadPaginas || ''}
+              onChange={(e) =>
+                setPaqueteActual({ ...paqueteActual, cantidadPaginas: e.target.value })
+              }
+              disabled={inputsDeshabilitados}
+              className={`w-full px-3 py-2 border rounded-md text-sm outline-none transition ${
+                inputsDeshabilitados 
+                  ? 'bg-gh-bg-tertiary border-gh-border/50 text-gh-text-muted cursor-not-allowed' 
+                  : 'bg-gh-bg-secondary border-gh-border text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50'
+              }`}
+            />
+            <p className="text-gh-text-muted text-xs mt-1">Opcional - Si vacío no se muestra en la página</p>
           </div>
         </div>
 

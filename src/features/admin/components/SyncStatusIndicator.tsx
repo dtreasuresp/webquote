@@ -49,6 +49,8 @@ export interface SyncStatusIndicatorProps {
   size?: 'sm' | 'md' | 'lg'
   /** Fase de carga visual (nueva API unificada) */
   loadingPhase?: LoadingPhase
+  /** Variante de estilo: default (con fondo) o statusbar (para barra de estado) */
+  variant?: 'default' | 'statusbar'
 }
 
 interface StatusConfig {
@@ -67,7 +69,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: MdWavingHand,
     color: 'text-yellow-500',
     bgColor: 'bg-yellow-50',
-    text: '¡Bienvenido!',
+    text: '¡Bienvenido a WebQuote!',
     pulse: false,
     spin: false
   },
@@ -75,7 +77,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: FaWifi,
     color: 'text-blue-500',
     bgColor: 'bg-blue-50',
-    text: 'Verificando conexión a BD...',
+    text: 'Estamos verificando si hay conexión a la nube...',
     pulse: false,
     spin: true
   },
@@ -83,7 +85,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: FaDatabase,
     color: 'text-blue-500',
     bgColor: 'bg-blue-50',
-    text: 'Sincronizando datos de BD a local...',
+    text: 'Existe conexión! Sincronizando desde la nube...',
     pulse: false,
     spin: true
   },
@@ -91,7 +93,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: FaSync,
     color: 'text-blue-500',
     bgColor: 'bg-blue-50',
-    text: 'Actualizando analítica...',
+    text: 'Estamos actualizando la analítica...',
     pulse: false,
     spin: true
   },
@@ -99,7 +101,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: FaCheck,
     color: 'text-green-500',
     bgColor: 'bg-green-50',
-    text: 'Sincronizado con BD',
+    text: 'Listo! WebQuote está sincronizado desde la nube',
     pulse: false,
     spin: false
   },
@@ -107,7 +109,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: FaCloud,
     color: 'text-amber-500',
     bgColor: 'bg-amber-50',
-    text: 'Sin conexión a BD. Mostrando datos locales',
+    text: 'Lo siento, no hay conexión a la nube. Mostrando datos locales',
     pulse: false,
     spin: false
   },
@@ -115,15 +117,23 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: FaExclamationTriangle,
     color: 'text-red-500',
     bgColor: 'bg-red-50',
-    text: 'Sin conexión y sin datos en cache',
+    text: 'Qué mal, no hay conexión a la nube y tampoco datos locales',
     pulse: true,
     spin: false
+  },
+  'reconnecting': {
+    icon: FaWifi,
+    color: 'text-green-500',
+    bgColor: 'bg-green-50',
+    text: 'Perfecto, se ha restablecido la conexión con la nube. Procedemos a sincronizar...',
+    pulse: true,
+    spin: true
   },
   'merging': {
     icon: FaCodeBranch,
     color: 'text-purple-500',
     bgColor: 'bg-purple-50',
-    text: 'Fusionando datos...',
+    text: 'Según tu elección, estamos fusionando los datos entre la nube y los locales...',
     pulse: false,
     spin: true
   },
@@ -131,7 +141,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: FaExchangeAlt,
     color: 'text-orange-500',
     bgColor: 'bg-orange-50',
-    text: 'Comparando diferencias...',
+    text: 'Comparando diferencias entre la nube y los locales...',
     pulse: false,
     spin: true
   },
@@ -139,7 +149,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     icon: FaExclamationTriangle,
     color: 'text-red-500',
     bgColor: 'bg-red-50',
-    text: 'Error de sincronización',
+    text: 'Atención! Hubo un error de sincronización con la nube',
     pulse: true,
     spin: false
   }
@@ -153,20 +163,38 @@ export function SyncStatusIndicator({
   lastSaved = null,
   showText = true,
   size = 'md',
-  loadingPhase = 'welcome'
+  loadingPhase = 'welcome',
+  variant = 'default'
 }: Readonly<SyncStatusIndicatorProps>) {
+  const isStatusBar = variant === 'statusbar'
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     setMounted(true)
   }, [])
   
   const sizeClasses = {
-    sm: 'w-3 h-3',
-    md: 'w-4 h-4',
-    lg: 'w-5 h-5'
+    sm: 'w-2.5 h-2.5',
+    md: 'w-3.5 h-3.5',
+    lg: 'w-4 h-4'
+  }
+
+  // Tamaños de texto según size
+  const textSizeClasses = {
+    sm: 'text-[11px]',
+    md: 'text-xs',
+    lg: 'text-sm'
+  }
+
+  // Padding del contenedor del icono según size
+  const iconPaddingClasses = {
+    sm: 'p-1',
+    md: 'p-1.5',
+    lg: 'p-1.5'
   }
 
   const iconSize = sizeClasses[size]
+  const textSize = textSizeClasses[size]
+  const iconPadding = iconPaddingClasses[size]
 
   // Determinar estado visual
   const getStatusConfig = (): StatusConfig => {
@@ -279,16 +307,17 @@ export function SyncStatusIndicator({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center ${isStatusBar ? 'gap-1' : 'gap-1.5'}`}>
       <div className={`
-        flex items-center justify-center rounded-full p-1.5
-        ${config.bgColor}
+        flex items-center justify-center rounded-full
+        ${isStatusBar ? '' : iconPadding}
+        ${isStatusBar ? '' : config.bgColor}
         ${config.pulse ? 'animate-pulse' : ''}
       `}>
         <Icon 
           className={`
             ${iconSize} 
-            ${config.color}
+            ${isStatusBar ? config.color : config.color}
             ${config.spin ? 'animate-spin' : ''}
           `}
         />
@@ -296,11 +325,11 @@ export function SyncStatusIndicator({
       
       {showText && (
         <div className="flex flex-col">
-          <span className={`text-sm font-medium ${config.color}`}>
+          <span className={`${textSize} font-medium leading-tight ${isStatusBar ? 'text-gh-text-muted' : config.color}`}>
             {config.text}
           </span>
-          {mounted && lastSaved && loadingPhase === 'synced' && (
-            <span className="text-xs text-gray-400">
+          {mounted && lastSaved && loadingPhase === 'synced' && !isStatusBar && (
+            <span className="text-[9px] text-gray-400 leading-tight">
               Guardado {formatLastSaved()}
             </span>
           )}

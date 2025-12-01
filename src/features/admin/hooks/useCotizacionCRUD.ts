@@ -98,7 +98,7 @@ export function useCotizacionCRUD(): UseCotizacionCRUDReturn {
           emailProveedor: '',
           whatsappProveedor: '',
           ubicacionProveedor: '',
-          heroTituloMain: 'Mi Propuesta',
+          heroTituloMain: 'Propuesta de Cotización',
           heroTituloSub: 'Cotización personalizada',
         }),
       })

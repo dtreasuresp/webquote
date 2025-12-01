@@ -22,6 +22,26 @@ function slugify(nombre: string): string {
     .join('-')
 }
 
+// Función para parsear semanas desde tiempoEntrega
+function parseSemanasFromTiempoEntrega(tiempoEntrega: string): number | null {
+  if (!tiempoEntrega) return null
+  
+  // Buscar patrones como "4 semanas", "5-6 semanas", "4-6 Semanas"
+  const semanasMatch = tiempoEntrega.match(/(\d+)(?:-(\d+))?\s*semanas?/i)
+  if (semanasMatch) {
+    // Si es rango (5-6), usar el mayor
+    return semanasMatch[2] ? parseInt(semanasMatch[2]) : parseInt(semanasMatch[1])
+  }
+  
+  // Si dice "días", convertir a semanas
+  const diasMatch = tiempoEntrega.match(/(\d+)\s*d[ií]as?/i)
+  if (diasMatch) {
+    return Math.ceil(parseInt(diasMatch[1]) / 7)
+  }
+  
+  return null // No se pudo parsear
+}
+
 interface PackageData {
   id: string
   nombre: string
@@ -37,8 +57,8 @@ interface PackageData {
   features: Array<{ category: string; items: string[] }>
   serviciosOpcionales?: Array<{ nombre: string; precio: number }>
   gestion?: { nombre: string; precioMensual: number }
-  pages: number | string
-  timelineWeeks: number
+  pages: string  // Opcional - si vacío no se muestra
+  timelineWeeks: number | null  // Opcional - si null no se muestra
   colorScheme: 'rojo' | 'dorado' | 'negro' | 'neutro'
   recomendado: boolean
 }
@@ -86,21 +106,23 @@ export default function Paquetes() {
         }
       : undefined
 
-    // Páginas y timeline por nombre
-    const nombreUpper = snap.nombre.toUpperCase()
-    let pages: number | string = '8+'
-    let timelineWeeks = 6
-    let nivelProfesional = 'ESTÁNDAR'
+    // Páginas desde datos del paquete (opcional)
+    const pages = snap.paquete.cantidadPaginas || ''
 
-    if (nombreUpper.includes('CONSTRUCTOR')) {
-      pages = 8
-      timelineWeeks = 4
-      nivelProfesional = 'BÁSICO'
-    } else if (nombreUpper.includes('OBRA')) {
-      nivelProfesional = 'PROFESIONAL'
-    } else if (nombreUpper.includes('IMPERIO')) {
-      timelineWeeks = 8
-      nivelProfesional = 'PREMIUM'
+    // Semanas desde tiempoEntrega (parsear si es posible)
+    const timelineWeeks = parseSemanasFromTiempoEntrega(snap.paquete.tiempoEntrega || '')
+
+    // Nivel profesional basado en tipo o nombre
+    const nombreUpper = snap.nombre.toUpperCase()
+    let nivelProfesional = snap.paquete.tipo || 'ESTÁNDAR'
+    if (!snap.paquete.tipo) {
+      if (nombreUpper.includes('CONSTRUCTOR')) {
+        nivelProfesional = 'BÁSICO'
+      } else if (nombreUpper.includes('OBRA')) {
+        nivelProfesional = 'PROFESIONAL'
+      } else if (nombreUpper.includes('IMPERIO')) {
+        nivelProfesional = 'PREMIUM'
+      }
     }
 
     return {
@@ -111,7 +133,7 @@ export default function Paquetes() {
       icon: '🎁',
       nivelProfesional,
       tipo: snap.paquete.tipo || '',
-      subtitulo: `INVERSIÓN ANUAL: $${inversionAnio1} USD`,
+      subtitulo: `INVERSIÓN TOTAL: $${inversionAnio1} USD`,
       pagoInicial,
       inversionAnio1,
       description: snap.paquete.descripcion || `Paquete personalizado para empresas.`,
@@ -346,7 +368,7 @@ function PaqueteCard({
       <div className="h-[40px] relative">
         {data.recomendado && (
           <div className={`absolute top-0 left-0 right-0 ${styles.badge} py-2 text-center text-sm font-semibold flex items-center justify-center gap-2 z-10`}>
-            <FaStar className="text-xs" /> RECOMENDADO
+            <FaStar className="text-xs" /> MÁS POPULAR
           </div>
         )}
       </div>

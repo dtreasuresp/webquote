@@ -34,6 +34,7 @@ import type {
 } from '@/lib/types'
 import type { GarantiasData } from '@/components/sections/Garantias'
 import { generateCSSVariables, applyCSSVariables } from '@/lib/utils/colorSystem'
+import { defaultPresupuestoCronograma } from '@/features/admin/components/content/contenido'
 import { AnalyticsProvider } from '@/features/admin/contexts'
 import { useEventTracking } from '@/features/admin/hooks'
 
@@ -144,7 +145,16 @@ function HomeContent() {
   const fortalezasData: FortalezasData | undefined = contenido?.fortalezas
   const dinamicoVsEstaticoData: DinamicoVsEstaticoData | undefined = contenido?.dinamicoVsEstatico
   const tablaComparativaData: TablaComparativaData | undefined = contenido?.tablaComparativa
-  const presupuestoCronogramaData: PresupuestoCronogramaData | undefined = contenido?.presupuestoCronograma
+  // Merge profundo para asegurar que metodosPago y otros subcampos existan
+  const presupuestoFromDB = contenido?.presupuestoCronograma as PresupuestoCronogramaData | undefined
+  const presupuestoCronogramaData: PresupuestoCronogramaData | undefined = presupuestoFromDB ? {
+    ...defaultPresupuestoCronograma,
+    ...presupuestoFromDB,
+    presupuesto: { ...defaultPresupuestoCronograma.presupuesto, ...presupuestoFromDB.presupuesto },
+    metodosPago: { ...defaultPresupuestoCronograma.metodosPago, ...presupuestoFromDB.metodosPago },
+    cronograma: { ...defaultPresupuestoCronograma.cronograma, ...presupuestoFromDB.cronograma },
+    caracteristicasPorPaquete: { ...defaultPresupuestoCronograma.caracteristicasPorPaquete, ...presupuestoFromDB.caracteristicasPorPaquete },
+  } : undefined
   const observacionesData: ObservacionesData | undefined = contenido?.observaciones
   const conclusionData: ConclusionData | undefined = contenido?.conclusion
 

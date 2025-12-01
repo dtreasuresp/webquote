@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client'
 /**
  * PATCH /api/quotation-config/[id]/contenido
  * Actualizar SOLO una sección específica del contenidoGeneral
- * Payload optimizado: { seccion: string, datos: any, timestamp?: string }
+ * Payload optimizado: { seccion: string, datos: any, timestamp?: string, visibilidad?: Record<string, boolean> }
  */
 export async function PATCH(
   request: NextRequest,
@@ -13,7 +13,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = params
-    const { seccion, datos, timestamp } = await request.json()
+    const { seccion, datos, timestamp, visibilidad } = await request.json()
 
     if (!id) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
@@ -82,6 +82,42 @@ export async function PATCH(
       nuevoContenido.updatedTimestamps = {
         ...updatedTimestamps,
         [seccion]: timestamp,
+      }
+    }
+
+    // Actualizar visibilidad si se proporciona
+    if (visibilidad && Object.keys(visibilidad).length > 0) {
+      // Detectar si es visibilidad de secciones nuevas (campos directos) o antiguas (anidadas en .visibilidad)
+      const camposVisibilidadDirectos = [
+        'visibilidadAnalisis', 'visibilidadFortalezas', 'visibilidadDinamico',
+        'visibilidadPresupuesto', 'visibilidadTabla', 'visibilidadObservaciones', 'visibilidadConclusion'
+      ]
+      
+      const visibilidadDirecta: Record<string, boolean> = {}
+      const visibilidadAnidada: Record<string, boolean> = {}
+      
+      Object.entries(visibilidad).forEach(([key, value]) => {
+        if (camposVisibilidadDirectos.includes(key)) {
+          visibilidadDirecta[key] = value as boolean
+        } else {
+          visibilidadAnidada[key] = value as boolean
+        }
+      })
+      
+      // Aplicar campos directos al nivel raíz
+      if (Object.keys(visibilidadDirecta).length > 0) {
+        Object.assign(nuevoContenido, visibilidadDirecta)
+        console.log(`[API PATCH] Visibilidad directa actualizada:`, visibilidadDirecta)
+      }
+      
+      // Aplicar campos anidados a .visibilidad
+      if (Object.keys(visibilidadAnidada).length > 0) {
+        const currentVisibilidad = (nuevoContenido.visibilidad as Record<string, boolean>) || {}
+        nuevoContenido.visibilidad = {
+          ...currentVisibilidad,
+          ...visibilidadAnidada,
+        }
+        console.log(`[API PATCH] Visibilidad anidada actualizada:`, visibilidadAnidada)
       }
     }
 

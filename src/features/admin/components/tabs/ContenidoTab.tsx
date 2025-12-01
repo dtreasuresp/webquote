@@ -285,7 +285,7 @@ interface ContenidoTabProps {
   readonly cotizacionConfig: QuotationConfig | null
   readonly setCotizacionConfig: React.Dispatch<React.SetStateAction<QuotationConfig | null>>
   readonly onSave: (config: QuotationConfig) => Promise<void>
-  readonly onSaveSeccion?: (id: string, seccion: string, datos: unknown, timestamp: string) => Promise<void>
+  readonly onSaveSeccion?: (id: string, seccion: string, datos: unknown, timestamp: string, visibilidad?: Record<string, boolean>) => Promise<void>
   readonly toast: {
     success: (msg: string) => void
     error: (msg: string) => void
@@ -402,7 +402,15 @@ export default function ContenidoTab({
   const analisisActual: AnalisisRequisitosData = (contenido.analisisRequisitos as AnalisisRequisitosData) || defaultAnalisisRequisitos
   const fortalezasActual: FortalezasData = (contenido.fortalezas as FortalezasData) || defaultFortalezas
   const dinamicoActual: DinamicoVsEstaticoData = (contenido.dinamicoVsEstatico as DinamicoVsEstaticoData) || defaultDinamicoVsEstatico
-  const presupuestoActual: PresupuestoCronogramaData = (contenido.presupuestoCronograma as PresupuestoCronogramaData) || defaultPresupuestoCronograma
+  // Merge profundo para presupuesto para asegurar que metodosPago y otros subcampos existan
+  const presupuestoFromDB = contenido.presupuestoCronograma as PresupuestoCronogramaData | undefined
+  const presupuestoActual: PresupuestoCronogramaData = presupuestoFromDB ? {
+    ...defaultPresupuestoCronograma,
+    ...presupuestoFromDB,
+    presupuesto: { ...defaultPresupuestoCronograma.presupuesto, ...presupuestoFromDB.presupuesto },
+    metodosPago: { ...defaultPresupuestoCronograma.metodosPago, ...presupuestoFromDB.metodosPago },
+    cronograma: { ...defaultPresupuestoCronograma.cronograma, ...presupuestoFromDB.cronograma },
+  } : defaultPresupuestoCronograma
   const tablaActual: TablaComparativaData = (contenido.tablaComparativa as TablaComparativaData) || defaultTablaComparativa
   const observacionesActual: ObservacionesData = (contenido.observaciones as ObservacionesData) || defaultObservaciones
   const conclusionActual: ConclusionData = (contenido.conclusion as ConclusionData) || defaultConclusion
@@ -564,6 +572,52 @@ export default function ContenidoTab({
     }
   }
 
+  // Helper para obtener la visibilidad relevante de una sección
+  const getVisibilidadSeccion = (seccion: SeccionActiva): Record<string, boolean> | null => {
+    switch (seccion) {
+      case 'resumen': 
+        return {
+          tituloSeccion: visibilidadActual.tituloSeccion !== false,
+          parrafoIntroduccion: visibilidadActual.parrafoIntroduccion !== false,
+          beneficiosPrincipales: visibilidadActual.beneficiosPrincipales !== false,
+          parrafoPaquetes: visibilidadActual.parrafoPaquetes !== false,
+          diferenciasClave: visibilidadActual.diferenciasClave !== false,
+          responsabilidadesProveedor: visibilidadActual.responsabilidadesProveedor !== false,
+          clienteNoHace: visibilidadActual.clienteNoHace !== false,
+          flujoComunicacion: visibilidadActual.flujoComunicacion !== false,
+        }
+      case 'faq': 
+        return { faq: visibilidadActual.faq !== false }
+      case 'garantias': 
+        return {
+          garantiasProveedor: visibilidadActual.garantiasProveedor !== false,
+          garantiasCliente: visibilidadActual.garantiasCliente !== false,
+          politicasCancelacion: visibilidadActual.politicasCancelacion !== false,
+          siIncumpleProveedor: visibilidadActual.siIncumpleProveedor !== false,
+        }
+      case 'contacto': 
+        return { contacto: visibilidadActual.contacto !== false }
+      case 'terminos': 
+        return { terminos: visibilidadActual.terminos !== false }
+      // Nuevas secciones - guardar como campos separados en contenidoGeneral
+      case 'analisis':
+        return { visibilidadAnalisis: visibilidadExtendida.analisisRequisitos }
+      case 'fortalezas':
+        return { visibilidadFortalezas: visibilidadExtendida.fortalezas }
+      case 'dinamico':
+        return { visibilidadDinamico: visibilidadExtendida.dinamicoVsEstatico }
+      case 'presupuesto':
+        return { visibilidadPresupuesto: visibilidadExtendida.presupuestoCronograma }
+      case 'tabla':
+        return { visibilidadTabla: visibilidadExtendida.tablaComparativa }
+      case 'observaciones':
+        return { visibilidadObservaciones: visibilidadExtendida.observaciones }
+      case 'conclusion':
+        return { visibilidadConclusion: visibilidadExtendida.conclusion }
+      default: return null
+    }
+  }
+
   // Helper para obtener los datos originales de una sección (desde BD)
   const getDatosOriginales = (seccion: SeccionActiva): unknown => {
     const original = contenidoOriginalRef.current
@@ -591,11 +645,42 @@ export default function ContenidoTab({
     }
   }
 
-  // Helper para verificar si una sección tiene cambios pendientes
+  // Helper para verificar si una sección tiene cambios pendientes (datos o visibilidad)
   const hasChangesForSection = (seccion: SeccionActiva): boolean => {
     const datosActuales = getDatosSeccion(seccion)
     const datosOriginales = getDatosOriginales(seccion)
-    return !deepEqual(datosActuales, datosOriginales)
+    const hayCambiosDatos = !deepEqual(datosActuales, datosOriginales)
+    
+    // Verificar cambios de visibilidad
+    const visibilidadSeccion = getVisibilidadSeccion(seccion)
+    if (!visibilidadSeccion) return hayCambiosDatos
+    
+    // Para secciones antiguas: comparar con contenidoOriginalRef.visibilidad
+    // Para secciones nuevas: comparar con contenidoOriginalRef.visibilidadXxx directamente
+    const camposDirectos = ['visibilidadAnalisis', 'visibilidadFortalezas', 'visibilidadDinamico',
+      'visibilidadPresupuesto', 'visibilidadTabla', 'visibilidadObservaciones', 'visibilidadConclusion']
+    
+    let hayCambiosVisibilidad = false
+    const claves = Object.keys(visibilidadSeccion)
+    const esSeccionNueva = claves.some(k => camposDirectos.includes(k))
+    
+    if (esSeccionNueva) {
+      // Comparar con el campo directo en contenidoOriginalRef
+      const campoDirecto = claves[0] as keyof ContenidoGeneral // Solo hay un campo
+      const valorActual = visibilidadSeccion[campoDirecto]
+      const valorOriginal = (contenidoOriginalRef.current as unknown as Record<string, unknown>)?.[campoDirecto] !== false
+      hayCambiosVisibilidad = valorActual !== valorOriginal
+    } else {
+      // Sección antigua: comparar con .visibilidad anidada
+      const visibilidadOriginal = contenidoOriginalRef.current?.visibilidad || {}
+      hayCambiosVisibilidad = !deepEqual(visibilidadSeccion, 
+        Object.fromEntries(
+          Object.keys(visibilidadSeccion).map(k => [k, visibilidadOriginal[k as keyof typeof visibilidadOriginal] !== false])
+        )
+      )
+    }
+    
+    return hayCambiosDatos || hayCambiosVisibilidad
   }
 
   // Estado de guardando por sección (para feedback visual independiente)
@@ -606,12 +691,40 @@ export default function ContenidoTab({
     if (!cotizacionConfig) return
     
     const datosActuales = getDatosSeccion(seccion)
+    const visibilidadSeccion = getVisibilidadSeccion(seccion)
+    
+    // Para secciones antiguas, siempre guardar (pueden tener cambios de visibilidad)
+    // Para nuevas secciones, verificar cambios en datos
     const datosOriginales = getDatosOriginales(seccion)
+    const hayCambiosDatos = !deepEqual(datosActuales, datosOriginales)
     
-    // Comparar si hay cambios reales
-    const hayCambios = !deepEqual(datosActuales, datosOriginales)
+    // Identificar si es sección nueva (usa campos directos de visibilidad)
+    const camposDirectos = ['visibilidadAnalisis', 'visibilidadFortalezas', 'visibilidadDinamico',
+      'visibilidadPresupuesto', 'visibilidadTabla', 'visibilidadObservaciones', 'visibilidadConclusion']
+    const esSeccionNueva = visibilidadSeccion && Object.keys(visibilidadSeccion).some(k => camposDirectos.includes(k))
     
-    if (!hayCambios) {
+    // Verificar si hay cambios de visibilidad
+    let hayCambiosVisibilidad = false
+    if (visibilidadSeccion) {
+      const claves = Object.keys(visibilidadSeccion)
+      if (esSeccionNueva) {
+        // Comparar con el campo directo en contenidoOriginalRef
+        const campoDirecto = claves[0] as keyof ContenidoGeneral
+        const valorActual = visibilidadSeccion[campoDirecto]
+        const valorOriginal = (contenidoOriginalRef.current as unknown as Record<string, unknown>)?.[campoDirecto] !== false
+        hayCambiosVisibilidad = valorActual !== valorOriginal
+      } else {
+        // Sección antigua: comparar con .visibilidad anidada
+        const visibilidadOriginal = contenidoOriginalRef.current?.visibilidad || {}
+        hayCambiosVisibilidad = !deepEqual(visibilidadSeccion, 
+          Object.fromEntries(
+            Object.keys(visibilidadSeccion).map(k => [k, visibilidadOriginal[k as keyof typeof visibilidadOriginal] !== false])
+          )
+        )
+      }
+    }
+    
+    if (!hayCambiosDatos && !hayCambiosVisibilidad) {
       toast.info('ℹ️ No hay cambios que guardar')
       return
     }
@@ -621,15 +734,34 @@ export default function ContenidoTab({
     
     // Log de optimización
     const payloadSize = formatBytes(JSON.stringify(datosActuales).length)
-    console.log(`[GUARDADO AISLADO] Sección "${seccion}" (${payloadSize})`)
+    console.log(`[GUARDADO AISLADO] Sección "${seccion}" (${payloadSize})${hayCambiosVisibilidad ? ' + visibilidad' : ''}`)
     
     try {
       // Usar el método optimizado de guardado por sección
       if (onSaveSeccion && cotizacionConfig.id) {
-        await onSaveSeccion(cotizacionConfig.id, seccion, datosActuales, now)
+        // Enviar visibilidad solo si hay cambios de visibilidad
+        await onSaveSeccion(cotizacionConfig.id, seccion, datosActuales, now, hayCambiosVisibilidad ? visibilidadSeccion ?? undefined : undefined)
         
-        // Actualizar estado local con el timestamp
+        // Actualizar estado local con el timestamp y visibilidad
         const currentTimestamps = cotizacionConfig.contenidoGeneral?.updatedTimestamps || {}
+        
+        // Preparar actualizaciones de visibilidad según el tipo de sección
+        let visibilidadUpdates = {}
+        if (hayCambiosVisibilidad && visibilidadSeccion) {
+          if (esSeccionNueva) {
+            // Nuevas secciones: usar campos directos
+            visibilidadUpdates = visibilidadSeccion
+          } else {
+            // Secciones antiguas: anidar en .visibilidad
+            visibilidadUpdates = {
+              visibilidad: {
+                ...cotizacionConfig.contenidoGeneral?.visibilidad,
+                ...visibilidadSeccion,
+              }
+            }
+          }
+        }
+        
         const updatedConfig = {
           ...cotizacionConfig,
           contenidoGeneral: {
@@ -638,6 +770,7 @@ export default function ContenidoTab({
               ...currentTimestamps,
               [seccion]: now,
             },
+            ...visibilidadUpdates,
           },
         }
         setCotizacionConfig(updatedConfig)
@@ -645,6 +778,19 @@ export default function ContenidoTab({
         // Actualizar SOLO la sección guardada en el ref de contenido original
         if (contenidoOriginalRef.current) {
           const updatedOriginal = { ...contenidoOriginalRef.current }
+          // Actualizar visibilidad en el ref según tipo de sección
+          if (hayCambiosVisibilidad && visibilidadSeccion) {
+            if (esSeccionNueva) {
+              // Nuevas secciones: copiar campos directos
+              Object.assign(updatedOriginal, visibilidadSeccion)
+            } else {
+              // Secciones antiguas: anidar
+              updatedOriginal.visibilidad = {
+                ...updatedOriginal.visibilidad,
+                ...visibilidadSeccion,
+              }
+            }
+          }
           switch (seccion) {
             case 'resumen':
               updatedOriginal.textos = { ...updatedOriginal.textos, resumenEjecutivo: JSON.parse(JSON.stringify(datosActuales)) }
