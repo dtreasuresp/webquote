@@ -19,14 +19,14 @@ interface HeroProps {
 export default function Hero({ cotizacion }: HeroProps) {
 
   return (
-    <section className="relative bg-light-bg border-b border-light-border font-github">
+    <section className="relative bg-light-bg border-b border-light-border font-github px-4">
       {/* Header con patrón de puntos sutil */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: 'radial-gradient(circle, #1f2328 1px, transparent 1px)',
         backgroundSize: '24px 24px'
       }} />
       
-      <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-20">
+      <div className="relative max-w-7xl mx-auto py-16 md:py-20">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -54,7 +54,7 @@ export default function Hero({ cotizacion }: HeroProps) {
           </div>
 
           {/* Grid de información */}
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6">
             
             {/* Card: Información de Cotización */}
             <div className="bg-light-bg rounded-lg border border-light-border overflow-hidden">

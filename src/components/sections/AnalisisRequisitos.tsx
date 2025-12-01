@@ -15,7 +15,7 @@ export default function AnalisisRequisitos({ data }: AnalisisRequisitosProps) {
   const analisisData = data
   return (
     <section id="analisis" className="py-6 md:py-8 px-4 bg-light-bg font-github">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -76,7 +76,7 @@ export default function AnalisisRequisitos({ data }: AnalisisRequisitosProps) {
 
             {/* Identidad Visual */}
             <InfoCard title="🎨 Identidad Visual">
-              <div className="grid md:grid-cols-4 gap-6 mb-6">
+              <div className="grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-6 mb-6">
                 {/* Columna 1: Colores Corporativos */}
                 <div>
                   <h4 className="font-semibold mb-3 text-light-text">Colores Corporativos</h4>
@@ -228,10 +228,10 @@ export default function AnalisisRequisitos({ data }: AnalisisRequisitosProps) {
 
             {/* Funcionalidades */}
             <InfoCard title="🔧 Funcionalidades especiales requeridas">
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-[3fr_1fr] gap-6 items-top">
                 <div>
-                  <h4 className="font-semibold text-light-text mb-3">Características del Sitio Web</h4>
-                  <ul className="space-y-1 text-light-text-secondary text-sm">
+                  <h4 className="font-semibold text-light-text mb-3">Características a implementar en la Tienda Virtual</h4>
+                  <ul className="space-y-1 text-light-text-secondary text-sm grid md:grid-cols-[1fr_1fr] gap-2">
                     {analisisData.funcionalidades.caracteristicas.map((item) => (
                       <li key={`caract-${item.replaceAll(' ', '-')}`} className="flex items-center gap-2">
                         <span className="text-light-success">✓</span>

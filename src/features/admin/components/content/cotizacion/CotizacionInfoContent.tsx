@@ -84,14 +84,17 @@ export default function CotizacionInfoContent({
             <p className="text-gh-text-muted text-xs mt-2">Se genera automáticamente</p>
           </div>
 
-          {/* Firma de Autorización */}
+          {/* Título Principal (Hero) */}
           <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Firma</label>
+            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Título Principal</label>
             <input
               type="text"
-              placeholder="Nombre y firma"
+              value={cotizacionConfig?.heroTituloMain || ''}
+              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, heroTituloMain: e.target.value } : null)}
+              placeholder="Ej: Propuesta de Cotización"
               className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text placeholder-gh-text-muted"
             />
+            <p className="text-gh-text-muted text-xs mt-2">Título principal del Hero</p>
           </div>
         </div>
       </div>

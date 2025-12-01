@@ -1,13 +1,32 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { FaCalendarAlt, FaChevronDown, FaChevronUp, FaPlus, FaTrash, FaDollarSign, FaClock, FaBox, FaSort } from 'react-icons/fa'
+import { FaCalendarAlt, FaChevronDown, FaChevronUp, FaPlus, FaTrash, FaDollarSign, FaClock, FaBox, FaSort, FaFileImport, FaGripVertical } from 'react-icons/fa'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import ContentHeader from './ContentHeader'
 import ArrayFieldGH from './ArrayFieldGH'
+import ArrayFieldDraggable from './ArrayFieldDraggable'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
+import DialogoGenerico from '@/features/admin/components/DialogoGenerico'
 import useSnapshots from '@/features/admin/hooks/useSnapshots'
-import { getPaquetesDesglose, type PaqueteDesglose } from '@/lib/utils/priceRangeCalculator'
+import { getPaquetesDesglose } from '@/lib/utils/priceRangeCalculator'
 import type { SeccionesColapsadasConfig } from '@/lib/types'
 
 // Tipos para Presupuesto y Cronograma
@@ -58,6 +77,8 @@ export interface PresupuestoCronogramaData {
   caracteristicasPorPaquete?: {
     [nombrePaquete: string]: string[]
   }
+  /** Orden personalizado de paquetes (array de IDs) */
+  ordenPaquetes?: string[]
 }
 
 interface PresupuestoCronogramaContentProps {
@@ -72,6 +93,231 @@ interface PresupuestoCronogramaContentProps {
   readonly hasChanges?: boolean
   readonly seccionesColapsadas: SeccionesColapsadasConfig
   readonly onSeccionColapsadaChange: (key: string, isExpanded: boolean) => void
+}
+
+// Tipo para el paquete desde snapshots
+interface PaqueteDesglose {
+  id: string
+  nombre: string
+  emoji: string
+  tagline?: string
+  tiempoEntrega?: string
+  desarrollo: number
+  costoInicial: number
+  serviciosBase: Array<{ nombre: string; precio: number; mesesPago: number }>
+  serviciosOpcionales: Array<{ nombre: string; precio: number; mesesPago?: number }>
+}
+
+// Props para el componente de paquete arrastrable
+interface SortablePaqueteCardProps {
+  readonly paq: PaqueteDesglose
+  readonly getCaracteristicasPaquete: (nombre: string) => string[]
+  readonly updateCaracteristicasPaquete: (nombre: string, items: string[]) => void
+  readonly getPaquetesConCaracteristicas: (excluir: string) => string[]
+  readonly paqueteImportarDesde: { [key: string]: string }
+  readonly setPaqueteImportarDesde: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>
+  readonly handleImportarClick: (nombre: string) => void
+  readonly menuOrdenarAbierto: string | null
+  readonly setMenuOrdenarAbierto: React.Dispatch<React.SetStateAction<string | null>>
+  readonly menuOrdenarRef: React.RefObject<HTMLDivElement | null>
+  readonly sortCaracteristicas: (nombre: string, tipo: 'az' | 'za' | 'short' | 'long') => void
+}
+
+// Componente de tarjeta de paquete arrastrable
+function SortablePaqueteCard({
+  paq,
+  getCaracteristicasPaquete,
+  updateCaracteristicasPaquete,
+  getPaquetesConCaracteristicas,
+  paqueteImportarDesde,
+  setPaqueteImportarDesde,
+  handleImportarClick,
+  menuOrdenarAbierto,
+  setMenuOrdenarAbierto,
+  menuOrdenarRef,
+  sortCaracteristicas,
+}: SortablePaqueteCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: paq.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`p-4 bg-gh-bg-tertiary border border-gh-border rounded-md ${isDragging ? 'opacity-50 shadow-lg' : ''}`}
+    >
+      {/* Header del paquete con handle de arrastre */}
+      <div className="flex items-start gap-3 mb-4">
+        {/* Handle de arrastre */}
+        <button
+          {...attributes}
+          {...listeners}
+          type="button"
+          className="mt-1 p-1.5 text-gh-text-muted hover:text-gh-text cursor-grab active:cursor-grabbing transition-colors rounded hover:bg-gh-bg-secondary"
+          title="Arrastrar para reordenar paquete"
+        >
+          <FaGripVertical size={14} />
+        </button>
+
+        <div className="flex-1 flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">{paq.emoji}</span>
+              <span className="text-sm font-semibold text-gh-text">{paq.nombre}</span>
+            </div>
+            {paq.tagline && (
+              <p className="text-xs text-gh-text-muted italic">&quot;{paq.tagline}&quot;</p>
+            )}
+            {paq.tiempoEntrega && (
+              <p className="text-xs text-gh-text-muted mt-1">
+                <FaClock className="inline mr-1" /> {paq.tiempoEntrega}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-bold text-gh-success">${paq.desarrollo.toLocaleString()}</p>
+            <p className="text-xs text-gh-text-muted">Desarrollo</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Servicios Base (solo lectura) */}
+      {paq.serviciosBase.length > 0 && (
+        <div className="mb-3 p-2 bg-gh-bg-secondary/50 rounded">
+          <p className="text-xs font-medium text-gh-text-muted mb-2">Servicios Base:</p>
+          <div className="flex flex-wrap gap-2">
+            {paq.serviciosBase.map((srv) => (
+              <span key={srv.nombre} className="text-xs bg-gh-bg-tertiary px-2 py-1 rounded text-gh-text">
+                {srv.nombre}: ${srv.precio}/mes ({srv.mesesPago}m)
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Servicios Opcionales (solo lectura) */}
+      {paq.serviciosOpcionales.length > 0 && (
+        <div className="mb-3 p-2 bg-gh-bg-secondary/50 rounded">
+          <p className="text-xs font-medium text-gh-text-muted mb-2">Servicios Opcionales:</p>
+          <div className="flex flex-wrap gap-2">
+            {paq.serviciosOpcionales.map((srv) => (
+              <span key={srv.nombre} className="text-xs bg-gh-warning/20 px-2 py-1 rounded text-gh-text">
+                {srv.nombre}: ${srv.precio}{srv.mesesPago ? `/mes (${srv.mesesPago}m)` : ''}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Costo Total (solo lectura) */}
+      <div className="mb-4 p-2 bg-gh-success/10 border border-gh-success/30 rounded flex justify-between items-center">
+        <span className="text-xs text-gh-text-muted">Total Inicial:</span>
+        <span className="text-sm font-bold text-gh-success">${paq.costoInicial.toLocaleString()}</span>
+      </div>
+
+      {/* Características Incluidas (EDITABLE con drag & drop) */}
+      <div className="border-t border-gh-border pt-3">
+        <div className="flex items-center justify-between mb-2 gap-2">
+          <span className="text-xs font-medium text-gh-text-muted">✏️ Características Incluidas (arrastrables)</span>
+          
+          {/* Controles: Importar + Ordenar */}
+          <div className="flex items-center gap-2">
+            {/* Dropdown Importar desde otro paquete */}
+            {getPaquetesConCaracteristicas(paq.nombre).length > 0 && (
+              <div className="flex items-center gap-1">
+                <select
+                  value={paqueteImportarDesde[paq.nombre] || ''}
+                  onChange={(e) => setPaqueteImportarDesde(prev => ({ ...prev, [paq.nombre]: e.target.value }))}
+                  className="px-2 py-1 text-xs bg-gh-bg-secondary border border-gh-border rounded text-gh-text-muted focus:outline-none focus:border-gh-info cursor-pointer"
+                >
+                  <option value="">Importar desde...</option>
+                  {getPaquetesConCaracteristicas(paq.nombre).map(nombrePaq => (
+                    <option key={nombrePaq} value={nombrePaq}>
+                      {nombrePaq} ({getCaracteristicasPaquete(nombrePaq).length})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => handleImportarClick(paq.nombre)}
+                  disabled={!paqueteImportarDesde[paq.nombre]}
+                  className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+                    paqueteImportarDesde[paq.nombre]
+                      ? 'bg-gh-info/20 border border-gh-info/30 text-gh-info hover:bg-gh-info/30'
+                      : 'bg-gh-bg-secondary border border-gh-border text-gh-text-muted opacity-50 cursor-not-allowed'
+                  }`}
+                  title="Importar características"
+                >
+                  <FaFileImport className="text-xs" />
+                </button>
+              </div>
+            )}
+
+            {/* Botón Ordenar (ahora con click) */}
+            {getCaracteristicasPaquete(paq.nombre).length > 1 && (
+              <div className="relative" ref={menuOrdenarAbierto === paq.nombre ? menuOrdenarRef : null}>
+                <button
+                  onClick={() => setMenuOrdenarAbierto(menuOrdenarAbierto === paq.nombre ? null : paq.nombre)}
+                  className={`flex items-center gap-1 px-2 py-1 text-xs border rounded transition-colors ${
+                    menuOrdenarAbierto === paq.nombre
+                      ? 'bg-gh-bg-tertiary border-gh-border-hover text-gh-text'
+                      : 'bg-gh-bg-secondary border-gh-border text-gh-text-muted hover:bg-gh-bg-tertiary'
+                  }`}
+                >
+                  <FaSort className="text-xs" /> Ordenar
+                </button>
+                {menuOrdenarAbierto === paq.nombre && (
+                  <div className="absolute right-0 top-full mt-1 w-40 bg-gh-bg-secondary border border-gh-border rounded-md shadow-lg z-10">
+                    <button
+                      onClick={() => sortCaracteristicas(paq.nombre, 'az')}
+                      className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
+                    >
+                      🔤 Alfabético A-Z
+                    </button>
+                    <button
+                      onClick={() => sortCaracteristicas(paq.nombre, 'za')}
+                      className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
+                    >
+                      🔤 Alfabético Z-A
+                    </button>
+                    <button
+                      onClick={() => sortCaracteristicas(paq.nombre, 'short')}
+                      className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors border-t border-gh-border"
+                    >
+                      📏 Corto → Largo
+                    </button>
+                    <button
+                      onClick={() => sortCaracteristicas(paq.nombre, 'long')}
+                      className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
+                    >
+                      📏 Largo → Corto
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <ArrayFieldDraggable
+          label=""
+          items={getCaracteristicasPaquete(paq.nombre)}
+          onChange={(items) => updateCaracteristicasPaquete(paq.nombre, items)}
+          placeholder="Ej: Diseño responsive, SEO básico..."
+        />
+      </div>
+    </div>
+  )
 }
 
 // Datos por defecto
@@ -170,6 +416,75 @@ export default function PresupuestoCronogramaContent({
   const { snapshots, loading: loadingSnapshots } = useSnapshots()
   const paquetesSnapshot = getPaquetesDesglose(snapshots)
 
+  // ═══════════════════════════════════════════════════════════════
+  // Estados para menú ordenar (click) y diálogo de importación
+  // ═══════════════════════════════════════════════════════════════
+  const [menuOrdenarAbierto, setMenuOrdenarAbierto] = useState<string | null>(null)
+  const [paqueteImportarDesde, setPaqueteImportarDesde] = useState<{ [key: string]: string }>({})
+  const menuOrdenarRef = useRef<HTMLDivElement>(null)
+  
+  // Estado para el diálogo de confirmación
+  const [dialogoAbierto, setDialogoAbierto] = useState(false)
+  const [dialogoConfig, setDialogoConfig] = useState<{
+    titulo: string
+    mensaje: string
+    tipo: 'info' | 'warning' | 'success'
+    paqueteDestino: string
+    paqueteOrigen: string
+  } | null>(null)
+
+  // Cerrar menú ordenar al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuOrdenarRef.current && !menuOrdenarRef.current.contains(event.target as Node)) {
+        setMenuOrdenarAbierto(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // ═══════════════════════════════════════════════════════════════
+  // Drag & Drop de Paquetes
+  // ═══════════════════════════════════════════════════════════════
+  const sensorsPaquetes = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  // Ordenar paquetes según el orden guardado o por defecto
+  const paquetesOrdenados = useMemo(() => {
+    if (!data.ordenPaquetes || data.ordenPaquetes.length === 0) {
+      return paquetesSnapshot
+    }
+    // Ordenar según el array guardado, paquetes nuevos van al final
+    const ordenMap = new Map(data.ordenPaquetes.map((id, index) => [id, index]))
+    return [...paquetesSnapshot].sort((a, b) => {
+      const indexA = ordenMap.get(a.id) ?? Infinity
+      const indexB = ordenMap.get(b.id) ?? Infinity
+      return indexA - indexB
+    })
+  }, [paquetesSnapshot, data.ordenPaquetes])
+
+  const paqueteIds = paquetesOrdenados.map(p => p.id)
+
+  const handleDragEndPaquetes = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      const oldIndex = paqueteIds.indexOf(active.id as string)
+      const newIndex = paqueteIds.indexOf(over.id as string)
+      const nuevoOrden = arrayMove(paqueteIds, oldIndex, newIndex)
+      onChange({
+        ...data,
+        ordenPaquetes: nuevoOrden,
+      })
+    }
+  }
+
   // Estado de secciones colapsables viene de props (se persiste al guardar)
   const expandedSections = {
     presupuesto: seccionesColapsadas.presupuesto_presupuesto ?? true,
@@ -220,6 +535,65 @@ export default function PresupuestoCronogramaContent({
     }
     
     updateCaracteristicasPaquete(nombrePaquete, caracteristicas)
+    setMenuOrdenarAbierto(null) // Cerrar menú después de ordenar
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // Funciones para Importar características desde otro paquete
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Obtener paquetes que tienen características (para el dropdown)
+  const getPaquetesConCaracteristicas = (excluirPaquete: string): string[] => {
+    return paquetesSnapshot
+      .filter(p => p.nombre !== excluirPaquete)
+      .filter(p => (data.caracteristicasPorPaquete?.[p.nombre]?.length || 0) > 0)
+      .map(p => p.nombre)
+  }
+
+  // Abrir diálogo de confirmación para importar
+  const handleImportarClick = (paqueteDestino: string) => {
+    const paqueteOrigen = paqueteImportarDesde[paqueteDestino]
+    if (!paqueteOrigen) return
+
+    const caracteristicasDestino = getCaracteristicasPaquete(paqueteDestino)
+    const tieneCaracteristicas = caracteristicasDestino.length > 0
+
+    setDialogoConfig({
+      titulo: tieneCaracteristicas ? '¿Cómo deseas importar?' : 'Confirmar importación',
+      mensaje: tieneCaracteristicas 
+        ? `El paquete "${paqueteDestino}" ya tiene ${caracteristicasDestino.length} característica(s). ¿Deseas reemplazarlas o agregarlas a las existentes?`
+        : `Se importarán las características del paquete "${paqueteOrigen}" al paquete "${paqueteDestino}".`,
+      tipo: tieneCaracteristicas ? 'warning' : 'info',
+      paqueteDestino,
+      paqueteOrigen,
+    })
+    setDialogoAbierto(true)
+  }
+
+  // Ejecutar la importación
+  const ejecutarImportacion = (modo: 'reemplazar' | 'agregar') => {
+    if (!dialogoConfig) return
+
+    const { paqueteDestino, paqueteOrigen } = dialogoConfig
+    const caracteristicasOrigen = getCaracteristicasPaquete(paqueteOrigen)
+    const caracteristicasDestino = getCaracteristicasPaquete(paqueteDestino)
+
+    let nuevasCaracteristicas: string[]
+    if (modo === 'reemplazar') {
+      nuevasCaracteristicas = [...caracteristicasOrigen]
+    } else {
+      // Agregar solo las que no existen
+      const existentes = new Set(caracteristicasDestino.map(c => c.toLowerCase()))
+      const nuevas = caracteristicasOrigen.filter(c => !existentes.has(c.toLowerCase()))
+      nuevasCaracteristicas = [...caracteristicasDestino, ...nuevas]
+    }
+
+    updateCaracteristicasPaquete(paqueteDestino, nuevasCaracteristicas)
+    
+    // Limpiar estados
+    setDialogoAbierto(false)
+    setDialogoConfig(null)
+    setPaqueteImportarDesde(prev => ({ ...prev, [paqueteDestino]: '' }))
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -557,118 +931,35 @@ export default function PresupuestoCronogramaContent({
               ) : paquetesSnapshot.length === 0 ? (
                 <div className="p-4 bg-gh-warning/10 border border-gh-warning/30 rounded-md text-center">
                   <p className="text-sm text-gh-warning">No hay paquetes activos configurados.</p>
-                  <p className="text-xs text-gh-text-muted mt-1">Ve a la pestaña "Paquetes" para crear o activar paquetes.</p>
+                  <p className="text-xs text-gh-text-muted mt-1">Ve a la pestaña &quot;Paquetes&quot; para crear o activar paquetes.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {paquetesSnapshot.map((paq) => (
-                    <div key={paq.id} className="p-4 bg-gh-bg-tertiary border border-gh-border rounded-md">
-                      {/* Header del paquete */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-lg">{paq.emoji}</span>
-                            <span className="text-sm font-semibold text-gh-text">{paq.nombre}</span>
-                          </div>
-                          {paq.tagline && (
-                            <p className="text-xs text-gh-text-muted italic">&quot;{paq.tagline}&quot;</p>
-                          )}
-                          {paq.tiempoEntrega && (
-                            <p className="text-xs text-gh-text-muted mt-1">
-                              <FaClock className="inline mr-1" /> {paq.tiempoEntrega}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-gh-success">${paq.desarrollo.toLocaleString()}</p>
-                          <p className="text-xs text-gh-text-muted">Desarrollo</p>
-                        </div>
-                      </div>
-
-                      {/* Servicios Base (solo lectura) */}
-                      {paq.serviciosBase.length > 0 && (
-                        <div className="mb-3 p-2 bg-gh-bg-secondary/50 rounded">
-                          <p className="text-xs font-medium text-gh-text-muted mb-2">Servicios Base:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {paq.serviciosBase.map((srv) => (
-                              <span key={srv.nombre} className="text-xs bg-gh-bg-tertiary px-2 py-1 rounded text-gh-text">
-                                {srv.nombre}: ${srv.precio}/mes ({srv.mesesPago}m)
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Servicios Opcionales (solo lectura) */}
-                      {paq.serviciosOpcionales.length > 0 && (
-                        <div className="mb-3 p-2 bg-gh-bg-secondary/50 rounded">
-                          <p className="text-xs font-medium text-gh-text-muted mb-2">Servicios Opcionales:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {paq.serviciosOpcionales.map((srv) => (
-                              <span key={srv.nombre} className="text-xs bg-gh-warning/20 px-2 py-1 rounded text-gh-text">
-                                {srv.nombre}: ${srv.precio}{srv.mesesPago ? `/mes (${srv.mesesPago}m)` : ''}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Costo Total (solo lectura) */}
-                      <div className="mb-4 p-2 bg-gh-success/10 border border-gh-success/30 rounded flex justify-between items-center">
-                        <span className="text-xs text-gh-text-muted">Total Inicial:</span>
-                        <span className="text-sm font-bold text-gh-success">${paq.costoInicial.toLocaleString()}</span>
-                      </div>
-
-                      {/* Características Incluidas (EDITABLE) */}
-                      <div className="border-t border-gh-border pt-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-medium text-gh-text-muted">✏️ Características Incluidas (editable)</span>
-                          {getCaracteristicasPaquete(paq.nombre).length > 1 && (
-                            <div className="relative group">
-                              <button
-                                className="flex items-center gap-1 px-2 py-1 text-xs bg-gh-bg-secondary border border-gh-border rounded hover:bg-gh-bg-tertiary transition-colors text-gh-text-muted"
-                              >
-                                <FaSort className="text-xs" /> Ordenar
-                              </button>
-                              <div className="absolute right-0 top-full mt-1 w-40 bg-gh-bg-secondary border border-gh-border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                                <button
-                                  onClick={() => sortCaracteristicas(paq.nombre, 'az')}
-                                  className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
-                                >
-                                  🔤 Alfabético A-Z
-                                </button>
-                                <button
-                                  onClick={() => sortCaracteristicas(paq.nombre, 'za')}
-                                  className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
-                                >
-                                  🔤 Alfabético Z-A
-                                </button>
-                                <button
-                                  onClick={() => sortCaracteristicas(paq.nombre, 'short')}
-                                  className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors border-t border-gh-border"
-                                >
-                                  📏 Corto → Largo
-                                </button>
-                                <button
-                                  onClick={() => sortCaracteristicas(paq.nombre, 'long')}
-                                  className="w-full px-3 py-2 text-left text-xs text-gh-text hover:bg-gh-bg-tertiary transition-colors"
-                                >
-                                  📏 Largo → Corto
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <ArrayFieldGH
-                          label=""
-                          items={getCaracteristicasPaquete(paq.nombre)}
-                          onChange={(items) => updateCaracteristicasPaquete(paq.nombre, items)}
-                          placeholder="Ej: Diseño responsive, SEO básico..."
+                <DndContext
+                  sensors={sensorsPaquetes}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEndPaquetes}
+                >
+                  <SortableContext items={paqueteIds} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-4">
+                      {paquetesOrdenados.map((paq) => (
+                        <SortablePaqueteCard
+                          key={paq.id}
+                          paq={paq}
+                          getCaracteristicasPaquete={getCaracteristicasPaquete}
+                          updateCaracteristicasPaquete={updateCaracteristicasPaquete}
+                          getPaquetesConCaracteristicas={getPaquetesConCaracteristicas}
+                          paqueteImportarDesde={paqueteImportarDesde}
+                          setPaqueteImportarDesde={setPaqueteImportarDesde}
+                          handleImportarClick={handleImportarClick}
+                          menuOrdenarAbierto={menuOrdenarAbierto}
+                          setMenuOrdenarAbierto={setMenuOrdenarAbierto}
+                          menuOrdenarRef={menuOrdenarRef}
+                          sortCaracteristicas={sortCaracteristicas}
                         />
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
           )}
@@ -717,7 +1008,7 @@ export default function PresupuestoCronogramaContent({
                       <FaTrash />
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-[1.1fr_0.6fr_3fr] gap-3">
                     <div>
                       <label className="block text-gh-text-muted text-xs mb-1">Nombre</label>
                       <input
@@ -873,6 +1164,68 @@ export default function PresupuestoCronogramaContent({
         </div>
 
       </div>
+
+      {/* Diálogo de confirmación para importar características */}
+      <DialogoGenerico
+        isOpen={dialogoAbierto}
+        onClose={() => {
+          setDialogoAbierto(false)
+          setDialogoConfig(null)
+        }}
+        title={dialogoConfig?.titulo || 'Importar características'}
+        type={dialogoConfig?.tipo === 'warning' ? 'warning' : 'info'}
+        size="sm"
+        variant="premium"
+        footer={
+          dialogoConfig?.tipo === 'warning' ? (
+            // Si tiene características existentes, mostrar opciones
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={() => {
+                  setDialogoAbierto(false)
+                  setDialogoConfig(null)
+                }}
+                className="flex-1 px-3 py-2 bg-gh-bg-tertiary hover:bg-gh-border text-gh-text-muted rounded-md transition-colors text-sm font-medium border border-gh-border"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => ejecutarImportacion('agregar')}
+                className="flex-1 px-3 py-2 bg-gh-info/20 hover:bg-gh-info/30 text-gh-info rounded-md transition-colors text-sm font-medium border border-gh-info/30"
+              >
+                Agregar
+              </button>
+              <button
+                onClick={() => ejecutarImportacion('reemplazar')}
+                className="flex-1 px-3 py-2 bg-gh-warning/20 hover:bg-gh-warning/30 text-gh-warning rounded-md transition-colors text-sm font-medium border border-gh-warning/30"
+              >
+                Reemplazar
+              </button>
+            </div>
+          ) : (
+            // Si no tiene características, solo confirmar
+            <div className="flex gap-2 w-full justify-end">
+              <button
+                onClick={() => {
+                  setDialogoAbierto(false)
+                  setDialogoConfig(null)
+                }}
+                className="px-4 py-2 bg-gh-bg-tertiary hover:bg-gh-border text-gh-text-muted rounded-md transition-colors text-sm font-medium border border-gh-border"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => ejecutarImportacion('reemplazar')}
+                className="px-4 py-2 bg-gh-success/20 hover:bg-gh-success/30 text-gh-success rounded-md transition-colors text-sm font-medium border border-gh-success/30"
+              >
+                Importar
+              </button>
+            </div>
+          )
+        }
+      >
+        <p className="text-sm text-gh-text-muted">{dialogoConfig?.mensaje}</p>
+      </DialogoGenerico>
     </motion.div>
   )
 }

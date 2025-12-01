@@ -1,21 +1,37 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
+import type { QuotationConfig, ContenidoGeneral, VisibilidadConfig } from '@/lib/types'
 
-const navItems = [
-  { id: 'resumen', label: 'Inicio' },
-  { id: 'analisis', label: 'Solicitudes' },
-  { id: 'dinamico-vs-estatico', label: 'Definición' },
-  { id: 'paquetes', label: 'Paquetes' },
-  { id: 'comparativa', label: 'Comparativa' },
-  { id: 'garantias', label: 'Garantías' },
-  { id: 'faq', label: 'FAQ' },
-  { id: 'contacto', label: 'Contacto' },
+/** Configuración de cada item de navegación con su clave de datos */
+interface NavItemConfig {
+  id: string
+  label: string
+  /** Clave del dato en contenidoGeneral que determina si la sección se muestra */
+  dataKey?: keyof ContenidoGeneral
+  /** Clave en visibilidad (para secciones que usan el patrón visibilidad.X) */
+  visibilityKey?: keyof VisibilidadConfig
+}
+
+/** Configuración completa de items de navegación - una sección se muestra si:
+ * 1. No tiene dataKey ni visibilityKey (siempre visible)
+ * 2. Tiene dataKey y contenidoGeneral[dataKey] existe
+ * 3. Tiene visibilityKey y visibilidad[visibilityKey] !== false
+ */
+const navItemsConfig: NavItemConfig[] = [
+  { id: 'resumen', label: 'Inicio' }, // Siempre visible
+  { id: 'analisis', label: 'Solicitudes', dataKey: 'analisisRequisitos' },
+  { id: 'dinamico-vs-estatico', label: 'Definición', dataKey: 'dinamicoVsEstatico' },
+  { id: 'paquetes', label: 'Paquetes' }, // Siempre visible (sección principal)
+  { id: 'comparativa', label: 'Comparativa', dataKey: 'tablaComparativa' },
+  { id: 'garantias', label: 'Garantías', dataKey: 'garantias' },
+  { id: 'faq', label: 'FAQ', visibilityKey: 'faq', dataKey: 'faq' },
+  { id: 'contacto', label: 'Contacto', visibilityKey: 'contacto', dataKey: 'contacto' },
 ]
 
 // Logos: verde para admin, azul con fondo para el resto
@@ -23,13 +39,63 @@ const LOGO_ADMIN = '/img/logo-webquote_green_txt_white.svg'
 const LOGO_DEFAULT = '/img/logo-webquote_blue_backgroud_txt_white.png'
 const LOGO_DARK = '/img/logo-webquote_blue_txt_black.png' // Logo para fondo claro
 
-export default function Navigation() {
+interface NavigationProps {
+  /** Cotización activa para determinar visibilidad de secciones */
+  readonly cotizacion?: QuotationConfig | null
+}
+
+export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   const router = useRouter()
   const pathname = usePathname()
   const isAdminPage = pathname === '/administrador'
+
+  // Filtrar navItems basado en la visibilidad configurada en la cotización
+  const navItems = useMemo(() => {
+    // En página de admin, mostrar todos los items
+    if (isAdminPage) {
+      return navItemsConfig.map(({ id, label }) => ({ id, label }))
+    }
+    
+    // Si no hay cotización, mostrar solo items sin dataKey (básicos)
+    if (!cotizacion) {
+      return navItemsConfig
+        .filter(item => !item.dataKey && !item.visibilityKey)
+        .map(({ id, label }) => ({ id, label }))
+    }
+    
+    const contenido = cotizacion.contenidoGeneral
+    const visibilidad = contenido?.visibilidad
+    
+    return navItemsConfig
+      .filter(item => {
+        // Sin dataKey ni visibilityKey = siempre visible
+        if (!item.dataKey && !item.visibilityKey) return true
+        
+        // Si tiene dataKey, verificar que el dato existe
+        if (item.dataKey) {
+          const data = contenido?.[item.dataKey]
+          // Para arrays (como faq), verificar que tenga elementos
+          if (Array.isArray(data)) {
+            if (data.length === 0) return false
+          } else if (!data) {
+            // Si no hay datos, no mostrar
+            return false
+          }
+        }
+        
+        // Si tiene visibilityKey, verificar que no esté explícitamente desactivado
+        if (item.visibilityKey && visibilidad) {
+          const visible = visibilidad[item.visibilityKey]
+          if (visible === false) return false
+        }
+        
+        return true
+      })
+      .map(({ id, label }) => ({ id, label }))
+  }, [cotizacion, isAdminPage])
 
   useEffect(() => {
     const handleScroll = () => {

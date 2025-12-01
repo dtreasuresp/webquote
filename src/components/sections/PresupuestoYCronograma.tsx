@@ -24,17 +24,15 @@ function PaqueteCard({ paquete, caracteristicas }: PaqueteCardProps) {
     <div className="bg-light-bg-secondary rounded-lg border border-light-border overflow-hidden flex flex-col h-full">
       {/* Header del paquete */}
       <div className="p-4 bg-light-bg-tertiary/30 border-b border-light-border">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <span className="text-xl">{paquete.emoji}</span>
           <h4 className="text-lg font-semibold text-light-text">{paquete.nombre}</h4>
+          <span className="text-xs text-light-accent flex items-center gap-1">
+            • <FaClock /> {paquete.tiempoEntrega || 'Consultar'}
+          </span>
         </div>
         {paquete.tagline && (
           <p className="text-xs text-light-text-secondary italic">&quot;{paquete.tagline}&quot;</p>
-        )}
-        {paquete.tiempoEntrega && (
-          <p className="text-xs text-light-accent mt-2 flex items-center gap-1">
-            <FaClock className="text-light-accent" /> {paquete.tiempoEntrega}
-          </p>
         )}
       </div>
 
@@ -226,7 +224,12 @@ export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaP
                         </div>
                       </div>
                       <div className="flex-grow">
-                        <h4 className="font-medium text-light-text text-sm">{fase.nombre} ({fase.descripcion})</h4>
+                        <h4 className="font-medium text-light-text text-sm">
+                          {fase.nombre} ({fase.descripcion})
+                          {fase.duracionDias > 0 && (
+                            <span className="text-light-accent ml-2">• 📅 {fase.duracionDias} días</span>
+                          )}
+                        </h4>
                         <p className="text-xs text-light-text-secondary mt-1">
                           {fase.entregables.map((entregable, i) => (
                             <span key={`entregable-${entregable.replaceAll(' ', '-')}`}>
@@ -241,7 +244,7 @@ export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaP
 
                 <div className="bg-light-warning/10 border-l-2 border-light-warning rounded-md p-3">
                   <p className="text-xs text-light-text">
-                    <strong>📌 Nota importante:</strong> Todas las fechas son estimadas y pueden variar según complejidad.
+                    <strong>📌 Nota importante:</strong> Este cronograma corresponde al paquete de mayor complejidad.
                   </p>
                 </div>
               </div>

@@ -226,7 +226,7 @@ function HomeContent() {
 
   return (
     <main className="bg-light-bg font-github min-h-screen">
-      <Navigation />
+      <Navigation cotizacion={cotizacion} />
       <Hero cotizacion={cotizacion} />
       <ResumenEjecutivo 
         data={resumenData} 

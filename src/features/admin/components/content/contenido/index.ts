@@ -6,6 +6,7 @@ export { default as ContactoContent } from './ContactoContent'
 export { default as TerminosContent } from './TerminosContent'
 export { default as ContentHeader } from './ContentHeader'
 export { default as ArrayFieldGH } from './ArrayFieldGH'
+export { default as ArrayFieldDraggable } from './ArrayFieldDraggable'
 
 // Nuevas secciones de contenido (Phase 16)
 export { default as AnalisisRequisitosContent, defaultAnalisisRequisitos } from './AnalisisRequisitosContent'

@@ -1211,6 +1211,25 @@ export default function Administrador() {
     // 2. Guardar contexto
     setQuotationEnModal(quotation)
     setSnapshotsModalActual(snapshotsFiltrados)
+    
+    // 2.1 Sincronizar cotizacionActual con los datos de la quotation
+    setCotizacionActual({
+      numero: quotation.numero || '',
+      fechaEmision: quotation.fechaEmision ? new Date(quotation.fechaEmision).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      tiempoValidez: quotation.tiempoValidez || 30,
+      empresa: quotation.empresa || '',
+      sector: quotation.sector || '',
+      ubicacion: quotation.ubicacion || '',
+      emailCliente: quotation.emailCliente || '',
+      whatsappCliente: quotation.whatsappCliente || '',
+      profesional: quotation.profesional || '',
+      empresaProveedor: quotation.empresaProveedor || '',
+      emailProveedor: quotation.emailProveedor || '',
+      whatsappProveedor: quotation.whatsappProveedor || '',
+      ubicacionProveedor: quotation.ubicacionProveedor || '',
+      heroTituloMain: quotation.heroTituloMain || 'Propuesta de Cotización',
+      heroTituloSub: quotation.heroTituloSub || 'Cotización personalizada',
+    })
 
     // 3. Seleccionar primer snapshot
     if (snapshotsFiltrados.length > 0) {
@@ -4075,6 +4094,30 @@ Profesional: ${cotizacionConfig.profesional || 'Sin especificar'}
                         hasChanges: pestañaTieneCambios('cotizacion'),
                         content: (
                           <div className="space-y-4">
+                            {/* Fila 1: Títulos del Hero */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Título Principal (Hero)</label>
+                                <input
+                                  type="text"
+                                  value={cotizacionActual.heroTituloMain || ''}
+                                  onChange={(e) => setCotizacionActual({...cotizacionActual, heroTituloMain: e.target.value})}
+                                  className="w-full px-2 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none text-xs text-[#c9d1d9]"
+                                  placeholder="Propuesta de Cotización"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Subtítulo (Hero)</label>
+                                <input
+                                  type="text"
+                                  value={cotizacionActual.heroTituloSub || ''}
+                                  onChange={(e) => setCotizacionActual({...cotizacionActual, heroTituloSub: e.target.value})}
+                                  className="w-full px-2 py-1.5 rounded-md bg-[#0d1117] border border-[#30363d] focus:border-[#58a6ff] focus:outline-none text-xs text-[#c9d1d9]"
+                                  placeholder="Página Catálogo Dinámica"
+                                />
+                              </div>
+                            </div>
+                            {/* Fila 2: Número, Fecha, Validez */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                               <div>
                                 <label className="block text-[10px] font-semibold text-[#c9d1d9] mb-0.5">Número</label>

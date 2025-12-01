@@ -55,8 +55,8 @@ interface PackageData {
   inversionAnio1: number
   description: string
   features: Array<{ category: string; items: string[] }>
-  serviciosOpcionales?: Array<{ nombre: string; precio: number }>
-  gestion?: { nombre: string; precioMensual: number }
+  serviciosOpcionales?: Array<{ nombre: string; precio: number; mesesGratis: number; mesesPago: number; acumulado: number }>
+  gestion?: { nombre: string; precioMensual: number; mesesGratis: number; mesesPago: number; acumulado: number }
   pages: string  // Opcional - si vacío no se muestra
   timelineWeeks: number | null  // Opcional - si null no se muestra
   colorScheme: 'rojo' | 'dorado' | 'negro' | 'neutro'
@@ -81,10 +81,9 @@ export default function Paquetes() {
         const mesesPago = srv.mesesPago || 9
         const price = srv.precio || 0
         const acumulado = price * mesesPago
-        const category = `${srv.nombre} (luego del ${mesesGratis + 1}º mes)`
         features.push({
-          category,
-          items: [`$${price} USD/mes ($${acumulado} USD/${mesesPago} meses)`],
+          category: srv.nombre,
+          items: [`$${price} USD/mes ($${acumulado} USD/${mesesGratis}m gratis/${mesesPago}m pago)`],
         })
       }
     }
@@ -95,14 +94,20 @@ export default function Paquetes() {
         ? snap.otrosServicios.map((s: OtroServicioSnapshot) => ({
             nombre: s.nombre,
             precio: s.precio || 0,
+            mesesGratis: s.mesesGratis || 0,
+            mesesPago: s.mesesPago || 12,
+            acumulado: (s.precio || 0) * (s.mesesPago || 12),
           }))
         : undefined
 
-    // Gestión
-    const gestionData = snap.gestion
+    // Gestión (solo mostrar si precio > 0)
+    const gestionData = snap.gestion && snap.gestion.precio > 0
       ? {
           nombre: 'Gestión Mensual',
-          precioMensual: snap.gestion.precio || 0,
+          precioMensual: snap.gestion.precio,
+          mesesGratis: snap.gestion.mesesGratis || 0,
+          mesesPago: snap.gestion.mesesPago || 12,
+          acumulado: snap.gestion.precio * (snap.gestion.mesesPago || 12),
         }
       : undefined
 
@@ -201,7 +206,7 @@ export default function Paquetes() {
 
   return (
     <section id="paquetes" className="py-6 md:py-8 px-4 bg-light-bg font-github">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -403,7 +408,7 @@ function PaqueteCard({
           {data.gestion && (
             <div key="gestion" className="text-sm border-t border-light-border pt-2 mt-2">
               <p className="font-medium text-light-text text-xs leading-tight">Gestión Mensual</p>
-              <p className="text-light-text-secondary text-xs">${data.gestion.precioMensual} USD/mes</p>
+              <p className="text-light-text-secondary text-xs">${data.gestion.precioMensual} USD/mes (${data.gestion.acumulado} USD/{data.gestion.mesesGratis}m gratis/{data.gestion.mesesPago}m pago)</p>
             </div>
           )}
 
@@ -412,7 +417,7 @@ function PaqueteCard({
               <p className="font-medium text-light-text text-xs leading-tight">Servicios Opcionales</p>
               {data.serviciosOpcionales.map((srv) => (
                 <p key={srv.nombre} className="text-light-text-secondary text-xs">
-                  {srv.nombre}: ${srv.precio} USD
+                  {srv.nombre}: ${srv.precio} USD/mes (${srv.acumulado} USD/{srv.mesesGratis}m gratis/{srv.mesesPago}m pago)
                 </p>
               ))}
             </div>
@@ -432,7 +437,7 @@ function PaqueteCard({
 
         <a
           href={data.href}
-          className={`mt-4 py-2 px-4 rounded-md font-medium text-sm text-center transition-colors ${styles.button}`}
+          className={`hidden mt-4 py-2 px-4 rounded-md font-medium text-sm text-center transition-colors ${styles.button}`}
         >
           Ver Detalles
         </a>
