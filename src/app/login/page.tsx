@@ -24,9 +24,9 @@ function LoginContent() {
   useEffect(() => {
     if (status === 'authenticated' && session?.user && !isSubmitting) {
       console.log('[AUTH] Usuario ya autenticado - Redirigiendo a /')
-      router.push('/')
+      window.location.href = '/'
     }
-  }, [status, session, router, isSubmitting])
+  }, [status, session, isSubmitting])
 
   // Mostrar mensaje de error si viene de callback
   useEffect(() => {
