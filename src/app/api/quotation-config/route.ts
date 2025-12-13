@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateNextQuotationNumber, updateQuotationVersion } from '@/lib/utils/quotationNumber'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -12,22 +14,68 @@ const calcularFechaVencimiento = (fechaEmision: Date, dias: number): Date => {
   return vencimiento
 }
 
-// GET: Obtener la cotización ACTIVA (isGlobal: true)
+// GET: Obtener cotización según usuario autenticado
 export async function GET(request: NextRequest) {
   try {
-    // [AUDIT] Buscar cotización activa
-    console.log('[AUDIT] GET /api/quotation-config - Buscando cotización activa (isGlobal: true)')
+    // ✅ Verificar sesión del usuario
+    const session = await getServerSession(authOptions)
     
-    const cotizacion = await prisma.quotationConfig.findFirst({
-      where: { isGlobal: true },
-      orderBy: { updatedAt: 'desc' },
+    if (!session?.user) {
+      console.log('[AUTH] GET /api/quotation-config - Sin sesión, acceso denegado')
+      return NextResponse.json(
+        { error: 'No autenticado. Por favor inicie sesión.' },
+        { status: 401 }
+      )
+    }
+
+    console.log('[AUTH] Usuario autenticado:', session.user.username, 'Role:', session.user.role)
+    
+    // Si es SUPER_ADMIN o ADMIN sin quotationAssignedId, buscar cotización global
+    if ((session.user.role === 'SUPER_ADMIN' || session.user.role === 'ADMIN') && !session.user.quotationAssignedId) {
+      console.log('[AUDIT] Admin/SuperAdmin sin cotización asignada - Buscando cotización global (isGlobal: true)')
+      
+      const cotizacion = await prisma.quotationConfig.findFirst({
+        where: { isGlobal: true },
+        orderBy: { updatedAt: 'desc' },
+      })
+      
+      if (!cotizacion) {
+        return NextResponse.json({ error: 'No hay cotización global configurada' }, { status: 404 })
+      }
+
+      console.log('[AUDIT] Cotización global encontrada:', cotizacion.numero)
+      return NextResponse.json({
+        ...cotizacion,
+        fechaEmision: cotizacion.fechaEmision.toISOString(),
+        fechaVencimiento: cotizacion.fechaVencimiento.toISOString(),
+        createdAt: cotizacion.createdAt.toISOString(),
+        updatedAt: cotizacion.updatedAt.toISOString(),
+      })
+    }
+
+    // ✅ Filtrar por quotationAssignedId del usuario
+    if (!session.user.quotationAssignedId) {
+      console.log('[AUTH] Usuario sin cotización asignada:', session.user.username)
+      return NextResponse.json(
+        { error: 'No tiene cotización asignada. Contacte al administrador.' },
+        { status: 403 }
+      )
+    }
+
+    console.log('[AUDIT] Buscando cotización asignada:', session.user.quotationAssignedId)
+    
+    const cotizacion = await prisma.quotationConfig.findUnique({
+      where: { id: session.user.quotationAssignedId },
     })
     
-    console.log('[AUDIT] Cotización encontrada:', cotizacion?.id, cotizacion?.numero, 'isGlobal:', cotizacion?.isGlobal)
-
     if (!cotizacion) {
-      return NextResponse.json(null, { status: 404 })
+      return NextResponse.json(
+        { error: 'Cotización asignada no encontrada' },
+        { status: 404 }
+      )
     }
+
+    console.log('[AUDIT] Cotización encontrada para usuario:', cotizacion.numero)
 
     return NextResponse.json({
       ...cotizacion,

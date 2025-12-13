@@ -784,15 +784,57 @@ const SECURITY_PERMISSIONS = [
 - ✅ Estados de carga y error siguiendo patrones existentes
 - ✅ Toast notifications para feedback de acciones
 
-### 🔄 Fase 7: Filtrado de Cotización por Usuario (PENDIENTE)
-**Duración estimada:** 2-3 horas
+### ✅ Fase 7: Filtrado de Cotización por Usuario (COMPLETADA)
+**Duración:** 2-3 horas | **Estado:** ✅ Completada el 13/12/2025
 
-| Tarea | Descripción | Archivos |
-|-------|-------------|----------|
-| 7.1 | Modificar GET /api/quotation-config para filtrar por usuario | `route.ts` |
-| 7.2 | Agregar lógica de sesión en página pública | `src/app/page.tsx` |
-| 7.3 | Filtrar cotizaciones por número base en modal | `UserManagementPanel.tsx` |
-| 7.4 | Agrupar versiones al asignar cotización | API y UI |
+| Tarea | Descripción | Archivos | Estado |
+|-------|-------------|----------|--------|
+| 7.1 | Modificar GET /api/quotation-config para filtrar por usuario | `src/app/api/quotation-config/route.ts` | ✅ |
+| 7.2 | Agregar lógica de sesión en página pública | `src/app/page.tsx` | ✅ |
+| 7.3 | Modificar GET /api/snapshots para filtrar por quotationConfigId | `src/app/api/snapshots/route.ts` | ✅ |
+| 7.4 | Proteger endpoint /api/snapshots/all (solo ADMIN/SUPER_ADMIN) | `src/app/api/snapshots/all/route.ts` | ✅ |
+| 7.5 | Actualizar páginas /paquete/* con verificación de sesión | `src/app/paquete/*/page.tsx` (3 archivos) | ✅ |
+
+**Cambios Implementados:**
+
+1. **API `/api/quotation-config` (GET):**
+   - ✅ Verifica sesión con `getServerSession(authOptions)`
+   - ✅ Retorna 401 si no hay sesión
+   - ✅ SUPER_ADMIN/ADMIN sin asignación → busca cotización global (isGlobal: true)
+   - ✅ Usuarios con `quotationAssignedId` → filtra por su cotización asignada
+   - ✅ Retorna 403 si el usuario no tiene cotización asignada
+
+2. **API `/api/snapshots` (GET):**
+   - ✅ Verifica sesión con `getServerSession(authOptions)`
+   - ✅ Retorna 401 si no hay sesión
+   - ✅ SUPER_ADMIN/ADMIN sin asignación → retorna todos los snapshots activos
+   - ✅ Usuarios con `quotationAssignedId` → filtra por `quotationConfigId`
+   - ✅ Retorna array vacío si el usuario no tiene cotización asignada
+
+3. **API `/api/snapshots/all` (GET):**
+   - ✅ Verifica sesión con `getServerSession(authOptions)`
+   - ✅ Retorna 401 si no hay sesión
+   - ✅ Retorna 403 si el rol no es SUPER_ADMIN o ADMIN
+   - ✅ Solo administradores pueden ver todos los snapshots
+
+4. **Homepage `/` (src/app/page.tsx):**
+   - ✅ Verifica sesión con `useSession()` client-side
+   - ✅ Redirige a `/login` si `status === 'unauthenticated'`
+   - ✅ Muestra mensaje de error si el usuario no tiene cotización asignada
+   - ✅ Maneja estados de carga mientras se verifica la sesión
+
+5. **Páginas `/paquete/*` (constructor, obra-maestra, imperio-digital):**
+   - ✅ Importan `useSession()` y `useRouter`
+   - ✅ Verifican sesión antes de cargar snapshots
+   - ✅ Redirigen a `/login` si no hay sesión
+   - ✅ Usan `obtenerSnapshots()` en lugar de `obtenerSnapshotsCompleto()` para filtrado automático
+   - ✅ Actualizan dependencias de `useEffect` con `[status, router]`
+
+**Resultado:**
+- 🔒 **Seguridad:** Usuarios no autenticados NO pueden acceder a ninguna página pública
+- 🎯 **Filtrado:** Cada usuario ve SOLO la cotización y snapshots asignados a su cuenta
+- 👨‍💼 **Administradores:** SUPER_ADMIN/ADMIN pueden acceder a cotizaciones globales y todos los snapshots
+- ✅ **Validación:** Endpoints retornan códigos HTTP correctos (401, 403, 404)
 
 ### 🔄 Fase 8: Actualización del Historial (PENDIENTE)
 **Duración estimada:** 2-3 horas

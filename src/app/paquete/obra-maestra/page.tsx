@@ -6,7 +6,7 @@ import { FaArrowLeft, FaCheckCircle, FaCalendar } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/sections/PackageCostSummary'
 import PaymentOptions from '@/components/sections/PaymentOptions'
-import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
+import { obtenerSnapshots } from '@/lib/snapshotApi'
 import SECTION_STYLES from '@/lib/styleConstants'
 
 interface ServicioBase {
@@ -59,7 +59,7 @@ export default function ObraMaestraPage() {
   useEffect(() => {
     const cargarSnapshot = async () => {
       try {
-        const snapshots = await obtenerSnapshotsCompleto()
+        const snapshots = await obtenerSnapshots()
         const activos = snapshots.filter(s => s.activo)
         
         // Ordenar por inversión anual (año1)
