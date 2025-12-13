@@ -30,58 +30,21 @@ function LoginContent() {
     setError(null)
     setLoading(true)
 
-    console.log('[LOGIN] Iniciando autenticación...')
-    console.log('[LOGIN] Username:', username)
-
     try {
       const callbackUrl = searchParams.get('callbackUrl') || '/'
-      console.log('[LOGIN] CallbackUrl:', callbackUrl)
       
-      // ✅ redirect=false para capturar errores
-      console.log('[LOGIN] Llamando a signIn...')
-      const result = await signIn('credentials', {
+      // Dejar que NextAuth maneje todo automáticamente
+      await signIn('credentials', {
         username,
         password,
-        redirect: false,
+        callbackUrl,
       })
-
-      console.log('[LOGIN] Resultado de signIn:', JSON.stringify(result, null, 2))
-
-      if (!result) {
-        console.log('[LOGIN] result es null/undefined')
-        setError('No se pudo completar el inicio de sesión. Intenta de nuevo.')
-        setLoading(false)
-        return
-      }
-
-      if (result?.error) {
-        console.log('[LOGIN] Error en result:', result.error)
-        // Manejar errores específicos
-        if (result.error === 'CredentialsSignin') {
-          setError('Usuario o contraseña incorrectos')
-        } else {
-          setError(result.error)
-        }
-        setLoading(false)
-        return
-      }
-
-      if (result?.ok) {
-        console.log('[LOGIN] Autenticación exitosa, result.ok=true')
-        console.log('[LOGIN] result.url:', result.url)
-        // Navegar usando la URL que devuelve NextAuth si existe (más robusto)
-        const targetUrl = result.url || callbackUrl
-        console.log('[LOGIN] Navegando a:', targetUrl)
-        window.location.href = targetUrl
-        return
-      }
-
-      // Caso inesperado: sin error y sin ok
-      console.log('[LOGIN] Caso inesperado - result:', result)
-      setError('No se pudo iniciar sesión. Intenta de nuevo.')
+      
+      // Si llegamos aquí sin redirección, hubo un error
+      setError('Usuario o contraseña incorrectos')
       setLoading(false)
-    } catch (err) {
-      console.error('[LOGIN] Excepción:', err)
+    } catch (error) {
+      console.error('[LOGIN] Error:', error)
       setError('Error al iniciar sesión. Intenta de nuevo.')
       setLoading(false)
     }
