@@ -167,9 +167,6 @@ export const authOptions: NextAuthOptions = {
   
   secret: process.env.NEXTAUTH_SECRET,
   
-  // CRÍTICO para Vercel y ambientes serverless
-  trustHost: true,
-  
   debug: process.env.NODE_ENV === "development",
 };
 
