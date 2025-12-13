@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { FaArrowLeft, FaCheckCircle, FaCalendar } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/sections/PackageCostSummary'
@@ -110,7 +112,7 @@ export default function ConstructorPage() {
     }
 
     cargarSnapshot()
-  }, [])
+  }, [status, router])
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
 

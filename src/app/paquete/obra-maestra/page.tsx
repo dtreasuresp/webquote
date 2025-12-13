@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { FaArrowLeft, FaCheckCircle, FaCalendar } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/sections/PackageCostSummary'
@@ -51,6 +53,8 @@ interface PackageSnapshot {
 }
 
 export default function ObraMaestraPage() {
+  const router = useRouter()
+  const { data: session, status } = useSession()
   const [snapshotObraMaestra, setSnapshotObraMaestra] = useState<PackageSnapshot | null>(null)
   const [cargando, setCargando] = useState(true)
   const [medallaEmoji, setMedallaEmoji] = useState('📦')
@@ -58,6 +62,16 @@ export default function ObraMaestraPage() {
 
   useEffect(() => {
     const cargarSnapshot = async () => {
+      // Esperar a que se cargue el estado de la sesión
+      if (status === 'loading') return
+
+      // Si no hay sesión, redirigir al login
+      if (status === 'unauthenticated') {
+        console.log('[AUTH] Usuario no autenticado - Redirigiendo a login')
+        router.push('/login')
+        return
+      }
+
       try {
         const snapshots = await obtenerSnapshots()
         const activos = snapshots.filter(s => s.activo)
@@ -97,7 +111,7 @@ export default function ObraMaestraPage() {
     }
 
     cargarSnapshot()
-  }, [])
+  }, [status, router])
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header con navegación */}
