@@ -45,13 +45,17 @@ function LoginContent() {
     setIsSubmitting(true)
 
     try {
+      console.log('[LOGIN] Iniciando signIn...')
       const result = await signIn('credentials', {
         username,
         password,
         redirect: false,
       })
 
+      console.log('[LOGIN] Resultado signIn:', result)
+
       if (result?.error) {
+        console.error('[LOGIN] Error en signIn:', result.error)
         if (result.error === 'CredentialsSignin') {
           setError('Usuario o contraseña incorrectos')
         } else {
@@ -63,15 +67,21 @@ function LoginContent() {
       }
 
       if (result?.ok) {
+        console.log('[LOGIN] SignIn exitoso, esperando callback...')
         setSuccess(true)
         // ✅ Esperar un momento antes de redirigir para que NextAuth complete el callback
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 1000))
         const callbackUrl = searchParams.get('callbackUrl') || '/'
-        router.push(callbackUrl)
-        // Mantener isSubmitting=true para evitar que el useEffect interfiera
+        console.log('[LOGIN] Redirigiendo a:', callbackUrl)
+        window.location.href = callbackUrl // Usar location.href para forzar refresh
+      } else {
+        console.error('[LOGIN] SignIn retornó sin ok ni error:', result)
+        setError('Error inesperado en la autenticación')
+        setLoading(false)
+        setIsSubmitting(false)
       }
     } catch (err) {
-      console.error('Error en login:', err)
+      console.error('[LOGIN] Excepción en handleSubmit:', err)
       setError('Error al iniciar sesión. Intenta de nuevo.')
       setLoading(false)
       setIsSubmitting(false)
