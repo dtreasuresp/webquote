@@ -1,32 +1,19 @@
 'use client'
 
 import React, { useState, useEffect, Suspense } from 'react'
-import { signIn, useSession } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { signIn } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaUser, FaLock, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaEye, FaEyeSlash } from 'react-icons/fa'
+import { FaUser, FaLock, FaSpinner, FaExclamationTriangle, FaEye, FaEyeSlash } from 'react-icons/fa'
 
 function LoginContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const { data: session, status } = useSession()
   
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // ✅ Si ya está autenticado, redirigir a la página principal
-  // PERO NO durante el proceso de login (evita interferir con el callback)
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user && !isSubmitting) {
-      console.log('[AUTH] Usuario ya autenticado - Redirigiendo a /')
-      window.location.href = '/'
-    }
-  }, [status, session, isSubmitting])
 
   // Mostrar mensaje de error si viene de callback
   useEffect(() => {
@@ -42,68 +29,28 @@ function LoginContent() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    setIsSubmitting(true)
 
     try {
-      console.log('[LOGIN] Iniciando signIn...')
-      const result = await signIn('credentials', {
+      // ✅ SIMPLIFICADO: redirect=true deja que NextAuth maneje TODO
+      // NextAuth redirigirá automáticamente después de autenticación exitosa
+      const callbackUrl = searchParams.get('callbackUrl') || '/'
+      
+      await signIn('credentials', {
         username,
         password,
-        redirect: false,
+        callbackUrl,
+        redirect: true, // ← NextAuth maneja la redirección completamente
       })
-
-      console.log('[LOGIN] Resultado signIn:', result)
-
-      if (result?.error) {
-        console.error('[LOGIN] Error en signIn:', result.error)
-        if (result.error === 'CredentialsSignin') {
-          setError('Usuario o contraseña incorrectos')
-        } else {
-          setError(result.error)
-        }
-        setLoading(false)
-        setIsSubmitting(false)
-        return
-      }
-
-      if (result?.ok) {
-        console.log('[LOGIN] SignIn exitoso, esperando callback...')
-        setSuccess(true)
-        // ✅ Esperar un momento antes de redirigir para que NextAuth complete el callback
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        const callbackUrl = searchParams.get('callbackUrl') || '/'
-        console.log('[LOGIN] Redirigiendo a:', callbackUrl)
-        window.location.href = callbackUrl // Usar location.href para forzar refresh
-      } else {
-        console.error('[LOGIN] SignIn retornó sin ok ni error:', result)
-        setError('Error inesperado en la autenticación')
-        setLoading(false)
-        setIsSubmitting(false)
-      }
+      
+      // Si llegamos aquí, significa que hubo un error
+      // (signIn con redirect=true solo retorna si falla)
+      setError('Error al iniciar sesión')
+      setLoading(false)
     } catch (err) {
-      console.error('[LOGIN] Excepción en handleSubmit:', err)
+      console.error('[LOGIN] Error:', err)
       setError('Error al iniciar sesión. Intenta de nuevo.')
       setLoading(false)
-      setIsSubmitting(false)
     }
-  }
-
-  // Loading inicial mientras verifica sesión
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#0d1117] flex items-center justify-center">
-        <FaSpinner className="animate-spin text-[#58a6ff] text-4xl" />
-      </div>
-    )
-  }
-
-  // Si está autenticado, mostrar loading mientras redirige
-  if (status === 'authenticated') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#0d1117] flex items-center justify-center">
-        <FaSpinner className="animate-spin text-[#58a6ff] text-4xl" />
-      </div>
-    )
   }
 
   return (
@@ -158,18 +105,6 @@ function LoginContent() {
                   <p className="text-sm text-[#f85149]">{error}</p>
                 </motion.div>
               )}
-              
-              {success && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="bg-[#23863620] border border-[#238636] rounded-lg p-4 flex items-center gap-3"
-                >
-                  <FaCheckCircle className="text-[#3fb950] flex-shrink-0" />
-                  <p className="text-sm text-[#3fb950]">¡Inicio de sesión exitoso!</p>
-                </motion.div>
-              )}
             </AnimatePresence>
 
             {/* Campo Usuario */}
@@ -186,7 +121,7 @@ function LoginContent() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Tu nombre de usuario"
                   required
-                  disabled={loading || success}
+                  disabled={loading}
                   className="w-full pl-12 pr-4 py-3 bg-[#0d1117] border border-[#30363d] rounded-lg text-[#f0f6fc] placeholder-[#6e7681] focus:border-[#58a6ff] focus:ring-2 focus:ring-[#58a6ff]/20 outline-none transition-all disabled:opacity-50"
                 />
               </div>
@@ -206,13 +141,13 @@ function LoginContent() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Tu contraseña"
                   required
-                  disabled={loading || success}
+                  disabled={loading}
                   className="w-full pl-12 pr-12 py-3 bg-[#0d1117] border border-[#30363d] rounded-lg text-[#f0f6fc] placeholder-[#6e7681] focus:border-[#58a6ff] focus:ring-2 focus:ring-[#58a6ff]/20 outline-none transition-all disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading || success}
+                  disabled={loading}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8b949e] hover:text-[#c9d1d9] transition-colors disabled:opacity-50"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -223,34 +158,23 @@ function LoginContent() {
             {/* Botón Submit */}
             <motion.button
               type="submit"
-              disabled={loading || success || !username || !password}
-              whileHover={{ scale: loading || success ? 1 : 1.02 }}
-              whileTap={{ scale: loading || success ? 1 : 0.98 }}
+              disabled={loading || !username || !password}
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
               className={`w-full py-3 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 ${
-                loading || success
+                loading
                   ? 'bg-[#21262d] cursor-not-allowed'
                   : 'bg-gradient-to-r from-[#238636] to-[#2ea043] hover:from-[#2ea043] hover:to-[#3fb950] shadow-lg shadow-[#238636]/25'
               }`}
             >
-              {(() => {
-                if (loading) {
-                  return (
-                    <>
-                      <FaSpinner className="animate-spin" />
-                      Iniciando sesión...
-                    </>
-                  )
-                }
-                if (success) {
-                  return (
-                    <>
-                      <FaCheckCircle />
-                      Redirigiendo...
-                    </>
-                  )
-                }
-                return 'Iniciar Sesión'
-              })()}
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin" />
+                  Iniciando sesión...
+                </>
+              ) : (
+                'Iniciar Sesión'
+              )}
             </motion.button>
           </form>
 
