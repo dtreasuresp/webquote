@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaUser, FaLock, FaSpinner, FaExclamationTriangle, FaEye, FaEyeSlash } from 'react-icons/fa'
 
 function LoginContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   
   const [username, setUsername] = useState('')
@@ -41,6 +40,12 @@ function LoginContent() {
         redirect: false,
       })
 
+      if (!result) {
+        setError('No se pudo completar el inicio de sesión. Intenta de nuevo.')
+        setLoading(false)
+        return
+      }
+
       if (result?.error) {
         // Manejar errores específicos
         if (result.error === 'CredentialsSignin') {
@@ -53,11 +58,15 @@ function LoginContent() {
       }
 
       if (result?.ok) {
-        // ✅ Usar router de Next.js con refresh
-        router.push(callbackUrl)
-        router.refresh()
-        // Mantener loading=true hasta que la navegación complete
+        // Navegar usando la URL que devuelve NextAuth si existe (más robusto)
+        const targetUrl = result.url || callbackUrl
+        window.location.assign(targetUrl)
+        return
       }
+
+      // Caso inesperado: sin error y sin ok
+      setError('No se pudo iniciar sesión. Intenta de nuevo.')
+      setLoading(false)
     } catch (err) {
       console.error('[LOGIN] Error:', err)
       setError('Error al iniciar sesión. Intenta de nuevo.')
