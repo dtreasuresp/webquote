@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, Suspense } from 'react'
 import { signIn } from 'next-auth/react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaUser, FaLock, FaSpinner, FaExclamationTriangle, FaEye, FaEyeSlash } from 'react-icons/fa'
 
 function LoginContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   
   const [username, setUsername] = useState('')
@@ -31,21 +32,32 @@ function LoginContent() {
     setLoading(true)
 
     try {
-      // ✅ SIMPLIFICADO: redirect=true deja que NextAuth maneje TODO
-      // NextAuth redirigirá automáticamente después de autenticación exitosa
       const callbackUrl = searchParams.get('callbackUrl') || '/'
       
-      await signIn('credentials', {
+      // ✅ redirect=false para capturar errores
+      const result = await signIn('credentials', {
         username,
         password,
-        callbackUrl,
-        redirect: true, // ← NextAuth maneja la redirección completamente
+        redirect: false,
       })
-      
-      // Si llegamos aquí, significa que hubo un error
-      // (signIn con redirect=true solo retorna si falla)
-      setError('Error al iniciar sesión')
-      setLoading(false)
+
+      if (result?.error) {
+        // Manejar errores específicos
+        if (result.error === 'CredentialsSignin') {
+          setError('Usuario o contraseña incorrectos')
+        } else {
+          setError(result.error)
+        }
+        setLoading(false)
+        return
+      }
+
+      if (result?.ok) {
+        // ✅ Usar router de Next.js con refresh
+        router.push(callbackUrl)
+        router.refresh()
+        // Mantener loading=true hasta que la navegación complete
+      }
     } catch (err) {
       console.error('[LOGIN] Error:', err)
       setError('Error al iniciar sesión. Intenta de nuevo.')
