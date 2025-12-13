@@ -28,11 +28,6 @@ interface PackageSnapshot {
   id: string
   nombre: string
   serviciosBase: ServicioBase[]
-  gestion: {
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-  }
   paquete: {
     desarrollo: number
     descuento: number
@@ -443,9 +438,6 @@ export default function ObraMaestraPage() {
             className="bg-gradient-to-br from-accent/10 to-accent/20 p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow border-2 border-accent mt-6"
           >
             <p className="text-gray-800">
-              <strong>💳 Gestión mensual:</strong> ${snapshotObraMaestra?.gestion.precio || 12}/mes desde el mes {snapshotObraMaestra?.gestion.mesesGratis ? snapshotObraMaestra.gestion.mesesGratis + 1 : 2} (facturación separada). El primer mes de despliegue en internet es gratis
-            </p>
-            <p className="text-gray-800 mt-4">
               <strong>💳 Pago inicial: </strong>El costo total del pago inicial es la suma del desarrollo inicial (restando los descuentos si procede) y la infraestructura.
             </p>
             <p className="text-gray-800 mt-4">

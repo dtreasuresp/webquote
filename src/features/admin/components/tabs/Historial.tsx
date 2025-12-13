@@ -1,11 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaChevronDown, FaEdit, FaTrash, FaEye, FaToggleOn, FaToggleOff } from 'react-icons/fa'
+import { ChevronDown, Edit, Trash2, Eye, History, Check } from 'lucide-react'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import type { QuotationConfig, PackageSnapshot } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
+import { extractBaseQuotationNumber } from '@/lib/utils/quotationNumber'
 import { useEventTracking } from '@/features/admin/hooks'
+import DialogoGenerico from '../DialogoGenerico'
+import DialogoGenericoDinamico from '../DialogoGenericoDinamico'
+import CotizacionTimeline from '../CotizacionTimeline'
+import CotizacionComparison from '../CotizacionComparison'
+import { PaquetesComparisonContent } from '../comparisons/PaquetesComparisonContent'
 
 interface HistorialProps {
   snapshots: PackageSnapshot[]
@@ -14,6 +21,22 @@ interface HistorialProps {
   onDelete?: (quotationId: string) => void
   onToggleActive?: (quotationId: string, status: { activo: boolean; isGlobal: boolean }) => void
   onViewProposal?: (quotation: QuotationConfig) => void
+  onRestaurarVersion?: (version: QuotationConfig) => void
+  onDuplicarVersion?: (version: QuotationConfig) => void
+  /** Mostrar botón de activar en modo selección post-eliminación */
+  showActivateButton?: boolean
+  /** Handler para activar cotización desde modo selección */
+  onActivarCotizacion?: (quotationId: string) => void
+}
+
+/**
+ * Tipo para agrupar cotizaciones por número base
+ */
+interface CotizacionAgrupada {
+  numeroBase: string
+  versionActiva: QuotationConfig
+  todasLasVersiones: QuotationConfig[]
+  totalVersiones: number
 }
 
 export default function Historial({
@@ -23,8 +46,24 @@ export default function Historial({
   onDelete,
   onToggleActive,
   onViewProposal,
+  onRestaurarVersion,
+  onDuplicarVersion,
+  showActivateButton = false,
+  onActivarCotizacion,
 }: HistorialProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  
+  // Estados para el timeline
+  const [showTimeline, setShowTimeline] = useState(false)
+  const [selectedQuotation, setSelectedQuotation] = useState<QuotationConfig | null>(null)
+  
+  // Estados para comparación
+  const [showComparacion, setShowComparacion] = useState(false)
+  const [versionesParaComparar, setVersionesParaComparar] = useState<[QuotationConfig, QuotationConfig] | null>(null)
+  
+  // Estados para comparación de paquetes
+  const [showComparacionPaquetes, setShowComparacionPaquetes] = useState(false)
+  const [versionesParaCompararPaquetes, setVersionesParaCompararPaquetes] = useState<[QuotationConfig, QuotationConfig] | null>(null)
   
   // Hook de tracking
   const { 
@@ -36,11 +75,51 @@ export default function Historial({
     trackCotizacionDeactivated,
     trackCotizacionDeleted
   } = useEventTracking()
+
+  /**
+   * Agrupar cotizaciones por número base
+   * Solo mostrar una fila por número de cotización único
+   */
+  const cotizacionesAgrupadas = useMemo((): CotizacionAgrupada[] => {
+    // Agrupar por número base (sin la versión)
+    const grupos = new Map<string, QuotationConfig[]>()
+    
+    for (const q of quotations) {
+      const numeroBase = extractBaseQuotationNumber(q.numero)
+      if (!grupos.has(numeroBase)) {
+        grupos.set(numeroBase, [])
+      }
+      grupos.get(numeroBase)!.push(q)
+    }
+    
+    // Convertir a array de grupos, ordenar versiones y elegir la activa
+    const resultado: CotizacionAgrupada[] = []
+    
+    for (const [numeroBase, versiones] of grupos) {
+      // Ordenar por versionNumber descendente
+      const versionesOrdenadas = [...versiones].sort((a, b) => b.versionNumber - a.versionNumber)
+      
+      // La versión activa es la que tiene isGlobal: true, o la más reciente
+      const versionActiva = versionesOrdenadas.find(v => v.isGlobal) || versionesOrdenadas[0]
+      
+      resultado.push({
+        numeroBase,
+        versionActiva,
+        todasLasVersiones: versionesOrdenadas,
+        totalVersiones: versionesOrdenadas.length
+      })
+    }
+    
+    // Ordenar grupos por fecha de actualización más reciente
+    return resultado.sort((a, b) => 
+      new Date(b.versionActiva.updatedAt).getTime() - new Date(a.versionActiva.updatedAt).getTime()
+    )
+  }, [quotations])
   
   // Trackear cuando se visualiza el historial
   useEffect(() => {
-    trackHistorialViewed(quotations.length)
-  }, [quotations.length, trackHistorialViewed])
+    trackHistorialViewed(cotizacionesAgrupadas.length)
+  }, [cotizacionesAgrupadas.length, trackHistorialViewed])
 
   const toggleExpanded = useCallback((id: string, numero?: string) => {
     const newSet = new Set(expandedIds)
@@ -74,6 +153,73 @@ export default function Historial({
     onDelete?.(quotationId)
   }, [onDelete, trackCotizacionDeleted])
 
+  // Handler para abrir timeline
+  const handleShowTimeline = useCallback((quotation: QuotationConfig) => {
+    setSelectedQuotation(quotation)
+    setShowTimeline(true)
+  }, [])
+
+  // Handler para cerrar timeline
+  const handleCloseTimeline = useCallback(() => {
+    setShowTimeline(false)
+    setSelectedQuotation(null)
+  }, [])
+
+  // Handler para restaurar versión
+  const handleRestaurarVersion = useCallback((version: QuotationConfig) => {
+    onRestaurarVersion?.(version)
+    handleCloseTimeline()
+  }, [onRestaurarVersion, handleCloseTimeline])
+
+  // Handler para duplicar versión
+  const handleDuplicarVersion = useCallback((version: QuotationConfig) => {
+    onDuplicarVersion?.(version)
+    handleCloseTimeline()
+  }, [onDuplicarVersion, handleCloseTimeline])
+
+  // Handler para comparar versiones
+  const handleCompararVersiones = useCallback((v1: QuotationConfig, v2: QuotationConfig) => {
+    // Ordenar por versionNumber: v1 siempre es la más antigua
+    const [older, newer] = v1.versionNumber < v2.versionNumber 
+      ? [v1, v2] 
+      : [v2, v1]
+    
+    setVersionesParaComparar([older, newer])
+    setShowComparacion(true)
+    // Cerrar el timeline al abrir comparación
+    handleCloseTimeline()
+  }, [handleCloseTimeline])
+
+  // Handler para cerrar comparación
+  const handleCloseComparacion = useCallback(() => {
+    setShowComparacion(false)
+    setVersionesParaComparar(null)
+  }, [])
+
+  // Handler para comparar paquetes entre versiones
+  const handleCompararPaquetes = useCallback((v1: QuotationConfig, v2: QuotationConfig) => {
+    // Ordenar por versionNumber: v1 siempre es la más antigua
+    const [older, newer] = v1.versionNumber < v2.versionNumber 
+      ? [v1, v2] 
+      : [v2, v1]
+    
+    setVersionesParaCompararPaquetes([older, newer])
+    setShowComparacionPaquetes(true)
+    // Cerrar el timeline al abrir comparación de paquetes
+    handleCloseTimeline()
+  }, [handleCloseTimeline])
+
+  // Handler para cerrar comparación de paquetes
+  const handleCloseComparacionPaquetes = useCallback(() => {
+    setShowComparacionPaquetes(false)
+    setVersionesParaCompararPaquetes(null)
+  }, [])
+
+  // Obtener versiones de la cotización seleccionada (mismo número base, sin versión)
+  const versionesSeleccionadas = selectedQuotation 
+    ? quotations.filter(q => extractBaseQuotationNumber(q.numero) === extractBaseQuotationNumber(selectedQuotation.numero))
+    : []
+
   if (quotations.length === 0) {
     return (
       <div className="text-center py-12">
@@ -87,36 +233,54 @@ export default function Historial({
 
   return (
     <div className="p-6 space-y-4">
-      <div className="space-y-0 border border-gh-border rounded-lg overflow-hidden bg-gh-bg">
+      <div className="space-y-0 border border-gh-border/30 rounded-lg overflow-hidden bg-gh-bg">
         {/* Encabezado de la tabla - Estilo GitHub */}
-        <div className="bg-gh-bg-secondary border-b border-gh-border px-4 py-3 grid grid-cols-6 gap-2 text-xs font-semibold text-gh-text">
+        <div className="text-center bg-gh-bg-secondary border-b border-gh-border px-4 py-3 grid grid-cols-[1fr_0.5fr_1fr_1.4fr_1fr_1fr_1fr] gap-2 text-xs font-semibold text-gh-text">
           <div>Número</div>
-          <div>Versión</div>
+          <div>Versiones</div>
           <div>Empresa</div>
           <div>Profesional</div>
+          <div>Creada</div>
           <div>Última Actualización</div>
-          <div className="text-center">Acción</div>
+          <div>Acción</div>
         </div>
 
-        {/* Filas de cotizaciones */}
-        {quotations.map((quotation) => {
+        {/* Filas de cotizaciones - Agrupadas por número */}
+        {cotizacionesAgrupadas.map((grupo) => {
+          const quotation = grupo.versionActiva
           const isExpanded = expandedIds.has(quotation.id)
+          // Obtener paquetes de la versión activa
           const quotationSnapshots = snapshots.filter(
             (s) => s.quotationConfigId === quotation.id
           )
           // Filtrar solo paquetes ACTIVOS para "PAQUETES CONFIGURADOS"
           const paquetesConfigurados = quotationSnapshots.filter(s => s.activo)
 
+          // Calcular fecha de creación de la PRIMERA versión
+          const primeraVersion = grupo.todasLasVersiones[grupo.todasLasVersiones.length - 1]
+          const fechaCreacionOriginal = primeraVersion.createdAt
+
+          // Calcular fecha de actualización de la ÚLTIMA versión (más reciente)
+          const ultimaVersion = grupo.todasLasVersiones[0]
+          const fechaActualizacionReciente = ultimaVersion.updatedAt
+
           return (
-            <div key={quotation.id} className="border-b border-gh-border last:border-b-0">
+            <div key={grupo.numeroBase} className="border-b border-gh-border last:border-b-0">
               {/* Fila principal - Tabla de resumen */}
               <div className="bg-gh-bg hover:bg-gh-bg-secondary transition-colors px-4 py-3">
-                <div className="grid grid-cols-6 gap-2 items-center text-sm">
-                  {/* Número */}
-                  <div className="text-gh-text font-semibold">#{quotation.numero}</div>
+                <div className="text-center grid grid-cols-[1fr_0.5fr_1fr_1.4fr_1fr_1fr_1fr] gap-2 items-center text-sm">
+                  {/* Número base (sin versión) */}
+                  <div className="text-gh-text font-semibold">#{grupo.numeroBase}</div>
 
-                  {/* Versión */}
-                  <div className="text-gh-text-muted">v.{quotation.versionNumber}</div>
+                  {/* Total de versiones con badge */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-gh-text-muted">v.{quotation.versionNumber}</span>
+                    {grupo.totalVersiones > 1 && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold">
+                        +{grupo.totalVersiones - 1}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Empresa */}
                   <div className="text-gh-text-muted truncate" title={quotation.empresa}>
@@ -128,13 +292,26 @@ export default function Historial({
                     {quotation.profesional || '—'}
                   </div>
 
-                  {/* Fecha */}
-                  <div className="text-gh-text-muted text-xs">
-                    {new Date(quotation.updatedAt).toLocaleDateString('es-CO', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: '2-digit',
-                    })}
+                  {/* Fecha de Creación (Primera Versión) */}
+                  <div className="text-gh-text-muted text-xs flex items-center justify-center py-1 px-2 bg-gh-bg-secondary rounded border border-gh-border/30">
+                    <span className="font-semibold text-gh-text">
+                      {new Date(fechaCreacionOriginal).toLocaleDateString('es-CO', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: '2-digit',
+                      })}
+                    </span>
+                  </div>
+
+                  {/* Fecha de Última Actualización (Última Versión) */}
+                  <div className="text-gh-text-muted text-xs flex items-center justify-center py-1 px-2 bg-gh-bg-secondary rounded border border-gh-border/30">
+                    <span className="font-semibold text-gh-text">
+                      {new Date(fechaActualizacionReciente).toLocaleDateString('es-CO', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: '2-digit',
+                      })}
+                    </span>
                   </div>
 
                   {/* Estado y Expandir */}
@@ -151,7 +328,7 @@ export default function Historial({
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       className="text-gh-text-muted hover:text-gh-text transition-colors p-1 rounded hover:bg-gh-border"
                     >
-                      <FaChevronDown size={14} />
+                      <ChevronDown className="w-3.5 h-3.5" />
                     </motion.button>
                   </div>
                 </div>
@@ -168,19 +345,25 @@ export default function Historial({
                     className="bg-gh-bg-secondary border-t border-gh-border overflow-hidden"
                   >
                     <div className="px-4 py-4 space-y-4">
-                      {/* SECCIÓN A: Información de Versión de la Cotización */}
+                      {/* SECCIÓN A: Información de Versión de la Cotización - AHORA CON TODAS LAS VERSIONES */}
                       <div>
                         <h4 className="text-xs font-semibold text-gh-text mb-3 flex items-center gap-2">
                           📌 VERSIÓN DE LA COTIZACIÓN
+                          {grupo.totalVersiones > 1 && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400">
+                              {grupo.totalVersiones} versiones
+                            </span>
+                          )}
                         </h4>
-                        <div className="bg-gh-bg rounded-lg border border-gh-border p-3">
+                        <div className="bg-gh-bg rounded-lg border border-gh-border/30 p-3">
+                          {/* Versión activa */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="inline-flex items-center justify-center px-2.5 py-1 bg-purple-500/10 border border-purple-500/30 rounded-md text-purple-400 font-mono text-sm font-bold">
                                 v.{quotation.versionNumber}
                               </span>
                               <div>
-                                <p className="text-xs text-gh-text font-medium">Versión actual</p>
+                                <p className="text-xs text-gh-text font-medium">Versión {quotation.isGlobal ? 'activa' : 'más reciente'}</p>
                                 <p className="text-[10px] text-gh-text-muted flex items-center gap-1 mt-0.5">
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -206,7 +389,37 @@ export default function Historial({
                               </p>
                             </div>
                           </div>
-                          {quotation.versionNumber > 1 && (
+                          
+                          {/* Lista de versiones anteriores */}
+                          {grupo.totalVersiones > 1 && (
+                            <div className="mt-3 pt-3 border-t border-gh-border">
+                              <p className="text-[10px] text-gh-text-muted mb-2">
+                                Versiones anteriores ({grupo.totalVersiones - 1}):
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {grupo.todasLasVersiones
+                                  .filter(v => v.id !== quotation.id)
+                                  .map(v => (
+                                    <span 
+                                      key={v.id}
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 bg-gh-bg-secondary border border-gh-border/30 rounded text-[10px] text-gh-text-muted"
+                                      title={`Actualizada: ${new Date(v.updatedAt).toLocaleDateString('es-CO')}`}
+                                    >
+                                      v.{v.versionNumber}
+                                      <span className="text-[8px] opacity-60">
+                                        ({new Date(v.updatedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })})
+                                      </span>
+                                    </span>
+                                  ))
+                                }
+                              </div>
+                              <p className="text-[10px] text-gh-text-muted italic mt-2">
+                                💡 Use el botón &quot;Historial&quot; para restaurar o comparar versiones anteriores
+                              </p>
+                            </div>
+                          )}
+                          
+                          {grupo.totalVersiones === 1 && quotation.versionNumber > 1 && (
                             <div className="mt-2 pt-2 border-t border-gh-border">
                               <p className="text-[10px] text-gh-text-muted italic">
                                 Esta cotización ha sido editada {quotation.versionNumber - 1} {quotation.versionNumber === 2 ? 'vez' : 'veces'} desde su creación.
@@ -216,13 +429,13 @@ export default function Historial({
                         </div>
                       </div>
 
-                      {/* SECCIÓN B: Paquetes Configurados - Grid 2 columnas simplificado */}
+                      {/* SECCIÓN B: Paquetes Configurados - Grid 3 columnas simplificado */}
                       <div>
                         <h4 className="text-xs font-semibold text-gh-text mb-3 flex items-center gap-2">
                           📦 PAQUETES CONFIGURADOS ({paquetesConfigurados.length})
                         </h4>
                         {paquetesConfigurados.length > 0 ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {paquetesConfigurados.map((snapshot) => {
                               // Calcular preview de descuentos para este snapshot
                               const preview = calcularPreviewDescuentos(snapshot)
@@ -322,12 +535,23 @@ export default function Historial({
                       <div className="border-t border-gh-border pt-3">
                         <h4 className="text-xs font-semibold text-gh-text mb-3">ACCIONES</h4>
                         <div className="flex flex-wrap gap-2">
+                          {/* Botón Activar - Solo visible en modo selección post-eliminación */}
+                          {showActivateButton && !quotation.isGlobal && (
+                            <button
+                              onClick={() => onActivarCotizacion?.(quotation.id)}
+                              className="flex items-center gap-1.5 px-4 py-2 bg-gh-success hover:bg-gh-success-hover text-white text-xs font-bold rounded-md transition-colors shadow-lg"
+                              title="Activar esta cotización"
+                            >
+                              <Check className="w-3 h-3" /> Activar Esta
+                            </button>
+                          )}
+
                           <button
                             onClick={() => onEdit?.(quotation)}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-bg hover:bg-gh-border text-gh-text text-xs font-semibold rounded-md border border-gh-border transition-colors"
                             title="Editar cotización"
                           >
-                            <FaEdit size={12} /> Editar
+                            <Edit className="w-3 h-3" /> Editar
                           </button>
 
                           <button
@@ -335,7 +559,15 @@ export default function Historial({
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-md border border-purple-500/30 transition-colors"
                             title="Ver propuesta"
                           >
-                            <FaEye size={12} /> Ver
+                            <Eye className="w-3 h-3" /> Ver
+                          </button>
+
+                          <button
+                            onClick={() => handleShowTimeline(quotation)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-md border border-blue-500/30 transition-colors"
+                            title="Ver historial de versiones"
+                          >
+                            <History className="w-3 h-3" /> Historial
                           </button>
 
                           <button
@@ -343,7 +575,7 @@ export default function Historial({
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold rounded-md border border-red-500/30 transition-colors"
                             title="Eliminar cotización"
                           >
-                            <FaTrash size={12} /> Eliminar
+                            <Trash2 className="w-3 h-3" /> Eliminar
                           </button>
 
                           <button
@@ -360,15 +592,15 @@ export default function Historial({
                             }`}
                             title={quotation.isGlobal ? 'Desactivar' : 'Activar'}
                           >
-                            {quotation.isGlobal ? (
-                              <>
-                                <FaToggleOn size={12} /> Desactivar
-                              </>
-                            ) : (
-                              <>
-                                <FaToggleOff size={12} /> Activar
-                              </>
-                            )}
+                            <div className="min-w-[100px]">
+                        <ToggleItem
+                          enabled={quotation.isGlobal}
+                          onChange={(v) => handleToggleActive(quotation.id, { activo: v, isGlobal: v }, quotation.numero)}
+                          title={quotation.isGlobal ? 'Global' : 'Local'}
+                          description={quotation.isGlobal ? 'Desactivar visibilidad global' : 'Activar visibilidad global'}
+                          showBadge={false}
+                        />
+                      </div>
                           </button>
                         </div>
                       </div>
@@ -380,6 +612,70 @@ export default function Historial({
           )
         })}
       </div>
+
+      {/* Modal de Timeline de Cotización */}
+      {showTimeline && selectedQuotation && (
+        <DialogoGenerico
+          isOpen={showTimeline}
+          onClose={handleCloseTimeline}
+          title={`Historial de Cotización #${selectedQuotation.numero}`}
+          icon={History}
+          size="2xl"
+          type="info"
+          variant="premium"
+        >
+          <CotizacionTimeline
+            cotizacionActual={selectedQuotation}
+            versiones={versionesSeleccionadas}
+            onRestaurar={handleRestaurarVersion}
+            onDuplicar={handleDuplicarVersion}
+            onComparar={handleCompararVersiones}
+            onCompararPaquetes={handleCompararPaquetes}
+            showActivateButton={showActivateButton}
+            onActivarCotizacion={onActivarCotizacion}
+          />
+        </DialogoGenerico>
+      )}
+
+      {/* Modal de Comparación de Cotizaciones */}
+      <AnimatePresence>
+        {showComparacion && versionesParaComparar && (
+          <CotizacionComparison
+            cotizacion1={versionesParaComparar[0]}
+            cotizacion2={versionesParaComparar[1]}
+            snapshots1={snapshots.filter(s => s.quotationConfigId === versionesParaComparar[0].id)}
+            snapshots2={snapshots.filter(s => s.quotationConfigId === versionesParaComparar[1].id)}
+            onClose={handleCloseComparacion}
+            onRestaurar={onRestaurarVersion}
+            showRestaurarButton={!!onRestaurarVersion}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Comparación de Paquetes - Usando DialogoGenericoDinamico */}
+      {showComparacionPaquetes && versionesParaCompararPaquetes && (
+        <DialogoGenericoDinamico
+          isOpen={showComparacionPaquetes}
+          onClose={handleCloseComparacionPaquetes}
+          title="Comparación de Paquetes"
+          description={`Comparando paquetes entre v${versionesParaCompararPaquetes[0].versionNumber || 1} y v${versionesParaCompararPaquetes[1].versionNumber || 1}`}
+          contentType="custom"
+          content={
+            <PaquetesComparisonContent
+              cotizacion1={versionesParaCompararPaquetes[0]}
+              cotizacion2={versionesParaCompararPaquetes[1]}
+              snapshots1={snapshots.filter(s => s.quotationConfigId === versionesParaCompararPaquetes[0].id)}
+              snapshots2={snapshots.filter(s => s.quotationConfigId === versionesParaCompararPaquetes[1].id)}
+            />
+          }
+          size="xl"
+          type="info"
+          variant="premium"
+          maxHeight="85vh"
+        />
+      )}
     </div>
   )
 }
+
+

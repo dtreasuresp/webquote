@@ -6,8 +6,6 @@ export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
-    await prisma.$queryRaw`SELECT 1`
-    
     const snapshots = await prisma.packageSnapshot.findMany({
       orderBy: { createdAt: 'desc' },
     })

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import AuthProvider from '@/components/providers/AuthProvider'
 import '../styles/globals.css'
 import '../styles/modal-scroll.css'
 
@@ -33,7 +34,9 @@ export default function RootLayout({
   return (
     <html lang="es" className={`scroll-smooth ${inter.variable}`}>
       <body className={`${inter.className} antialiased`}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Analytics />
         <SpeedInsights />
       </body>

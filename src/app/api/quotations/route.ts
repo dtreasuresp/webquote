@@ -1,19 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+// Forzar que esta ruta sea dinámica (no cacheada)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 /**
  * GET /api/quotations
  * Obtiene todas las QuotationConfig ordenadas por fecha
+ * OPTIMIZADO: Solo campos esenciales para listado (excluye JSON pesados como contenidoGeneral)
  */
 export async function GET(request: NextRequest) {
   try {
-    await prisma.$queryRaw`SELECT 1`
-    
+    // Seleccionar solo campos necesarios para el listado
+    // Excluimos: contenidoGeneral (~463KB por versión), packagesSnapshot, estilosConfig, etc.
     const quotations = await prisma.quotationConfig.findMany({
-      include: {
-        snapshots: {
-          orderBy: { createdAt: 'desc' },
-        },
+      select: {
+        id: true,
+        numero: true,
+        versionNumber: true,
+        isGlobal: true,
+        activo: true,
+        // Datos del cliente
+        empresa: true,
+        sector: true,
+        ubicacion: true,
+        emailCliente: true,
+        whatsappCliente: true,
+        // Datos del proveedor
+        profesional: true,
+        empresaProveedor: true,
+        emailProveedor: true,
+        whatsappProveedor: true,
+        ubicacionProveedor: true,
+        // Fechas y configuración básica
+        fechaEmision: true,
+        fechaVencimiento: true,
+        tiempoValidez: true,
+        tiempoVigenciaValor: true,
+        tiempoVigenciaUnidad: true,
+        presupuesto: true,
+        moneda: true,
+        // Hero
+        heroTituloMain: true,
+        heroTituloSub: true,
+        // Timestamps
+        createdAt: true,
+        updatedAt: true,
+        // Templates ligeros (necesarios para edición)
+        serviciosBaseTemplate: true,
+        serviciosOpcionalesTemplate: true,
+        opcionesPagoTemplate: true,
+        configDescuentosTemplate: true,
+        descripcionesPaqueteTemplates: true,
+        metodoPagoPreferido: true,
+        notasPago: true,
+        metodosPreferidos: true,
+        // Nota: Excluimos intencionalmente:
+        // - contenidoGeneral (contiene imagen base64 de ~463KB)
+        // - packagesSnapshot (JSON histórico pesado)
+        // - estilosConfig (raramente necesario en listado)
+        // - editorState (estado interno del editor)
       },
       orderBy: { updatedAt: 'desc' },
     })

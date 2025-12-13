@@ -60,7 +60,6 @@ export function compararSnapshots(
     'costos.inicial',
     'costos.año1',
     'costos.año2',
-    'gestion.precio',
   ]
 
   camposComparar.forEach((campo) => {

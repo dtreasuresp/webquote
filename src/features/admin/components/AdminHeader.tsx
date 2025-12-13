@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { FaSave, FaFileDownload, FaPlus, FaCog, FaEllipsisV } from 'react-icons/fa'
+import { Save, FileDown, Plus, Settings, MoreVertical } from 'lucide-react'
 import { useToast } from '@/features/admin/hooks/useToast'
 
 export interface AdminHeaderProps {
@@ -72,7 +72,7 @@ export default function AdminHeader({
               {quoteName}
             </h1>
             {hasChanges && (
-              <p className="text-sm text-gh-text-secondary">
+              <p className="text-xs font-medium text-gh-text-secondary">
                 Cambios sin guardar
               </p>
             )}
@@ -98,7 +98,7 @@ export default function AdminHeader({
             `}
             title={hasChanges ? 'Guardar cambios' : 'Sin cambios para guardar'}
           >
-            <FaSave className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
+            <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">
               {isSaving ? 'Guardando...' : 'Guardar'}
             </span>
@@ -118,7 +118,7 @@ export default function AdminHeader({
             `}
             title="Descargar como PDF"
           >
-            <FaFileDownload className={`w-4 h-4 ${isPdfGenerating ? 'animate-spin' : ''}`} />
+            <FileDown className={`w-4 h-4 ${isPdfGenerating ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">
               {isPdfGenerating ? 'Generando...' : 'PDF'}
             </span>
@@ -136,7 +136,7 @@ export default function AdminHeader({
             `}
             title="Crear nueva cotización"
           >
-            <FaPlus className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Nueva</span>
           </button>
 
@@ -152,7 +152,7 @@ export default function AdminHeader({
             `}
             title="Configuración"
           >
-            <FaCog className="w-4 h-4" />
+            <Settings className="w-4 h-4" />
           </button>
 
           {/* Menu Button */}
@@ -168,7 +168,7 @@ export default function AdminHeader({
               `}
               title="Más opciones"
             >
-              <FaEllipsisV className="w-4 h-4" />
+              <MoreVertical className="w-4 h-4" />
             </button>
 
             {/* Dropdown Menu */}
@@ -229,3 +229,5 @@ export default function AdminHeader({
     </header>
   )
 }
+
+

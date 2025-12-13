@@ -2,7 +2,8 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaCreditCard, FaPercent, FaCheckCircle } from 'react-icons/fa'
+import { CreditCard, Percent, CheckCircle } from 'lucide-react'
+import { DropdownSelect } from '@/components/ui/DropdownSelect'
 
 export interface PagoContentProps {
   descuentoPaquete: number
@@ -35,16 +36,16 @@ export default function PagoContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gh-text flex items-center gap-2 uppercase tracking-wide">
-          <FaCreditCard className="text-gh-success" /> Opciones de Pago
+        <h4 className="text-sm font-semibold text-gh-text flex items-center gap-2">
+          <CreditCard className="text-gh-success" /> Opciones de Pago
         </h4>
         {tieneDescuento ? (
           <span className="text-xs px-2 py-1 rounded bg-gh-success/10 text-gh-success flex items-center gap-1.5">
-            <FaPercent size={10} /> {descuentoPaquete}% descuento
+            <Percent className="w-3 h-3" /> {descuentoPaquete}% descuento
           </span>
         ) : (
           <span className="text-xs px-2 py-1 rounded bg-gh-bg-secondary text-gh-text-muted">
@@ -54,10 +55,10 @@ export default function PagoContent({
       </div>
 
       {/* Formulario */}
-      <div className="space-y-4 p-6 bg-gh-bg-overlay border border-gh-border rounded-lg">
+      <div className="space-y-4 p-6 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="descuento" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+            <label htmlFor="descuento" className="block font-medium text-xs mb-2 text-gh-text">
               Descuento del Paquete (%)
             </label>
             <input
@@ -67,30 +68,28 @@ export default function PagoContent({
               max={100}
               value={descuentoPaquete}
               onChange={(e) => setDescuentoPaquete(Math.min(100, Math.max(0, Number.parseFloat(e.target.value) || 0)))}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-sm text-gh-text outline-none transition"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs font-medium text-gh-text outline-none transition"
             />
             <p className="text-gh-text-muted text-xs mt-2">Descuento aplicado al total de la cotización</p>
           </div>
           <div>
-            <label htmlFor="metodoPago" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
-              Método de Pago Preferido
-            </label>
-            <select
+            <DropdownSelect
               id="metodoPago"
+              label="Método de Pago Preferido"
               value={metodoPagoPreferido || ''}
-              onChange={(e) => setMetodoPagoPreferido?.(e.target.value)}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-sm text-gh-text outline-none transition"
-            >
-              <option value="">Selecciona un método</option>
-              <option value="transferencia">Transferencia Bancaria</option>
-              <option value="tarjeta">Tarjeta de Crédito/Débito</option>
-              <option value="cheque">Cheque</option>
-            </select>
+              onChange={(val) => setMetodoPagoPreferido?.(val)}
+              options={[
+                { value: '', label: 'Selecciona un método' },
+                { value: 'transferencia', label: 'Transferencia Bancaria' },
+                { value: 'tarjeta', label: 'Tarjeta de Crédito/Débito' },
+                { value: 'cheque', label: 'Cheque' }
+              ]}
+            />
           </div>
         </div>
 
         <div>
-          <label htmlFor="notas" className="block font-medium text-xs mb-2 uppercase tracking-wide text-gh-text">
+          <label htmlFor="notas" className="block font-medium text-xs mb-2 text-gh-text">
             Notas de Pago
           </label>
           <textarea
@@ -99,7 +98,7 @@ export default function PagoContent({
             placeholder="Ej: Pago inicial del 50%, resto a la entrega..."
             value={notasPago || ''}
             onChange={(e) => setNotasPago?.(e.target.value)}
-            className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-sm text-gh-text outline-none transition resize-none"
+            className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs font-medium text-gh-text outline-none transition resize-none"
           />
           <p className="text-gh-text-muted text-xs mt-2">Condiciones o términos adicionales de pago</p>
         </div>
@@ -119,10 +118,12 @@ export default function PagoContent({
         </span>
         {tieneDescuento && (
           <span className="text-gh-success flex items-center gap-1.5">
-            <FaCheckCircle size={12} /> Descuento configurado
+            <CheckCircle className="w-3 h-3" /> Descuento configurado
           </span>
         )}
       </div>
     </motion.div>
   )
 }
+
+

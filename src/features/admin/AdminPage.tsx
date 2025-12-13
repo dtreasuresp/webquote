@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useState, useEffect, useCallback } from 'react'
-import { FaArrowLeft } from 'react-icons/fa'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import Navigation from '@/components/layout/Navigation'
 import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
@@ -12,7 +12,7 @@ import { useSnapshotsRefresh } from '@/features/admin/hooks/useSnapshots'
 import { useQuotationCache } from '@/hooks'
 import { SyncStatusIndicator } from '@/features/admin/components/SyncStatusIndicator'
 import type { ConflictInfo, ConflictResolution } from '@/lib/cache/types'
-import { FaExclamationTriangle, FaCloud, FaDesktop, FaCodeBranch } from 'react-icons/fa'
+import { AlertTriangle, Cloud, Monitor, GitBranch } from 'lucide-react'
 
 // Hooks del admin
 import { useAdminState, useAdvancedValidation, useEventTracking } from './hooks'
@@ -47,8 +47,6 @@ function AdminPageContent() {
     setCotizacionConfig,
     serviciosBase,
     setServiciosBase,
-    gestion,
-    setGestion,
     paqueteActual,
     setPaqueteActual,
     serviciosOpcionales,
@@ -188,10 +186,9 @@ function AdminPageContent() {
             if (config.serviciosOpcionalesTemplate) {
               setServiciosOpcionales(config.serviciosOpcionalesTemplate)
             }
-            // Cargar gestión y paquete si están en editorState
+            // Cargar paquete si está en editorState
             if (config.editorState) {
-              const editorState = config.editorState as { gestion?: typeof gestion; paqueteActual?: typeof paqueteActual }
-              if (editorState.gestion) setGestion(editorState.gestion)
+              const editorState = config.editorState as { paqueteActual?: typeof paqueteActual }
               if (editorState.paqueteActual) setPaqueteActual(editorState.paqueteActual)
             }
           }
@@ -286,7 +283,6 @@ function AdminPageContent() {
         serviciosBaseTemplate: serviciosBase,
         serviciosOpcionalesTemplate: serviciosOpcionales,
         editorState: {
-          gestion,
           paqueteActual,
           timestamp: new Date().toISOString(),
         },
@@ -454,7 +450,7 @@ function AdminPageContent() {
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-3 bg-gh-btn-secondary text-gh-text rounded-lg hover:bg-gh-bg transition-all flex items-center gap-2 font-semibold border border-gh-border backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-gh-border focus-visible:ring-offset-2 focus-visible:ring-offset-gh-bg-absolute"
               >
-                <FaArrowLeft /> Volver
+                <ArrowLeft /> Volver
               </motion.button>
             </Link>
           </div>
@@ -481,7 +477,6 @@ function AdminPageContent() {
               setSnapshots={setSnapshots}
               serviciosBase={serviciosBase}
               paqueteActual={paqueteActual}
-              gestion={gestion}
               todoEsValido={true}
               refreshSnapshots={refreshSnapshots}
             />
@@ -537,7 +532,7 @@ function AdminPageContent() {
         onClose={() => setShowConflictModal(false)}
         title="Conflicto de sincronización"
         description="Los datos han sido modificados en otra sesión"
-        icon={FaExclamationTriangle}
+        icon={AlertTriangle}
         variant="premium"
         type="warning"
         size="md"
@@ -558,7 +553,7 @@ function AdminPageContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 bg-gh-accent-blue/10 rounded-lg border border-gh-accent-blue/30">
                 <div className="flex items-center gap-2 mb-1">
-                  <FaDesktop className="w-4 h-4 text-gh-accent-blue" />
+                  <Monitor className="w-4 h-4 text-gh-accent-blue" />
                   <span className="text-sm font-medium text-gh-accent-blue">Tu versión local</span>
                 </div>
                 <p className="text-xs text-gh-accent-blue/80">Versión {pendingConflict.localVersion}</p>
@@ -568,7 +563,7 @@ function AdminPageContent() {
               </div>
               <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
                 <div className="flex items-center gap-2 mb-1">
-                  <FaCloud className="w-4 h-4 text-purple-400" />
+                  <Cloud className="w-4 h-4 text-purple-400" />
                   <span className="text-sm font-medium text-purple-400">Versión del servidor</span>
                 </div>
                 <p className="text-xs text-purple-400/80">Versión {pendingConflict.serverVersion}</p>
@@ -602,7 +597,7 @@ function AdminPageContent() {
                 className="w-full p-3 text-left border border-gh-border rounded-lg hover:border-gh-accent-blue hover:bg-gh-accent-blue/10 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <FaDesktop className="w-5 h-5 text-gh-text-secondary group-hover:text-gh-accent-blue" />
+                  <Monitor className="w-5 h-5 text-gh-text-secondary group-hover:text-gh-accent-blue" />
                   <div>
                     <p className="font-medium text-gh-text group-hover:text-gh-accent-blue">Mantener mis cambios</p>
                     <p className="text-xs text-gh-text-secondary">Sobrescribir la versión del servidor con tus cambios locales</p>
@@ -615,7 +610,7 @@ function AdminPageContent() {
                 className="w-full p-3 text-left border border-gh-border rounded-lg hover:border-purple-400 hover:bg-purple-500/10 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <FaCloud className="w-5 h-5 text-gh-text-secondary group-hover:text-purple-400" />
+                  <Cloud className="w-5 h-5 text-gh-text-secondary group-hover:text-purple-400" />
                   <div>
                     <p className="font-medium text-gh-text group-hover:text-purple-400">Usar versión del servidor</p>
                     <p className="text-xs text-gh-text-secondary">Descartar tus cambios y usar la versión más reciente</p>
@@ -628,7 +623,7 @@ function AdminPageContent() {
                 className="w-full p-3 text-left border border-gh-border rounded-lg hover:border-gh-accent-green hover:bg-gh-accent-green/10 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <FaCodeBranch className="w-5 h-5 text-gh-text-secondary group-hover:text-gh-accent-green" />
+                  <GitBranch className="w-5 h-5 text-gh-text-secondary group-hover:text-gh-accent-green" />
                   <div>
                     <p className="font-medium text-gh-text group-hover:text-gh-accent-green">Fusionar cambios</p>
                     <p className="text-xs text-gh-text-secondary">Intentar combinar ambas versiones automáticamente</p>

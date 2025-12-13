@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import type { PackageSnapshot } from '@/lib/types'
+import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
 // Colores corporativos RGB
 const COLORS = {
@@ -7,6 +8,36 @@ const COLORS = {
   accent: { r: 252, g: 211, b: 77 }, // #FCD34D
   dark: { r: 31, g: 41, b: 55 }, // neutral-800
   light: { r: 243, g: 244, b: 246 }, // neutral-100
+}
+
+/**
+ * Obtiene el descuento efectivo a mostrar en el PDF
+ * Usa el nuevo sistema configDescuentos si está disponible
+ */
+function getEffectiveDiscountForPDF(snapshot: PackageSnapshot): { value: number; label: string } | null {
+  const config = snapshot.paquete.configDescuentos
+  
+  if (!config || config.tipoDescuento === 'ninguno') {
+    return null
+  }
+
+  if (config.tipoDescuento === 'general') {
+    return {
+      value: config.descuentoGeneral.porcentaje,
+      label: `Descuento General: ${config.descuentoGeneral.porcentaje}%`
+    }
+  }
+
+  if (config.tipoDescuento === 'granular') {
+    const preview = calcularPreviewDescuentos(snapshot)
+    const ahorro = preview.porcentajeAhorro
+    return {
+      value: ahorro,
+      label: `Descuentos Aplicados (Ahorro: ${ahorro.toFixed(1)}%)`
+    }
+  }
+
+  return null
 }
 
 export function generateSnapshotPDF(snapshot: PackageSnapshot): void {
@@ -65,8 +96,9 @@ export function generateSnapshotPDF(snapshot: PackageSnapshot): void {
   doc.setFont('helvetica', 'normal')
   doc.text(`Desarrollo: $${snapshot.paquete.desarrollo.toFixed(2)}`, 20, yPosition)
   yPosition += 6
-  if (snapshot.paquete.descuento > 0) {
-    doc.text(`Descuento: ${snapshot.paquete.descuento}%`, 20, yPosition)
+  const descuentoInfo = getEffectiveDiscountForPDF(snapshot)
+  if (descuentoInfo) {
+    doc.text(`${descuentoInfo.label}`, 20, yPosition)
     yPosition += 6
   }
   yPosition += 4
@@ -108,21 +140,6 @@ export function generateSnapshotPDF(snapshot: PackageSnapshot): void {
     })
     yPosition += 4
   }
-
-  // Sección: Gestión
-  doc.setTextColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b)
-  doc.setFontSize(14)
-  doc.setFont('helvetica', 'bold')
-  doc.text('⚙️ Gestión', 20, yPosition)
-  yPosition += 8
-
-  doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b)
-  doc.setFontSize(11)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`Meses de pago: ${snapshot.gestion.mesesPago}`, 20, yPosition)
-  yPosition += 6
-  doc.text(`Meses gratis: ${snapshot.gestion.mesesGratis}`, 20, yPosition)
-  yPosition += 10
 
   // Tabla de Costos
   doc.setFillColor(COLORS.accent.r, COLORS.accent.g, COLORS.accent.b)
@@ -231,8 +248,9 @@ export function generateSnapshotPDFBlob(snapshot: PackageSnapshot): Blob {
   doc.setFont('helvetica', 'normal')
   doc.text(`Desarrollo: $${snapshot.paquete.desarrollo.toFixed(2)}`, 20, yPosition)
   yPosition += 6
-  if (snapshot.paquete.descuento > 0) {
-    doc.text(`Descuento: ${snapshot.paquete.descuento}%`, 20, yPosition)
+  const descuentoInfoBlob = getEffectiveDiscountForPDF(snapshot)
+  if (descuentoInfoBlob) {
+    doc.text(`${descuentoInfoBlob.label}`, 20, yPosition)
     yPosition += 6
   }
   yPosition += 4
@@ -274,21 +292,6 @@ export function generateSnapshotPDFBlob(snapshot: PackageSnapshot): Blob {
     })
     yPosition += 4
   }
-
-  // Sección: Gestión
-  doc.setTextColor(COLORS.primary.r, COLORS.primary.g, COLORS.primary.b)
-  doc.setFontSize(14)
-  doc.setFont('helvetica', 'bold')
-  doc.text('⚙️ Gestión', 20, yPosition)
-  yPosition += 8
-
-  doc.setTextColor(COLORS.dark.r, COLORS.dark.g, COLORS.dark.b)
-  doc.setFontSize(11)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`Meses de pago: ${snapshot.gestion.mesesPago}`, 20, yPosition)
-  yPosition += 6
-  doc.text(`Meses gratis: ${snapshot.gestion.mesesGratis}`, 20, yPosition)
-  yPosition += 10
 
   // Tabla de Costos
   doc.setFillColor(COLORS.accent.r, COLORS.accent.g, COLORS.accent.b)

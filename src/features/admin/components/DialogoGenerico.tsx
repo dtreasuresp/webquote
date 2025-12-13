@@ -2,14 +2,13 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaTimes } from 'react-icons/fa'
-import { IconType } from 'react-icons'
+import { X, type LucideIcon } from 'lucide-react'
 
 // Tab definition for tabbed dialogs
 export interface DialogTab {
   id: string
   label: string
-  icon?: IconType
+  icon?: LucideIcon
   content: React.ReactNode
 }
 
@@ -20,7 +19,7 @@ export interface DialogoGenericoProps {
   description?: string
   children?: React.ReactNode
   footer?: React.ReactNode
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full'
   type?: 'info' | 'warning' | 'error' | 'success' | 'neutral'
   showCloseButton?: boolean
   closeOnBackdropClick?: boolean
@@ -28,7 +27,7 @@ export interface DialogoGenericoProps {
   maxHeight?: string
   // New props for extended functionality
   variant?: 'default' | 'premium'
-  icon?: IconType
+  icon?: LucideIcon
   iconClassName?: string
   tabs?: DialogTab[]
   defaultTab?: string
@@ -42,7 +41,11 @@ const sizeClasses = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-xl',
-  full: 'max-w-4xl',
+  '2xl': 'max-w-2xl',
+  '3xl': 'max-w-3xl',
+  '4xl': 'max-w-4xl',
+  '5xl': 'max-w-5xl',
+  'full': 'max-w-6xl',
 }
 
 const typeColors = {
@@ -218,7 +221,7 @@ export default function DialogoGenerico({
                     `}
                     aria-label="Close dialog"
                   >
-                    <FaTimes className={isPremium ? 'w-4 h-4' : 'w-5 h-5'} />
+                    <X className={isPremium ? 'w-4 h-4' : 'w-5 h-5'} />
                   </button>
                 )}
               </div>
@@ -287,3 +290,5 @@ export default function DialogoGenerico({
     </AnimatePresence>
   )
 }
+
+

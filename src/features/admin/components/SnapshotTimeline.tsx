@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaCalendar, FaCircle, FaArrowRight } from 'react-icons/fa'
+import { Calendar, Circle, ArrowRight } from 'lucide-react'
 import type { PackageSnapshot } from '@/lib/types'
 
 interface SnapshotTimelineProps {
@@ -60,12 +60,12 @@ export const SnapshotTimeline: React.FC<SnapshotTimelineProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ENCABEZADO */}
       <div className="flex items-center gap-2">
-        <FaCalendar className="text-gh-accent-blue" />
+        <Calendar className="text-gh-accent-blue" />
         <h3 className="text-lg font-bold text-gh-text">Historial de Versiones</h3>
-        <span className="text-sm text-gh-text-muted">({snapshotsOrdenados.length})</span>
+        <span className="text-xs font-medium text-gh-text-muted">({snapshotsOrdenados.length})</span>
       </div>
 
       {/* TIMELINE */}
@@ -101,7 +101,7 @@ export const SnapshotTimeline: React.FC<SnapshotTimelineProps> = ({
                   }`}
                   whileHover={{ scale: 1.15 }}
                 >
-                  <FaCircle
+                  <Circle
                     className={`text-sm ${isSelected || isFirst ? 'text-white' : 'text-gh-accent-blue/50'}`}
                   />
                 </motion.div>
@@ -119,7 +119,7 @@ export const SnapshotTimeline: React.FC<SnapshotTimelineProps> = ({
                     <div className="flex-1">
                       <h4 className="font-semibold text-gh-text mb-1">{snapshot.nombre}</h4>
                       <p className="text-xs text-gh-text-muted flex items-center gap-2">
-                        <FaCalendar size={10} />
+                        <Calendar className="w-2.5 h-2.5" />
                         {formatarFecha(snapshot.createdAt)}
                       </p>
                     </div>
@@ -162,7 +162,7 @@ export const SnapshotTimeline: React.FC<SnapshotTimelineProps> = ({
                   {/* INDICATOR DE SELECCIÓN */}
                   {isSelected && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <FaArrowRight className="text-gh-accent-blue animate-pulse" />
+                      <ArrowRight className="text-gh-accent-blue animate-pulse" />
                     </div>
                   )}
                 </motion.div>
@@ -175,7 +175,7 @@ export const SnapshotTimeline: React.FC<SnapshotTimelineProps> = ({
       {/* MENSAJE VACÍO */}
       {snapshotsOrdenados.length === 0 && (
         <div className="py-12 text-center">
-          <FaCalendar className="mx-auto mb-3 text-gh-text-muted opacity-50" size={32} />
+          <Calendar className="mx-auto mb-3 text-gh-text-muted opacity-50 w-8 h-8" />
           <p className="text-gh-text-muted">No hay snapshots en el historial</p>
         </div>
       )}
@@ -183,7 +183,7 @@ export const SnapshotTimeline: React.FC<SnapshotTimelineProps> = ({
       {/* INFORMACIÓN ADICIONAL */}
       {snapshotsOrdenados.length > 0 && (
         <div className="mt-6 p-4 rounded-lg bg-gh-bg-secondary border border-gh-border/30">
-          <p className="text-sm text-gh-text-muted">
+          <p className="text-xs font-medium text-gh-text-muted">
             💡 Selecciona una versión para comparar o restaurar cambios anteriores
           </p>
         </div>
@@ -193,3 +193,5 @@ export const SnapshotTimeline: React.FC<SnapshotTimelineProps> = ({
 }
 
 export default SnapshotTimeline
+
+

@@ -3,6 +3,11 @@
 import { motion } from 'framer-motion'
 import { FaCheckCircle } from 'react-icons/fa'
 import type { FortalezasData } from '@/lib/types'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { 
+  fluentSlideUp
+} from '@/lib/animations/variants'
+import { viewport, spring } from '@/lib/animations/config'
 
 interface FortalezasDelProyectoProps {
   readonly data?: FortalezasData
@@ -15,98 +20,124 @@ export default function FortalezasDelProyecto({ data }: FortalezasDelProyectoPro
   const fortalezasData = data
 
   return (
-    <section id="fortalezas" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+    <FluentSection
+      id="fortalezas"
+      animation="stagger"
+      paddingY="md"
+      className="bg-gradient-to-b from-light-bg to-white"
+    >
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-6"
+          variants={fluentSlideUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewport.default}
         >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-success-bg rounded-full mb-4">
-              <FaCheckCircle className="text-light-success" size={20} />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
-              {fortalezasData.titulo}
-            </h2>
-            <p className="text-sm text-light-text-secondary">
-              {fortalezasData.subtitulo}
-            </p>
-          </div>
+          <motion.div 
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-success to-emerald-600 rounded-2xl mb-4 shadow-lg"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={spring.fluent}
+          >
+            <FaCheckCircle className="text-white" size={24} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+            {fortalezasData.titulo}
+          </h2>
+          <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+            {fortalezasData.subtitulo}
+          </p>
+        </motion.div>
 
-          {/* Grid de Fortalezas */}
-          <div className="grid md:grid-cols-2 gap-4 mb-10">
-            {fortalezasData.fortalezas.map((item, idx) => (
-              <motion.div
-                key={`fortaleza-${item.title}-${idx}`}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.03 }}
-                className="bg-light-bg rounded-md p-5 border border-light-border hover:border-light-accent/40 transition-colors"
+        {/* Grid de Fortalezas */}
+        <FluentRevealGroup className="grid md:grid-cols-2 gap-5 mb-6">
+          {fortalezasData.fortalezas.map((item, idx) => (
+            <FluentRevealItem key={`fortaleza-${item.title}-${idx}`}>
+              <FluentGlass
+                variant="normal"
+                className="rounded-2xl p-6 h-full hover:shadow-lg transition-all"
               >
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">{item.icon}</div>
+                <div className="flex items-start gap-4">
+                  <motion.div 
+                    className="text-3xl p-2 bg-gradient-to-br from-light-bg-secondary to-white rounded-xl"
+                    whileHover={{ scale: 1.1, rotate: 10 }}
+                    transition={spring.fluent}
+                  >
+                    {item.icon}
+                  </motion.div>
                   <div className="flex-grow">
-                    <h3 className="font-medium text-light-text mb-1">{item.title}</h3>
-                    <p className="text-sm text-light-text-secondary">{item.desc}</p>
+                    <h3 className="font-semibold text-light-text mb-1.5">{item.title}</h3>
+                    <p className="text-sm text-light-text-secondary leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </FluentGlass>
+            </FluentRevealItem>
+          ))}
+        </FluentRevealGroup>
 
-          {/* Resumen de Fortalezas */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-light-bg rounded-md p-8 border border-light-border"
+        {/* Resumen de Fortalezas */}
+        <FluentReveal>
+          <FluentGlass
+            variant="normal"
+            className="rounded-2xl p-8"
           >
             <h3 className="text-xl font-semibold text-light-text mb-6">{fortalezasData.resumen.titulo}</h3>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <FluentRevealGroup className="grid md:grid-cols-2 gap-6">
               {/* Cliente Ideal */}
-              <div className="bg-light-bg-secondary rounded-md p-5 border border-light-border">
-                <h4 className="font-medium text-light-text mb-4 flex items-center gap-2">
-                  <FaCheckCircle className="text-light-success" /> Cliente Ideal
-                </h4>
-                <ul className="space-y-2 text-sm">
-                  {fortalezasData.resumen.clienteIdeal.map((item) => (
-                    <li key={`cliente-${item.slice(0, 30).replaceAll(' ', '-')}`} className="flex gap-2 text-light-text-secondary">
-                      <span className="text-light-accent">→</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <FluentRevealItem>
+                <div className="bg-gradient-to-br from-light-bg-secondary to-white rounded-xl p-5 border border-light-border/50 h-full">
+                  <h4 className="font-medium text-light-text mb-4 flex items-center gap-2">
+                    <div className="p-1 bg-light-success/10 rounded-lg">
+                      <FaCheckCircle className="text-light-success" />
+                    </div>
+                    Cliente Ideal
+                  </h4>
+                  <ul className="space-y-2.5 text-sm">
+                    {fortalezasData.resumen.clienteIdeal.map((item) => (
+                      <li key={`cliente-${item.slice(0, 30).replaceAll(' ', '-')}`} className="flex gap-2.5 text-light-text-secondary">
+                        <span className="text-light-accent">→</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </FluentRevealItem>
 
               {/* Ventajas Competitivas */}
-              <div className="bg-light-bg-secondary rounded-md p-5 border border-light-border">
-                <h4 className="font-medium text-light-text mb-4 flex items-center gap-2">
-                  <FaCheckCircle className="text-light-success" /> Ventajas Competitivas
-                </h4>
-                <ul className="space-y-2 text-sm">
-                  {fortalezasData.resumen.ventajasCompetitivas.map((item) => (
-                    <li key={`ventaja-${item.slice(0, 30).replaceAll(' ', '-')}`} className="flex gap-2 text-light-text-secondary">
-                      <span className="text-light-accent">→</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+              <FluentRevealItem>
+                <div className="bg-gradient-to-br from-light-bg-secondary to-white rounded-xl p-5 border border-light-border/50 h-full">
+                  <h4 className="font-medium text-light-text mb-4 flex items-center gap-2">
+                    <div className="p-1 bg-light-success/10 rounded-lg">
+                      <FaCheckCircle className="text-light-success" />
+                    </div>
+                    Ventajas Competitivas
+                  </h4>
+                  <ul className="space-y-2.5 text-sm">
+                    {fortalezasData.resumen.ventajasCompetitivas.map((item) => (
+                      <li key={`ventaja-${item.slice(0, 30).replaceAll(' ', '-')}`} className="flex gap-2.5 text-light-text-secondary">
+                        <span className="text-light-accent">→</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </FluentRevealItem>
+            </FluentRevealGroup>
 
-            <div className="mt-6 pt-6 border-t border-light-border">
+            <motion.div 
+              className="mt-6 pt-6 border-t border-light-border/50 bg-gradient-to-r from-light-accent/5 to-transparent rounded-lg p-4 -mx-4"
+              whileHover={{ x: 4 }}
+              transition={spring.fluent}
+            >
               <p className="text-sm text-light-text">
                 🎯 <strong>Resultado Final:</strong> {fortalezasData.resumen.resultadoFinal}
               </p>
-            </div>
-          </motion.div>
-        </motion.div>
+            </motion.div>
+          </FluentGlass>
+        </FluentReveal>
       </div>
-    </section>
+    </FluentSection>
   )
 }

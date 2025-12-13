@@ -4,7 +4,6 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode,
 
 interface EditorState {
   collapsedSections: Record<string, boolean>
-  gestion?: unknown
   paqueteActual?: unknown
 }
 
@@ -38,7 +37,6 @@ export function EditorStateProvider({ children }: { children: ReactNode }) {
             if (config.editorState) {
               setEditorState({
                 collapsedSections: config.editorState.collapsedSections || {},
-                gestion: config.editorState.gestion,
                 paqueteActual: config.editorState.paqueteActual,
               })
             }

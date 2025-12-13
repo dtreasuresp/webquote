@@ -138,9 +138,6 @@ export function validarSnapshot(data: any): {
   })
 
   // Validar precios
-  if (data.gestionPrecio !== undefined && !validarPrecio(data.gestionPrecio)) {
-    errores.push(`Precio de gestión debe ser mayor a 0`)
-  }
   if (data.desarrollo !== undefined && !validarPrecio(data.desarrollo)) {
     errores.push(`Precio de desarrollo debe ser mayor a 0`)
   }

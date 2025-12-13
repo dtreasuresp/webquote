@@ -2,13 +2,15 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { FaCalculator, FaEdit, FaTrash, FaDownload, FaExchangeAlt, FaHistory, FaTimes, FaCheck, FaBox, FaCog, FaPercentage, FaSave } from 'react-icons/fa'
+import { Calculator, Edit, Trash2, Download, ArrowLeftRight, History, X, Check, Package, Settings, Percent, Save } from 'lucide-react'
+import { ToggleSwitchWithLabel } from '@/features/admin/components/ToggleSwitch'
 import type { PackageSnapshot } from '@/lib/types'
 import { eliminarSnapshot, actualizarSnapshot } from '@/lib/snapshotApi'
 import DialogoGenerico, { DialogTab } from './DialogoGenerico'
 import { SnapshotTimeline } from './index'
 import SnapshotComparison from './SnapshotComparison'
 import { generateSnapshotPDF } from '@/features/pdf-export/utils/generator'
+import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
 interface SnapshotsTableSectionProps {
   readonly snapshots: PackageSnapshot[]
@@ -104,7 +106,8 @@ export default function SnapshotsTableSection({
   }
 
   const calcularCostoInicialSnapshot = (snapshot: PackageSnapshot) => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     const serviciosBaseMes1 = snapshot.serviciosBase.reduce((sum, s) => {
       if (s.nombre.toLowerCase() !== 'gestión') {
         return sum + (s.precio || 0)
@@ -115,7 +118,8 @@ export default function SnapshotsTableSection({
   }
 
   const calcularCostoAño1Snapshot = (snapshot: PackageSnapshot) => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => {
       return sum + (s.precio * s.mesesPago)
     }, 0)
@@ -198,14 +202,14 @@ export default function SnapshotsTableSection({
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="bg-gh-bg-secondary rounded-2xl border border-gh-border p-8 text-center"
+        className="bg-gh-bg-secondary rounded-2xl border border-gh-border/30 p-8 text-center"
       >
         <div className="flex items-center justify-center gap-3">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
           >
-            <FaCalculator className="text-white text-3xl" />
+            <Calculator className="text-white text-3xl" />
           </motion.div>
           <p className="text-lg text-white font-semibold">Cargando paquetes...</p>
         </div>
@@ -232,9 +236,9 @@ export default function SnapshotsTableSection({
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="bg-gh-bg-secondary rounded-2xl border border-gh-border p-8 text-center"
+        className="bg-gh-bg-secondary rounded-2xl border border-gh-border/30 p-8 text-center"
       >
-        <p className="text-white/80 font-semibold">No hay paquetes creados aún</p>
+        <p className="text-white/80 font-semibold">No hay ofertas creados aún</p>
       </motion.div>
     )
   }
@@ -243,7 +247,7 @@ export default function SnapshotsTableSection({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-xl font-bold text-gh-text">
-          Paquetes Creados ({snapshots.filter(s => s.activo).length})
+          Ofertas Creadas ({snapshots.filter(s => s.activo).length})
         </h2>
         {snapshots.length > 1 && (
           <motion.button
@@ -252,12 +256,12 @@ export default function SnapshotsTableSection({
             onClick={() => handleVerTimeline()}
             className="px-4 py-2 bg-gh-info text-white rounded-lg hover:bg-blue-600 transition-all text-sm font-semibold flex items-center gap-2"
           >
-            <FaHistory /> Línea de Tiempo
+            <History /> Línea de Tiempo
           </motion.button>
         )}
       </div>
 
-      <div className="space-y-6 md:grid md:grid-cols-2 gap-10 md:space-y-0">
+      <div className="space-y-4 md:grid md:grid-cols-2 gap-10 md:space-y-0">
         {snapshots.filter(s => s.activo).map((snapshot, idx) => (
           <motion.div
             key={snapshot.id}
@@ -272,7 +276,7 @@ export default function SnapshotsTableSection({
                   <h3 className="text-lg font-bold text-gh-text">
                     📦 {snapshot.nombre}
                   </h3>
-                  {snapshot.paquete.tipo && (
+                  {snapshot.paquete?.tipo && (
                     <p className="text-xs font-semibold tracking-wide text-gh-text mt-1 uppercase">
                       🏆 {snapshot.paquete.tipo}
                     </p>
@@ -282,52 +286,52 @@ export default function SnapshotsTableSection({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input
-                    id={`snapshot-activo-${snapshot.id}`}
-                    type="checkbox"
-                    checked={snapshot.activo}
-                    onChange={(e) => handleToggleActivo(snapshot.id, e.target.checked)}
-                    className="w-5 h-5 cursor-pointer accent-gh-success"
+                  <ToggleSwitchWithLabel
+                    enabled={snapshot.activo}
+                    onChange={(v) => handleToggleActivo(snapshot.id, v)}
+                    label="Activo"
+                    size="sm"
+                    labelPosition="right"
                   />
-                  <label htmlFor={`snapshot-activo-${snapshot.id}`} className="font-semibold text-white text-sm">Activo</label>
                 </div>
               </div>
             </div>
 
                 <div className="p-4 space-y-3">
               <div className="space-y-2">
-                <p className="text-sm text-gh-text"><strong className="text-gh-text">Desarrollo:</strong> ${snapshot.paquete.desarrollo.toFixed(2)}</p>
-                {snapshot.paquete.descuento > 0 && (
+                <p className="text-xs font-medium text-gh-text"><strong className="text-gh-text">Desarrollo:</strong> ${(snapshot.paquete.desarrollo ?? 0).toFixed(2)}</p>
+                {(snapshot.paquete.descuento ?? 0) > 0 && (
                   <p className="text-sm text-white/90"><strong className="text-white">Descuento:</strong> {snapshot.paquete.descuento}%</p>
                 )}
               </div>
                 <div className="space-y-2 border-t border-gh-border pt-3">
                 <p className="text-sm font-semibold text-gh-text">Costos:</p>
-                <p className="text-xs text-gh-text-muted">Pago Inicial: <span className="font-bold text-gh-text">${snapshot.costos.inicial.toFixed(2)}</span></p>
-                <p className="text-xs text-white/80">Año 1: <span className="font-bold text-white">${snapshot.costos.año1.toFixed(2)}</span></p>
-                <p className="text-xs text-white/80">Año 2+: <span className="font-bold text-white">${snapshot.costos.año2.toFixed(2)}</span></p>
+                <p className="text-xs text-gh-text-muted">Pago Inicial: <span className="font-bold text-gh-text">${(snapshot.costos?.inicial ?? 0).toFixed(2)}</span></p>
+                <p className="text-xs text-white/80">Año 1: <span className="font-bold text-white">${(snapshot.costos?.año1 ?? 0).toFixed(2)}</span></p>
+                <p className="text-xs text-white/80">Año 2+: <span className="font-bold text-white">${(snapshot.costos?.año2 ?? 0).toFixed(2)}</span></p>
               </div>
-                <div className="flex gap-2 pt-3 border-t border-gh-border">
+                <div className="flex gap-2 pt-3 border-t border-gh-border flex-wrap">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setEditingSnapshotId(snapshot.id)}
                   className="flex-1 px-3 py-2 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all text-sm font-semibold flex items-center justify-center gap-2"
                 >
-                  <FaEdit /> Editar
+                  <Edit /> Editar
                 </motion.button>
+                {/* Botón para comparar históricamente (mismo nombre, diferentes versiones) */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleCompararSnapshot(snapshot)}
                   className={`px-3 py-2 rounded-lg border transition-all text-sm ${
                     snapshotParaComparar?.id === snapshot.id
-                      ? 'bg-gh-success text-white border-gh-success'
+                      ? 'bg-gh-info text-white border-gh-info'
                       : 'bg-gh-btn-ghost text-gh-text border-gh-border hover:bg-gh-bg-secondary'
                   }`}
-                  title={snapshotParaComparar ? 'Seleccionar segundo paquete' : 'Seleccionar para comparar'}
+                  title={snapshotParaComparar ? 'Seleccionar segundo paquete para historial' : 'Comparar historial (versiones)'}
                 >
-                  <FaExchangeAlt />
+                  <History />
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -335,7 +339,7 @@ export default function SnapshotsTableSection({
                   onClick={() => handleDescargarPdf(snapshot)}
                   className="px-3 py-2 bg-gh-btn-ghost text-gh-text rounded-lg border border-gh-border hover:bg-gh-bg-secondary transition-all text-sm"
                 >
-                  <FaDownload />
+                  <Download />
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -343,7 +347,7 @@ export default function SnapshotsTableSection({
                   onClick={() => handleEliminarSnapshot(snapshot.id)}
                   className="px-3 py-2 bg-gh-danger text-white rounded-lg hover:bg-red-600 transition-all text-sm"
                 >
-                  <FaTrash />
+                  <Trash2 />
                 </motion.button>
               </div>
             </div>
@@ -358,7 +362,7 @@ export default function SnapshotsTableSection({
           onClose={() => setEditingSnapshotId(null)}
           title="Editar Paquete"
           description="Personaliza los detalles de tu paquete"
-          icon={FaBox}
+          icon={Package}
           variant="premium"
           type="success"
           size="full"
@@ -371,12 +375,12 @@ export default function SnapshotsTableSection({
               <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gh-bg-secondary border border-gh-border">
                 {autoSaveStatus === 'saving' && (
                   <span className="text-gh-warning text-sm font-semibold flex items-center gap-2">
-                    <FaSave className="animate-spin" /> Guardando...
+                    <Save className="animate-spin" /> Guardando...
                   </span>
                 )}
                 {autoSaveStatus === 'saved' && (
                   <span className="text-gh-success text-sm font-semibold flex items-center gap-2">
-                    <FaCheck /> Guardado
+                    <Check /> Guardado
                   </span>
                 )}
                 {autoSaveStatus === 'idle' && (
@@ -389,12 +393,12 @@ export default function SnapshotsTableSection({
             {
               id: 'descripcion',
               label: 'Descripción',
-              icon: FaEdit,
+              icon: Edit,
               content: (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-2xl p-6 border border-gh-border hover:border-gh-success/30 transition-colors">
                     <label htmlFor="nombre" className="flex items-center gap-2 text-sm font-bold text-gh-text mb-3">
-                      <FaEdit className="text-gh-success" /> Nombre del Paquete
+                      <Edit className="text-gh-success" /> Nombre del Paquete
                     </label>
                     <input
                       id="nombre"
@@ -402,12 +406,12 @@ export default function SnapshotsTableSection({
                       value={snapshotEditando.nombre}
                       onChange={(e) => handleCambiar('nombre', e.target.value)}
                       placeholder="Ej: Constructor, Obra Maestra, Imperio Digital"
-                      className="w-full px-4 py-3 bg-gh-bg border border-gh-border rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted"
+                      className="w-full px-4 py-3 bg-gh-bg border border-gh-border/30 rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted"
                     />
                   </div>
                   <div className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-2xl p-6 border border-gh-border hover:border-gh-success/30 transition-colors">
                     <label htmlFor="descripcion" className="flex items-center gap-2 text-sm font-bold text-gh-text mb-3">
-                      <FaEdit className="text-gh-success" /> Descripción Completa
+                      <Edit className="text-gh-success" /> Descripción Completa
                     </label>
                     <textarea
                       id="descripcion"
@@ -415,7 +419,7 @@ export default function SnapshotsTableSection({
                       onChange={(e) => handleCambiar('paquete', { ...snapshotEditando.paquete, descripcion: e.target.value })}
                       rows={6}
                       placeholder="Describe tu paquete de forma clara y atractiva..."
-                      className="w-full px-4 py-3 bg-gh-bg border border-gh-border rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted resize-none"
+                      className="w-full px-4 py-3 bg-gh-bg border border-gh-border/30 rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted resize-none"
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -427,7 +431,7 @@ export default function SnapshotsTableSection({
                         value={snapshotEditando.paquete.tipo || ''}
                         onChange={(e) => handleCambiar('paquete', { ...snapshotEditando.paquete, tipo: e.target.value })}
                         placeholder="Ej: BÁSICO, PROFESIONAL, PREMIUM"
-                        className="w-full px-4 py-3 bg-gh-bg border border-gh-border rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted"
+                        className="w-full px-4 py-3 bg-gh-bg border border-gh-border/30 rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted"
                       />
                     </div>
                     <div className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-2xl p-6 border border-gh-border hover:border-gh-success/30 transition-colors">
@@ -438,7 +442,7 @@ export default function SnapshotsTableSection({
                         value={snapshotEditando.paquete.tagline || ''}
                         onChange={(e) => handleCambiar('paquete', { ...snapshotEditando.paquete, tagline: e.target.value })}
                         placeholder="Ej: Solución digital personalizada"
-                        className="w-full px-4 py-3 bg-gh-bg border border-gh-border rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted"
+                        className="w-full px-4 py-3 bg-gh-bg border border-gh-border/30 rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted"
                       />
                     </div>
                   </div>
@@ -448,16 +452,16 @@ export default function SnapshotsTableSection({
             {
               id: 'servicios',
               label: 'Servicios Base',
-              icon: FaBox,
+              icon: Package,
               content: (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-lg bg-gh-success/20 border border-gh-success/30 flex items-center justify-center">
-                      <FaBox className="text-gh-success text-lg" />
+                      <Package className="text-gh-success text-lg" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gh-text">Servicios Base Incluidos</h3>
-                      <p className="text-sm text-gh-text-muted">Total: {snapshotEditando.serviciosBase.length} servicio(s)</p>
+                      <p className="text-xs font-medium text-gh-text-muted">Total: {snapshotEditando.serviciosBase.length} servicio(s)</p>
                     </div>
                   </div>
                   {snapshotEditando.serviciosBase.length > 0 ? (
@@ -503,90 +507,18 @@ export default function SnapshotsTableSection({
               ),
             },
             {
-              id: 'gestion',
-              label: 'Gestión',
-              icon: FaCog,
-              content: (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-gh-success/20 border border-gh-success/30 flex items-center justify-center">
-                      <FaCog className="text-gh-success text-lg" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gh-text">Configuración de Gestión</h3>
-                      <p className="text-sm text-gh-text-muted">Define los términos de gestión del paquete</p>
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-2xl p-6 border border-gh-border hover:border-gh-success/30 transition-colors">
-                    <label htmlFor="precio" className="text-sm font-bold text-gh-text mb-3 block">💰 Precio de Gestión Mensual</label>
-                    <input
-                      id="precio"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={snapshotEditando.gestion.precio}
-                      onChange={(e) => handleCambiar('gestion', { ...snapshotEditando.gestion, precio: Number.parseFloat(e.target.value) })}
-                      placeholder="0.00"
-                      className="w-full px-4 py-3 bg-gh-bg border border-gh-border rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text placeholder:text-gh-text-muted text-lg font-bold"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-2xl p-6 border border-gh-border hover:border-gh-success/30 transition-colors">
-                      <label htmlFor="mesesGratis" className="text-sm font-bold text-gh-text mb-3 block">🎁 Meses Gratis</label>
-                      <input
-                        id="mesesGratis"
-                        type="number"
-                        min="0"
-                        max="12"
-                        value={snapshotEditando.gestion.mesesGratis}
-                        onChange={(e) => handleCambiar('gestion', { ...snapshotEditando.gestion, mesesGratis: Number(e.target.value) })}
-                        placeholder="0"
-                        className="w-full px-4 py-3 bg-gh-bg border border-gh-border rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text text-lg font-bold"
-                      />
-                    </div>
-                    <div className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-2xl p-6 border border-gh-border hover:border-gh-success/30 transition-colors">
-                      <label htmlFor="mesesPago" className="text-sm font-bold text-gh-text mb-3 block">💳 Meses de Pago</label>
-                      <input
-                        id="mesesPago"
-                        type="number"
-                        min="0"
-                        max="12"
-                        value={snapshotEditando.gestion.mesesPago}
-                        onChange={(e) => handleCambiar('gestion', { ...snapshotEditando.gestion, mesesPago: Number(e.target.value) })}
-                        placeholder="0"
-                        className="w-full px-4 py-3 bg-gh-bg border border-gh-border rounded-lg focus:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/20 transition-all text-gh-text text-lg font-bold"
-                      />
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-r from-gh-success/10 to-gh-success/5 rounded-2xl p-6 border border-gh-success/30">
-                    <h4 className="font-bold text-gh-success mb-3">📊 Resumen Anual</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gh-text-muted">Meses Gratis:</span>
-                        <span className="font-bold text-gh-text">{snapshotEditando.gestion.mesesGratis}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gh-text-muted">Inversión en Gestión (Año 1):</span>
-                        <span className="font-bold text-gh-success">${(snapshotEditando.gestion.precio * snapshotEditando.gestion.mesesPago).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ),
-            },
-            {
               id: 'descuentos',
               label: 'Descuentos',
-              icon: FaPercentage,
+              icon: Percent,
               content: (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
-                      <FaPercentage className="text-accent text-lg" />
+                      <Percent className="text-accent text-lg" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gh-text">Descuentos y Promociones</h3>
-                      <p className="text-sm text-gh-text-muted">Aplica descuentos al desarrollo del paquete</p>
+                      <p className="text-xs font-medium text-gh-text-muted">Aplica descuentos al desarrollo del paquete</p>
                     </div>
                   </div>
                   <div className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-2xl p-8 border border-gh-border hover:border-accent/30 transition-colors">
@@ -602,7 +534,7 @@ export default function SnapshotsTableSection({
                           value={snapshotEditando.paquete.descuento}
                           onChange={(e) => handleCambiar('paquete', { ...snapshotEditando.paquete, descuento: Number.parseFloat(e.target.value) })}
                           placeholder="0.00"
-                          className="w-full px-4 py-3 bg-gh-bg border border-gh-border rounded-lg focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all text-gh-text placeholder:text-gh-text-muted text-2xl font-bold"
+                          className="w-full px-4 py-3 bg-gh-bg border border-gh-border/30 rounded-lg focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all text-gh-text placeholder:text-gh-text-muted text-2xl font-bold"
                         />
                       </div>
                       <span className="text-3xl font-bold text-accent mb-1">%</span>
@@ -610,7 +542,7 @@ export default function SnapshotsTableSection({
                   </div>
                   <div className="bg-gradient-to-r from-accent/10 to-accent/5 rounded-2xl p-6 border border-accent/30">
                     <h4 className="font-bold text-accent mb-4 flex items-center gap-2">
-                      <FaPercentage /> Resumen de Descuento
+                      <Percent /> Resumen de Descuento
                     </h4>
                     <div className="space-y-3 text-sm">
                       <div className="flex justify-between items-center">
@@ -643,14 +575,14 @@ export default function SnapshotsTableSection({
                 onClick={() => setEditingSnapshotId(null)}
                 className="flex-1 px-6 py-3 bg-gh-bg-secondary border border-gh-border text-gh-text rounded-xl hover:bg-gh-border hover:border-gh-text transition-all font-semibold flex items-center justify-center gap-2"
               >
-                <FaTimes /> Cerrar
+                <X /> Cerrar
               </button>
               <button
                 onClick={handleGuardarYCerrar}
                 disabled={!tieneCambios}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-gh-success to-gh-success-hover text-white rounded-xl hover:shadow-lg hover:shadow-gh-success/30 transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
               >
-                <FaCheck /> Guardar y Cerrar
+                <Check /> Guardar y Cerrar
               </button>
             </>
           }
@@ -675,7 +607,7 @@ export default function SnapshotsTableSection({
           >
             <div className="p-6 border-b border-gh-border flex items-center justify-between sticky top-0 bg-gh-bg-secondary">
               <h3 className="text-xl font-bold text-gh-text flex items-center gap-2">
-                <FaHistory /> Línea de Tiempo de Paquetes
+                <History /> Línea de Tiempo de Paquetes
               </h3>
               <button
                 onClick={() => setShowTimelineModal(false)}
@@ -713,7 +645,7 @@ export default function SnapshotsTableSection({
           >
             <div className="p-6 border-b border-gh-border flex items-center justify-between sticky top-0 bg-gh-bg-secondary">
               <h3 className="text-xl font-bold text-gh-text flex items-center gap-2">
-                <FaExchangeAlt /> Comparación de Paquetes
+                <ArrowLeftRight /> Comparación de Paquetes
               </h3>
               <button
                 onClick={() => setComparacionActiva(null)}
@@ -737,5 +669,7 @@ export default function SnapshotsTableSection({
     </div>
   )
 }
+
+
 
 

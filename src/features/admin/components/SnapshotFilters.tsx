@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaSearch } from 'react-icons/fa'
+import { Search } from 'lucide-react'
 
 type FilterType = 'all' | '7days' | '30days'
 
@@ -28,7 +28,7 @@ export default function SnapshotFilters({
     <div className="space-y-3 mb-6">
       {/* Barra de búsqueda */}
       <div className="relative group">
-        <FaSearch className="absolute left-4 top-2.5 text-gh-text-muted group-hover:text-gh-text transition-colors" />
+        <Search className="absolute left-4 top-2.5 text-gh-text-muted group-hover:text-gh-text transition-colors" />
         <input
           type="text"
           placeholder="Buscar por nombre del paquete..."
@@ -60,6 +60,8 @@ export default function SnapshotFilters({
     </div>
   )
 }
+
+
 
 
 

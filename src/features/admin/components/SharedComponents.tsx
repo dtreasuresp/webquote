@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { IconType } from 'react-icons'
+import { type LucideIcon } from 'lucide-react'
 
 type ButtonSize = 'sm' | 'md' | 'lg'
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'ghost' | 'danger'
@@ -11,7 +11,7 @@ export interface BaseButtonProps
   variant?: ButtonVariant
   size?: ButtonSize
   isLoading?: boolean
-  icon?: IconType
+  icon?: LucideIcon
   iconPosition?: 'left' | 'right'
   fullWidth?: boolean
 }
@@ -152,7 +152,7 @@ Badge.displayName = 'Badge'
 // Icon Button Component
 export interface IconButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  icon: IconType
+  icon: LucideIcon
   variant?: 'primary' | 'secondary' | 'tertiary' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   tooltip?: string
@@ -211,3 +211,5 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
 )
 
 IconButton.displayName = 'IconButton'
+
+

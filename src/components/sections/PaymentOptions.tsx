@@ -1,8 +1,16 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { PackageSnapshot } from '@/lib/types'
 import { FaCreditCard, FaPercent, FaGift } from 'react-icons/fa'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { 
+  fluentSlideUp,
+  fluentStaggerContainer,
+  fluentStaggerItem
+} from '@/lib/animations/variants'
+import { viewport, spring } from '@/lib/animations/config'
 
 interface PaymentOptionsProps {
   readonly snapshot: PackageSnapshot | null
@@ -33,6 +41,10 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
     ? snapshot.paquete.opcionesPago 
     : opcionesPagoPorDefecto
 
+  // Título y subtítulo dinámicos de la sección
+  const tituloSeccion = snapshot.paquete.tituloSeccionPago || 'Opciones de Pago'
+  const subtituloSeccion = snapshot.paquete.subtituloSeccionPago || ''
+
   // Calcular totales usando preview
   const totalOriginal = preview.totalOriginal
   const totalConDescuentos = preview.totalConDescuentos
@@ -50,55 +62,99 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
   const totalOp2 = totalConDescuentos
 
   return (
-    <div className="mt-10">
-      <h4 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2">
-        <FaCreditCard /> Opciones de Pago
-      </h4>
+    <FluentSection
+      id="payment-options"
+      animation="stagger"
+      paddingY="md"
+      className="bg-gradient-to-b from-white to-light-bg"
+    >
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-6"
+          variants={fluentSlideUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewport.default}
+        >
+          <motion.div 
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-accent to-blue-600 rounded-2xl mb-4 shadow-lg"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={spring.fluent}
+          >
+            <FaCreditCard className="text-white" size={24} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+            {tituloSeccion}
+          </h2>
+          {subtituloSeccion && (
+            <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+              {subtituloSeccion}
+            </p>
+          )}
+        </motion.div>
 
       {/* Resumen de descuentos aplicados */}
       {hayDescuentos && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
-          <div className="flex items-center gap-2 mb-3">
-            <FaPercent className="text-green-600" />
+        <FluentGlass
+          variant="normal"
+          className="mb-6 p-5 rounded-2xl"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-1.5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg text-white">
+              <FaPercent size={12} />
+            </div>
             <h5 className="font-bold text-green-800">Descuentos Aplicados</h5>
           </div>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <FluentRevealGroup className="grid md:grid-cols-3 gap-4 text-sm">
             {tipoDescuento !== 'ninguno' && (
-              <div className="bg-white p-3 rounded-lg border border-green-200">
-                <span className="text-gray-600">Tipo:</span>
-                <span className="ml-2 font-semibold text-green-700 capitalize">{tipoDescuento}</span>
-              </div>
+              <FluentRevealItem>
+                <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-green-200/50 shadow-sm h-full">
+                  <span className="text-light-text-secondary text-xs uppercase tracking-wide">Tipo</span>
+                  <p className="font-semibold text-light-success capitalize mt-1">{tipoDescuento}</p>
+                </div>
+              </FluentRevealItem>
             )}
             {descuentoPagoUnico > 0 && (
-              <div className="bg-white p-3 rounded-lg border border-orange-200">
-                <span className="text-gray-600">Pago Único:</span>
-                <span className="ml-2 font-semibold text-orange-600">{descuentoPagoUnico}% al desarrollo</span>
-              </div>
+              <FluentRevealItem>
+                <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-light-warning/30 shadow-sm h-full">
+                  <span className="text-light-text-secondary text-xs uppercase tracking-wide">Pago Único</span>
+                  <p className="font-semibold text-light-warning mt-1">{descuentoPagoUnico}% al desarrollo</p>
+                </div>
+              </FluentRevealItem>
             )}
             {descuentoDirecto > 0 && (
-              <div className="bg-white p-3 rounded-lg border border-blue-200">
-                <span className="text-gray-600">Directo:</span>
-                <span className="ml-2 font-semibold text-blue-600">{descuentoDirecto}% al total</span>
-              </div>
+              <FluentRevealItem>
+                <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-light-info/30 shadow-sm h-full">
+                  <span className="text-light-text-secondary text-xs uppercase tracking-wide">Directo</span>
+                  <p className="font-semibold text-blue-600 mt-1">{descuentoDirecto}% al total</p>
+                </div>
+              </FluentRevealItem>
             )}
-          </div>
-        </div>
+          </FluentRevealGroup>
+        </FluentGlass>
       )}
 
-      <div className="grid md:grid-cols-2 gap-8">
+      <FluentRevealGroup className="grid md:grid-cols-2 gap-8">
         {/* Opción 1: Pagos en cuotas */}
         {opcionesPago.length > 0 && (
-          <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-            <h5 className="text-xl font-bold text-gray-900 mb-4">📊 Opción 1: Pago en Cuotas</h5>
+          <FluentRevealItem>
+            <FluentGlass
+              variant="normal"
+              className="p-6 rounded-2xl h-full"
+            >
+              <h5 className="text-xl font-bold text-light-text mb-4 flex items-center gap-2">
+                📊 Opción 1: Pago en Cuotas
+              </h5>
             <div className="space-y-3">
               {/* Cuotas de Desarrollo */}
-              <div className="pb-3 border-b-2 border-gray-200">
+              <div className="pb-3 border-b-2 border-light-border">
                 <p className="text-sm font-semibold text-secondary mb-3">💳 CUOTAS DE DESARROLLO</p>
                 {opcionesPago.map((opcion, index) => {
                   const monto = (desarrolloOp1 * opcion.porcentaje) / 100
                   return (
                     <div key={`pago-${opcion.nombre || index}`} className="mb-2">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-light-bg-secondary rounded-lg">
                         <span className="font-semibold">
                           {opcion.nombre || `Pago ${index + 1}`} ({opcion.porcentaje}%)
                         </span>
@@ -106,7 +162,7 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
                           ${monto.toFixed(2)} USD
                         </span>
                       </div>
-                      <div className="text-center text-gray-600 text-xs p-1">
+                      <div className="text-center text-light-text-secondary text-xs p-1">
                         {opcion.descripcion}
                       </div>
                     </div>
@@ -117,7 +173,7 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
                   <div className="text-right">
                     {desarrolloOp1 < desarrollo ? (
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-400 line-through">${desarrollo.toFixed(2)}</span>
+                        <span className="text-sm text-light-text-muted line-through">${desarrollo.toFixed(2)}</span>
                         <span className="font-bold text-primary">${desarrolloOp1.toFixed(2)} USD</span>
                       </div>
                     ) : (
@@ -129,18 +185,18 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
 
               {/* Servicios Base */}
               {preview.serviciosBase.desglose.length > 0 && (
-                <div className="pb-3 border-b-2 border-gray-200">
+                <div className="pb-3 border-b-2 border-light-border">
                   <p className="text-sm font-semibold text-secondary mb-3">🏢 SERVICIOS BASE</p>
                   <div className="space-y-2">
                     {preview.serviciosBase.desglose.map((servicio) => (
-                      <div key={`servicio-base-${servicio.id}`} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                        <span className="text-sm text-gray-700">{servicio.nombre}</span>
+                      <div key={`servicio-base-${servicio.id}`} className="flex justify-between items-center p-2 bg-light-bg-secondary rounded-lg">
+                        <span className="text-sm text-light-text-secondary">{servicio.nombre}</span>
                         <div className="text-right">
                           {servicio.descuentoAplicado > 0 ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-400 line-through">${servicio.original.toFixed(2)}</span>
-                              <span className="font-semibold text-green-600">${servicio.conDescuento.toFixed(2)}</span>
-                              <span className="text-xs text-orange-500">(-{servicio.descuentoAplicado}%)</span>
+                              <span className="text-xs text-light-text-muted line-through">${servicio.original.toFixed(2)}</span>
+                              <span className="font-semibold text-light-success">${servicio.conDescuento.toFixed(2)}</span>
+                              <span className="text-xs text-light-warning">(-{servicio.descuentoAplicado}%)</span>
                             </div>
                           ) : (
                             <span className="font-semibold text-secondary">${servicio.original.toFixed(2)} USD</span>
@@ -158,18 +214,18 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
 
               {/* Otros Servicios */}
               {preview.otrosServicios.desglose.length > 0 && (
-                <div className="pb-3 border-b-2 border-gray-200">
+                <div className="pb-3 border-b-2 border-light-border">
                   <p className="text-sm font-semibold text-secondary mb-3">⚙️ SERVICIOS ADICIONALES</p>
                   <div className="space-y-2">
                     {preview.otrosServicios.desglose.map((servicio) => (
-                      <div key={`otro-servicio-${servicio.id}`} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-                        <span className="text-sm text-gray-700">{servicio.nombre}</span>
+                      <div key={`otro-servicio-${servicio.id}`} className="flex justify-between items-center p-2 bg-light-bg-secondary rounded-lg">
+                        <span className="text-sm text-light-text-secondary">{servicio.nombre}</span>
                         <div className="text-right">
                           {servicio.descuentoAplicado > 0 ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-400 line-through">${servicio.original.toFixed(2)}</span>
-                              <span className="font-semibold text-green-600">${servicio.conDescuento.toFixed(2)}</span>
-                              <span className="text-xs text-orange-500">(-{servicio.descuentoAplicado}%)</span>
+                              <span className="text-xs text-light-text-muted line-through">${servicio.original.toFixed(2)}</span>
+                              <span className="font-semibold text-light-success">${servicio.conDescuento.toFixed(2)}</span>
+                              <span className="text-xs text-light-warning">(-{servicio.descuentoAplicado}%)</span>
                             </div>
                           ) : (
                             <span className="font-semibold text-secondary">${servicio.original.toFixed(2)} USD</span>
@@ -186,45 +242,54 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
               )}
 
               {/* Total General Opción 1 */}
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-3 rounded-lg border-2 border-primary/30">
+              <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 rounded-xl border border-primary/30 shadow-sm">
                 {descuentoDirecto > 0 && (
                   <div className="flex justify-between items-center mb-2 pb-2 border-b border-primary/20">
-                    <span className="text-sm text-gray-600">Descuento Directo ({descuentoDirecto}%):</span>
-                    <span className="text-green-600">-${(subtotalOp1 - totalOp1).toFixed(2)} USD</span>
+                    <span className="text-sm text-light-text-secondary">Descuento Directo ({descuentoDirecto}%):</span>
+                    <span className="text-light-success font-medium">-${(subtotalOp1 - totalOp1).toFixed(2)} USD</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-lg text-gray-900">TOTAL:</span>
+                  <span className="font-bold text-lg text-light-text">TOTAL:</span>
                   <span className="text-2xl font-bold text-primary">
                     ${totalOp1.toFixed(2)} USD
                   </span>
                 </div>
               </div>
             </div>
-          </div>
+          </FluentGlass>
+        </FluentRevealItem>
         )}
 
         {/* Opción 2: Pago único */}
-        <div className="bg-gradient-to-br from-accent/10 to-accent/20 p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow border-2 border-accent">
-          <div className="flex items-center gap-2 mb-4">
-            <h5 className="text-xl font-bold text-secondary">🎁 Opción 2: Pago Único</h5>
-            {ahorroTotal > 0 && (
-              <span className="bg-accent text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                <FaGift size={12} />
-                {porcentajeAhorro.toFixed(0)}% OFF
-              </span>
-            )}
-          </div>
+        <FluentRevealItem>
+          <FluentGlass
+            variant="elevated"
+            className="p-8 rounded-2xl h-full border-2 border-light-accent/50"
+          >
+            <div className="flex items-center gap-3 mb-5">
+              <h5 className="text-xl font-bold text-secondary">🎁 Opción 2: Pago Único</h5>
+              {ahorroTotal > 0 && (
+                <motion.span 
+                  className="bg-gradient-to-r from-accent to-accent-dark text-white px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-1.5 shadow-md"
+                  whileHover={{ scale: 1.05 }}
+                  transition={spring.fluent}
+                >
+                  <FaGift size={12} />
+                  {porcentajeAhorro.toFixed(0)}% OFF
+                </motion.span>
+              )}
+            </div>
           <div className="space-y-4">
             {/* Desarrollo */}
             <div className="pb-3 border-b-2 border-accent/20">
               <p className="text-sm font-semibold text-secondary mb-2">💳 DESARROLLO</p>
               <div className="flex justify-between items-center p-3 bg-white rounded-lg mb-2">
-                <span className="font-semibold text-gray-900">Pago único</span>
+                <span className="font-semibold text-light-text">Pago único</span>
                 {preview.desarrolloConDescuento < preview.desarrollo ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-lg text-neutral-400 line-through">${preview.desarrollo.toFixed(2)}</span>
-                    <span className="text-lg font-bold text-green-600">${preview.desarrolloConDescuento.toFixed(2)} USD</span>
+                    <span className="text-lg text-light-text-muted line-through">${preview.desarrollo.toFixed(2)}</span>
+                    <span className="text-lg font-bold text-light-success">${preview.desarrolloConDescuento.toFixed(2)} USD</span>
                   </div>
                 ) : (
                   <span className="text-lg font-bold text-primary">${preview.desarrollo.toFixed(2)} USD</span>
@@ -244,12 +309,12 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
                 <div className="space-y-2 mb-2">
                   {preview.serviciosBase.desglose.map((servicio) => (
                     <div key={`op2-base-${servicio.id}`} className="flex justify-between items-center p-2 bg-white rounded-lg">
-                      <span className="text-sm text-gray-700">{servicio.nombre}</span>
+                      <span className="text-sm text-light-text-secondary">{servicio.nombre}</span>
                       <div className="text-right">
                         {servicio.descuentoAplicado > 0 ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400 line-through">${servicio.original.toFixed(2)}</span>
-                            <span className="font-semibold text-green-600">${servicio.conDescuento.toFixed(2)}</span>
+                            <span className="text-xs text-light-text-muted line-through">${servicio.original.toFixed(2)}</span>
+                            <span className="font-semibold text-light-success">${servicio.conDescuento.toFixed(2)}</span>
                           </div>
                         ) : (
                           <span className="font-semibold text-secondary">${servicio.original.toFixed(2)} USD</span>
@@ -272,12 +337,12 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
                 <div className="space-y-2 mb-2">
                   {preview.otrosServicios.desglose.map((servicio) => (
                     <div key={`op2-otro-${servicio.id}`} className="flex justify-between items-center p-2 bg-white rounded-lg">
-                      <span className="text-sm text-gray-700">{servicio.nombre}</span>
+                      <span className="text-sm text-light-text-secondary">{servicio.nombre}</span>
                       <div className="text-right">
                         {servicio.descuentoAplicado > 0 ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400 line-through">${servicio.original.toFixed(2)}</span>
-                            <span className="font-semibold text-green-600">${servicio.conDescuento.toFixed(2)}</span>
+                            <span className="text-xs text-light-text-muted line-through">${servicio.original.toFixed(2)}</span>
+                            <span className="font-semibold text-light-success">${servicio.conDescuento.toFixed(2)}</span>
                           </div>
                         ) : (
                           <span className="font-semibold text-secondary">${servicio.original.toFixed(2)} USD</span>
@@ -294,7 +359,11 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
             )}
 
             {/* Total Final Opción 2 */}
-            <div className="bg-gradient-to-r from-accent to-accent-dark rounded-lg p-4">
+            <motion.div 
+              className="bg-gradient-to-r from-accent to-accent-dark rounded-2xl p-5 shadow-lg"
+              whileHover={{ scale: 1.02 }}
+              transition={spring.fluent}
+            >
               {ahorroTotal > 0 && (
                 <div className="flex justify-between items-center mb-2 pb-2 border-b-2 border-white/20">
                   <span className="font-semibold text-white">Total Inicial:</span>
@@ -304,7 +373,7 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
               {descuentoDirecto > 0 && (
                 <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/20">
                   <span className="text-sm text-white/80">Descuento Directo ({descuentoDirecto}%):</span>
-                  <span className="text-green-300">-${(preview.subtotalConDescuentos - totalOp2).toFixed(2)} USD</span>
+                  <span className="text-green-300 font-medium">-${(preview.subtotalConDescuentos - totalOp2).toFixed(2)} USD</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
@@ -314,19 +383,26 @@ export default function PaymentOptions({ snapshot }: PaymentOptionsProps) {
                 </span>
               </div>
               {ahorroTotal > 0 && (
-                <div className="mt-2 text-center">
-                  <span className="bg-white/20 text-white text-sm px-3 py-1 rounded-full">
+                <motion.div 
+                  className="mt-3 text-center"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <span className="bg-white/20 backdrop-blur-sm text-white text-sm px-4 py-1.5 rounded-full inline-flex items-center gap-2">
                     🎉 Ahorro: ${ahorroTotal.toFixed(2)} USD
                   </span>
-                </div>
+                </motion.div>
               )}
-            </div>
-            <p className="text-center text-gray-700 text-xs">
+            </motion.div>
+            <p className="text-center text-light-text-secondary text-xs mt-3">
               <strong>Todos los descuentos aplicados</strong>
             </p>
           </div>
-        </div>
+        </FluentGlass>
+      </FluentRevealItem>
+    </FluentRevealGroup>
       </div>
-    </div>
+    </FluentSection>
   )
 }

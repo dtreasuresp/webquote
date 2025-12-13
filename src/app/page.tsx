@@ -9,7 +9,9 @@ import AnalisisRequisitos from '@/components/sections/AnalisisRequisitos'
 import DinamicoVsEstatico from '@/components/sections/DinamicoVsEstatico'
 import Paquetes from '@/components/sections/Paquetes'
 import TablaComparativa from '@/components/sections/TablaComparativa'
-import PresupuestoYCronograma from '@/components/sections/PresupuestoYCronograma'
+import Presupuesto from '@/components/sections/Presupuesto'
+import MetodosPagoPublic from '@/components/sections/MetodosPagoPublic'
+import Cronograma from '@/components/sections/Cronograma'
 import FortalezasDelProyecto from '@/components/sections/FortalezasDelProyecto'
 import ObservacionesYRecomendaciones from '@/components/sections/ObservacionesYRecomendaciones'
 import Conclusion from '@/components/sections/Conclusion'
@@ -30,7 +32,8 @@ import type {
   TablaComparativaData,
   PresupuestoCronogramaData,
   ObservacionesData,
-  ConclusionData
+  ConclusionData,
+  CuotasData
 } from '@/lib/types'
 import type { GarantiasData } from '@/components/sections/Garantias'
 import { generateCSSVariables, applyCSSVariables } from '@/lib/utils/colorSystem'
@@ -145,18 +148,20 @@ function HomeContent() {
   const fortalezasData: FortalezasData | undefined = contenido?.fortalezas
   const dinamicoVsEstaticoData: DinamicoVsEstaticoData | undefined = contenido?.dinamicoVsEstatico
   const tablaComparativaData: TablaComparativaData | undefined = contenido?.tablaComparativa
-  // Merge profundo para asegurar que metodosPago y otros subcampos existan
+  // Merge profundo para asegurar que todos los subcampos existan
   const presupuestoFromDB = contenido?.presupuestoCronograma as PresupuestoCronogramaData | undefined
   const presupuestoCronogramaData: PresupuestoCronogramaData | undefined = presupuestoFromDB ? {
     ...defaultPresupuestoCronograma,
     ...presupuestoFromDB,
     presupuesto: { ...defaultPresupuestoCronograma.presupuesto, ...presupuestoFromDB.presupuesto },
-    metodosPago: { ...defaultPresupuestoCronograma.metodosPago, ...presupuestoFromDB.metodosPago },
     cronograma: { ...defaultPresupuestoCronograma.cronograma, ...presupuestoFromDB.cronograma },
     caracteristicasPorPaquete: { ...defaultPresupuestoCronograma.caracteristicasPorPaquete, ...presupuestoFromDB.caracteristicasPorPaquete },
   } : undefined
   const observacionesData: ObservacionesData | undefined = contenido?.observaciones
   const conclusionData: ConclusionData | undefined = contenido?.conclusion
+  
+  // Cuotas (datos de métodos de pago y rangos de presupuesto)
+  const cuotasData: CuotasData | undefined = contenido?.cuotas as CuotasData | undefined
 
   // ==================== COLORES CORPORATIVOS DINÁMICOS ====================
   // Aplicar CSS variables basadas en los colores corporativos definidos en el admin
@@ -237,7 +242,9 @@ function HomeContent() {
       <AnalisisRequisitos data={analisisData} />
       <FortalezasDelProyecto data={fortalezasData} />
       <DinamicoVsEstatico data={dinamicoVsEstaticoData} />
-      <PresupuestoYCronograma data={presupuestoCronogramaData} />
+      <Presupuesto data={presupuestoCronogramaData} />
+      <MetodosPagoPublic data={presupuestoCronogramaData} cuotasData={cuotasData} />
+      <Cronograma data={presupuestoCronogramaData} />
       <Paquetes />
       <TablaComparativa data={tablaComparativaData} />
       <ObservacionesYRecomendaciones data={observacionesData} />

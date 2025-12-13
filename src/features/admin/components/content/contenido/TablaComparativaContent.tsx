@@ -2,8 +2,9 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaTable, FaChevronDown, FaChevronUp, FaPlus, FaTrash, FaCheck, FaTimes } from 'react-icons/fa'
+import { Table, ChevronDown, ChevronUp, Plus, Trash2, Check, X } from 'lucide-react'
 import ContentHeader from './ContentHeader'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { SeccionesColapsadasConfig } from '@/lib/types'
 
@@ -259,14 +260,14 @@ export default function TablaComparativaContent({
           }`}
           title={isBoolean ? (value ? 'Incluido' : 'No incluido') : 'Texto personalizado'}
         >
-          {isBoolean ? (value ? <FaCheck size={10} /> : <FaTimes size={10} />) : '📝'}
+          {isBoolean ? (value ? <Check className="w-2.5 h-2.5" /> : <X className="w-2.5 h-2.5" />) : '📝'}
         </button>
         {!isBoolean && (
           <input
             type="text"
             value={value}
             onChange={(e) => updateItem(catIndex, itemIndex, field, e.target.value)}
-            className="flex-1 px-2 py-1 bg-gh-bg-secondary border border-gh-border rounded text-xs text-gh-text"
+            className="flex-1 px-2 py-1 bg-gh-bg-secondary border border-gh-border/30 rounded text-xs text-gh-text"
             placeholder="Texto..."
           />
         )}
@@ -286,11 +287,12 @@ export default function TablaComparativaContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader
         title="Tabla Comparativa"
-        icon={<FaTable className="text-gh-accent" />}
+        subtitle="Comparación detallada de paquetes y características"
+        icon={Table}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -299,8 +301,8 @@ export default function TablaComparativaContent({
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
         <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
       </div>
 
@@ -308,9 +310,9 @@ export default function TablaComparativaContent({
       <div className={`space-y-4 transition-opacity duration-200 ${!visible ? 'opacity-50' : ''}`}>
         
         {/* Subsección: Títulos */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.titulos === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.titulos === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={vis.titulos !== false} 
               onChange={(v) => handleVisChange('titulos', v)}
@@ -323,7 +325,7 @@ export default function TablaComparativaContent({
                 type="text"
                 value={data.titulo}
                 onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -332,7 +334,7 @@ export default function TablaComparativaContent({
                 type="text"
                 value={data.subtitulo}
                 onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
           </div>
@@ -341,16 +343,14 @@ export default function TablaComparativaContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* PAQUETES */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.paquetes === false ? 'opacity-50' : ''}`}>
-          <div className="flex items-center justify-between">
+        <div className={`bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden transition-opacity duration-200 ${vis.paquetes === false ? 'opacity-50' : ''}`}>
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
             <button
               onClick={() => toggleSection('paquetes')}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-2 text-xs font-medium text-gh-text hover:text-gh-info transition-colors"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                📦 Configuración de Paquetes
-              </span>
-              {expandedSections.paquetes ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              <span className="text-base">📦</span> Configuración de Paquetes
+              {expandedSections.paquetes ? <ChevronUp className="w-4 h-4 text-gh-text-muted" /> : <ChevronDown className="w-4 h-4 text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.paquetes !== false} 
@@ -359,7 +359,7 @@ export default function TablaComparativaContent({
           </div>
 
           {expandedSections.paquetes && (
-            <div className="mt-4 grid grid-cols-3 gap-4">
+            <div className="p-4 grid grid-cols-3 gap-4">
               {(['basic', 'professional', 'enterprise'] as const).map((tipo) => (
                 <div key={tipo} className="p-4 bg-gh-bg-secondary/50 border border-gh-border/50 rounded-md">
                   <div className="flex items-center justify-between mb-3">
@@ -381,7 +381,7 @@ export default function TablaComparativaContent({
                         type="text"
                         value={data.paquetes[tipo].name}
                         onChange={(e) => updatePackage(tipo, 'name', e.target.value)}
-                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       />
                     </div>
                     <div>
@@ -390,7 +390,7 @@ export default function TablaComparativaContent({
                         type="text"
                         value={data.paquetes[tipo].price}
                         onChange={(e) => updatePackage(tipo, 'price', e.target.value)}
-                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       />
                     </div>
                     <div>
@@ -399,7 +399,7 @@ export default function TablaComparativaContent({
                         type="text"
                         value={data.paquetes[tipo].description}
                         onChange={(e) => updatePackage(tipo, 'description', e.target.value)}
-                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       />
                     </div>
                     <div>
@@ -408,7 +408,7 @@ export default function TablaComparativaContent({
                         type="text"
                         value={data.paquetes[tipo].cta}
                         onChange={(e) => updatePackage(tipo, 'cta', e.target.value)}
-                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       />
                     </div>
                   </div>
@@ -421,16 +421,14 @@ export default function TablaComparativaContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* CATEGORÍAS Y FEATURES */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.categorias === false ? 'opacity-50' : ''}`}>
-          <div className="flex items-center justify-between">
+        <div className={`bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden transition-opacity duration-200 ${vis.categorias === false ? 'opacity-50' : ''}`}>
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
             <button
               onClick={() => toggleSection('categorias')}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-2 text-xs font-medium text-gh-text hover:text-gh-info transition-colors"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                📋 Categorías y Características
-              </span>
-              {expandedSections.categorias ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              <span className="text-base">📋</span> Categorías y Características
+              {expandedSections.categorias ? <ChevronUp className="w-4 h-4 text-gh-text-muted" /> : <ChevronDown className="w-4 h-4 text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.categorias !== false} 
@@ -439,7 +437,7 @@ export default function TablaComparativaContent({
           </div>
 
           {expandedSections.categorias && (
-            <div className="mt-4 space-y-4">
+            <div className="p-4 space-y-4">
               {data.categorias.map((categoria, catIndex) => (
                 <div key={`cat-${catIndex}`} className="p-4 bg-gh-bg-secondary/50 border border-gh-border/50 rounded-md">
                   <div className="flex items-center justify-between mb-3">
@@ -447,33 +445,33 @@ export default function TablaComparativaContent({
                       type="text"
                       value={categoria.category}
                       onChange={(e) => updateCategoria(catIndex, e.target.value)}
-                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm font-medium text-gh-text"
+                      className="px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-sm font-medium text-gh-text"
                     />
                     <button
                       onClick={() => removeCategoria(catIndex)}
                       className="text-gh-danger hover:text-gh-danger/80 text-xs p-2"
                     >
-                      <FaTrash />
+                      <Trash2 />
                     </button>
                   </div>
 
                   {/* Items de la categoría */}
                   <div className="space-y-2">
                     {categoria.items.map((item, itemIndex) => (
-                      <div key={`item-${catIndex}-${itemIndex}`} className="p-3 bg-gh-bg-tertiary border border-gh-border rounded-md">
+                      <div key={`item-${catIndex}-${itemIndex}`} className="p-3 bg-gh-bg-tertiary border border-gh-border/30 rounded-md">
                         <div className="flex items-center gap-2 mb-2">
                           <input
                             type="text"
                             value={item.name}
                             onChange={(e) => updateItem(catIndex, itemIndex, 'name', e.target.value)}
-                            className="flex-1 px-2 py-1 bg-gh-bg-secondary border border-gh-border rounded text-sm text-gh-text"
+                            className="flex-1 px-2 py-1 bg-gh-bg-secondary border border-gh-border/30 rounded text-xs font-medium text-gh-text"
                             placeholder="Nombre de la característica"
                           />
                           <button
                             onClick={() => removeItem(catIndex, itemIndex)}
                             className="text-gh-danger hover:text-gh-danger/80 text-xs"
                           >
-                            <FaTrash />
+                            <Trash2 />
                           </button>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
@@ -498,7 +496,7 @@ export default function TablaComparativaContent({
                     onClick={() => addItem(catIndex)}
                     className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-gh-info/20 border border-gh-info/30 text-gh-info rounded-md text-xs hover:bg-gh-info/30 transition-colors"
                   >
-                    <FaPlus /> Agregar Característica
+                    <Plus /> Agregar Característica
                   </button>
                 </div>
               ))}
@@ -507,16 +505,16 @@ export default function TablaComparativaContent({
                 onClick={addCategoria}
                 className="flex items-center gap-2 px-3 py-2 bg-gh-success/20 border border-gh-success/30 text-gh-success rounded-md text-sm hover:bg-gh-success/30 transition-colors"
               >
-                <FaPlus /> Agregar Categoría
+                <Plus /> Agregar Categoría
               </button>
             </div>
           )}
         </div>
 
         {/* Nota al pie */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.notaPie === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.notaPie === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📝 Nota al Pie</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📝 Nota al Pie</span>
             <ToggleSwitch 
               enabled={vis.notaPie !== false} 
               onChange={(v) => handleVisChange('notaPie', v)}
@@ -525,7 +523,7 @@ export default function TablaComparativaContent({
           <textarea
             value={data.notaPie}
             onChange={(e) => onChange({ ...data, notaPie: e.target.value })}
-            className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+            className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
             rows={2}
           />
         </div>
@@ -534,3 +532,7 @@ export default function TablaComparativaContent({
     </motion.div>
   )
 }
+
+
+
+

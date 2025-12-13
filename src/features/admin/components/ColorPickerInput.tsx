@@ -77,7 +77,7 @@ export default function ColorPickerInput({
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="w-10 h-8 border border-gh-border rounded cursor-pointer transition-all hover:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/50"
+            className="w-10 h-8 border border-gh-border/30 rounded cursor-pointer transition-all hover:border-gh-success focus:outline-none focus:ring-2 focus:ring-gh-success/50"
             style={{ backgroundColor: isValidColor ? value : '#ffffff' }}
             title="Abrir selector de color"
             aria-label="Abrir selector de color"
@@ -91,7 +91,7 @@ export default function ColorPickerInput({
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="flex-1 px-3 py-1.5 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none uppercase"
+          className="flex-1 px-3 py-1.5 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none uppercase"
           maxLength={7}
         />
       </div>
@@ -104,7 +104,7 @@ export default function ColorPickerInput({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-50 mt-2 p-3 bg-gh-bg-secondary border border-gh-border rounded-lg shadow-xl"
+            className="absolute z-50 mt-2 p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg shadow-xl"
           >
             <HexColorPicker
               color={isValidColor ? value : '#ffffff'}
@@ -117,7 +117,7 @@ export default function ColorPickerInput({
                 className="w-8 h-8 rounded border border-gh-border"
                 style={{ backgroundColor: isValidColor ? value : '#ffffff' }}
               />
-              <span className="text-sm text-gh-text font-mono uppercase">{value}</span>
+              <span className="text-xs font-medium text-gh-text font-mono uppercase">{value}</span>
             </div>
 
             {/* Colores predefinidos comunes */}
@@ -143,7 +143,7 @@ export default function ColorPickerInput({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="mt-3 w-full px-3 py-1.5 text-xs font-medium text-gh-text bg-gh-bg-tertiary border border-gh-border rounded-md hover:bg-gh-bg-overlay transition-colors"
+              className="mt-3 w-full px-3 py-1.5 text-xs font-medium text-gh-text bg-gh-bg-tertiary border border-gh-border/30 rounded-md hover:bg-gh-bg-overlay transition-colors"
             >
               Cerrar
             </button>
@@ -153,3 +153,5 @@ export default function ColorPickerInput({
     </div>
   )
 }
+
+

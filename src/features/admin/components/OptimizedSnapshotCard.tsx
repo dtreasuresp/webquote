@@ -8,8 +8,10 @@
 
 import React, { useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { FaEdit, FaTrash, FaDownload, FaExchangeAlt } from 'react-icons/fa'
+import { Edit, Trash2, Download, ArrowLeftRight } from 'lucide-react'
+import { ToggleSwitchWithLabel } from '@/features/admin/components/ToggleSwitch'
 import type { PackageSnapshot } from '@/lib/types'
+import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
 export interface OptimizedSnapshotCardProps {
   snapshot: PackageSnapshot
@@ -53,7 +55,8 @@ export const OptimizedSnapshotCard = React.memo(
       costoAño1: snapshot.costos.año1.toFixed(2),
       costoAño2: snapshot.costos.año2.toFixed(2),
       fecha: new Date(snapshot.createdAt).toLocaleDateString('es-ES'),
-    }), [snapshot.costos, snapshot.createdAt])
+      preview: calcularPreviewDescuentos(snapshot),
+    }), [snapshot.costos, snapshot.createdAt, snapshot])
 
     return (
       <motion.div
@@ -79,31 +82,25 @@ export const OptimizedSnapshotCard = React.memo(
               <p className="text-xs text-gh-text-muted mt-2">{displayData.fecha}</p>
             </div>
             <div className="flex items-center gap-2">
-              <input
-                id={`snapshot-activo-${snapshot.id}`}
-                type="checkbox"
-                checked={snapshot.activo}
-                onChange={handleToggleActivo}
-                className="w-5 h-5 cursor-pointer accent-gh-success"
+              <ToggleSwitchWithLabel
+                enabled={snapshot.activo}
+                onChange={(v) => onToggleActivo?.(snapshot, v)}
+                label="Activo"
+                size="sm"
+                labelPosition="right"
               />
-              <label 
-                htmlFor={`snapshot-activo-${snapshot.id}`} 
-                className="font-semibold text-white text-sm"
-              >
-                Activo
-              </label>
             </div>
           </div>
         </div>
 
         <div className="p-4 space-y-3">
           <div className="space-y-2">
-            <p className="text-sm text-gh-text">
+            <p className="text-xs font-medium text-gh-text">
               <strong className="text-gh-text">Desarrollo:</strong> ${snapshot.paquete.desarrollo.toFixed(2)}
             </p>
-            {snapshot.paquete.descuento > 0 && (
+            {displayData.preview.porcentajeAhorro > 0 && (
               <p className="text-sm text-white/90">
-                <strong className="text-white">Descuento:</strong> {snapshot.paquete.descuento}%
+                <strong className="text-white">Ahorro:</strong> {displayData.preview.porcentajeAhorro.toFixed(1)}%
               </p>
             )}
           </div>
@@ -126,7 +123,7 @@ export const OptimizedSnapshotCard = React.memo(
               onClick={handleEdit}
               className="flex-1 px-3 py-2 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all text-sm font-semibold flex items-center justify-center gap-2"
             >
-              <FaEdit /> Editar
+              <Edit /> Editar
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -139,7 +136,7 @@ export const OptimizedSnapshotCard = React.memo(
               }`}
               title="Seleccionar para comparar"
             >
-              <FaExchangeAlt />
+              <ArrowLeftRight />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -147,7 +144,7 @@ export const OptimizedSnapshotCard = React.memo(
               onClick={handleDownload}
               className="px-3 py-2 bg-gh-btn-ghost text-gh-text rounded-lg border border-gh-border hover:bg-gh-bg-secondary transition-all text-sm"
             >
-              <FaDownload />
+              <Download />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -155,7 +152,7 @@ export const OptimizedSnapshotCard = React.memo(
               onClick={handleDelete}
               className="px-3 py-2 bg-gh-danger text-white rounded-lg hover:bg-red-600 transition-all text-sm"
             >
-              <FaTrash />
+              <Trash2 />
             </motion.button>
           </div>
         </div>
@@ -180,3 +177,5 @@ export const OptimizedSnapshotCard = React.memo(
 OptimizedSnapshotCard.displayName = 'OptimizedSnapshotCard'
 
 export default OptimizedSnapshotCard
+
+

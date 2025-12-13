@@ -16,8 +16,10 @@ export interface CostoPreview {
   // Subtotales antes del descuento directo
   subtotalOriginal: number
   subtotalConDescuentos: number
-  // Descuento directo aplicado al final
+  // Descuentos individuales aplicados
   descuentoDirectoAplicado: number
+  descuentoPagoUnico: number
+  descuentoGeneral?: { porcentaje: number; aplicarA: { desarrollo: boolean; serviciosBase: boolean; otrosServicios: boolean } }
   // Totales finales
   totalOriginal: number
   totalConDescuentos: number
@@ -267,6 +269,8 @@ export function calcularPreviewDescuentos(snapshot: PackageSnapshot): CostoPrevi
     subtotalOriginal,
     subtotalConDescuentos,
     descuentoDirectoAplicado,
+    descuentoPagoUnico: config.descuentoPagoUnico,
+    descuentoGeneral: config.descuentoGeneral,
     totalOriginal,
     totalConDescuentos,
     totalAhorro,

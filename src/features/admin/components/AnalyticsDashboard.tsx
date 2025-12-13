@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { FaChartLine, FaCheckCircle, FaTimesCircle, FaClock, FaDownload } from 'react-icons/fa'
+import { LineChart, CheckCircle2, XCircle, Clock, Download } from 'lucide-react'
 import { useAnalytics } from '../contexts/AnalyticsContext'
 import { useAnalyticsMetrics } from '../hooks/useAnalyticsMetrics'
 
@@ -61,14 +61,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-4 ${className}`}>
       {/* HEADER */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <FaChartLine className="text-gh-accent-blue text-2xl" />
+          <LineChart className="text-gh-accent-blue text-2xl" />
           <div>
             <h2 className="text-2xl font-bold text-gh-text">Analytics Dashboard</h2>
-            {state.sessionId && <p className="text-sm text-gh-text-muted">Session ID: {state.sessionId}</p>}
+            {state.sessionId && <p className="text-xs font-medium text-gh-text-muted">Session ID: {state.sessionId}</p>}
           </div>
         </div>
         <div className="flex gap-2">
@@ -78,7 +78,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
             onClick={handleExportAnalytics}
             className="px-4 py-2 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all text-sm font-semibold flex items-center gap-2"
           >
-            <FaDownload /> Exportar
+            <Download /> Exportar
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -116,11 +116,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4"
+            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-gh-text-muted text-sm font-semibold">Total Eventos</span>
-              <FaChartLine className="text-gh-accent-blue text-xl" />
+              <LineChart className="text-gh-accent-blue text-xl" />
             </div>
             <p className="text-3xl font-bold text-gh-text">{aggregateMetrics.totalEvents}</p>
             <p className="text-xs text-gh-text-muted mt-1">registrados</p>
@@ -131,11 +131,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4"
+            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-gh-text-muted text-sm font-semibold">Acciones</span>
-              <FaClock className="text-gh-warning text-xl" />
+              <Clock className="text-gh-warning text-xl" />
             </div>
             <p className="text-3xl font-bold text-gh-text">{aggregateMetrics.totalActions}</p>
             <p className="text-xs text-gh-text-muted mt-1">rastreadas</p>
@@ -146,11 +146,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4"
+            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-gh-text-muted text-sm font-semibold">Tasa Éxito</span>
-              <FaCheckCircle className="text-gh-success text-xl" />
+              <CheckCircle2 className="text-gh-success text-xl" />
             </div>
             <p className="text-3xl font-bold text-gh-success">{successRate.toFixed(1)}%</p>
             <p className="text-xs text-gh-text-muted mt-1">acciones exitosas</p>
@@ -161,11 +161,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4"
+            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-gh-text-muted text-sm font-semibold">Tasa Error</span>
-              <FaTimesCircle className="text-gh-error text-xl" />
+              <XCircle className="text-gh-error text-xl" />
             </div>
             <p className="text-3xl font-bold text-gh-error">{errorRate.toFixed(1)}%</p>
             <p className="text-xs text-gh-text-muted mt-1">acciones fallidas</p>
@@ -186,7 +186,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
                   key={comp.component}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-gh-bg-secondary border border-gh-border rounded-lg p-4"
+                  className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg p-4"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-gh-text">{comp.component}</h4>
@@ -224,7 +224,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
                   key={act.action}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-gh-bg-secondary border border-gh-border rounded-lg p-4"
+                  className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg p-4"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-gh-text">{act.action}</h4>
@@ -261,7 +261,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gh-bg-secondary border border-gh-border rounded-lg p-4"
+              className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg p-4"
             >
               <p className="text-gh-text-muted text-sm mb-2">Duración Promedio</p>
               <p className="text-2xl font-bold text-gh-accent-blue">{formatDuration(avgDuration)}</p>
@@ -270,7 +270,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="bg-gh-bg-secondary border border-gh-border rounded-lg p-4"
+              className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg p-4"
             >
               <p className="text-gh-text-muted text-sm mb-2">Acción Más Rápida</p>
               <p className="text-sm font-semibold text-gh-text">{performanceMetrics.fastestAction?.action}</p>
@@ -282,7 +282,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gh-bg-secondary border border-gh-border rounded-lg p-4"
+              className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg p-4"
             >
               <p className="text-gh-text-muted text-sm mb-2">Acción Más Lenta</p>
               <p className="text-sm font-semibold text-gh-text">{performanceMetrics.slowestAction?.action}</p>
@@ -332,3 +332,5 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ classNam
 }
 
 export default AnalyticsDashboard
+
+

@@ -82,7 +82,7 @@ export const OfertaAnalyticsSection: React.FC<OfertaAnalyticsSectionProps> = ({ 
       id: 'servicios-base',
       titulo: 'Servicios Base',
       icono: Box,
-      color: 'gh-success',
+      iconColor: 'text-gh-success w-4 h-4',
       metricas: [
         { label: 'Creados', valor: serviciosBaseCreados, color: 'text-gh-success' },
         { label: 'Editados', valor: serviciosBaseEditados, color: 'text-gh-info' },
@@ -93,7 +93,7 @@ export const OfertaAnalyticsSection: React.FC<OfertaAnalyticsSectionProps> = ({ 
       id: 'servicios-opcionales',
       titulo: 'Servicios Opcionales',
       icono: Grid3x3,
-      color: 'gh-info',
+      iconColor: 'text-gh-info w-4 h-4',
       metricas: [
         { label: 'Creados', valor: serviciosOpcCreados, color: 'text-gh-success' },
         { label: 'Editados', valor: serviciosOpcEditados, color: 'text-gh-info' },
@@ -104,7 +104,7 @@ export const OfertaAnalyticsSection: React.FC<OfertaAnalyticsSectionProps> = ({ 
       id: 'paquetes',
       titulo: 'Paquetes',
       icono: Layers,
-      color: 'gh-accent-purple',
+      iconColor: 'text-purple-400 w-4 h-4',
       metricas: [
         { label: 'Creados', valor: snapshotsCreados, color: 'text-gh-success' },
         { label: 'Activados', valor: snapshotsActivados, color: 'text-gh-info' },
@@ -116,7 +116,7 @@ export const OfertaAnalyticsSection: React.FC<OfertaAnalyticsSectionProps> = ({ 
       id: 'financiero',
       titulo: 'Configuración Financiera',
       icono: DollarSign,
-      color: 'gh-warning',
+      iconColor: 'text-gh-warning w-4 h-4',
       metricas: [
         { label: 'Descuentos config.', valor: descuentosConfigurados, color: 'text-gh-success' },
         { label: 'Opciones pago mod.', valor: opcionesPagoModificadas, color: 'text-gh-info' },
@@ -148,10 +148,10 @@ export const OfertaAnalyticsSection: React.FC<OfertaAnalyticsSectionProps> = ({ 
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
               whileHover={{ translateY: -2, scale: 1.02 }}
-              className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4 hover:border-gh-accent-blue/50 transition-all cursor-pointer"
+              className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4 hover:border-gh-accent-blue/50 transition-all cursor-pointer"
             >
               <div className="flex items-center gap-2 mb-3">
-                <Icon className={`text-${card.color}`} />
+                <Icon className={card.iconColor} />
                 <h4 className="text-sm font-semibold text-gh-text">{card.titulo}</h4>
               </div>
               <div className="space-y-2">
@@ -174,7 +174,7 @@ export const OfertaAnalyticsSection: React.FC<OfertaAnalyticsSectionProps> = ({ 
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           whileHover={{ translateY: -2, scale: 1.02 }}
-          className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4 hover:border-gh-accent-blue/50 transition-all cursor-pointer"
+          className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4 hover:border-gh-accent-blue/50 transition-all cursor-pointer"
         >
           <div className="flex items-center gap-2 mb-3">
             <Navigation className="text-gh-accent-blue w-4 h-4" />
@@ -211,7 +211,7 @@ export const OfertaAnalyticsSection: React.FC<OfertaAnalyticsSectionProps> = ({ 
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
           whileHover={{ translateY: -2, scale: 1.02 }}
-          className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4 hover:border-gh-success/50 transition-all cursor-pointer"
+          className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4 hover:border-gh-success/50 transition-all cursor-pointer"
         >
           <div className="flex items-center gap-2 mb-3">
             <FileText className="text-gh-success w-4 h-4" />
@@ -230,3 +230,5 @@ export const OfertaAnalyticsSection: React.FC<OfertaAnalyticsSectionProps> = ({ 
 }
 
 export default OfertaAnalyticsSection
+
+

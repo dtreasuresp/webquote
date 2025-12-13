@@ -2,9 +2,10 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaStar, FaChevronDown, FaChevronUp, FaPlus, FaTrash } from 'react-icons/fa'
+import { Star, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import ContentHeader from './ContentHeader'
 import ArrayFieldGH from './ArrayFieldGH'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { SeccionesColapsadasConfig } from '@/lib/types'
 
@@ -143,11 +144,12 @@ export default function FortalezasContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader
         title="Fortalezas del Proyecto"
-        icon={<FaStar className="text-gh-warning" />}
+        subtitle="Ventajas competitivas y factores de éxito del proyecto"
+        icon={Star}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -156,8 +158,8 @@ export default function FortalezasContent({
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
         <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
       </div>
 
@@ -165,9 +167,9 @@ export default function FortalezasContent({
       <div className={`space-y-4 transition-opacity duration-200 ${!visible ? 'opacity-50' : ''}`}>
         
         {/* Subsección: Títulos */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.titulos === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.titulos === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={vis.titulos !== false} 
               onChange={(v) => handleVisChange('titulos', v)}
@@ -180,7 +182,7 @@ export default function FortalezasContent({
                 type="text"
                 value={data.titulo}
                 onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -189,7 +191,7 @@ export default function FortalezasContent({
                 type="text"
                 value={data.subtitulo}
                 onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
           </div>
@@ -198,16 +200,15 @@ export default function FortalezasContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* FORTALEZAS */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.listaFortalezas === false ? 'opacity-50' : ''}`}>
-          <div className="flex items-center justify-between">
+        <div className={`bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden transition-opacity duration-200 ${vis.listaFortalezas === false ? 'opacity-50' : ''}`}>
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
             <button
               onClick={() => toggleSection('fortalezas')}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-2 text-xs font-medium text-gh-text hover:text-gh-info transition-colors"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                ⭐ Lista de Fortalezas ({data.fortalezas.length})
-              </span>
-              {expandedSections.fortalezas ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              <span className="text-base">⭐</span> Lista de Fortalezas
+              <span className="text-gh-text-muted font-normal">({data.fortalezas.length})</span>
+              {expandedSections.fortalezas ? <ChevronUp className="w-4 h-4 text-gh-text-muted" /> : <ChevronDown className="w-4 h-4 text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.listaFortalezas !== false} 
@@ -216,16 +217,16 @@ export default function FortalezasContent({
           </div>
 
           {expandedSections.fortalezas && (
-            <div className="mt-4 space-y-3">
+            <div className="p-4 space-y-3">
               {data.fortalezas.map((fortaleza, index) => (
-                <div key={`fortaleza-${index}`} className="p-3 bg-gh-bg-secondary border border-gh-border rounded-md">
+                <div key={`fortaleza-${index}`} className="p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-md">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-medium text-gh-text-muted">Fortaleza {index + 1}</span>
                     <button
                       onClick={() => handleRemoveFortaleza(index)}
                       className="p-1.5 text-gh-danger hover:bg-gh-danger/10 rounded"
                     >
-                      <FaTrash size={10} />
+                      <Trash2 className="w-2.5 h-2.5" />
                     </button>
                   </div>
                   <div className="grid grid-cols-12 gap-2">
@@ -235,7 +236,7 @@ export default function FortalezasContent({
                         type="text"
                         value={fortaleza.icon}
                         onChange={(e) => handleUpdateFortaleza(index, 'icon', e.target.value)}
-                        className="w-full px-2 py-1.5 bg-gh-bg-tertiary border border-gh-border rounded text-sm text-gh-text text-center"
+                        className="w-full px-2 py-1.5 bg-gh-bg-tertiary border border-gh-border/30 rounded text-xs font-medium text-gh-text text-center"
                         placeholder="🎯"
                       />
                     </div>
@@ -245,7 +246,7 @@ export default function FortalezasContent({
                         type="text"
                         value={fortaleza.title}
                         onChange={(e) => handleUpdateFortaleza(index, 'title', e.target.value)}
-                        className="w-full px-2 py-1.5 bg-gh-bg-tertiary border border-gh-border rounded text-sm text-gh-text"
+                        className="w-full px-2 py-1.5 bg-gh-bg-tertiary border border-gh-border/30 rounded text-xs font-medium text-gh-text"
                         placeholder="Título de la fortaleza"
                       />
                     </div>
@@ -255,7 +256,7 @@ export default function FortalezasContent({
                         type="text"
                         value={fortaleza.desc}
                         onChange={(e) => handleUpdateFortaleza(index, 'desc', e.target.value)}
-                        className="w-full px-2 py-1.5 bg-gh-bg-tertiary border border-gh-border rounded text-sm text-gh-text"
+                        className="w-full px-2 py-1.5 bg-gh-bg-tertiary border border-gh-border/30 rounded text-xs font-medium text-gh-text"
                         placeholder="Descripción breve"
                       />
                     </div>
@@ -266,7 +267,7 @@ export default function FortalezasContent({
                 onClick={handleAddFortaleza}
                 className="w-full px-3 py-2 text-xs font-medium text-gh-text-muted hover:text-gh-text bg-gh-bg-secondary border border-gh-border border-dashed rounded-md hover:bg-gh-bg-tertiary transition-colors flex items-center justify-center gap-1.5"
               >
-                <FaPlus size={10} /> Agregar Fortaleza
+                <Plus className="w-2.5 h-2.5" /> Agregar Fortaleza
               </button>
             </div>
           )}
@@ -275,16 +276,14 @@ export default function FortalezasContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* RESUMEN */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.resumen === false ? 'opacity-50' : ''}`}>
-          <div className="flex items-center justify-between">
+        <div className={`bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden transition-opacity duration-200 ${vis.resumen === false ? 'opacity-50' : ''}`}>
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
             <button
               onClick={() => toggleSection('resumen')}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-2 text-xs font-medium text-gh-text hover:text-gh-info transition-colors"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                📋 Resumen de Fortalezas
-              </span>
-              {expandedSections.resumen ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              <span className="text-base">📋</span> Resumen de Fortalezas
+              {expandedSections.resumen ? <ChevronUp className="w-4 h-4 text-gh-text-muted" /> : <ChevronDown className="w-4 h-4 text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.resumen !== false} 
@@ -293,14 +292,14 @@ export default function FortalezasContent({
           </div>
 
           {expandedSections.resumen && (
-            <div className="mt-4 space-y-4 p-4 bg-gh-bg-secondary/50 border border-gh-border/50 rounded-md">
+            <div className="p-4 space-y-4">
               <div>
                 <label className="block text-gh-text-muted text-xs mb-1">Título del Resumen</label>
                 <input
                   type="text"
                   value={data.resumen.titulo}
                   onChange={(e) => onChange({ ...data, resumen: { ...data.resumen, titulo: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                 />
               </div>
               <ArrayFieldGH
@@ -320,7 +319,7 @@ export default function FortalezasContent({
                 <textarea
                   value={data.resumen.resultadoFinal}
                   onChange={(e) => onChange({ ...data, resumen: { ...data.resumen, resultadoFinal: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   rows={2}
                 />
               </div>
@@ -332,3 +331,7 @@ export default function FortalezasContent({
     </motion.div>
   )
 }
+
+
+
+

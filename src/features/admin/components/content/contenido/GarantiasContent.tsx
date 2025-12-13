@@ -2,9 +2,10 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaShieldAlt, FaPlus, FaTrash } from 'react-icons/fa'
+import { Shield, Plus, Trash2 } from 'lucide-react'
 import ContentHeader from './ContentHeader'
 import ArrayFieldGH from './ArrayFieldGH'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { PoliticaCancelacion, VisibilidadConfig } from '@/lib/types'
 
@@ -61,11 +62,12 @@ export default function GarantiasContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader 
-        title="Garantías y Responsabilidades" 
-        icon={<FaShieldAlt className="text-gh-info" />}
+        title="Garantías y Responsabilidades"
+        subtitle="Compromisos del proveedor y responsabilidades del cliente"
+        icon={Shield}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -74,8 +76,8 @@ export default function GarantiasContent({
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
         <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
       </div>
 
@@ -85,9 +87,9 @@ export default function GarantiasContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* 📌 TÍTULO Y SUBTÍTULO - No colapsable */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={true} 
               onChange={() => {}} 
@@ -102,7 +104,7 @@ export default function GarantiasContent({
                 value={titSub.titulo}
                 onChange={(e) => handleTitSubChange('titulo', e.target.value)}
                 placeholder="Garantías y Responsabilidades"
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -112,7 +114,7 @@ export default function GarantiasContent({
                 value={titSub.subtitulo}
                 onChange={(e) => handleTitSubChange('subtitulo', e.target.value)}
                 placeholder="Compromisos y responsabilidades del proyecto"
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
           </div>
@@ -121,9 +123,9 @@ export default function GarantiasContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* EL PROVEEDOR GARANTIZA */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${visibilidad.garantiasProveedor === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${visibilidad.garantiasProveedor === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gh-text font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+            <span className="text-gh-text font-medium text-xs flex items-center gap-2">
               ✅ El Proveedor Garantiza
             </span>
             <ToggleSwitch 
@@ -142,9 +144,9 @@ export default function GarantiasContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* EL CLIENTE ES RESPONSABLE */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${visibilidad.garantiasCliente === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${visibilidad.garantiasCliente === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gh-text font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+            <span className="text-gh-text font-medium text-xs flex items-center gap-2">
               📋 El Cliente es Responsable de
             </span>
             <ToggleSwitch 
@@ -163,9 +165,9 @@ export default function GarantiasContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* POLÍTICAS DE CANCELACIÓN */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${visibilidad.politicasCancelacion === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${visibilidad.politicasCancelacion === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gh-text font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+            <span className="text-gh-text font-medium text-xs flex items-center gap-2">
               📋 Políticas de Cancelación
             </span>
             <ToggleSwitch 
@@ -176,7 +178,7 @@ export default function GarantiasContent({
           
           <div className="space-y-3">
             {politicasCancelacion.map((pol, index) => (
-              <div key={`pol-${pol.title.slice(0, 15)}-${index}`} className="p-3 bg-gh-bg-secondary border border-gh-border rounded-md">
+              <div key={`pol-${pol.title.slice(0, 15)}-${index}`} className="p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-md">
                 <div className="flex gap-2 items-start">
                   <div className="flex-1 space-y-2">
                     <input
@@ -188,7 +190,7 @@ export default function GarantiasContent({
                         onChange('politicasCancelacion', updated)
                       }}
                       placeholder="Título de la política..."
-                      className="w-full px-3 py-2 bg-gh-bg-tertiary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text font-medium"
+                      className="w-full px-3 py-2 bg-gh-bg-tertiary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text font-medium"
                     />
                     <input
                       type="text"
@@ -199,7 +201,7 @@ export default function GarantiasContent({
                         onChange('politicasCancelacion', updated)
                       }}
                       placeholder="Detalle..."
-                      className="w-full px-3 py-2 bg-gh-bg-tertiary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                      className="w-full px-3 py-2 bg-gh-bg-tertiary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                     />
                   </div>
                   <button
@@ -207,7 +209,7 @@ export default function GarantiasContent({
                     className="p-2 text-gh-danger hover:bg-gh-danger/10 rounded transition-colors"
                     title="Eliminar"
                   >
-                    <FaTrash size={12} />
+                    <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
               </div>
@@ -217,7 +219,7 @@ export default function GarantiasContent({
               onClick={() => onChange('politicasCancelacion', [...politicasCancelacion, { title: '', detail: '' }])}
               className="w-full px-3 py-2 text-xs font-medium text-gh-text-muted hover:text-gh-text bg-gh-bg-secondary border border-gh-border border-dashed rounded-md hover:bg-gh-bg-tertiary transition-colors flex items-center justify-center gap-1.5"
             >
-              <FaPlus size={10} /> Agregar Política
+              <Plus className="w-2.5 h-2.5" /> Agregar Política
             </button>
           </div>
         </div>
@@ -225,9 +227,9 @@ export default function GarantiasContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SI EL PROVEEDOR INCUMPLE */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${visibilidad.siIncumpleProveedor === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${visibilidad.siIncumpleProveedor === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gh-text font-medium text-xs uppercase tracking-wide flex items-center gap-2">
+            <span className="text-gh-text font-medium text-xs flex items-center gap-2">
               ⚖️ Si el Proveedor Incumple
             </span>
             <ToggleSwitch 
@@ -246,3 +248,7 @@ export default function GarantiasContent({
     </motion.div>
   )
 }
+
+
+
+

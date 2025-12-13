@@ -2,8 +2,9 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaFlagCheckered } from 'react-icons/fa'
+import { Flag } from 'lucide-react'
 import ContentHeader from './ContentHeader'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 
 // Tipos para Conclusión
@@ -77,11 +78,12 @@ export default function ConclusionContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader
         title="Conclusión"
-        icon={<FaFlagCheckered className="text-gh-success" />}
+        subtitle="Cierre de la propuesta y siguiente paso hacia su presencia digital"
+        icon={Flag}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -90,18 +92,18 @@ export default function ConclusionContent({
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
-        <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
+        <ToggleItem enabled={visible} onChange={onVisibleChange} title="" showBadge={false} />
       </div>
 
       {/* Contenedor con opacity si global OFF */}
       <div className={`space-y-4 transition-opacity duration-200 ${!visible ? 'opacity-50' : ''}`}>
         
         {/* Subsección: Títulos */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={true} 
               onChange={() => {}} 
@@ -114,7 +116,7 @@ export default function ConclusionContent({
                 type="text"
                 value={data.titulo}
                 onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -123,7 +125,7 @@ export default function ConclusionContent({
                 type="text"
                 value={data.subtitulo}
                 onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
           </div>
@@ -132,9 +134,9 @@ export default function ConclusionContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* CONTENIDO PRINCIPAL */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
               📝 Contenido Principal
             </span>
             <ToggleSwitch 
@@ -148,7 +150,7 @@ export default function ConclusionContent({
             <textarea
               value={data.parrafoPrincipal}
               onChange={(e) => onChange({ ...data, parrafoPrincipal: e.target.value })}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
               rows={3}
               placeholder="Mensaje principal de la conclusión..."
             />
@@ -159,7 +161,7 @@ export default function ConclusionContent({
             <textarea
               value={data.parrafoSecundario}
               onChange={(e) => onChange({ ...data, parrafoSecundario: e.target.value })}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
               rows={3}
               placeholder="Mensaje de cierre complementario..."
             />
@@ -169,9 +171,9 @@ export default function ConclusionContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* LLAMADA A LA ACCIÓN */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
               🎯 Llamada a la Acción (CTA)
             </span>
             <ToggleSwitch
@@ -189,7 +191,7 @@ export default function ConclusionContent({
                     type="text"
                     value={data.llamadaAccion.titulo}
                     onChange={(e) => onChange({ ...data, llamadaAccion: { ...data.llamadaAccion, titulo: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
                 <div>
@@ -198,7 +200,7 @@ export default function ConclusionContent({
                     type="text"
                     value={data.llamadaAccion.textoBoton}
                     onChange={(e) => onChange({ ...data, llamadaAccion: { ...data.llamadaAccion, textoBoton: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
               </div>
@@ -207,7 +209,7 @@ export default function ConclusionContent({
                 <textarea
                   value={data.llamadaAccion.descripcion}
                   onChange={(e) => onChange({ ...data, llamadaAccion: { ...data.llamadaAccion, descripcion: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   rows={2}
                 />
               </div>
@@ -217,7 +219,7 @@ export default function ConclusionContent({
                   type="text"
                   value={data.llamadaAccion.urlBoton}
                   onChange={(e) => onChange({ ...data, llamadaAccion: { ...data.llamadaAccion, urlBoton: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   placeholder="#contacto o https://..."
                 />
               </div>
@@ -228,9 +230,9 @@ export default function ConclusionContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* FIRMA DIGITAL */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
               ✍️ Firma Digital
             </span>
             <ToggleSwitch
@@ -248,7 +250,7 @@ export default function ConclusionContent({
                     type="text"
                     value={data.firmaDigital.nombreEmpresa}
                     onChange={(e) => onChange({ ...data, firmaDigital: { ...data.firmaDigital, nombreEmpresa: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
                 <div>
@@ -257,7 +259,7 @@ export default function ConclusionContent({
                     type="text"
                     value={data.firmaDigital.eslogan}
                     onChange={(e) => onChange({ ...data, firmaDigital: { ...data.firmaDigital, eslogan: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
               </div>
@@ -267,7 +269,7 @@ export default function ConclusionContent({
                   type="text"
                   value={data.firmaDigital.textoFinal}
                   onChange={(e) => onChange({ ...data, firmaDigital: { ...data.firmaDigital, textoFinal: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                 />
               </div>
             </div>
@@ -278,3 +280,7 @@ export default function ConclusionContent({
     </motion.div>
   )
 }
+
+
+
+

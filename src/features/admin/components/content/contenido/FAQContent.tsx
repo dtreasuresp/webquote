@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { FaQuestionCircle, FaPlus, FaTrash } from 'react-icons/fa'
+import { HelpCircle, Plus, Trash2 } from 'lucide-react'
 import ContentHeader from './ContentHeader'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { FAQItem } from '@/lib/types'
 
@@ -59,11 +60,12 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader 
-        title="Preguntas Frecuentes (FAQ)" 
-        icon={<FaQuestionCircle className="text-gh-info" />}
+        title="Preguntas Frecuentes (FAQ)"
+        subtitle="Respuestas a las dudas más comunes sobre el proyecto"
+        icon={HelpCircle}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -72,9 +74,9 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
-        <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
+        <ToggleItem enabled={visible} onChange={onVisibleChange} title="" showBadge={false} />
       </div>
 
       {/* Contenedores independientes para cada subsección */}
@@ -83,9 +85,9 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* 📌 TÍTULO Y SUBTÍTULO - No colapsable */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={true} 
               onChange={() => {}} 
@@ -100,7 +102,7 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
                 value={titSub.titulo}
                 onChange={(e) => handleTitSubChange('titulo', e.target.value)}
                 placeholder="Preguntas Frecuentes"
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -110,7 +112,7 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
                 value={titSub.subtitulo}
                 onChange={(e) => handleTitSubChange('subtitulo', e.target.value)}
                 placeholder="Respuestas a las preguntas más comunes"
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
           </div>
@@ -119,11 +121,11 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* LISTA DE FAQS */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <FaQuestionCircle className="text-gh-info" />
-              <span className="text-gh-text font-medium text-xs uppercase tracking-wide">
+              <HelpCircle className="text-gh-info" />
+              <span className="text-gh-text font-medium text-xs">
                 Preguntas ({data.length})
               </span>
             </div>
@@ -135,7 +137,7 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
           
           <div className="space-y-3">
             {data.map((faq, index) => (
-              <div key={`faq-${faq.question.slice(0, 20)}-${index}`} className="p-4 bg-gh-bg-secondary border border-gh-border rounded-md space-y-3">
+              <div key={`faq-${faq.question.slice(0, 20)}-${index}`} className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-md space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gh-text-muted">Pregunta #{index + 1}</span>
                   <button
@@ -143,7 +145,7 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
                     className="p-1.5 text-gh-danger hover:bg-gh-danger/10 rounded transition-colors"
                     title="Eliminar"
                   >
-                    <FaTrash size={12} />
+                    <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
                 
@@ -152,14 +154,14 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
                   value={faq.question}
                   onChange={(e) => handleUpdate(index, 'question', e.target.value)}
                   placeholder="Pregunta..."
-                  className="w-full px-3 py-2 bg-gh-bg-tertiary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text font-medium"
+                  className="w-full px-3 py-2 bg-gh-bg-tertiary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text font-medium"
                 />
                 
                 <textarea
                   value={Array.isArray(faq.answer) ? faq.answer.join('\n') : faq.answer}
                   onChange={(e) => handleUpdate(index, 'answer', e.target.value)}
                   placeholder="Respuesta..."
-                  className="w-full px-3 py-2 bg-gh-bg-tertiary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-tertiary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                   rows={3}
                 />
               </div>
@@ -170,11 +172,11 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* AGREGAR NUEVA PREGUNTA */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <FaPlus className="text-gh-success" />
-              <span className="text-gh-text font-medium text-xs uppercase tracking-wide">
+              <Plus className="text-gh-success" />
+              <span className="text-gh-text font-medium text-xs">
                 Agregar Nueva Pregunta
               </span>
             </div>
@@ -190,14 +192,14 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
               placeholder="¿Cuál es la pregunta?"
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
             />
             
             <textarea
               value={newAnswer}
               onChange={(e) => setNewAnswer(e.target.value)}
               placeholder="Escribe la respuesta..."
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
               rows={2}
             />
             
@@ -206,7 +208,7 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
               disabled={!newQuestion.trim() || !newAnswer.trim()}
               className="px-4 py-2 text-xs font-medium text-white bg-gh-success hover:bg-gh-success/90 rounded-md transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FaPlus size={10} /> Agregar Pregunta
+              <Plus className="w-2.5 h-2.5" /> Agregar Pregunta
             </button>
           </div>
         </div>
@@ -214,3 +216,7 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
     </motion.div>
   )
 }
+
+
+
+

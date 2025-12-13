@@ -9,7 +9,7 @@
 'use client'
 
 import React from 'react'
-import { FaCheckCircle, FaTimesCircle, FaInfoCircle } from 'react-icons/fa'
+import { CheckCircle2, XCircle, Info } from 'lucide-react'
 import {
   validarConsistenciaFechas,
   validarConsistenciaCliente,
@@ -60,8 +60,8 @@ function obtenerValidadorTab(tab: TabType): (context: ValidationContext) => stri
  */
 function obtenerIcono(esValido: boolean, tamaño = 16) {
   return esValido
-    ? <FaCheckCircle size={tamaño} className="text-gh-success" />
-    : <FaTimesCircle size={tamaño} className="text-gh-error" />
+    ? <CheckCircle2 size={tamaño} className="text-gh-success" />
+    : <XCircle size={tamaño} className="text-gh-error" />
 }
 
 /**
@@ -160,7 +160,7 @@ export const TabValidator: React.FC<{
         <div className="mt-4 pt-4 border-t border-gh-border/30 space-y-2">
           {errores.map((error) => (
             <div key={error} className="flex items-start gap-2 text-sm">
-              <FaTimesCircle size={14} className="text-gh-error flex-shrink-0 mt-0.5" />
+              <XCircle className="w-3.5 h-3.5 text-gh-error flex-shrink-0 mt-0.5" />
               <span className="text-gh-text-secondary">{error}</span>
             </div>
           ))}
@@ -194,7 +194,7 @@ export const FieldValidationFeedback: React.FC<ErrorFieldProps> = ({
         <div className="space-y-1">
           {errores.map((error) => (
             <div key={error} className="flex items-start gap-2 text-sm">
-              <FaTimesCircle size={12} className="text-gh-error flex-shrink-0 mt-1" />
+              <XCircle className="w-3 h-3 text-gh-error flex-shrink-0 mt-1" />
               <span className="text-gh-error">{error}</span>
             </div>
           ))}
@@ -206,7 +206,7 @@ export const FieldValidationFeedback: React.FC<ErrorFieldProps> = ({
         <div className="space-y-1">
           {advertencias.map((adv) => (
             <div key={adv} className="flex items-start gap-2 text-sm">
-              <FaInfoCircle size={12} className="text-gh-warning flex-shrink-0 mt-1" />
+              <Info className="w-3 h-3 text-gh-warning flex-shrink-0 mt-1" />
               <span className="text-gh-warning">{adv}</span>
             </div>
           ))}
@@ -273,21 +273,21 @@ export const ValidatedInput: React.FC<ValidatedInputProps> = ({
       {/* FEEDBACK */}
       {tieneError && (
         <p className="text-xs text-gh-error flex items-center gap-1">
-          <FaTimesCircle size={12} />
+          <XCircle className="w-3 h-3" />
           {error}
         </p>
       )}
 
       {tieneAdvertencia && (
         <p className="text-xs text-gh-warning flex items-center gap-1">
-          <FaInfoCircle size={12} />
+          <Info className="w-3 h-3" />
           {advertencia}
         </p>
       )}
 
       {regla && !tieneError && !tieneAdvertencia && (
         <p className="text-xs text-gh-text-secondary flex items-center gap-1">
-          <FaCheckCircle size={12} className="text-gh-success" />
+          <CheckCircle2 className="w-3 h-3 text-gh-success" />
           {regla.descripcion}
         </p>
       )}
@@ -344,13 +344,13 @@ export const ValidationStatusBar: React.FC<ValidationStatusBarProps> = ({
         <div className="flex items-center gap-2">
           {todosValidos ? (
             <>
-              <FaCheckCircle className="text-gh-success" />
-              <span className="text-sm text-gh-text">Todos los TABs validados</span>
+              <CheckCircle2 className="text-gh-success" />
+              <span className="text-xs font-medium text-gh-text">Todos los TABs validados</span>
             </>
           ) : (
             <>
-              <FaTimesCircle className="text-gh-error" />
-              <span className="text-sm text-gh-text">
+              <XCircle className="text-gh-error" />
+              <span className="text-xs font-medium text-gh-text">
                 {tabsConErrores.length} TAB(s) con errores
               </span>
             </>
@@ -371,9 +371,9 @@ export const ValidationStatusBar: React.FC<ValidationStatusBarProps> = ({
               `}
             >
               {estado?.valido ? (
-                <FaCheckCircle size={12} />
+                <CheckCircle2 className="w-3 h-3" />
               ) : (
-                <FaTimesCircle size={12} />
+                <XCircle className="w-3 h-3" />
               )}
               <span>{tab}</span>
               {!estado?.valido && <span>({estado?.errores})</span>}
@@ -384,3 +384,5 @@ export const ValidationStatusBar: React.FC<ValidationStatusBarProps> = ({
     </div>
   )
 }
+
+

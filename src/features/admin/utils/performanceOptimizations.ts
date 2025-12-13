@@ -5,6 +5,7 @@
  */
 
 import type { PackageSnapshot, ServicioBase } from '@/lib/types'
+import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
 /**
  * Debounce helper (native implementation)
@@ -81,7 +82,8 @@ export const createAutoSaveDebounce = (callback: () => Promise<void>, delay: num
  */
 export const calculateCostoInicialMemoized = createMemoize(
   (snapshot: PackageSnapshot) => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     const serviciosBaseMes1 = snapshot.serviciosBase.reduce((sum, s) => {
       if (s.nombre.toLowerCase() !== 'gestión') {
         return sum + (s.precio || 0)
@@ -94,7 +96,7 @@ export const calculateCostoInicialMemoized = createMemoize(
     // Serializar solo los campos relevantes para la clave de memoización
     return JSON.stringify({
       desarrollo: snapshot.paquete.desarrollo,
-      descuento: snapshot.paquete.descuento,
+      configDescuentos: JSON.stringify(snapshot.paquete.configDescuentos),
       serviciosBaseIds: snapshot.serviciosBase.map(s => `${s.id}:${s.precio}`).join(',')
     })
   }
@@ -105,7 +107,8 @@ export const calculateCostoInicialMemoized = createMemoize(
  */
 export const calculateCostoAño1Memoized = createMemoize(
   (snapshot: PackageSnapshot) => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => {
       return sum + (s.precio * s.mesesPago)
     }, 0)
@@ -117,7 +120,7 @@ export const calculateCostoAño1Memoized = createMemoize(
   (snapshot: PackageSnapshot) => {
     return JSON.stringify({
       desarrollo: snapshot.paquete.desarrollo,
-      descuento: snapshot.paquete.descuento,
+      configDescuentos: JSON.stringify(snapshot.paquete.configDescuentos),
       serviciosBaseData: snapshot.serviciosBase.map(s => `${s.id}:${s.precio}:${s.mesesPago}`).join(','),
       otrosServiciosData: snapshot.otrosServicios.map(s => `${s.nombre}:${s.precio}:${s.mesesPago}`).join(',')
     })

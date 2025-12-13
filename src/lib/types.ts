@@ -19,16 +19,38 @@ export interface ServicioBase {
   frecuenciaPago?: 'mensual' | 'anual' // Default: 'mensual'
 }
 
-export interface GestionConfig {
-  precio: number
-  mesesGratis: number
-  mesesPago: number
-}
-
 export interface OpcionPago {
   nombre: string
   porcentaje: number
   descripcion: string
+}
+
+/** Método de pago preferido con su nota individual */
+export interface MetodoPreferido {
+  /** ID único del método preferido */
+  id: string
+  /** Nombre del método de pago (ej: "Transferencia", "PayPal") */
+  metodo: string
+  /** Nota específica para este método de pago */
+  nota: string
+}
+
+/** Plantilla de configuración financiera reutilizable */
+export interface FinancialTemplate {
+  id: string
+  userId: string
+  nombre: string
+  desarrollo: number
+  descuento: number
+  opcionesPago?: OpcionPago[]
+  tituloSeccionPago?: string
+  subtituloSeccionPago?: string
+  metodosPreferidos?: MetodoPreferido[]
+  configDescuentos?: ConfigDescuentos | null
+  descuentoPagoUnico?: number
+  notasPago?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface DescuentoServicio {
@@ -78,6 +100,13 @@ export interface ConfigDescuentos {
   
   /** Descuento directo aplicado al Total General DESPUÉS de otros descuentos (%) */
   descuentoDirecto: number
+  
+  /** Descuento especial opcional */
+  descuentoEspecial?: {
+    habilitado: boolean
+    porcentaje: number
+    motivo?: string
+  }
 }
 
 // ==================== TIPOS LEGACY (para compatibilidad) ====================
@@ -106,12 +135,14 @@ export interface Package {
   descripcion?: string
   emoji?: string
   tagline?: string
-  precioHosting?: number
-  precioMailbox?: number
-  precioDominio?: number
   tiempoEntrega?: string
   cantidadPaginas?: string  // Ej: "8", "10+", "15" - opcional, si vacío no se muestra
   opcionesPago?: OpcionPago[]
+  
+  // Precios legacy de servicios opcionales
+  precioHosting?: number
+  precioMailbox?: number
+  precioDominio?: number
   
   // ✅ NUEVO SISTEMA DE DESCUENTOS
   configDescuentos?: ConfigDescuentos
@@ -201,10 +232,12 @@ export interface QuotationConfig {
   opcionesPagoTemplate?: OpcionPago[]
   // Configuración de Descuentos template (para crear nuevos paquetes)
   configDescuentosTemplate?: ConfigDescuentos
-  // Método de pago preferido a nivel de cotización
+  // Método de pago preferido a nivel de cotización (LEGACY - mantener para compatibilidad)
   metodoPagoPreferido?: string
-  // Notas de pago a nivel de cotización
+  // Notas de pago a nivel de cotización (LEGACY - mantener para compatibilidad)
   notasPago?: string
+  // Múltiples métodos de pago preferidos con notas individuales
+  metodosPreferidos?: MetodoPreferido[]
   // Configuración de estilos (JSON)
   estilosConfig?: Record<string, unknown>
   // Contenido general editable (FAQ, Garantías, Contacto, etc.)
@@ -221,11 +254,6 @@ export interface PackageSnapshot {
   id: string
   nombre: string
   serviciosBase: ServicioBase[]
-  gestion: {
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-  }
   paquete: {
     desarrollo: number
     descuento: number
@@ -233,18 +261,24 @@ export interface PackageSnapshot {
     descripcion?: string
     emoji?: string
     tagline?: string
-    precioHosting?: number
-    precioMailbox?: number
-    precioDominio?: number
     tiempoEntrega?: string
     cantidadPaginas?: string  // Ej: "8", "10+", "15" - opcional
     opcionesPago?: OpcionPago[]
+    // Precios legacy de servicios opcionales
+    precioHosting?: number
+    precioMailbox?: number
+    precioDominio?: number
+    // Título y subtítulo para la sección de opciones de pago en página pública
+    tituloSeccionPago?: string
+    subtituloSeccionPago?: string
     // ✅ NUEVO SISTEMA DE DESCUENTOS
     configDescuentos?: ConfigDescuentos
-    // Método de pago preferido para este paquete
+    // Método de pago preferido para este paquete (LEGACY)
     metodoPagoPreferido?: string
-    // Notas de pago para este paquete
+    // Notas de pago para este paquete (LEGACY)
     notasPago?: string
+    // Múltiples métodos de pago preferidos con notas individuales
+    metodosPreferidos?: MetodoPreferido[]
     // Legacy (mantener para compatibilidad)
     descuentoPagoUnico?: number
     descuentosGenerales?: DescuentosGenerales
@@ -559,17 +593,17 @@ export interface FaseCronograma {
 export interface PresupuestoCronogramaData {
   titulo: string
   subtitulo: string
-  presupuesto: {
-    visible: boolean
-    titulo: string
-    descripcion: string
-    rangos: RangoPresupuesto[]
-    notaImportante: string
+  presupuesto?: {
+    visible?: boolean
+    titulo?: string
+    descripcion?: string
+    rangos?: RangoPresupuestoCuotas[]
+    notaImportante?: string
   }
-  metodosPago: {
-    visible: boolean
-    titulo: string
-    opciones: MetodoPago[]
+  metodosPago?: {
+    visible?: boolean
+    titulo?: string
+    opciones?: MetodoPagoCuotas[]
   }
   cronograma: {
     visible: boolean
@@ -578,9 +612,39 @@ export interface PresupuestoCronogramaData {
     duracionTotal: string
     fases: FaseCronograma[]
   }
-  /** Características editables por paquete (clave = nombre del paquete desde snapshots) */
-  caracteristicasPorPaquete?: {
-    [nombrePaquete: string]: string[]
+  caracteristicasPorPaquete?: Record<string, string[]>
+  ordenPaquetes?: string[]
+}
+
+// --- Cuotas y Pagos ---
+export interface RangoPresupuestoCuotas {
+  paquete: string
+  rangoMin: number
+  rangoMax: number
+  descripcion: string
+  caracteristicas: string[]
+}
+
+export interface MetodoPagoCuotas {
+  nombre: string
+  porcentaje?: number
+  descripcion: string
+}
+
+export interface CuotasData {
+  titulo: string
+  subtitulo: string
+  metodosPago: {
+    visible: boolean
+    titulo: string
+    opciones: MetodoPagoCuotas[]
+  }
+  presupuesto: {
+    visible: boolean
+    titulo: string
+    descripcion: string
+    rangos: RangoPresupuestoCuotas[]
+    notaImportante: string
   }
 }
 
@@ -672,7 +736,7 @@ export interface SeccionesColapsadasConfig {
   dinamico_dinamico?: boolean
   // PresupuestoCronogramaContent
   presupuesto_presupuesto?: boolean
-  presupuesto_metodosPago?: boolean
+  presupuesto_paquetesDinamicos?: boolean
   presupuesto_cronograma?: boolean
   // TablaComparativaContent
   tabla_paquetes?: boolean
@@ -720,6 +784,8 @@ export interface ContenidoGeneral {
   dinamicoVsEstatico?: DinamicoVsEstaticoData
   // Presupuesto y Cronograma
   presupuestoCronograma?: PresupuestoCronogramaData
+  // Cuotas y Pagos
+  cuotas?: CuotasData
   // Tabla Comparativa
   tablaComparativa?: TablaComparativaData
   // Observaciones
@@ -732,6 +798,7 @@ export interface ContenidoGeneral {
   visibilidadFortalezas?: boolean
   visibilidadDinamico?: boolean
   visibilidadPresupuesto?: boolean
+  visibilidadCuotas?: boolean
   visibilidadTabla?: boolean
   visibilidadObservaciones?: boolean
   visibilidadConclusion?: boolean
@@ -740,22 +807,32 @@ export interface ContenidoGeneral {
   updatedTimestamps?: Record<string, string>
 }
 // ==================== TIPOS PARA SISTEMA GENÉRICO DE DIÁLOGOS ====================
-export type DialogType = 'error' | 'advertencia' | 'confirmacion' | 'info' | 'success' | 'activar'
+export type DialogType = 'error' | 'advertencia' | 'confirmacion' | 'info' | 'success' | 'activar' | 'warning' | 'danger' | 'guardarCotizacion' | 'confirmarCancelacion'
+
+export interface DialogInputConfig {
+  placeholder?: string
+  defaultValue?: string
+  type?: 'text' | 'number' | 'email'
+  required?: boolean
+}
 
 export interface DialogButton {
   label: string
   /** Retorna false para mantener el modal abierto, true o void para cerrarlo */
-  action: () => boolean | void | Promise<boolean | void>
+  action: (inputValue?: string) => boolean | void | Promise<boolean | void>
   style: 'primary' | 'secondary' | 'danger' | 'success'
 }
 
 export interface DialogConfig {
   tipo: DialogType
   titulo: string
-  mensaje: string
+  mensaje?: string
+  mensajeHTML?: string // HTML seguro para renderizar (usar con precaución)
   subtitulo?: string
   icono?: string // emoji o nombre del icono
   botones: DialogButton[]
   quotation?: QuotationConfig // Solo para tipo 'activar'
   modoAbrir?: 'editar' | 'ver' // Solo para tipo 'activar'
+  input?: DialogInputConfig // Campo de input opcional
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full' // Tamaño del modal
 }

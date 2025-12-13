@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion'
 import { FaGavel, FaInfoCircle } from 'react-icons/fa'
 import type { TerminosCondiciones, VisibilidadConfig } from '@/lib/types'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { spring } from '@/lib/animations/config'
 
 interface TerminosProps {
   readonly data?: TerminosCondiciones
@@ -21,66 +23,75 @@ export default function Terminos({ data, visibilidad }: TerminosProps) {
   const parrafos = data.parrafos || []
 
   return (
-    <section id="terminos" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+    <FluentSection
+      id="terminos"
+      animation="stagger"
+      paddingY="md"
+      className="bg-gradient-to-b from-light-bg to-white"
+    >
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-        >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-info-bg rounded-full mb-4">
-              <FaGavel className="text-light-accent" size={20} />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
-              {titulo}
-            </h2>
-            <p className="text-sm text-light-text-secondary">
-              {subtitulo}
-            </p>
-          </div>
+        {/* Header */}
+        <FluentReveal className="text-center mb-6">
+          <motion.div 
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-accent to-blue-600 rounded-2xl mb-4 shadow-lg"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={spring.fluent}
+          >
+            <FaGavel className="text-white" size={24} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+            {titulo}
+          </h2>
+          <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+            {subtitulo}
+          </p>
+        </FluentReveal>
 
-          <div className="flex items-start gap-3 mb-5">
-            <div className="p-2 bg-light-accent/10 rounded-md flex-shrink-0">
-              <FaInfoCircle className="text-light-accent text-lg" />
+        <FluentReveal className="mb-6">
+          <FluentGlass
+            variant="subtle"
+            className="flex items-start gap-4 p-5 bg-gradient-to-r from-light-accent/10 to-blue-500/5 rounded-2xl border border-light-accent/20"
+          >
+            <div className="p-2.5 bg-gradient-to-br from-light-accent to-blue-600 rounded-xl flex-shrink-0 shadow-md">
+              <FaInfoCircle className="text-white text-lg" />
             </div>
             <div>
               <h3 className="text-base font-medium text-light-text mb-1">
                 Información importante
               </h3>
-              <p className="text-light-text-secondary text-sm">
+              <p className="text-light-text-secondary text-sm leading-relaxed">
                 Por favor, lee cuidadosamente los siguientes términos antes de aceptar esta propuesta.
               </p>
             </div>
-          </div>
+          </FluentGlass>
+        </FluentReveal>
 
-          <div className="space-y-3">
-            {parrafos.map((parrafo, index) => (
-              <motion.div
-                key={`termino-${parrafo.slice(0, 30)}-${index}`}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                className="flex items-start gap-3 p-4 bg-light-bg-secondary rounded-md border border-light-border"
+        <FluentRevealGroup className="space-y-3">
+          {parrafos.map((parrafo, index) => (
+            <FluentRevealItem key={`termino-${parrafo.slice(0, 30)}-${index}`}>
+              <FluentGlass
+                variant="subtle"
+                className="flex items-start gap-4 p-5 rounded-xl"
               >
-                <span className="text-light-accent font-medium text-sm flex-shrink-0">
-                  {index + 1}.
-                </span>
-                <p className="text-sm text-light-text-secondary">{parrafo}</p>
-              </motion.div>
-            ))}
-          </div>
+                <motion.span 
+                  className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-light-accent to-blue-600 text-white font-semibold text-sm rounded-lg flex-shrink-0 shadow-md"
+                  whileHover={{ scale: 1.1 }}
+                  transition={spring.fluent}
+                >
+                  {index + 1}
+                </motion.span>
+                <p className="text-sm text-light-text-secondary leading-relaxed">{parrafo}</p>
+              </FluentGlass>
+            </FluentRevealItem>
+          ))}
+        </FluentRevealGroup>
 
-          <div className="mt-6 pt-4 border-t border-light-border">
-            <p className="text-xs text-light-text-secondary text-center">
-              Al aceptar esta propuesta, confirmas que has leído y estás de acuerdo con estos términos y condiciones.
-            </p>
-          </div>
-        </motion.div>
+        <FluentReveal className="mt-8 pt-5 border-t border-light-border/50">
+          <p className="text-xs text-light-text-secondary text-center">
+            Al aceptar esta propuesta, confirmas que has leído y estás de acuerdo con estos términos y condiciones.
+          </p>
+        </FluentReveal>
       </div>
-    </section>
+    </FluentSection>
   )
 }

@@ -2,8 +2,9 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaPhone, FaBuilding, FaMapMarkerAlt, FaFileAlt } from 'react-icons/fa'
+import { Phone, Building, MapPin, FileText } from 'lucide-react'
 import ContentHeader from './ContentHeader'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { ContactoInfo } from '@/lib/types'
 
@@ -40,11 +41,12 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader 
-        title="Información de Contacto" 
-        icon={<FaPhone className="text-gh-info" />}
+        title="Información de Contacto"
+        subtitle="Canales de comunicación y datos de la empresa"
+        icon={Phone}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -53,8 +55,8 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
         <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
       </div>
 
@@ -64,9 +66,9 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* 📌 TÍTULO Y SUBTÍTULO */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={true} 
               onChange={() => {}} 
@@ -79,7 +81,7 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
                 type="text"
                 value={data.titulo || ''}
                 onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 placeholder="Información de Contacto"
               />
             </div>
@@ -89,7 +91,7 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
                 type="text"
                 value={data.subtitulo || ''}
                 onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 placeholder="Estamos aquí para ayudarte"
               />
             </div>
@@ -99,10 +101,10 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* CANALES DE COMUNICACIÓN */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.canales === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.canales === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gh-text font-medium text-xs uppercase tracking-wide flex items-center gap-2">
-              <FaPhone className="text-gh-warning" /> Canales de Comunicación
+            <span className="text-gh-text font-medium text-xs flex items-center gap-2">
+              <Phone className="text-gh-warning" /> Canales de Comunicación
             </span>
             <ToggleSwitch 
               enabled={vis.canales !== false} 
@@ -111,32 +113,32 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
           </div>
           <div className="grid md:grid-cols-3 gap-3">
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">WhatsApp</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">WhatsApp</span>
               <input
                 type="text"
                 value={data.whatsapp}
                 onChange={(e) => onChange({ ...data, whatsapp: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="+53 5856 9291"
               />
             </div>
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Email</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Email</span>
               <input
                 type="email"
                 value={data.email}
                 onChange={(e) => onChange({ ...data, email: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="correo@ejemplo.com"
               />
             </div>
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Teléfono</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Teléfono</span>
               <input
                 type="text"
                 value={data.telefono}
                 onChange={(e) => onChange({ ...data, telefono: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="+53 5856 9291"
               />
             </div>
@@ -146,10 +148,10 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* UBICACIÓN */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.ubicacion === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.ubicacion === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gh-text font-medium text-xs uppercase tracking-wide flex items-center gap-2">
-              <FaMapMarkerAlt className="text-gh-danger" /> Ubicación
+            <span className="text-gh-text font-medium text-xs flex items-center gap-2">
+              <MapPin className="text-gh-danger" /> Ubicación
             </span>
             <ToggleSwitch 
               enabled={vis.ubicacion !== false} 
@@ -158,32 +160,32 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
           </div>
           <div className="grid md:grid-cols-2 gap-3">
             <div className="md:col-span-2">
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Dirección</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Dirección</span>
               <input
                 type="text"
                 value={data.direccion}
                 onChange={(e) => onChange({ ...data, direccion: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="Calle, Número, Referencia"
               />
             </div>
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Ciudad</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Ciudad</span>
               <input
                 type="text"
                 value={data.ciudad}
                 onChange={(e) => onChange({ ...data, ciudad: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="Ciudad, Estado"
               />
             </div>
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">País</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">País</span>
               <input
                 type="text"
                 value={data.pais}
                 onChange={(e) => onChange({ ...data, pais: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="País"
               />
             </div>
@@ -193,10 +195,10 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* INFORMACIÓN EMPRESARIAL */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.empresarial === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.empresarial === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gh-text font-medium text-xs uppercase tracking-wide flex items-center gap-2">
-              <FaBuilding className="text-gh-info" /> Información Empresarial
+            <span className="text-gh-text font-medium text-xs flex items-center gap-2">
+              <Building className="text-gh-info" /> Información Empresarial
             </span>
             <ToggleSwitch 
               enabled={vis.empresarial !== false} 
@@ -205,32 +207,32 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
           </div>
           <div className="grid md:grid-cols-3 gap-3">
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Nombre CEO</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Nombre CEO</span>
               <input
                 type="text"
                 value={data.nombreCeo}
                 onChange={(e) => onChange({ ...data, nombreCeo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="Nombre completo"
               />
             </div>
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Empresa</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Empresa</span>
               <input
                 type="text"
                 value={data.empresaNombre}
                 onChange={(e) => onChange({ ...data, empresaNombre: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="Mi Empresa S.A."
               />
             </div>
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Horario</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Horario</span>
               <input
                 type="text"
                 value={data.horario}
                 onChange={(e) => onChange({ ...data, horario: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="Lun-Vie 9:00-18:00"
               />
             </div>
@@ -240,10 +242,10 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* METADATA DE LA PROPUESTA */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.metadata === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.metadata === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-gh-text font-medium text-xs uppercase tracking-wide flex items-center gap-2">
-              <FaFileAlt className="text-gh-success" /> Metadata de la Propuesta
+            <span className="text-gh-text font-medium text-xs flex items-center gap-2">
+              <FileText className="text-gh-success" /> Metadata de la Propuesta
             </span>
             <ToggleSwitch 
               enabled={vis.metadata !== false} 
@@ -252,32 +254,32 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
           </div>
           <div className="grid md:grid-cols-3 gap-3">
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Fecha de Propuesta</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Fecha de Propuesta</span>
               <input
                 type="text"
                 value={data.fechaPropuesta || ''}
                 onChange={(e) => onChange({ ...data, fechaPropuesta: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="15 de noviembre de 2025"
               />
             </div>
             <div>
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Versión</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Versión</span>
               <input
                 type="text"
                 value={data.versionPropuesta || ''}
                 onChange={(e) => onChange({ ...data, versionPropuesta: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="1.0"
               />
             </div>
             <div className="md:col-span-3">
-              <span className="block text-gh-text-muted font-medium text-xs mb-2 uppercase tracking-wide">Copyright</span>
+              <span className="block text-gh-text-muted font-medium text-xs mb-2">Copyright</span>
               <input
                 type="text"
                 value={data.copyright || ''}
                 onChange={(e) => onChange({ ...data, copyright: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-xs font-medium text-gh-text"
                 placeholder="© 2025 DGTECNOVA. Todos los derechos reservados."
               />
             </div>
@@ -287,3 +289,7 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
     </motion.div>
   )
 }
+
+
+
+

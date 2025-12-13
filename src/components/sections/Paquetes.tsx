@@ -1,9 +1,19 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaStar, FaBox } from 'react-icons/fa'
+import { FaStar, FaBox, FaCheck } from 'react-icons/fa'
 import useSnapshots from '@/features/admin/hooks/useSnapshots'
 import type { OtroServicioSnapshot } from '@/lib/types'
+import { spring, fluentShadow } from '@/lib/animations/config'
+import { 
+  FluentReveal, 
+  FluentRevealGroup, 
+  FluentRevealItem,
+  FluentGlass,
+  FluentSurface,
+  FluentHover,
+  FluentTap
+} from '@/components/motion'
 
 function slugify(nombre: string): string {
   return nombre
@@ -56,7 +66,6 @@ interface PackageData {
   description: string
   features: Array<{ category: string; items: string[] }>
   serviciosOpcionales?: Array<{ nombre: string; precio: number; mesesGratis: number; mesesPago: number; acumulado: number }>
-  gestion?: { nombre: string; precioMensual: number; mesesGratis: number; mesesPago: number; acumulado: number }
   pages: string  // Opcional - si vacío no se muestra
   timelineWeeks: number | null  // Opcional - si null no se muestra
   colorScheme: 'rojo' | 'dorado' | 'negro' | 'neutro'
@@ -100,17 +109,6 @@ export default function Paquetes() {
           }))
         : undefined
 
-    // Gestión (solo mostrar si precio > 0)
-    const gestionData = snap.gestion && snap.gestion.precio > 0
-      ? {
-          nombre: 'Gestión Mensual',
-          precioMensual: snap.gestion.precio,
-          mesesGratis: snap.gestion.mesesGratis || 0,
-          mesesPago: snap.gestion.mesesPago || 12,
-          acumulado: snap.gestion.precio * (snap.gestion.mesesPago || 12),
-        }
-      : undefined
-
     // Páginas desde datos del paquete (opcional)
     const pages = snap.paquete.cantidadPaginas || ''
 
@@ -138,13 +136,12 @@ export default function Paquetes() {
       icon: '🎁',
       nivelProfesional,
       tipo: snap.paquete.tipo || '',
-      subtitulo: `INVERSIÓN TOTAL: $${inversionAnio1} USD`,
+      subtitulo: `VALOR DEL CONTRATO: $${inversionAnio1} USD`,
       pagoInicial,
       inversionAnio1,
       description: snap.paquete.descripcion || `Paquete personalizado para empresas.`,
       features,
       serviciosOpcionales,
-      gestion: gestionData,
       pages,
       timelineWeeks,
       colorScheme: 'neutro',
@@ -205,111 +202,149 @@ export default function Paquetes() {
   }
 
   return (
-    <section id="paquetes" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+    <section id="paquetes" className="py-10 md:py-14 px-4 bg-gradient-to-b from-light-bg via-light-bg-secondary to-white font-github">
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-        >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-accent/10 rounded-full mb-4">
-              <FaBox className="text-light-accent" size={20} />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+        {/* Header con FluentReveal */}
+        <FluentReveal direction="up" blur delay={0.1}>
+          <div className="text-center mb-6">
+            <FluentHover effect="scale" scaleAmount={1.1}>
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-light-accent to-blue-600 rounded-2xl mb-5 shadow-lg">
+                <FaBox className="text-white" size={28} />
+              </div>
+            </FluentHover>
+            <h2 className="text-3xl md:text-4xl font-bold text-light-text mb-3 tracking-tight">
               Paquetes de Servicios
             </h2>
-            <p className="text-sm text-light-text-secondary">
+            <p className="text-lg text-light-text-secondary max-w-xl mx-auto">
               Opciones diseñadas para diferentes necesidades y presupuestos
             </p>
           </div>
+        </FluentReveal>
 
+        <FluentRevealGroup stagger={0.1} delay={0.2}>
           <div className={`grid ${activos.length <= 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-6`}>
             {loading && (
               <>
                 {['skel-1', 'skel-2', 'skel-3'].map((id) => (
-                  <div key={id} className="rounded-md bg-light-bg border border-light-border p-6 animate-pulse h-96" />
+                  <FluentRevealItem key={id}>
+                    <FluentGlass 
+                      preset="light" 
+                      rounded="2xl" 
+                      className="p-6 animate-pulse h-96"
+                    />
+                  </FluentRevealItem>
                 ))}
               </>
             )}
             {!loading &&
               paquetesData.map((paquete) => (
-                <PaqueteCard
-                  key={paquete.id}
-                  data={paquete}
-                />
+                <FluentRevealItem key={paquete.id}>
+                  <PaqueteCard data={paquete} />
+                </FluentRevealItem>
               ))}
           </div>
+        </FluentRevealGroup>
 
-          {/* Lo que siempre está incluido */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3 }}
-            className="mt-12 bg-light-bg border border-light-border p-8 rounded-md"
+        {/* Lo que siempre está incluido - con FluentGlass */}
+        <FluentReveal direction="up" blur delay={0.4}>
+          <FluentGlass 
+            preset="frosted" 
+            rounded="2xl" 
+            elevateOnHover 
+            className="mt-14 p-8 border border-light-border/50"
           >
-            <h3 className="text-xl font-semibold mb-6 text-light-text flex items-center gap-2">
-              <span>🎁</span> ¿QUÉ ESTÁ INCLUIDO SIEMPRE?
-            </h3>
-            <p className="text-light-text-secondary mb-6">
+            <FluentHover effect="lift" liftAmount={2}>
+              <h3 className="text-xl font-bold mb-6 text-light-text flex items-center gap-3">
+                <motion.span 
+                  className="text-2xl"
+                  whileHover={{ scale: 1.2, rotate: 10 }}
+                  transition={spring.fluentBouncy}
+                >
+                  🎁
+                </motion.span> 
+                ¿QUÉ ESTÁ INCLUIDO SIEMPRE?
+              </h3>
+            </FluentHover>
+            <p className="text-light-text-secondary mb-8 text-base leading-relaxed">
               Independientemente del paquete que elijas, todos incluyen 3 meses gratis de Hosting y Mailbox, 6 meses de Dominio y 1 mes gratis de gestión de contenidos. También ofrecemos actualizaciones planificadas libres de costo en dependencia del paquete contratado. Además de lo anterior siempre recibes:
             </p>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  title: '🔒 SEGURIDAD',
-                  items: [
-                    'Certificado SSL (candado 🔒 en el navegador)',
-                    'Protección contra ataques',
-                    'Backups automáticos periódicos',
-                    'Actualización de seguridad',
-                  ]
-                },
-                {
-                  title: '⚡ RENDIMIENTO',
-                  items: [
-                    'Velocidad de carga optimizada',
-                    'Funciona perfectamente en móvil',
-                    'Servidor rápido y confiable',
-                    'Disponibilidad del 99.9% de tu sitio web en internet',
-                  ]
-                },
-                {
-                  title: '📈 POSICIONAMIENTO',
-                  items: [
-                    'Optimizado para aparecer en Google',
-                    'Reportes de tráfico',
-                    'Sugerencias de mejora continua',
-                  ]
-                },
-                {
-                  title: '🎓 CAPACITACIÓN',
-                  items: [
-                    '2-6 horas según paquete contratado',
-                    'Manual de usuario',
-                    'Soporte',
-                  ]
-                },
-              ].map((section) => (
-                <div key={section.title} className="bg-light-bg-secondary rounded-md p-4 border border-light-border">
-                  <h4 className="font-semibold mb-3 text-light-text">{section.title}</h4>
-                  <ul className="space-y-2">
-                    {section.items.map((item) => (
-                      <li key={`${section.title}-${item}`} className="flex items-start gap-2 text-sm text-light-text-secondary">
-                        <span className="text-light-success mt-0.5">✓</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </motion.div>
+            <FluentRevealGroup stagger={0.08}>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  {
+                    title: '🔒 SEGURIDAD',
+                    gradient: 'from-green-500/10 to-emerald-500/5',
+                    borderColor: 'border-green-500/20',
+                    items: [
+                      'Certificado SSL (candado 🔒 en el navegador)',
+                      'Protección contra ataques',
+                      'Backups automáticos periódicos',
+                      'Actualización de seguridad',
+                    ]
+                  },
+                  {
+                    title: '⚡ RENDIMIENTO',
+                    gradient: 'from-yellow-500/10 to-amber-500/5',
+                    borderColor: 'border-yellow-500/20',
+                    items: [
+                      'Velocidad de carga optimizada',
+                      'Funciona perfectamente en móvil',
+                      'Servidor rápido y confiable',
+                      'Disponibilidad del 99.9% de tu sitio web en internet',
+                    ]
+                  },
+                  {
+                    title: '📈 POSICIONAMIENTO',
+                    gradient: 'from-blue-500/10 to-cyan-500/5',
+                    borderColor: 'border-blue-500/20',
+                    items: [
+                      'Optimizado para aparecer en Google',
+                      'Reportes de tráfico',
+                      'Sugerencias de mejora continua',
+                    ]
+                  },
+                  {
+                    title: '🎓 CAPACITACIÓN',
+                    gradient: 'from-purple-500/10 to-violet-500/5',
+                    borderColor: 'border-purple-500/20',
+                    items: [
+                      '2-6 horas según paquete contratado',
+                      'Manual de usuario',
+                      'Soporte',
+                    ]
+                  },
+                ].map((section) => (
+                  <FluentRevealItem key={section.title}>
+                    <FluentSurface 
+                      elevation="raised" 
+                      elevateOnHover 
+                      rounded="xl" 
+                      bordered={false}
+                      className={`bg-gradient-to-br ${section.gradient} p-5 border ${section.borderColor} h-full`}
+                    >
+                      <h4 className="font-bold mb-4 text-light-text text-sm">{section.title}</h4>
+                      <ul className="space-y-2.5">
+                        {section.items.map((item) => (
+                          <FluentHover key={`${section.title}-${item}`} effect="none">
+                            <motion.li 
+                              className="flex items-start gap-2 text-sm text-light-text-secondary"
+                              whileHover={{ x: 3 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <FaCheck className="text-light-success mt-0.5 flex-shrink-0" size={12} />
+                              <span>{item}</span>
+                            </motion.li>
+                          </FluentHover>
+                        ))}
+                      </ul>
+                    </FluentSurface>
+                  </FluentRevealItem>
+                ))}
+              </div>
+            </FluentRevealGroup>
+          </FluentGlass>
+        </FluentReveal>
       </div>
     </section>
   )
@@ -323,38 +358,50 @@ function PaqueteCard({
   const getCardStyles = () => {
     if (data.colorScheme === 'dorado') {
       return {
-        container: 'bg-light-bg border-2 border-light-warning shadow-md',
-        badge: 'bg-light-warning text-white',
-        priceBox: 'bg-light-warning/5 border-l-2 border-light-warning',
+        container: 'bg-white/80 backdrop-blur-sm border-2 border-light-warning',
+        gradient: 'from-light-warning/10 to-amber-50',
+        badge: 'bg-gradient-to-r from-light-warning to-amber-500 text-white',
+        priceBox: 'bg-gradient-to-r from-light-warning/10 to-amber-50 border-l-4 border-light-warning',
         priceText: 'text-light-warning',
-        button: 'bg-light-warning text-white hover:bg-amber-600',
+        iconBg: 'bg-gradient-to-br from-light-warning to-amber-500',
+        hoverShadow: fluentShadow.glowWarning,
+        button: 'bg-gradient-to-r from-light-warning to-amber-500 text-white hover:shadow-lg',
       }
     }
     if (data.colorScheme === 'rojo') {
       return {
-        container: 'bg-light-bg border border-light-danger/50',
+        container: 'bg-white/80 backdrop-blur-sm border border-light-danger/40',
+        gradient: 'from-red-50 to-rose-50',
         badge: '',
-        priceBox: 'bg-light-danger/5 border-l-2 border-light-danger',
+        priceBox: 'bg-gradient-to-r from-light-danger/10 to-rose-50 border-l-4 border-light-danger',
         priceText: 'text-light-danger',
-        button: 'bg-light-danger text-white hover:bg-red-700',
+        iconBg: 'bg-gradient-to-br from-light-danger to-rose-500',
+        hoverShadow: fluentShadow.glowDanger,
+        button: 'bg-gradient-to-r from-light-danger to-rose-500 text-white hover:shadow-lg',
       }
     }
     if (data.colorScheme === 'negro') {
       return {
-        container: 'bg-light-bg border border-light-text/30',
+        container: 'bg-white/80 backdrop-blur-sm border border-gray-300',
+        gradient: 'from-gray-50 to-slate-50',
         badge: '',
-        priceBox: 'bg-light-bg-tertiary border-l-2 border-light-text',
-        priceText: 'text-light-text',
-        button: 'bg-light-text text-white hover:bg-gray-800',
+        priceBox: 'bg-gradient-to-r from-gray-100 to-slate-50 border-l-4 border-gray-700',
+        priceText: 'text-gray-700',
+        iconBg: 'bg-gradient-to-br from-gray-700 to-gray-900',
+        hoverShadow: fluentShadow.elevated,
+        button: 'bg-gradient-to-r from-gray-700 to-gray-900 text-white hover:shadow-lg',
       }
     }
     // neutro
     return {
-      container: 'bg-light-bg border border-light-border',
+      container: 'bg-white/80 backdrop-blur-sm border border-light-border/50',
+      gradient: 'from-light-bg-secondary to-white',
       badge: '',
-      priceBox: 'bg-light-bg-secondary border-l-2 border-light-border',
-      priceText: 'text-light-text-secondary',
-      button: 'bg-light-accent text-white hover:bg-blue-700',
+      priceBox: 'bg-gradient-to-r from-light-bg-secondary to-white border-l-4 border-light-accent',
+      priceText: 'text-light-accent',
+      iconBg: 'bg-gradient-to-br from-light-accent to-blue-600',
+      hoverShadow: fluentShadow.glow,
+      button: 'bg-gradient-to-r from-light-accent to-blue-600 text-white hover:shadow-lg',
     }
   }
 
@@ -362,85 +409,105 @@ function PaqueteCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-      className={`relative rounded-md overflow-hidden transition-all ${styles.container}`}
+      className={`relative rounded-2xl overflow-hidden transition-all ${styles.container}`}
+      whileHover={{ 
+        y: -6,
+        boxShadow: styles.hoverShadow,
+        transition: { duration: 0.3, ease: [0.33, 1, 0.68, 1] }
+      }}
     >
       {/* Reservar espacio para badge */}
-      <div className="h-[40px] relative">
+      <div className="h-[44px] relative">
         {data.recomendado && (
-          <div className={`absolute top-0 left-0 right-0 ${styles.badge} py-2 text-center text-sm font-semibold flex items-center justify-center gap-2 z-10`}>
+          <motion.div 
+            className={`absolute top-0 left-0 right-0 ${styles.badge} py-2.5 text-center text-sm font-bold flex items-center justify-center gap-2 z-10`}
+            initial={{ y: -50 }}
+            animate={{ y: 0 }}
+            transition={spring.fluentBouncy}
+          >
             <FaStar className="text-xs" /> MÁS POPULAR
-          </div>
+          </motion.div>
         )}
       </div>
 
-      <div className="p-5 h-full flex flex-col">
-        <div className="text-center mb-4 min-h-[100px] flex flex-col justify-center">
-          <span className="text-3xl">{data.icon}</span>
+      <div className="p-6 h-full flex flex-col">
+        <div className="text-center mb-5 min-h-[110px] flex flex-col justify-center">
+          <FluentHover effect="scale" scaleAmount={1.2}>
+            <span className="text-4xl block">{data.icon}</span>
+          </FluentHover>
           {data.tipo ? (
-            <p className="mt-2 text-xs font-medium tracking-wide text-light-text-secondary uppercase">{data.tipo}</p>
+            <p className="mt-3 text-xs font-bold tracking-wider text-light-text-muted uppercase">{data.tipo}</p>
           ) : (
-            <p className="mt-2 text-xs font-medium tracking-wide text-light-text-secondary">{data.nivelProfesional}</p>
+            <p className="mt-3 text-xs font-bold tracking-wider text-light-text-muted">{data.nivelProfesional}</p>
           )}
-          <h3 className="text-lg font-semibold text-light-text mt-2">{data.nombre}</h3>
-          <p className={`${styles.priceText} font-semibold text-sm`}>{data.subtitulo}</p>
+          <h3 className="text-lg font-bold text-light-text mt-2">{data.nombre}</h3>
+          <p className={`${styles.priceText} font-bold text-sm`}>{data.subtitulo}</p>
         </div>
 
-        <p className="text-light-text-secondary text-sm text-center mb-4 flex-grow min-h-[40px]">{data.description}</p>
+        <p className="text-light-text-secondary text-sm text-center mb-5 flex-grow min-h-[50px] leading-relaxed">{data.description}</p>
 
-        <div className={`${styles.priceBox} p-3 rounded-md mb-4`}>
-          <p className="text-xs text-light-text-secondary">Pago Inicial</p>
-          <p className={`text-2xl font-bold ${styles.priceText}`}>${data.pagoInicial} USD</p>
-        </div>
+        <FluentHover effect="scale" scaleAmount={1.02}>
+          <div className={`${styles.priceBox} p-4 rounded-xl mb-5`}>
+            <p className="text-xs text-light-text-muted font-medium">Pago Inicial</p>
+            <p className={`text-3xl font-bold ${styles.priceText}`}>${data.pagoInicial} <span className="text-base font-medium">USD</span></p>
+          </div>
+        </FluentHover>
 
-        <div className="grid grid-cols-1 gap-2 mb-4 flex-grow">
+        <div className="space-y-3 mb-5 flex-grow">
           {data.features.map((feature) => (
-            <div key={`feat-${feature.category}`} className="text-sm">
-              <p className="font-medium text-light-text text-xs leading-tight">{feature.category}</p>
-              <p className="text-light-text-secondary text-xs">{feature.items[0]}</p>
-            </div>
+            <FluentHover key={`feat-${feature.category}`} effect="none">
+              <motion.div 
+                className="text-sm group"
+                whileHover={{ x: 4 }}
+                transition={{ duration: 0.2 }}
+              >
+                <p className="font-semibold text-light-text text-xs leading-tight group-hover:text-light-accent transition-colors">{feature.category}</p>
+                <p className="text-light-text-secondary text-xs">{feature.items[0]}</p>
+              </motion.div>
+            </FluentHover>
           ))}
 
-          {data.gestion && (
-            <div key="gestion" className="text-sm border-t border-light-border pt-2 mt-2">
-              <p className="font-medium text-light-text text-xs leading-tight">Gestión Mensual</p>
-              <p className="text-light-text-secondary text-xs">${data.gestion.precioMensual} USD/mes (${data.gestion.acumulado} USD/{data.gestion.mesesGratis}m gratis/{data.gestion.mesesPago}m pago)</p>
-            </div>
-          )}
-
           {data.serviciosOpcionales && data.serviciosOpcionales.length > 0 && (
-            <div key="opcionales" className="text-sm border-t border-light-border pt-2 mt-2">
-              <p className="font-medium text-light-text text-xs leading-tight">Servicios Opcionales</p>
+            <div key="opcionales" className="text-sm border-t border-light-border/50 pt-3 mt-3">
+              <p className="font-semibold text-light-text text-xs leading-tight mb-1">Servicios Opcionales</p>
               {data.serviciosOpcionales.map((srv) => (
-                <p key={srv.nombre} className="text-light-text-secondary text-xs">
-                  {srv.nombre}: ${srv.precio} USD/mes (${srv.acumulado} USD/{srv.mesesGratis}m gratis/{srv.mesesPago}m pago)
-                </p>
+                <FluentHover key={srv.nombre} effect="none">
+                  <motion.p 
+                    className="text-light-text-secondary text-xs"
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {srv.nombre}: ${srv.precio} USD/mes (${srv.acumulado} USD/{srv.mesesGratis}m gratis/{srv.mesesPago}m pago)
+                  </motion.p>
+                </FluentHover>
               ))}
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-3 border-t border-light-border">
-          <div className="text-center">
-            <p className={`text-xl font-bold ${styles.priceText}`}>{data.pages}</p>
-            <p className="text-xs text-light-text-secondary">Páginas</p>
-          </div>
-          <div className="text-center">
-            <p className={`text-xl font-bold ${styles.priceText}`}>{data.timelineWeeks}</p>
-            <p className="text-xs text-light-text-secondary">Semanas</p>
-          </div>
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-light-border/50">
+          <FluentHover effect="scale" scaleAmount={1.05}>
+            <div className="text-center p-2 rounded-lg bg-light-bg-secondary/50">
+              <p className={`text-2xl font-bold ${styles.priceText}`}>{data.pages}</p>
+              <p className="text-xs text-light-text-muted font-medium">Páginas</p>
+            </div>
+          </FluentHover>
+          <FluentHover effect="scale" scaleAmount={1.05}>
+            <div className="text-center p-2 rounded-lg bg-light-bg-secondary/50">
+              <p className={`text-2xl font-bold ${styles.priceText}`}>{data.timelineWeeks}</p>
+              <p className="text-xs text-light-text-muted font-medium">Semanas</p>
+            </div>
+          </FluentHover>
         </div>
 
-        <a
-          href={data.href}
-          className={`hidden mt-4 py-2 px-4 rounded-md font-medium text-sm text-center transition-colors ${styles.button}`}
-        >
-          Ver Detalles
-        </a>
+        <FluentTap>
+          <a
+            href={data.href}
+            className={`hidden mt-5 py-3 px-4 rounded-xl font-semibold text-sm text-center transition-all ${styles.button}`}
+          >
+            Ver Detalles
+          </a>
+        </FluentTap>
       </div>
     </motion.div>
   )

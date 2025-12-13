@@ -2,10 +2,12 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaExclamationTriangle, FaChevronDown, FaChevronUp, FaPlus, FaTrash } from 'react-icons/fa'
+import { AlertTriangle, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
 import ContentHeader from './ContentHeader'
 import ArrayFieldGH from './ArrayFieldGH'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
+import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import type { SeccionesColapsadasConfig } from '@/lib/types'
 
 // Tipos para Observaciones y Recomendaciones
@@ -217,11 +219,12 @@ export default function ObservacionesContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader
         title="Observaciones y Recomendaciones"
-        icon={<FaExclamationTriangle className="text-gh-warning" />}
+        subtitle="Notas importantes y sugerencias para el proyecto"
+        icon={AlertTriangle}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -230,18 +233,18 @@ export default function ObservacionesContent({
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
-        <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
+        <ToggleItem enabled={visible} onChange={onVisibleChange} title="" showBadge={false} />
       </div>
 
       {/* Contenedor con opacity si global OFF */}
       <div className={`space-y-4 transition-opacity duration-200 ${!visible ? 'opacity-50' : ''}`}>
         
         {/* Subsección: Títulos */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={true} 
               onChange={() => {}} 
@@ -254,7 +257,7 @@ export default function ObservacionesContent({
                 type="text"
                 value={data.titulo}
                 onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -263,7 +266,7 @@ export default function ObservacionesContent({
                 type="text"
                 value={data.subtitulo}
                 onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
           </div>
@@ -272,16 +275,14 @@ export default function ObservacionesContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* PUNTOS DE ATENCIÓN */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
-          <div className="flex items-center justify-between">
+        <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
             <button
               onClick={() => toggleSection('puntosAtencion')}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-2 text-xs font-medium text-gh-text hover:text-gh-info transition-colors"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                ⚠️ Puntos de Atención
-              </span>
-              {expandedSections.puntosAtencion ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              <span className="text-base">⚠️</span> Puntos de Atención
+              {expandedSections.puntosAtencion ? <ChevronUp className="w-4 h-4 text-gh-text-muted" /> : <ChevronDown className="w-4 h-4 text-gh-text-muted" />}
             </button>
             <ToggleSwitch
               enabled={data.puntosAtencion.visible}
@@ -290,7 +291,7 @@ export default function ObservacionesContent({
           </div>
 
           {expandedSections.puntosAtencion && (
-            <div className="mt-4 space-y-4 p-4 bg-gh-bg-secondary/50 border border-gh-border/50 rounded-md">
+            <div className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gh-text-muted text-xs mb-1">Título</label>
@@ -298,7 +299,7 @@ export default function ObservacionesContent({
                     type="text"
                     value={data.puntosAtencion.titulo}
                     onChange={(e) => onChange({ ...data, puntosAtencion: { ...data.puntosAtencion, titulo: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
                 <div>
@@ -307,14 +308,14 @@ export default function ObservacionesContent({
                     type="text"
                     value={data.puntosAtencion.descripcion}
                     onChange={(e) => onChange({ ...data, puntosAtencion: { ...data.puntosAtencion, descripcion: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
               </div>
 
               {/* Lista de Puntos */}
               {data.puntosAtencion.items.map((punto, index) => (
-                <div key={`punto-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border rounded-md">
+                <div key={`punto-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border/30 rounded-md">
                   <div className="flex justify-between items-start mb-3">
                     <span className={`text-xs px-2 py-1 rounded border ${getPrioridadColor(punto.prioridad)}`}>
                       {punto.prioridad.toUpperCase()}
@@ -323,7 +324,7 @@ export default function ObservacionesContent({
                       onClick={() => removePuntoAtencion(index)}
                       className="text-gh-danger hover:text-gh-danger/80 text-xs"
                     >
-                      <FaTrash />
+                      <Trash2 />
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-3 mb-3">
@@ -333,20 +334,20 @@ export default function ObservacionesContent({
                         type="text"
                         value={punto.titulo}
                         onChange={(e) => updatePuntoAtencion(index, 'titulo', e.target.value)}
-                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       />
                     </div>
                     <div>
                       <label className="block text-gh-text-muted text-xs mb-1">Prioridad</label>
-                      <select
+                      <DropdownSelect
                         value={punto.prioridad}
-                        onChange={(e) => updatePuntoAtencion(index, 'prioridad', e.target.value as 'alta' | 'media' | 'baja')}
-                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
-                      >
-                        <option value="alta">Alta</option>
-                        <option value="media">Media</option>
-                        <option value="baja">Baja</option>
-                      </select>
+                        onChange={(val) => updatePuntoAtencion(index, 'prioridad', val as 'alta' | 'media' | 'baja')}
+                        options={[
+                          { value: 'alta', label: 'Alta' },
+                          { value: 'media', label: 'Media' },
+                          { value: 'baja', label: 'Baja' }
+                        ]}
+                      />
                     </div>
                   </div>
                   <div>
@@ -354,7 +355,7 @@ export default function ObservacionesContent({
                     <textarea
                       value={punto.descripcion}
                       onChange={(e) => updatePuntoAtencion(index, 'descripcion', e.target.value)}
-                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       rows={2}
                     />
                   </div>
@@ -365,7 +366,7 @@ export default function ObservacionesContent({
                 onClick={addPuntoAtencion}
                 className="flex items-center gap-2 px-3 py-2 bg-gh-warning/20 border border-gh-warning/30 text-gh-warning rounded-md text-sm hover:bg-gh-warning/30 transition-colors"
               >
-                <FaPlus /> Agregar Punto de Atención
+                <Plus /> Agregar Punto de Atención
               </button>
             </div>
           )}
@@ -374,16 +375,14 @@ export default function ObservacionesContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* RECOMENDACIONES ESTRATÉGICAS */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
-          <div className="flex items-center justify-between">
+        <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
             <button
               onClick={() => toggleSection('recomendaciones')}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-2 text-xs font-medium text-gh-text hover:text-gh-info transition-colors"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                💡 Recomendaciones Estratégicas
-              </span>
-              {expandedSections.recomendaciones ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              <span className="text-base">💡</span> Recomendaciones Estratégicas
+              {expandedSections.recomendaciones ? <ChevronUp className="w-4 h-4 text-gh-text-muted" /> : <ChevronDown className="w-4 h-4 text-gh-text-muted" />}
             </button>
             <ToggleSwitch
               enabled={data.recomendaciones.visible}
@@ -392,7 +391,7 @@ export default function ObservacionesContent({
           </div>
 
           {expandedSections.recomendaciones && (
-            <div className="mt-4 space-y-4 p-4 bg-gh-bg-secondary/50 border border-gh-border/50 rounded-md">
+            <div className="p-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gh-text-muted text-xs mb-1">Título</label>
@@ -400,7 +399,7 @@ export default function ObservacionesContent({
                     type="text"
                     value={data.recomendaciones.titulo}
                     onChange={(e) => onChange({ ...data, recomendaciones: { ...data.recomendaciones, titulo: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
                 <div>
@@ -409,21 +408,21 @@ export default function ObservacionesContent({
                     type="text"
                     value={data.recomendaciones.descripcion}
                     onChange={(e) => onChange({ ...data, recomendaciones: { ...data.recomendaciones, descripcion: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
               </div>
 
               {/* Lista de Recomendaciones */}
               {data.recomendaciones.items.map((rec, index) => (
-                <div key={`rec-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border rounded-md">
+                <div key={`rec-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border/30 rounded-md">
                   <div className="flex justify-between items-start mb-3">
                     <span className="text-sm font-medium text-gh-text">{rec.titulo}</span>
                     <button
                       onClick={() => removeRecomendacion(index)}
                       className="text-gh-danger hover:text-gh-danger/80 text-xs"
                     >
-                      <FaTrash />
+                      <Trash2 />
                     </button>
                   </div>
                   <div className="mb-3">
@@ -432,7 +431,7 @@ export default function ObservacionesContent({
                       type="text"
                       value={rec.titulo}
                       onChange={(e) => updateRecomendacion(index, 'titulo', e.target.value)}
-                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                     />
                   </div>
                   <div className="mb-3">
@@ -440,7 +439,7 @@ export default function ObservacionesContent({
                     <textarea
                       value={rec.descripcion}
                       onChange={(e) => updateRecomendacion(index, 'descripcion', e.target.value)}
-                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       rows={2}
                     />
                   </div>
@@ -457,16 +456,16 @@ export default function ObservacionesContent({
                 onClick={addRecomendacion}
                 className="flex items-center gap-2 px-3 py-2 bg-gh-success/20 border border-gh-success/30 text-gh-success rounded-md text-sm hover:bg-gh-success/30 transition-colors"
               >
-                <FaPlus /> Agregar Recomendación
+                <Plus /> Agregar Recomendación
               </button>
             </div>
           )}
         </div>
 
         {/* Nota Final */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
+        <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📝 Nota Final</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📝 Nota Final</span>
             <ToggleSwitch 
               enabled={true} 
               onChange={() => {}} 
@@ -475,7 +474,7 @@ export default function ObservacionesContent({
           <textarea
             value={data.notaFinal}
             onChange={(e) => onChange({ ...data, notaFinal: e.target.value })}
-            className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+            className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
             rows={2}
           />
         </div>
@@ -484,3 +483,7 @@ export default function ObservacionesContent({
     </motion.div>
   )
 }
+
+
+
+

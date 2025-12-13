@@ -1,20 +1,22 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { 
-  FaFileAlt, 
-  FaQuestionCircle, 
-  FaShieldAlt, 
-  FaPhone, 
-  FaGavel,
-  FaClipboardList,
-  FaStar,
-  FaExchangeAlt,
-  FaCalendarAlt,
-  FaTable,
-  FaExclamationTriangle,
-  FaFlagCheckered
-} from 'react-icons/fa'
+  FileText, 
+  HelpCircle, 
+  Shield, 
+  Phone, 
+  Scale,
+  ClipboardList,
+  Star,
+  ArrowRightLeft,
+  Calendar,
+  Table,
+  AlertTriangle,
+  Flag,
+  CreditCard
+} from 'lucide-react'
 import { deepEqual, formatBytes } from '@/lib/utils/deepCompare'
 import AdminSidebar from '@/features/admin/components/AdminSidebar'
 import {
@@ -31,6 +33,7 @@ import {
   TablaComparativaContent,
   ObservacionesContent,
   ConclusionContent,
+  CuotasContent,
   // Defaults
   defaultAnalisisRequisitos,
   defaultFortalezas,
@@ -39,6 +42,7 @@ import {
   defaultTablaComparativa,
   defaultObservaciones,
   defaultConclusion,
+  defaultCuotas,
 } from '@/features/admin/components/content/contenido'
 import type { 
   AnalisisRequisitosData,
@@ -48,6 +52,7 @@ import type {
   TablaComparativaData,
   ObservacionesData,
   ConclusionData,
+  CuotasData,
 } from '@/features/admin/components/content/contenido'
 import type { 
   QuotationConfig, 
@@ -277,6 +282,7 @@ type SeccionActiva =
   | 'fortalezas'
   | 'dinamico'
   | 'presupuesto'
+  | 'cuotas'
   | 'tabla'
   | 'observaciones'
   | 'conclusion'
@@ -318,18 +324,19 @@ export default function ContenidoTab({
 
   // Sidebar items
   const sidebarItems = [
-    { id: 'resumen', label: 'Resumen', icon: FaFileAlt },
-    { id: 'analisis', label: 'Análisis', icon: FaClipboardList },
-    { id: 'fortalezas', label: 'Fortalezas', icon: FaStar },
-    { id: 'dinamico', label: 'Comparativa', icon: FaExchangeAlt },
-    { id: 'presupuesto', label: 'Presupuesto', icon: FaCalendarAlt },
-    { id: 'tabla', label: 'Paquetes', icon: FaTable },
-    { id: 'observaciones', label: 'Notas', icon: FaExclamationTriangle },
-    { id: 'conclusion', label: 'Conclusión', icon: FaFlagCheckered },
-    { id: 'faq', label: 'FAQ', icon: FaQuestionCircle },
-    { id: 'garantias', label: 'Garantías', icon: FaShieldAlt },
-    { id: 'contacto', label: 'Contacto', icon: FaPhone },
-    { id: 'terminos', label: 'Términos', icon: FaGavel },
+    { id: 'resumen', label: 'Resumen', icon: FileText },
+    { id: 'analisis', label: 'Análisis', icon: ClipboardList },
+    { id: 'fortalezas', label: 'Fortalezas', icon: Star },
+    { id: 'dinamico', label: 'Comparativa', icon: ArrowRightLeft },
+    { id: 'presupuesto', label: 'Cronograma', icon: Calendar },
+    { id: 'cuotas', label: 'Cuotas', icon: CreditCard },
+    { id: 'tabla', label: 'Paquetes', icon: Table },
+    { id: 'observaciones', label: 'Notas', icon: AlertTriangle },
+    { id: 'conclusion', label: 'Conclusión', icon: Flag },
+    { id: 'faq', label: 'FAQ', icon: HelpCircle },
+    { id: 'garantias', label: 'Garantías', icon: Shield },
+    { id: 'contacto', label: 'Contacto', icon: Phone },
+    { id: 'terminos', label: 'Términos', icon: Scale },
   ] as const
 
   // Obtener contenido actual o usar defaults
@@ -360,7 +367,7 @@ export default function ContenidoTab({
     dinamico_estatico: true,
     dinamico_dinamico: true,
     presupuesto_presupuesto: true,
-    presupuesto_metodosPago: false,
+    presupuesto_paquetesDinamicos: true,
     presupuesto_cronograma: false,
     tabla_paquetes: true,
     tabla_categorias: false,
@@ -402,18 +409,25 @@ export default function ContenidoTab({
   const analisisActual: AnalisisRequisitosData = (contenido.analisisRequisitos as AnalisisRequisitosData) || defaultAnalisisRequisitos
   const fortalezasActual: FortalezasData = (contenido.fortalezas as FortalezasData) || defaultFortalezas
   const dinamicoActual: DinamicoVsEstaticoData = (contenido.dinamicoVsEstatico as DinamicoVsEstaticoData) || defaultDinamicoVsEstatico
-  // Merge profundo para presupuesto para asegurar que metodosPago y otros subcampos existan
+  // Merge profundo para presupuesto para asegurar que todos los subcampos existan
   const presupuestoFromDB = contenido.presupuestoCronograma as PresupuestoCronogramaData | undefined
   const presupuestoActual: PresupuestoCronogramaData = presupuestoFromDB ? {
     ...defaultPresupuestoCronograma,
     ...presupuestoFromDB,
     presupuesto: { ...defaultPresupuestoCronograma.presupuesto, ...presupuestoFromDB.presupuesto },
-    metodosPago: { ...defaultPresupuestoCronograma.metodosPago, ...presupuestoFromDB.metodosPago },
     cronograma: { ...defaultPresupuestoCronograma.cronograma, ...presupuestoFromDB.cronograma },
   } : defaultPresupuestoCronograma
   const tablaActual: TablaComparativaData = (contenido.tablaComparativa as TablaComparativaData) || defaultTablaComparativa
   const observacionesActual: ObservacionesData = (contenido.observaciones as ObservacionesData) || defaultObservaciones
   const conclusionActual: ConclusionData = (contenido.conclusion as ConclusionData) || defaultConclusion
+  // Cuotas (nuevo)
+  const cuotasFromDB = contenido.cuotas as CuotasData | undefined
+  const cuotasActual: CuotasData = cuotasFromDB ? {
+    ...defaultCuotas,
+    ...cuotasFromDB,
+    metodosPago: { ...defaultCuotas.metodosPago, ...cuotasFromDB.metodosPago },
+    presupuesto: { ...defaultCuotas.presupuesto, ...cuotasFromDB.presupuesto },
+  } : defaultCuotas
 
   // Visibilidad de nuevas secciones (ahora tipadas correctamente)
   const visibilidadExtendida = {
@@ -424,6 +438,7 @@ export default function ContenidoTab({
     fortalezas: contenido.visibilidadFortalezas !== false,
     dinamicoVsEstatico: contenido.visibilidadDinamico !== false,
     presupuestoCronograma: contenido.visibilidadPresupuesto !== false,
+    cuotas: contenido.visibilidadCuotas !== false,
     tablaComparativa: contenido.visibilidadTabla !== false,
     observaciones: contenido.visibilidadObservaciones !== false,
     conclusion: contenido.visibilidadConclusion !== false,
@@ -479,6 +494,9 @@ export default function ContenidoTab({
       case 'presupuestoCronograma':
         nuevoContenido.presupuestoCronograma = value as PresupuestoCronogramaData
         break
+      case 'cuotas':
+        nuevoContenido.cuotas = value as CuotasData
+        break
       case 'tablaComparativa':
         nuevoContenido.tablaComparativa = value as TablaComparativaData
         break
@@ -515,6 +533,9 @@ export default function ContenidoTab({
         break
       case 'presupuestoCronograma':
         nuevoContenido.visibilidadPresupuesto = value
+        break
+      case 'cuotas':
+        nuevoContenido.visibilidadCuotas = value
         break
       case 'tablaComparativa':
         nuevoContenido.visibilidadTabla = value
@@ -565,6 +586,7 @@ export default function ContenidoTab({
       case 'fortalezas': return fortalezasActual
       case 'dinamico': return dinamicoActual
       case 'presupuesto': return presupuestoActual
+      case 'cuotas': return cuotasActual
       case 'tabla': return tablaActual
       case 'observaciones': return observacionesActual
       case 'conclusion': return conclusionActual
@@ -608,6 +630,8 @@ export default function ContenidoTab({
         return { visibilidadDinamico: visibilidadExtendida.dinamicoVsEstatico }
       case 'presupuesto':
         return { visibilidadPresupuesto: visibilidadExtendida.presupuestoCronograma }
+      case 'cuotas':
+        return { visibilidadCuotas: visibilidadExtendida.cuotas }
       case 'tabla':
         return { visibilidadTabla: visibilidadExtendida.tablaComparativa }
       case 'observaciones':
@@ -638,6 +662,7 @@ export default function ContenidoTab({
       case 'fortalezas': return original.fortalezas || defaultFortalezas
       case 'dinamico': return original.dinamicoVsEstatico || defaultDinamicoVsEstatico
       case 'presupuesto': return original.presupuestoCronograma || defaultPresupuestoCronograma
+      case 'cuotas': return original.cuotas || defaultCuotas
       case 'tabla': return original.tablaComparativa || defaultTablaComparativa
       case 'observaciones': return original.observaciones || defaultObservaciones
       case 'conclusion': return original.conclusion || defaultConclusion
@@ -658,7 +683,7 @@ export default function ContenidoTab({
     // Para secciones antiguas: comparar con contenidoOriginalRef.visibilidad
     // Para secciones nuevas: comparar con contenidoOriginalRef.visibilidadXxx directamente
     const camposDirectos = ['visibilidadAnalisis', 'visibilidadFortalezas', 'visibilidadDinamico',
-      'visibilidadPresupuesto', 'visibilidadTabla', 'visibilidadObservaciones', 'visibilidadConclusion']
+      'visibilidadPresupuesto', 'visibilidadCuotas', 'visibilidadTabla', 'visibilidadObservaciones', 'visibilidadConclusion']
     
     let hayCambiosVisibilidad = false
     const claves = Object.keys(visibilidadSeccion)
@@ -700,7 +725,7 @@ export default function ContenidoTab({
     
     // Identificar si es sección nueva (usa campos directos de visibilidad)
     const camposDirectos = ['visibilidadAnalisis', 'visibilidadFortalezas', 'visibilidadDinamico',
-      'visibilidadPresupuesto', 'visibilidadTabla', 'visibilidadObservaciones', 'visibilidadConclusion']
+      'visibilidadPresupuesto', 'visibilidadCuotas', 'visibilidadTabla', 'visibilidadObservaciones', 'visibilidadConclusion']
     const esSeccionNueva = visibilidadSeccion && Object.keys(visibilidadSeccion).some(k => camposDirectos.includes(k))
     
     // Verificar si hay cambios de visibilidad
@@ -819,6 +844,9 @@ export default function ContenidoTab({
             case 'presupuesto':
               updatedOriginal.presupuestoCronograma = JSON.parse(JSON.stringify(datosActuales))
               break
+            case 'cuotas':
+              updatedOriginal.cuotas = JSON.parse(JSON.stringify(datosActuales))
+              break
             case 'tabla':
               updatedOriginal.tablaComparativa = JSON.parse(JSON.stringify(datosActuales))
               break
@@ -899,6 +927,9 @@ export default function ContenidoTab({
       case 'presupuesto':
         (nuevoContenido as Record<string, unknown>).presupuestoCronograma = JSON.parse(JSON.stringify(datosOriginales))
         break
+      case 'cuotas':
+        (nuevoContenido as Record<string, unknown>).cuotas = JSON.parse(JSON.stringify(datosOriginales))
+        break
       case 'tabla':
         (nuevoContenido as Record<string, unknown>).tablaComparativa = JSON.parse(JSON.stringify(datosOriginales))
         break
@@ -927,7 +958,7 @@ export default function ContenidoTab({
     return (
       <div className="pl-2 pr-6 py-6 flex items-center justify-center h-64">
         <div className="text-center max-w-md mx-auto">
-          <FaFileAlt className="mx-auto text-4xl text-gh-text-muted mb-4" />
+          <FileText className="mx-auto text-4xl text-gh-text-muted mb-4" />
           <p className="text-gh-text-muted text-sm">Selecciona o crea una cotización para editar su contenido</p>
         </div>
       </div>
@@ -938,100 +969,137 @@ export default function ContenidoTab({
   const timestamps = contenido.updatedTimestamps || {}
 
   return (
-    <div className="pl-2 pr-6 py-6 flex gap-6">
+    <div className="pl-2 pr-6 py-6 flex gap-6 items-stretch">
       <AdminSidebar
         items={sidebarItems.map(i => ({ id: i.id, label: i.label, icon: i.icon }))}
         activeItem={activeItem}
         onItemClick={(id) => setActiveItem(id as SeccionActiva)}
+        title="Contenido"
+        titleIcon={FileText}
       />
 
       <div className="flex-1">
         {/* RESUMEN EJECUTIVO */}
         {activeItem === 'resumen' && (
-          <ResumenContent
-            data={resumenActual}
-            onChange={(data) => updateContenido('resumen', data)}
-            visibilidad={visibilidadActual}
-            onVisibilidadChange={updateVisibilidad}
-            visible={visibilidadExtendida.resumenEjecutivo}
-            onVisibleChange={(v) => updateVisibilidad('tituloSeccion', v)}
-            updatedAt={timestamps.resumen}
-            onGuardar={() => handleGuardarSeccion('resumen')}
-            onReset={() => handleDescartarSeccion('resumen')}
-            guardando={guardandoSeccion === 'resumen'}
-            hasChanges={hasChangesForSection('resumen')}
-            seccionesColapsadas={seccionesColapsadasActual}
-            onSeccionColapsadaChange={updateSeccionColapsada}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ResumenContent
+              data={resumenActual}
+              onChange={(data) => updateContenido('resumen', data)}
+              visibilidad={visibilidadActual}
+              onVisibilidadChange={updateVisibilidad}
+              visible={visibilidadExtendida.resumenEjecutivo}
+              onVisibleChange={(v) => updateVisibilidad('tituloSeccion', v)}
+              updatedAt={timestamps.resumen}
+              onGuardar={() => handleGuardarSeccion('resumen')}
+              onReset={() => handleDescartarSeccion('resumen')}
+              guardando={guardandoSeccion === 'resumen'}
+              hasChanges={hasChangesForSection('resumen')}
+              seccionesColapsadas={seccionesColapsadasActual}
+              onSeccionColapsadaChange={updateSeccionColapsada}
+            />
+          </motion.div>
         )}
 
         {/* FAQ */}
         {activeItem === 'faq' && (
-          <FAQContent
-            data={faqActual}
-            onChange={(data) => updateContenido('faq', data)}
-            visible={visibilidadActual.faq !== false}
-            onVisibleChange={(v) => updateVisibilidad('faq', v)}
-            tituloSubtitulo={faqTituloSubtituloActual}
-            onTituloSubtituloChange={(field, value) => updateContenido('faqTituloSubtitulo', { ...faqTituloSubtituloActual, [field]: value })}
-            updatedAt={timestamps.faq}
-            onGuardar={() => handleGuardarSeccion('faq')}
-            onReset={() => handleDescartarSeccion('faq')}
-            guardando={guardandoSeccion === 'faq'}
-            hasChanges={hasChangesForSection('faq')}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <FAQContent
+              data={faqActual}
+              onChange={(data) => updateContenido('faq', data)}
+              visible={visibilidadActual.faq !== false}
+              onVisibleChange={(v) => updateVisibilidad('faq', v)}
+              tituloSubtitulo={faqTituloSubtituloActual}
+              onTituloSubtituloChange={(field, value) => updateContenido('faqTituloSubtitulo', { ...faqTituloSubtituloActual, [field]: value })}
+              updatedAt={timestamps.faq}
+              onGuardar={() => handleGuardarSeccion('faq')}
+              onReset={() => handleDescartarSeccion('faq')}
+              guardando={guardandoSeccion === 'faq'}
+              hasChanges={hasChangesForSection('faq')}
+            />
+          </motion.div>
         )}
 
         {/* GARANTÍAS */}
         {activeItem === 'garantias' && (
-          <GarantiasContent
-            proveedorGarantiza={garantiasActual.proveedorGarantiza}
-            clienteResponsable={garantiasActual.clienteResponsable}
-            politicasCancelacion={garantiasActual.politicasCancelacion}
-            siIncumpleProveedor={garantiasActual.siIncumpleProveedor}
-            onChange={(field, data) => updateContenido(`garantias.${field}`, data)}
-            visibilidad={visibilidadActual}
-            onVisibilidadChange={updateVisibilidad}
-            visible={visibilidadExtendida.garantias}
-            onVisibleChange={(v) => updateVisibilidad('garantiasProveedor', v)}
-            tituloSubtitulo={garantiasTituloSubtituloActual}
-            onTituloSubtituloChange={(field, value) => updateContenido('garantiasTituloSubtitulo', { ...garantiasTituloSubtituloActual, [field]: value })}
-            updatedAt={timestamps.garantias}
-            onGuardar={() => handleGuardarSeccion('garantias')}
-            onReset={() => handleDescartarSeccion('garantias')}
-            guardando={guardandoSeccion === 'garantias'}
-            hasChanges={hasChangesForSection('garantias')}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <GarantiasContent
+              proveedorGarantiza={garantiasActual.proveedorGarantiza}
+              clienteResponsable={garantiasActual.clienteResponsable}
+              politicasCancelacion={garantiasActual.politicasCancelacion}
+              siIncumpleProveedor={garantiasActual.siIncumpleProveedor}
+              onChange={(field, data) => updateContenido(`garantias.${field}`, data)}
+              visibilidad={visibilidadActual}
+              onVisibilidadChange={updateVisibilidad}
+              visible={visibilidadExtendida.garantias}
+              onVisibleChange={(v) => updateVisibilidad('garantiasProveedor', v)}
+              tituloSubtitulo={garantiasTituloSubtituloActual}
+              onTituloSubtituloChange={(field, value) => updateContenido('garantiasTituloSubtitulo', { ...garantiasTituloSubtituloActual, [field]: value })}
+              updatedAt={timestamps.garantias}
+              onGuardar={() => handleGuardarSeccion('garantias')}
+              onReset={() => handleDescartarSeccion('garantias')}
+              guardando={guardandoSeccion === 'garantias'}
+              hasChanges={hasChangesForSection('garantias')}
+            />
+          </motion.div>
         )}
 
         {/* CONTACTO */}
         {activeItem === 'contacto' && (
-          <ContactoContent
-            data={contactoActual}
-            onChange={(data) => updateContenido('contacto', data)}
-            visible={visibilidadActual.contacto !== false}
-            onVisibleChange={(v) => updateVisibilidad('contacto', v)}
-            updatedAt={timestamps.contacto}
-            onGuardar={() => handleGuardarSeccion('contacto')}
-            onReset={() => handleDescartarSeccion('contacto')}
-            guardando={guardandoSeccion === 'contacto'}
-            hasChanges={hasChangesForSection('contacto')}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ContactoContent
+              data={contactoActual}
+              onChange={(data) => updateContenido('contacto', data)}
+              visible={visibilidadActual.contacto !== false}
+              onVisibleChange={(v) => updateVisibilidad('contacto', v)}
+              updatedAt={timestamps.contacto}
+              onGuardar={() => handleGuardarSeccion('contacto')}
+              onReset={() => handleDescartarSeccion('contacto')}
+              guardando={guardandoSeccion === 'contacto'}
+              hasChanges={hasChangesForSection('contacto')}
+            />
+          </motion.div>
         )}
 
         {/* TÉRMINOS */}
         {activeItem === 'terminos' && (
-          <TerminosContent
-            data={terminosActual}
-            onChange={(data) => updateContenido('terminos', data)}
-            visible={visibilidadActual.terminos !== false}
-            onVisibleChange={(v) => updateVisibilidad('terminos', v)}
-            updatedAt={timestamps.terminos}
-            onGuardar={() => handleGuardarSeccion('terminos')}
-            onReset={() => handleDescartarSeccion('terminos')}
-            guardando={guardandoSeccion === 'terminos'}
-            hasChanges={hasChangesForSection('terminos')}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <TerminosContent
+              data={terminosActual}
+              onChange={(data) => updateContenido('terminos', data)}
+              visible={visibilidadActual.terminos !== false}
+              onVisibleChange={(v) => updateVisibilidad('terminos', v)}
+              updatedAt={timestamps.terminos}
+              onGuardar={() => handleGuardarSeccion('terminos')}
+              onReset={() => handleDescartarSeccion('terminos')}
+              guardando={guardandoSeccion === 'terminos'}
+              hasChanges={hasChangesForSection('terminos')}
+            />
+          </motion.div>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
@@ -1040,120 +1108,195 @@ export default function ContenidoTab({
 
         {/* ANÁLISIS DE REQUISITOS */}
         {activeItem === 'analisis' && (
-          <AnalisisRequisitosContent
-            data={analisisActual}
-            onChange={(data) => updateContenido('analisisRequisitos', data)}
-            visible={visibilidadExtendida.analisisRequisitos}
-            onVisibleChange={(v) => updateVisibilidadExtendida('analisisRequisitos', v)}
-            updatedAt={timestamps.analisis}
-            onGuardar={() => handleGuardarSeccion('analisis')}
-            onReset={() => handleDescartarSeccion('analisis')}
-            guardando={guardandoSeccion === 'analisis'}
-            hasChanges={hasChangesForSection('analisis')}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <AnalisisRequisitosContent
+              data={analisisActual}
+              onChange={(data) => updateContenido('analisisRequisitos', data)}
+              visible={visibilidadExtendida.analisisRequisitos}
+              onVisibleChange={(v) => updateVisibilidadExtendida('analisisRequisitos', v)}
+              updatedAt={timestamps.analisis}
+              onGuardar={() => handleGuardarSeccion('analisis')}
+              onReset={() => handleDescartarSeccion('analisis')}
+              guardando={guardandoSeccion === 'analisis'}
+              hasChanges={hasChangesForSection('analisis')}
+            />
+          </motion.div>
         )}
 
         {/* FORTALEZAS */}
         {activeItem === 'fortalezas' && (
-          <FortalezasContent
-            data={fortalezasActual}
-            onChange={(data) => updateContenido('fortalezas', data)}
-            visible={visibilidadExtendida.fortalezas}
-            onVisibleChange={(v) => updateVisibilidadExtendida('fortalezas', v)}
-            updatedAt={timestamps.fortalezas}
-            onGuardar={() => handleGuardarSeccion('fortalezas')}
-            onReset={() => handleDescartarSeccion('fortalezas')}
-            guardando={guardandoSeccion === 'fortalezas'}
-            hasChanges={hasChangesForSection('fortalezas')}
-            seccionesColapsadas={seccionesColapsadasActual}
-            onSeccionColapsadaChange={updateSeccionColapsada}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <FortalezasContent
+              data={fortalezasActual}
+              onChange={(data) => updateContenido('fortalezas', data)}
+              visible={visibilidadExtendida.fortalezas}
+              onVisibleChange={(v) => updateVisibilidadExtendida('fortalezas', v)}
+              updatedAt={timestamps.fortalezas}
+              onGuardar={() => handleGuardarSeccion('fortalezas')}
+              onReset={() => handleDescartarSeccion('fortalezas')}
+              guardando={guardandoSeccion === 'fortalezas'}
+              hasChanges={hasChangesForSection('fortalezas')}
+              seccionesColapsadas={seccionesColapsadasActual}
+              onSeccionColapsadaChange={updateSeccionColapsada}
+            />
+          </motion.div>
         )}
 
         {/* DINÁMICO VS ESTÁTICO */}
         {activeItem === 'dinamico' && (
-          <DinamicoVsEstaticoContent
-            data={dinamicoActual}
-            onChange={(data) => updateContenido('dinamicoVsEstatico', data)}
-            visible={visibilidadExtendida.dinamicoVsEstatico}
-            onVisibleChange={(v) => updateVisibilidadExtendida('dinamicoVsEstatico', v)}
-            updatedAt={timestamps.dinamico}
-            onGuardar={() => handleGuardarSeccion('dinamico')}
-            onReset={() => handleDescartarSeccion('dinamico')}
-            guardando={guardandoSeccion === 'dinamico'}
-            hasChanges={hasChangesForSection('dinamico')}
-            seccionesColapsadas={seccionesColapsadasActual}
-            onSeccionColapsadaChange={updateSeccionColapsada}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <DinamicoVsEstaticoContent
+              data={dinamicoActual}
+              onChange={(data) => updateContenido('dinamicoVsEstatico', data)}
+              visible={visibilidadExtendida.dinamicoVsEstatico}
+              onVisibleChange={(v) => updateVisibilidadExtendida('dinamicoVsEstatico', v)}
+              updatedAt={timestamps.dinamico}
+              onGuardar={() => handleGuardarSeccion('dinamico')}
+              onReset={() => handleDescartarSeccion('dinamico')}
+              guardando={guardandoSeccion === 'dinamico'}
+              hasChanges={hasChangesForSection('dinamico')}
+              seccionesColapsadas={seccionesColapsadasActual}
+              onSeccionColapsadaChange={updateSeccionColapsada}
+            />
+          </motion.div>
         )}
 
         {/* PRESUPUESTO Y CRONOGRAMA */}
         {activeItem === 'presupuesto' && (
-          <PresupuestoCronogramaContent
-            data={presupuestoActual}
-            onChange={(data) => updateContenido('presupuestoCronograma', data)}
-            visible={visibilidadExtendida.presupuestoCronograma}
-            onVisibleChange={(v) => updateVisibilidadExtendida('presupuestoCronograma', v)}
-            updatedAt={timestamps.presupuesto}
-            onGuardar={() => handleGuardarSeccion('presupuesto')}
-            onReset={() => handleDescartarSeccion('presupuesto')}
-            guardando={guardandoSeccion === 'presupuesto'}
-            hasChanges={hasChangesForSection('presupuesto')}
-            seccionesColapsadas={seccionesColapsadasActual}
-            onSeccionColapsadaChange={updateSeccionColapsada}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <PresupuestoCronogramaContent
+              data={presupuestoActual}
+              onChange={(data) => updateContenido('presupuestoCronograma', data)}
+              visible={visibilidadExtendida.presupuestoCronograma}
+              onVisibleChange={(v) => updateVisibilidadExtendida('presupuestoCronograma', v)}
+              updatedAt={timestamps.presupuesto}
+              onGuardar={() => handleGuardarSeccion('presupuesto')}
+              onReset={() => handleDescartarSeccion('presupuesto')}
+              guardando={guardandoSeccion === 'presupuesto'}
+              hasChanges={hasChangesForSection('presupuesto')}
+              seccionesColapsadas={seccionesColapsadasActual}
+              onSeccionColapsadaChange={updateSeccionColapsada}
+            />
+          </motion.div>
+        )}
+
+        {/* CUOTAS Y PAGOS */}
+        {activeItem === 'cuotas' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <CuotasContent
+              data={cuotasActual}
+              onChange={(data) => updateContenido('cuotas', data)}
+              visible={visibilidadExtendida.cuotas}
+              onVisibleChange={(v) => updateVisibilidadExtendida('cuotas', v)}
+              updatedAt={timestamps.cuotas}
+              onGuardar={() => handleGuardarSeccion('cuotas')}
+              onReset={() => handleDescartarSeccion('cuotas')}
+              guardando={guardandoSeccion === 'cuotas'}
+              hasChanges={hasChangesForSection('cuotas')}
+              seccionesColapsadas={seccionesColapsadasActual}
+              onSeccionColapsadaChange={updateSeccionColapsada}
+            />
+          </motion.div>
         )}
 
         {/* TABLA COMPARATIVA */}
         {activeItem === 'tabla' && (
-          <TablaComparativaContent
-            data={tablaActual}
-            onChange={(data) => updateContenido('tablaComparativa', data)}
-            visible={visibilidadExtendida.tablaComparativa}
-            onVisibleChange={(v) => updateVisibilidadExtendida('tablaComparativa', v)}
-            updatedAt={timestamps.tabla}
-            onGuardar={() => handleGuardarSeccion('tabla')}
-            onReset={() => handleDescartarSeccion('tabla')}
-            guardando={guardandoSeccion === 'tabla'}
-            hasChanges={hasChangesForSection('tabla')}
-            seccionesColapsadas={seccionesColapsadasActual}
-            onSeccionColapsadaChange={updateSeccionColapsada}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <TablaComparativaContent
+              data={tablaActual}
+              onChange={(data) => updateContenido('tablaComparativa', data)}
+              visible={visibilidadExtendida.tablaComparativa}
+              onVisibleChange={(v) => updateVisibilidadExtendida('tablaComparativa', v)}
+              updatedAt={timestamps.tabla}
+              onGuardar={() => handleGuardarSeccion('tabla')}
+              onReset={() => handleDescartarSeccion('tabla')}
+              guardando={guardandoSeccion === 'tabla'}
+              hasChanges={hasChangesForSection('tabla')}
+              seccionesColapsadas={seccionesColapsadasActual}
+              onSeccionColapsadaChange={updateSeccionColapsada}
+            />
+          </motion.div>
         )}
 
         {/* OBSERVACIONES */}
         {activeItem === 'observaciones' && (
-          <ObservacionesContent
-            data={observacionesActual}
-            onChange={(data) => updateContenido('observaciones', data)}
-            visible={visibilidadExtendida.observaciones}
-            onVisibleChange={(v) => updateVisibilidadExtendida('observaciones', v)}
-            updatedAt={timestamps.observaciones}
-            onGuardar={() => handleGuardarSeccion('observaciones')}
-            onReset={() => handleDescartarSeccion('observaciones')}
-            guardando={guardandoSeccion === 'observaciones'}
-            hasChanges={hasChangesForSection('observaciones')}
-            seccionesColapsadas={seccionesColapsadasActual}
-            onSeccionColapsadaChange={updateSeccionColapsada}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ObservacionesContent
+              data={observacionesActual}
+              onChange={(data) => updateContenido('observaciones', data)}
+              visible={visibilidadExtendida.observaciones}
+              onVisibleChange={(v) => updateVisibilidadExtendida('observaciones', v)}
+              updatedAt={timestamps.observaciones}
+              onGuardar={() => handleGuardarSeccion('observaciones')}
+              onReset={() => handleDescartarSeccion('observaciones')}
+              guardando={guardandoSeccion === 'observaciones'}
+              hasChanges={hasChangesForSection('observaciones')}
+              seccionesColapsadas={seccionesColapsadasActual}
+              onSeccionColapsadaChange={updateSeccionColapsada}
+            />
+          </motion.div>
         )}
 
         {/* CONCLUSIÓN */}
         {activeItem === 'conclusion' && (
-          <ConclusionContent
-            data={conclusionActual}
-            onChange={(data) => updateContenido('conclusion', data)}
-            visible={visibilidadExtendida.conclusion}
-            onVisibleChange={(v) => updateVisibilidadExtendida('conclusion', v)}
-            updatedAt={timestamps.conclusion}
-            onGuardar={() => handleGuardarSeccion('conclusion')}
-            onReset={() => handleDescartarSeccion('conclusion')}
-            guardando={guardandoSeccion === 'conclusion'}
-            hasChanges={hasChangesForSection('conclusion')}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ConclusionContent
+              data={conclusionActual}
+              onChange={(data) => updateContenido('conclusion', data)}
+              visible={visibilidadExtendida.conclusion}
+              onVisibleChange={(v) => updateVisibilidadExtendida('conclusion', v)}
+              updatedAt={timestamps.conclusion}
+              onGuardar={() => handleGuardarSeccion('conclusion')}
+              onReset={() => handleDescartarSeccion('conclusion')}
+              guardando={guardandoSeccion === 'conclusion'}
+              hasChanges={hasChangesForSection('conclusion')}
+            />
+          </motion.div>
         )}
       </div>
     </div>
   )
 }
+
+
 

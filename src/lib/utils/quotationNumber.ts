@@ -145,6 +145,23 @@ export function getVersionNumber(numero: string): number {
 }
 
 /**
+ * Extrae el número base de cotización (sin versión)
+ * Útil para agrupar versiones de la misma cotización
+ * @example extractBaseQuotationNumber("CZ0042.251703V3") => "CZ0042.251703"
+ */
+export function extractBaseQuotationNumber(numero: string): string {
+  const parsed = parseQuotationNumber(numero)
+  
+  if (!parsed.isValid) {
+    // Si el formato es inválido, intentar remover V\d+ del final
+    return numero.replace(/V\d+$/, '')
+  }
+  
+  const seq = parsed.sequential.toString().padStart(4, '0')
+  return `CZ${seq}.${parsed.year}${parsed.time}`
+}
+
+/**
  * Formatea un número de cotización para display (con espacios)
  * @example formatForDisplay("CZ0001.251703V2") => "CZ-0001 | 25-17:03 | V2"
  */

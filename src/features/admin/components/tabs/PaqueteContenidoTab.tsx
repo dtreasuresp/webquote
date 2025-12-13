@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { PackageSnapshot } from '@/lib/types'
-import { FaTrash, FaPlus } from 'react-icons/fa'
+import { Trash2, Plus } from 'lucide-react'
 
 interface PaqueteContenidoTabProps {
   snapshot: PackageSnapshot
@@ -73,7 +73,7 @@ export default function PaqueteContenidoTab({
   }
 
   return (
-    <div className="paquete-contenido-tab space-y-6 py-6 px-6">
+    <div className="paquete-contenido-tab space-y-4 py-6 px-6">
       {/* Características Principales */}
       <ArrayFieldEditor
         label="✨ Características principales"
@@ -81,7 +81,7 @@ export default function PaqueteContenidoTab({
         onAddItem={(value) => handleAddItem('features', value)}
         onRemoveItem={(index) => handleRemoveItem('features', index)}
         readOnly={readOnly}
-        placeholder="Ej: Diseño responsive, SEO optimizado..."
+        placeholder="Ingrese característica..."
       />
 
       {/* Beneficios */}
@@ -91,7 +91,7 @@ export default function PaqueteContenidoTab({
         onAddItem={(value) => handleAddItem('beneficios', value)}
         onRemoveItem={(index) => handleRemoveItem('beneficios', index)}
         readOnly={readOnly}
-        placeholder="Ej: Aumenta conversiones, mejora visibilidad..."
+        placeholder="Ingrese beneficio..."
       />
 
       {/* Incluidos */}
@@ -101,7 +101,7 @@ export default function PaqueteContenidoTab({
         onAddItem={(value) => handleAddItem('incluidos', value)}
         onRemoveItem={(index) => handleRemoveItem('incluidos', index)}
         readOnly={readOnly}
-        placeholder="Ej: Hosting gratis 3 meses, dominio .com..."
+        placeholder="Ingrese elemento incluido..."
       />
 
       {/* Exclusiones */}
@@ -111,7 +111,7 @@ export default function PaqueteContenidoTab({
         onAddItem={(value) => handleAddItem('exclusiones', value)}
         onRemoveItem={(index) => handleRemoveItem('exclusiones', index)}
         readOnly={readOnly}
-        placeholder="Ej: Email ilimitado, certificados SSL avanzados..."
+        placeholder="Ingrese elemento excluido..."
       />
 
       {/* Términos y Condiciones */}
@@ -183,9 +183,9 @@ function ArrayFieldEditor({
           items.map((item, index) => (
             <div
               key={index}
-              className="flex items-center justify-between bg-gh-bg-secondary border border-gh-border rounded-md px-4 py-3 hover:border-gh-border-light transition-colors"
+              className="flex items-center justify-between bg-gh-bg-secondary border border-gh-border/30 rounded-md px-4 py-3 hover:border-gh-border-light transition-colors"
             >
-              <span className="text-sm text-gh-text flex-1">{item}</span>
+              <span className="text-xs font-medium text-gh-text flex-1">{item}</span>
               {!readOnly && (
                 <button
                   onClick={() => onRemoveItem(index)}
@@ -193,7 +193,7 @@ function ArrayFieldEditor({
                   title="Eliminar"
                   aria-label={`Eliminar item: ${item}`}
                 >
-                  <FaTrash size={14} />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
@@ -210,7 +210,7 @@ function ArrayFieldEditor({
             onChange={(e) => setNewItem(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder || 'Agregar nuevo...'}
-            className="flex-1 px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-gh-text outline-none transition"
+            className="flex-1 px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-sm focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-gh-text outline-none transition"
             disabled={readOnly}
           />
           <button
@@ -219,7 +219,7 @@ function ArrayFieldEditor({
             className="px-4 py-2 bg-gh-success text-white rounded-md text-sm hover:bg-[#1f7935] disabled:bg-gh-bg-secondary disabled:text-gh-text-muted transition-all flex items-center gap-2 font-semibold"
             aria-label="Agregar nuevo item"
           >
-            <FaPlus size={14} />
+            <Plus className="w-3.5 h-3.5" />
             Agregar
           </button>
         </div>
@@ -255,8 +255,10 @@ function TextareaField({
         disabled={readOnly}
         rows={rows}
         placeholder={placeholder}
-        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-gh-text outline-none transition disabled:bg-gh-bg-secondary disabled:text-gh-text-muted disabled:opacity-50"
+        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-sm focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-gh-text outline-none transition disabled:bg-gh-bg-secondary disabled:text-gh-text-muted disabled:opacity-50"
       />
     </div>
   )
 }
+
+

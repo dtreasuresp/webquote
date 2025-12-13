@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 /**
@@ -7,7 +9,14 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(request: NextRequest) {
   try {
-    await prisma.$queryRaw`SELECT 1`
+    // Verificar sesión y permisos
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+    }
     
     const userId = 'default-user'
     let preferences = await prisma.userPreferences.findUnique({
@@ -33,10 +42,13 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       data: preferences,
     })
+    res.headers.set('x-user-id', session.user.id || '')
+    res.headers.set('x-user-role', session.user.role || '')
+    return res
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
     console.error('Error fetching preferences:', msg)
@@ -59,6 +71,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Verificar sesión y permisos
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
+    }
+
     const body = await request.json()
     const userId = 'default-user'
 
@@ -96,11 +117,14 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       data: preferences,
       message: 'Preferences updated successfully',
     })
+    res.headers.set('x-user-id', session.user.id || '')
+    res.headers.set('x-user-role', session.user.role || '')
+    return res
   } catch (error) {
     console.error('Error updating preferences:', error)
     return NextResponse.json(

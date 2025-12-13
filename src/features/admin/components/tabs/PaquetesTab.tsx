@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { FaCalculator, FaEdit, FaTrash } from 'react-icons/fa'
+import { Calculator, Edit, Trash2, Package, Archive } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PackageSnapshot, QuotationConfig, DialogConfig } from '@/lib/types'
 import CollapsibleSection from '@/features/admin/components/CollapsibleSection'
@@ -146,11 +146,11 @@ export default function PaquetesTab({
 
   return (
     <div className="p-6 space-y-4">
-      {/* Sección: Paquetes Creados */}
+      {/* Sección: Ofertas Creadas */}
       <CollapsibleSection
-        id="paquetes-creados"
-        title={`Paquetes Creados (${snapshots.filter(s => s.activo).length})`}
-        icon=""
+        id="ofertas-creadas"
+        title={`Ofertas Creadas (${snapshots.filter(s => s.activo).length})`}
+        icon={Package}
         defaultOpen={true}
       >
         {cargandoSnapshots ? (
@@ -158,16 +158,16 @@ export default function PaquetesTab({
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gh-bg-secondary rounded-lg border border-gh-border p-8 text-center"
+            className="bg-gh-bg-secondary rounded-lg border border-gh-border/30 p-8 text-center"
           >
             <div className="flex items-center justify-center gap-3">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               >
-                <FaCalculator className="text-gh-text-muted text-2xl" />
+                <Calculator className="text-gh-text-muted text-2xl" />
               </motion.div>
-              <p className="text-sm text-gh-text-muted font-medium">Cargando paquetes...</p>
+              <p className="text-xs font-medium text-gh-text-muted font-medium">Cargando paquetes...</p>
             </div>
           </motion.div>
         ) : errorSnapshots ? (
@@ -243,7 +243,7 @@ export default function PaquetesTab({
                           className="w-8 h-8 rounded-md bg-gh-bg hover:bg-gh-border text-gh-text-muted hover:text-gh-text transition-all flex items-center justify-center border border-gh-border"
                           title="Editar paquete"
                         >
-                          <FaEdit size={13} />
+                          <Edit className="w-3.5 h-3.5" />
                         </motion.button>
 
                         <motion.button
@@ -254,7 +254,7 @@ export default function PaquetesTab({
                           className="w-8 h-8 rounded-md bg-gh-bg hover:bg-red-500/10 text-gh-text-muted hover:text-red-400 transition-all flex items-center justify-center border border-gh-border hover:border-red-500/30"
                           title="Eliminar paquete"
                         >
-                          <FaTrash size={12} />
+                          <Trash2 className="w-3 h-3" />
                         </motion.button>
                       </div>
                     </div>
@@ -629,18 +629,18 @@ export default function PaquetesTab({
             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gh-bg-secondary flex items-center justify-center">
               <span className="text-2xl">📭</span>
             </div>
-            <p className="text-sm text-gh-text font-medium">No hay paquetes creados</p>
-            <p className="text-xs text-gh-text-muted mt-1">Crea tu primer paquete completando los datos arriba</p>
+            <p className="text-xs font-medium text-gh-text font-medium">No hay ofertas creadas</p>
+            <p className="text-xs text-gh-text-muted mt-1">Crea tu primera oferta completando los datos arriba</p>
           </div>
         )}
       </CollapsibleSection>
 
-      {/* Sección: Paquetes Inactivos */}
+      {/* Sección: Ofertas Inactivas */}
       {snapshots.filter(s => !s.activo).length > 0 && (
         <CollapsibleSection
-          id="paquetes-inactivos"
-          title={`Paquetes Inactivos (${snapshots.filter(s => !s.activo).length})`}
-          icon=""
+          id="ofertas-inactivas"
+          title={`Ofertas Inactivas (${snapshots.filter(s => !s.activo).length})`}
+          icon={Archive}
           defaultOpen={false}
         >
           <div className="space-y-4">
@@ -661,11 +661,11 @@ export default function PaquetesTab({
                       </p>
                     )}
                     {snapshot.paquete.descripcion && (
-                      <p className="text-sm text-gh-text-muted italic mt-1">
+                      <p className="text-xs font-medium text-gh-text-muted italic mt-1">
                         {snapshot.paquete.descripcion}
                       </p>
                     )}
-                    <p className="text-sm text-gh-text-muted mt-2">
+                    <p className="text-xs font-medium text-gh-text-muted mt-2">
                       {new Date(snapshot.createdAt).toLocaleDateString('es-ES')}
                     </p>
                   </div>
@@ -700,7 +700,7 @@ export default function PaquetesTab({
                       onClick={() => handleEliminarConValidacion(snapshot)}
                       className="w-9 h-9 bg-gh-bg text-gh-text-muted hover:bg-gh-border transition-colors flex items-center justify-center rounded-lg"
                     >
-                      <FaTrash size={14} />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </motion.button>
                   </div>
                 </div>
@@ -712,3 +712,6 @@ export default function PaquetesTab({
     </div>
   )
 }
+
+
+

@@ -2,166 +2,279 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaCheckCircle, FaTimesCircle, FaChevronDown } from 'react-icons/fa'
+import { FaCheckCircle, FaTimesCircle, FaChevronDown, FaShieldAlt, FaQuestionCircle } from 'react-icons/fa'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { 
+  fluentSlideUp,
+  fluentStaggerContainer,
+  fluentStaggerItem
+} from '@/lib/animations/variants'
+import { viewport, spring } from '@/lib/animations/config'
 
 export default function GarantiasYFAQ() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(0)
 
   return (
-    <section className="py-20 px-4 bg-white">
-      <div className="max-w-7xl mx-auto">
-        {/* Garantías */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          id="garantias"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900">
-            Garantías y Responsabilidades
-          </h2>
+    <>
+      {/* Sección Garantías */}
+      <FluentSection
+        id="garantias"
+        animation="stagger"
+        paddingY="lg"
+        className="bg-gradient-to-b from-light-bg to-white"
+      >
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <motion.div 
+            className="text-center mb-6"
+            variants={fluentSlideUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewport.default}
+          >
+            <motion.div 
+              className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-success to-emerald-600 rounded-2xl mb-4 shadow-lg"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={spring.fluent}
+            >
+              <FaShieldAlt className="text-white" size={24} />
+            </motion.div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+              Garantías y Responsabilidades
+            </h2>
+            <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+              Compromisos claros de ambas partes
+            </p>
+          </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
+          {/* Grid de Garantías */}
+          <FluentRevealGroup className="grid md:grid-cols-2 gap-6 mb-6">
             {/* Proveedor Responsable */}
-            <div className="bg-accent/10 p-8 rounded-2xl border-0 border-accent">
-              <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
-                <FaCheckCircle className="text-accent" />
-                EL PROVEEDOR GARANTIZA:
-              </h3>
-              <ul className="space-y-3">
-                {[
-                  'Mantener el 99.9% de tiempo activo',
-                  'Seguridad SSL/HTTPS garantizada y gratis',
-                  'Backups automáticos',
-                  'Actualizaciones de seguridad',
-                  'Soporte técnico',
-                  'Cambios realizados puntualmente',
-                  'Diseño profesional de tu sitio',
-                  'Hosting, dominio y correo funcionando',
-                  'Cumplimiento de normativas legales',
-                  'Protección de datos y privacidad',
-                  'Soporte post-lanzamiento',
-                  'Período de garantía definido (30 a 90 días según paquete)',
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-3 text-gray-800">
-                    <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <FluentRevealItem>
+              <FluentGlass
+                variant="normal"
+                className="rounded-2xl overflow-hidden h-full border border-light-success/30"
+              >
+                <div className="bg-gradient-to-r from-light-success/10 to-emerald-500/10 px-6 py-4 border-b border-light-success/20">
+                  <h3 className="text-sm font-semibold text-light-success flex items-center gap-2">
+                    <FaCheckCircle size={14} />
+                    EL PROVEEDOR GARANTIZA
+                  </h3>
+                </div>
+                <div className="p-6">
+                  <ul className="space-y-2.5">
+                    {[
+                      'Mantener el 99.9% de tiempo activo',
+                      'Seguridad SSL/HTTPS garantizada y gratis',
+                      'Backups automáticos',
+                      'Actualizaciones de seguridad',
+                      'Soporte técnico',
+                      'Cambios realizados puntualmente',
+                      'Diseño profesional de tu sitio',
+                      'Hosting, dominio y correo funcionando',
+                      'Cumplimiento de normativas legales',
+                      'Protección de datos y privacidad',
+                      'Soporte post-lanzamiento',
+                      'Período de garantía definido (30 a 90 días según paquete)',
+                    ].map((item, index) => (
+                      <motion.li 
+                        key={`proveedor-${item.slice(0, 30)}-${index}`} 
+                        className="flex items-start gap-3 text-sm text-light-text"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.03 }}
+                      >
+                        <FaCheckCircle className="text-light-success mt-0.5 flex-shrink-0" size={12} />
+                        <span>{item}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </div>
+              </FluentGlass>
+            </FluentRevealItem>
 
             {/* Cliente Responsable */}
-            <div className="bg-neutral-50 p-8 rounded-2xl border-0 border-neutral-300">
-              <h3 className="text-2xl font-bold mb-6 text-secondary flex items-center gap-2">
-                <FaTimesCircle className="text-primary" />
-                EL CLIENTE ES RESPONSABLE DE:
-              </h3>
-              <ul className="space-y-3">
-                {[
-                  'Pagar las inversiones acordadas a tiempo',
-                  'Proporcionar contenidos/fotos necesarios',
-                  'Aprobar diseños y funcionalidades',
-                  'Usar el sitio legalmente',
-                  'Notificar si hay problemas',
-                  'Solicitar cambios dentro del alcance acordado',
-                  'Mantener la confidencialidad de accesos',
-                  'No transferir el sitio sin nuestro consentimiento', 
-                  'Cumplir con las políticas de uso',
-                  'Respetar los términos de servicio',
-                  'Seguir las recomendaciones de seguridad',
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-3 text-gray-800">
-                    <FaTimesCircle className="text-primary mt-1 flex-shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+            <FluentRevealItem>
+              <FluentGlass
+                variant="normal"
+                className="rounded-2xl overflow-hidden h-full"
+              >
+                <div className="bg-gradient-to-r from-light-bg-secondary to-light-bg-tertiary px-6 py-4 border-b border-light-border/50">
+                  <h3 className="text-sm font-semibold text-light-text flex items-center gap-2">
+                    <FaTimesCircle size={14} className="text-light-text-secondary" />
+                    EL CLIENTE ES RESPONSABLE DE
+                  </h3>
+                </div>
+                <div className="p-6">
+                  <ul className="space-y-2.5">
+                    {[
+                      'Pagar las inversiones acordadas a tiempo',
+                      'Proporcionar contenidos/fotos necesarios',
+                      'Aprobar diseños y funcionalidades',
+                      'Usar el sitio legalmente',
+                      'Notificar si hay problemas',
+                      'Solicitar cambios dentro del alcance acordado',
+                      'Mantener la confidencialidad de accesos',
+                      'No transferir el sitio sin nuestro consentimiento', 
+                      'Cumplir con las políticas de uso',
+                      'Respetar los términos de servicio',
+                      'Seguir las recomendaciones de seguridad',
+                    ].map((item, index) => (
+                      <motion.li 
+                        key={`cliente-${item.slice(0, 30)}-${index}`} 
+                        className="flex items-start gap-3 text-sm text-light-text"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.03 }}
+                      >
+                        <span className="text-light-text-muted mt-0.5 flex-shrink-0">•</span>
+                        <span>{item}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </div>
+              </FluentGlass>
+            </FluentRevealItem>
+          </FluentRevealGroup>
 
           {/* Políticas de Cancelación */}
-          <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-8 rounded-2xl border-0 border-red-300 mb-16">
-            <h3 className="text-2xl font-bold mb-6 text-red-900">
-              📋 POLÍTICAS DE CANCELACIÓN
-            </h3>
-            <div className="space-y-4">
-              {[
-                {
-                  title: 'Si el cliente cancela después del lanzamiento',
-                  detail: 'Se devuelve hasta el 50% de la inversión inicial (solo desarrollo)',
-                },
-                {
-                  title: 'Luego del segundo mes de lanzamiento',
-                  detail: 'Reembolso de 30% de la inversión inicial (solo desarrollo)',
-                },
-                {
-                  title: 'Después del período de garantía',
-                  detail: 'Sin derecho a reembolso',
-                },
-              ].map((policy, index) => (
-                <div key={index} className="border-l-4 border-red-500 pl-4">
-                  <p className="font-bold text-gray-900">{policy.title}</p>
-                  <p className="text-gray-700 text-sm">{policy.detail}</p>
-                </div>
-              ))}
+          <FluentReveal className="mb-6">
+            <FluentGlass
+              variant="normal"
+              className="rounded-2xl overflow-hidden border border-light-warning/30"
+            >
+              <div className="bg-gradient-to-r from-light-warning/10 to-amber-500/10 px-6 py-4 border-b border-light-warning/20">
+                <h3 className="text-sm font-semibold text-light-warning">
+                  📋 POLÍTICAS DE CANCELACIÓN
+                </h3>
+              </div>
+              <div className="p-6">
+                <FluentRevealGroup className="grid sm:grid-cols-3 gap-4">
+                {[
+                  {
+                    title: 'Si el cliente cancela después del lanzamiento',
+                    detail: 'Se devuelve hasta el 50% de la inversión inicial (solo desarrollo)',
+                  },
+                  {
+                    title: 'Luego del segundo mes de lanzamiento',
+                    detail: 'Reembolso de 30% de la inversión inicial (solo desarrollo)',
+                  },
+                  {
+                    title: 'Después del período de garantía',
+                    detail: 'Sin derecho a reembolso',
+                  },
+                ].map((policy, index) => (
+                  <FluentRevealItem key={`policy-${policy.title.slice(0, 30)}-${index}`}>
+                    <motion.div 
+                      className="p-4 bg-gradient-to-br from-light-bg-secondary to-white rounded-xl border-l-4 border-light-warning/50 h-full"
+                      whileHover={{ x: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                      transition={spring.fluent}
+                    >
+                      <p className="text-sm font-medium text-light-text mb-1">{policy.title}</p>
+                      <p className="text-xs text-light-text-secondary">{policy.detail}</p>
+                    </motion.div>
+                  </FluentRevealItem>
+                ))}
+              </FluentRevealGroup>
             </div>
-          </div>
+          </FluentGlass>
+        </FluentReveal>
 
           {/* Si Incumple el Proveedor */}
-          <div className="bg-gradient-to-r from-secondary/10 to-neutral-100 p-8 rounded-2xl border-0 border-secondary mb-16">
-            <h3 className="text-2xl font-bold mb-6 text-secondary">
-              ⚖️ SI EL PROVEEDOR INCUMPLE
-            </h3>
-            <div className="space-y-3">
-              {[
-                'Procede a compensación al cliente por inactividad (descuento de hasta un 40% en el próximo mes)',
-                'Corrección inmediata sin costo adicional',
-                'Reembolso parcial según el impacto',
-                'Revisión de los términos del contrato',
-                'Terminación del contrato si persisten incumplimientos',
-                'Notificación formal por escrito',
-                'Plazo de 15 días para subsanar el incumplimiento',
-                'Acceso a soporte prioritario',
-                'Informe detallado de acciones correctivas',
-                'Garantía extendida en caso de fallos recurrentes',
-                'Suspensión temporal del servicio si es necesario',
-              ].map((item, index) => (
-                <div key={index} className="flex items-start gap-3 text-gray-800">
-                  <FaCheckCircle className="text-accent mt-1 flex-shrink-0" />
-                  <span>{item}</span>
-                </div>
-              ))}
+          <FluentReveal>
+            <FluentGlass
+              variant="normal"
+              className="rounded-2xl overflow-hidden border border-light-accent/30"
+            >
+              <div className="bg-gradient-to-r from-light-accent/10 to-blue-500/10 px-6 py-4 border-b border-light-accent/20">
+                <h3 className="text-sm font-semibold text-light-accent">
+                  ⚖️ SI EL PROVEEDOR INCUMPLE
+                </h3>
+              </div>
+              <div className="p-6">
+                <FluentRevealGroup className="grid sm:grid-cols-2 gap-3">
+                {[
+                  'Procede a compensación al cliente por inactividad (descuento de hasta un 40% en el próximo mes)',
+                  'Corrección inmediata sin costo adicional',
+                  'Reembolso parcial según el impacto',
+                  'Revisión de los términos del contrato',
+                  'Terminación del contrato si persisten incumplimientos',
+                  'Notificación formal por escrito',
+                  'Plazo de 15 días para subsanar el incumplimiento',
+                  'Acceso a soporte prioritario',
+                  'Informe detallado de acciones correctivas',
+                  'Garantía extendida en caso de fallos recurrentes',
+                  'Suspensión temporal del servicio si es necesario',
+                ].map((item, index) => (
+                  <FluentRevealItem key={`incumple-${item.slice(0, 30)}-${index}`}>
+                    <div className="flex items-start gap-3 text-sm text-light-text p-3 rounded-lg hover:bg-light-bg-secondary/50 transition-colors">
+                      <span className="text-light-accent mt-0.5 flex-shrink-0">→</span>
+                      <span>{item}</span>
+                    </div>
+                  </FluentRevealItem>
+                ))}
+              </FluentRevealGroup>
             </div>
-          </div>
-        </motion.div>
+          </FluentGlass>
+        </FluentReveal>
+        </div>
+      </FluentSection>
 
-        {/* FAQ */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          id="faq"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900">
-            Preguntas Frecuentes
-          </h2>
+      {/* Sección FAQ */}
+      <FluentSection
+        id="faq"
+        animation="stagger"
+        paddingY="lg"
+        className="bg-gradient-to-b from-white to-light-bg"
+      >
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <motion.div 
+            className="text-center mb-6"
+            variants={fluentSlideUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewport.default}
+          >
+            <motion.div 
+              className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-accent to-blue-600 rounded-2xl mb-4 shadow-lg"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={spring.fluent}
+            >
+              <FaQuestionCircle className="text-white" size={24} />
+            </motion.div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+              Preguntas Frecuentes
+            </h2>
+            <p className="text-sm text-light-text-secondary">
+              Respuestas a las dudas más comunes
+            </p>
+          </motion.div>
 
-          <div className="space-y-4">
+          {/* FAQ Items */}
+          <motion.div 
+            className="rounded-2xl border border-light-border/50 overflow-hidden bg-white/70 backdrop-blur-sm shadow-sm"
+            variants={fluentStaggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewport.default}
+          >
             {faqData.map((faq, index) => (
               <FAQItem
-                key={index}
+                key={`faq-${faq.question.slice(0, 30)}-${index}`}
                 question={faq.question}
                 answer={faq.answer}
                 isOpen={openFAQ === index}
                 onToggle={() => setOpenFAQ(openFAQ === index ? null : index)}
+                isLast={index === faqData.length - 1}
               />
             ))}
-          </div>
-        </motion.div>
-      </div>
-    </section>
+          </motion.div>
+        </div>
+      </FluentSection>
+    </>
   )
 }
 
@@ -170,31 +283,36 @@ function FAQItem({
   answer,
   isOpen,
   onToggle,
-}: {
+  isLast,
+}: Readonly<{
   question: string
   answer: string | string[]
   isOpen: boolean
   onToggle: () => void
-}) {
+  isLast: boolean
+}>) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="border-2 border-gray-200 rounded-lg overflow-hidden hover:border-primary transition-colors"
+      variants={fluentStaggerItem}
+      className={isLast ? '' : 'border-b border-light-border/50'}
     >
-      <button
+      <motion.button
         onClick={onToggle}
-        className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+        className={`w-full px-6 py-4 flex items-center justify-between text-left transition-colors ${
+          isOpen ? 'bg-light-bg-secondary' : 'hover:bg-light-bg-tertiary'
+        }`}
+        whileHover={{ backgroundColor: isOpen ? undefined : 'rgba(0,0,0,0.02)' }}
+        transition={spring.fluent}
       >
-        <span className="font-bold text-lg text-gray-900">{question}</span>
+        <span className="font-medium text-sm text-light-text pr-4">{question}</span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
+          className="flex-shrink-0"
         >
-          <FaChevronDown className="text-primary" />
+          <FaChevronDown className="text-light-text-muted" size={12} />
         </motion.div>
-      </button>
+      </motion.button>
 
       <AnimatePresence>
         {isOpen && (
@@ -202,14 +320,15 @@ function FAQItem({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="border-t-2 border-gray-200"
+            transition={{ duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
           >
-            <div className="px-6 py-4 bg-white text-gray-800 space-y-2">
+            <div className="px-6 py-4 bg-light-bg-secondary text-sm text-light-text-secondary leading-relaxed border-t border-light-border/30">
               {Array.isArray(answer) ? (
-                answer.map((line, index) => (
-                  <p key={index}>{line}</p>
-                ))
+                <div className="space-y-2">
+                  {answer.map((line, i) => (
+                    <p key={`answer-line-${line.slice(0, 20)}-${i}`}>{line}</p>
+                  ))}
+                </div>
               ) : (
                 <p>{answer}</p>
               )}

@@ -6,7 +6,10 @@ import { FaBars, FaTimes } from 'react-icons/fa'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import type { QuotationConfig, ContenidoGeneral, VisibilidadConfig } from '@/lib/types'
+import UserProfileMenu from '@/components/UserProfileMenu'
+import ChangePasswordDialog from '@/components/ChangePasswordDialog'
 
 /** Configuración de cada item de navegación con su clave de datos */
 interface NavItemConfig {
@@ -47,10 +50,17 @@ interface NavigationProps {
 export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   const router = useRouter()
   const pathname = usePathname()
-  const isAdminPage = pathname === '/administrador'
+  const isAdminPage = pathname === '/admin'
+  const { data: session } = useSession()
+
+  // Si navegamos a otra ruta o recargamos se cierra el modal
+  useEffect(() => {
+    setIsChangePasswordOpen(false)
+  }, [pathname])
 
   // Filtrar navItems basado en la visibilidad configurada en la cotización
   const navItems = useMemo(() => {
@@ -106,6 +116,9 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
   }, [])
 
   const scrollToSection = (id: string) => {
+    // Cerrar modal de cambio de contraseña si estaba abierto para evitar superposición al navegar
+    setIsChangePasswordOpen(false)
+
     if (isAdminPage) {
       router.push(`/?section=${id}`)
     } else {
@@ -172,17 +185,26 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
                 </motion.button>
               ))}
               
-              {/* Admin Button - GitHub style */}
-              <Link href="/administrador" className="ml-3">
-                <motion.button
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="px-4 py-1.5 text-sm font-semibold bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200"
-                >
-                  Admin
-                </motion.button>
-              </Link>
+              {/* Admin Button / User Profile - GitHub style */}
+              {session ? (
+                <div className="ml-3">
+                  <UserProfileMenu 
+                    variant={isAdminPage ? 'dark' : 'light'} 
+                    onChangePassword={() => setIsChangePasswordOpen(true)}
+                  />
+                </div>
+              ) : (
+                <Link href="/login" className="ml-3">
+                  <motion.button
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="px-4 py-1.5 text-sm font-semibold bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200"
+                  >
+                    Iniciar Sesión
+                  </motion.button>
+                </Link>
+              )}
             </div>
 
             {/* Tablet Navigation */}
@@ -204,16 +226,26 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
                 </motion.button>
               ))}
               
-              <Link href="/administrador" className="ml-2">
-                <motion.button
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="px-3 py-1.5 text-xs font-semibold bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200"
-                >
-                  Admin
-                </motion.button>
-              </Link>
+              {/* User Profile or Login - Tablet */}
+              {session ? (
+                <div className="ml-2">
+                  <UserProfileMenu 
+                    variant={isAdminPage ? 'dark' : 'light'} 
+                    onChangePassword={() => setIsChangePasswordOpen(true)}
+                  />
+                </div>
+              ) : (
+                <Link href="/login" className="ml-2">
+                  <motion.button
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="px-3 py-1.5 text-xs font-semibold bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200"
+                  >
+                    Ingresar
+                  </motion.button>
+                </Link>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -258,21 +290,39 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
               </button>
             ))}
             
-            {/* Admin Link Mobile */}
+            {/* Mobile: User Profile or Login */}
             <div className={`pt-3 mt-2 border-t ${isAdminPage ? 'border-[#30363d]' : 'border-light-border'}`}>
-              <Link href="/administrador">
-                <motion.button
-                  className="w-full text-sm font-semibold px-4 py-2.5 bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <span>📊</span>
-                  Panel de Administración
-                </motion.button>
-              </Link>
+              {session ? (
+                <div className="px-2">
+                  <UserProfileMenu 
+                    variant={isAdminPage ? 'dark' : 'light'} 
+                    onChangePassword={() => setIsChangePasswordOpen(true)}
+                  />
+                </div>
+              ) : (
+                <Link href="/login">
+                  <motion.button
+                    className="w-full text-sm font-semibold px-4 py-2.5 bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center justify-center gap-2"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <span>🔐</span>
+                    Iniciar Sesión
+                  </motion.button>
+                </Link>
+              )}
             </div>
           </div>
         </motion.div>
       )}
+
+      {/* Diálogo de cambio de contraseña */}
+      <ChangePasswordDialog
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+        onSuccess={() => {
+          setIsChangePasswordOpen(false)
+        }}
+      />
     </>
   )
 }

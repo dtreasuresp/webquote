@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { FaPlus, FaTrash, FaEdit, FaTimes, FaCheck } from 'react-icons/fa'
+import { Plus, Trash2, Edit, X, Check } from 'lucide-react'
 import type { ServicioBase } from '@/lib/types'
 
 interface ServiciosBaseSectionProps {
@@ -66,10 +66,10 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="space-y-6"
+      className="space-y-4"
     >
       {/* PARTE 1: Elementos Existentes */}
-      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border p-6 grid grid-cols-6 gap-4">
+      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border/30 p-6 grid grid-cols-6 gap-4">
         <h3 className="text-xl font-bold text-gh-text mb-4 flex items-center gap-2">
           📝 Servicios Existentes
         </h3>
@@ -105,7 +105,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                             nombre: e.target.value,
                           })
                         }
-                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                       />
                       <input
                         type="number"
@@ -117,7 +117,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                             precio: Number.parseFloat(e.target.value) || 0,
                           })
                         }
-                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                         min="0"
                       />
                       <input
@@ -130,7 +130,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                             mesesGratis: Number.parseInt(e.target.value, 10) || 0,
                           })
                         }
-                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                         min="0"
                         max="12"
                       />
@@ -144,7 +144,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                             mesesPago: Number.parseInt(e.target.value, 10) || 0,
                           })
                         }
-                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                        className="hidden md:block w-full px-3 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                         min="1"
                         max="12"
                       />
@@ -157,14 +157,14 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                           onClick={guardarEditarServicioBase}
                           className="px-3 py-2 bg-gh-btn-secondary text-gh-text rounded-lg hover:bg-gh-bg-secondary transition-all"
                         >
-                          <FaCheck />
+                          <Check />
                         </button>
                         <button
                           aria-label="Cancelar edición servicio base"
                           onClick={cancelarEditarServicioBase}
                           className="px-3 py-2 bg-gh-bg-secondary text-gh-text rounded-lg hover:bg-gh-bg transition-all"
                         >
-                          <FaTimes />
+                          <X />
                         </button>
                       </div>
                     </>
@@ -183,14 +183,14 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                           onClick={() => abrirEditarServicioBase(servicio)}
                           className="px-3 py-2 bg-gh-btn-secondary text-gh-text rounded-lg hover:bg-gh-bg-secondary transition-all"
                         >
-                          <FaEdit />
+                          <Edit />
                         </button>
                         <button
                           aria-label={`Eliminar servicio base ${servicio.nombre}`}
                           onClick={() => eliminarServicioBase(servicio.id)}
                           className="px-3 py-2 bg-gh-danger text-white rounded-lg hover:bg-red-600 transition-all"
                         >
-                          <FaTrash />
+                          <Trash2 />
                         </button>
                       </div>
                     </>
@@ -205,7 +205,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
       </div>
 
       {/* PARTE 2: Agregar Nuevo */}
-      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border p-6">
+      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border/30 p-6">
         <h3 className="text-xl font-bold text-gh-text mb-4 flex items-center gap-2">
           ➕ Agregar Nuevo Servicio Base
         </h3>
@@ -222,7 +222,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
               onChange={(e) =>
                 setNuevoServicioBase({ ...nuevoServicioBase, nombre: e.target.value })
               }
-              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
             />
           </div>
           <div>
@@ -240,7 +240,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   precio: Number.parseFloat(e.target.value) || 0,
                 })
               }
-              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
               min="0"
             />
           </div>
@@ -262,7 +262,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   mesesPago: pagoCalculado,
                 })
               }}
-              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
               min="0"
               max="12"
             />
@@ -284,7 +284,7 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                   mesesPago: pagoValidado,
                 })
               }}
-              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+              className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
               min="1"
               max="12"
             />
@@ -302,13 +302,15 @@ export default function ServiciosBaseSection({ serviciosBase, setServiciosBase }
                 : 'bg-gh-bg text-gh-text-muted cursor-not-allowed'
             }`}
           >
-            <FaPlus className="text-sm" /> Agregar
+            <Plus className="text-sm" /> Agregar
           </motion.button>
         </div>
       </div>
     </motion.div>
   )
 }
+
+
 
 
 

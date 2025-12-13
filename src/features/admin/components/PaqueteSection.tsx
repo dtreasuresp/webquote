@@ -14,12 +14,12 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="space-y-6"
+      className="space-y-4"
     >
       {/* PARTE 1: Información Actual del Paquete */}
-      <div className="bg-gh-bg-overlay border border-gh-border rounded-lg p-6 backdrop-blur-sm">
+      <div className="bg-gh-bg-overlay border border-gh-border/30 rounded-lg p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gh-text mb-6 flex items-center gap-2">
-          <span className="text-gh-success">▪</span> Información del Paquete
+          <span className="text-gh-success">▪</span> Información de la oferta
         </h3>
         
         <div className="space-y-4 grid md:grid-cols-2 gap-2 *:md:space-y-0">
@@ -36,7 +36,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                 onChange={(e) =>
                   setPaqueteActual({ ...paqueteActual, nombre: e.target.value })
                 }
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -54,7 +54,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                     desarrollo: Number.parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 min="0"
               />
             </div>
@@ -73,7 +73,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                 onChange={(e) =>
                   setPaqueteActual({ ...paqueteActual, tipo: e.target.value })
                 }
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -91,7 +91,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                     descuento: Number.parseFloat(e.target.value) || 0,
                   })
                 }
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 min="0"
                 max="100"
               />
@@ -100,7 +100,7 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
 
           <div>
             <label htmlFor="paqueteDescripcion" className="block font-medium text-gh-text mb-2 text-xs uppercase tracking-wide">
-              Descripción del Paquete
+              Descripción de la oferta
             </label>
             <textarea
               id="paqueteDescripcion"
@@ -110,14 +110,14 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
                 setPaqueteActual({ ...paqueteActual, descripcion: e.target.value })
               }
               rows={3}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none resize-none"
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none resize-none"
             />
           </div>
         </div>
       </div>
 
       {/* PARTE 2: Resumen de Valores */}
-      <div className="bg-gh-bg-overlay border border-gh-border rounded-lg p-6 backdrop-blur-sm">
+      <div className="bg-gh-bg-overlay border border-gh-border/30 rounded-lg p-6 backdrop-blur-sm">
         <h3 className="text-lg font-semibold text-gh-text mb-6 flex items-center gap-2">
           <span className="text-gh-info">▪</span> Resumen de Valores
         </h3>
@@ -142,6 +142,8 @@ export default function PaqueteSection({ paqueteActual, setPaqueteActual }: Paqu
     </motion.div>
   )
 }
+
+
 
 
 

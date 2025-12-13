@@ -1,14 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
-import { IconType } from 'react-icons'
-import { FaBars, FaTimes } from 'react-icons/fa'
+import { LucideIcon, Menu, X, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export interface SidebarItem {
   id: string
   label: string
-  icon: IconType
+  icon: LucideIcon
   badge?: number
   description?: string
 }
@@ -18,6 +17,7 @@ export interface AdminSidebarProps {
   activeItem: string
   onItemClick: (id: string) => void
   title?: string
+  titleIcon?: LucideIcon
   className?: string
 }
 
@@ -26,6 +26,7 @@ export default function AdminSidebar({
   activeItem,
   onItemClick,
   title,
+  titleIcon: TitleIcon,
   className = '',
 }: Readonly<AdminSidebarProps>) {
   const [isOpen, setIsOpen] = useState(false)
@@ -37,13 +38,14 @@ export default function AdminSidebar({
   }
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
-      {/* Header opcional */}
+    <div className="h-full bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden flex flex-col">
+      {/* Header */}
       {title && (
-        <div className="px-3 py-2.5 border-b border-gh-border/30">
-          <span className="text-[10px] font-medium text-gh-text-secondary uppercase tracking-wide">
-            {title}
-          </span>
+        <div className="px-3 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30">
+          <div className="flex items-center gap-2">
+            {TitleIcon && <TitleIcon className="w-4 h-4 text-gh-accent" />}
+            <span className="text-xs font-medium text-gh-text">{title}</span>
+          </div>
         </div>
       )}
 
@@ -54,6 +56,12 @@ export default function AdminSidebar({
           const isActive = activeItem === item.id
           const isHovered = hoveredItem === item.id
 
+          // Calcular clase del botón (igual que PreferenciasSidebar)
+          const getButtonClass = () => {
+            if (isActive) return 'bg-gh-accent/10 text-gh-accent'
+            return 'text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary/40'
+          }
+
           return (
             <motion.button
               key={item.id}
@@ -62,64 +70,48 @@ export default function AdminSidebar({
               onMouseLeave={() => setHoveredItem(null)}
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.04, duration: 0.2 }}
+              transition={{ delay: index * 0.03, duration: 0.15 }}
               className={`
-                group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm
+                group relative w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
                 transition-colors duration-150
-                ${isActive 
-                  ? 'bg-gh-bg-tertiary/70 text-gh-text' 
-                  : 'text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary/40'
-                }
+                ${getButtonClass()}
               `}
             >
               {/* Indicador activo */}
               {isActive && (
                 <motion.div
-                  layoutId="sidebarIndicator"
-                  className="absolute left-0 top-0 bottom-0 w-0.5 bg-gh-success rounded-r"
+                  layoutId="adminSidebarIndicator"
+                  className="absolute left-0 top-0 bottom-0 w-0.5 bg-gh-accent rounded-r"
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
 
-              {/* Icon con contenedor sutil */}
+              {/* Icon (sin fondo, solo color - igual que PreferenciasSidebar) */}
               {(() => {
                 let iconClass = 'text-gh-text-muted'
                 if (isActive) {
-                  iconClass = 'bg-gh-success/10 text-gh-success'
+                  iconClass = 'text-gh-accent'
                 } else if (isHovered) {
-                  iconClass = 'bg-gh-border/20 text-gh-text'
+                  iconClass = 'text-gh-text'
                 }
                 return (
-                  <div className={`
-                    flex items-center justify-center w-6 h-6 rounded transition-colors duration-150
-                    ${iconClass}
-                  `}>
-                    <Icon className="text-xs" />
+                  <div className={`flex items-center justify-center w-5 h-5 rounded transition-colors duration-150 ${iconClass}`}>
+                    <Icon className="w-3.5 h-3.5" />
                   </div>
                 )
               })()}
 
-              {/* Label y descripción */}
-              <div className="flex-1 text-left min-w-0">
-                <span className={`
-                  block font-medium text-[13px] truncate
-                  ${isActive ? 'text-gh-text' : ''}
-                `}>
-                  {item.label}
-                </span>
-                {item.description && (
-                  <span className="block text-[10px] text-gh-text-secondary truncate mt-0.5 opacity-70">
-                    {item.description}
-                  </span>
-                )}
-              </div>
+              {/* Label */}
+              <span className="flex-1 text-left truncate">
+                {item.label}
+              </span>
 
               {/* Badge */}
               {item.badge !== undefined && item.badge > 0 && (
                 <span className={`
                   px-1.5 py-0.5 text-[10px] font-semibold rounded-full transition-colors
                   ${isActive 
-                    ? 'bg-gh-success/20 text-gh-success' 
+                    ? 'bg-gh-accent/20 text-gh-accent' 
                     : 'bg-gh-border/50 text-gh-text-muted group-hover:bg-gh-border/70'
                   }
                 `}>
@@ -127,31 +119,14 @@ export default function AdminSidebar({
                 </span>
               )}
 
-              {/* Flecha hover sutil */}
-              <motion.div
-                initial={{ opacity: 0, x: -2 }}
-                animate={{ 
-                  opacity: isHovered && !isActive ? 0.5 : 0, 
-                  x: isHovered && !isActive ? 0 : -2 
-                }}
-                transition={{ duration: 0.15 }}
-                className="text-gh-text-muted"
-              >
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                  <path d="M4.5 2.5L8 6L4.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </motion.div>
+              {/* Chevron para item activo (igual que PreferenciasSidebar) */}
+              {isActive && (
+                <ChevronRight className="w-3 h-3 text-gh-accent/60" />
+              )}
             </motion.button>
           )
         })}
       </nav>
-
-      {/* Footer sutil */}
-      <div className="px-3 py-2 border-t border-gh-border/20">
-        <span className="text-[9px] text-gh-text-secondary/60">
-          Selecciona una sección
-        </span>
-      </div>
     </div>
   )
 
@@ -181,7 +156,7 @@ export default function AdminSidebar({
               exit={{ rotate: 90, opacity: 0 }}
               transition={{ duration: 0.12 }}
             >
-              <FaTimes size={14} />
+              <X className="w-3.5 h-3.5" />
             </motion.div>
           ) : (
             <motion.div
@@ -191,7 +166,7 @@ export default function AdminSidebar({
               exit={{ rotate: -90, opacity: 0 }}
               transition={{ duration: 0.12 }}
             >
-              <FaBars size={14} />
+              <Menu className="w-3.5 h-3.5" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -219,7 +194,7 @@ export default function AdminSidebar({
             exit={{ x: -260 }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
             className={`
-              md:hidden fixed top-0 left-0 bottom-0 w-60
+              md:hidden fixed top-0 left-0 bottom-0 w-56
               bg-gh-bg-secondary/98 backdrop-blur-sm
               border-r border-gh-border/30 z-50
               ${className}
@@ -232,16 +207,19 @@ export default function AdminSidebar({
         )}
       </AnimatePresence>
 
-      {/* Desktop: Sidebar transparente y limpio */}
+      {/* Desktop: Sidebar */}
       <aside
         className={`
-          hidden md:flex flex-col w-48
-          bg-transparent
+          hidden md:block w-52 flex-shrink-0 self-stretch
           ${className}
         `}
       >
-        {sidebarContent}
+        <div className="h-full">
+          {sidebarContent}
+        </div>
       </aside>
     </>
   )
 }
+
+

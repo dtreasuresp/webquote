@@ -8,6 +8,13 @@ import {
   type PaqueteDesglose
 } from '@/lib/utils/priceRangeCalculator'
 import type { PresupuestoCronogramaData } from '@/lib/types'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { 
+  fluentSlideUp,
+  fluentStaggerContainer, 
+  fluentStaggerItem
+} from '@/lib/animations/variants'
+import { viewport, spring } from '@/lib/animations/config'
 
 interface PresupuestoYCronogramaProps {
   readonly data?: PresupuestoCronogramaData
@@ -21,14 +28,23 @@ interface PaqueteCardProps {
 
 function PaqueteCard({ paquete, caracteristicas }: PaqueteCardProps) {
   return (
-    <div className="bg-light-bg-secondary rounded-lg border border-light-border overflow-hidden flex flex-col h-full">
+    <FluentGlass
+      variant="normal"
+      className="rounded-2xl overflow-hidden flex flex-col h-full hover:shadow-lg transition-all"
+    >
       {/* Header del paquete */}
-      <div className="p-4 bg-light-bg-tertiary/30 border-b border-light-border">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <span className="text-xl">{paquete.emoji}</span>
+      <div className="p-5 bg-gradient-to-r from-light-bg-secondary to-light-bg-tertiary/50 border-b border-light-border/50">
+        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+          <motion.span 
+            className="text-2xl"
+            whileHover={{ scale: 1.2, rotate: 10 }}
+            transition={spring.fluent}
+          >
+            {paquete.emoji}
+          </motion.span>
           <h4 className="text-lg font-semibold text-light-text">{paquete.nombre}</h4>
-          <span className="text-xs text-light-accent flex items-center gap-1">
-            • <FaClock /> {paquete.tiempoEntrega || 'Consultar'}
+          <span className="text-xs text-light-accent flex items-center gap-1 bg-light-accent/10 px-2 py-0.5 rounded-full">
+            <FaClock size={10} /> {paquete.tiempoEntrega || 'Consultar'}
           </span>
         </div>
         {paquete.tagline && (
@@ -93,17 +109,23 @@ function PaqueteCard({ paquete, caracteristicas }: PaqueteCardProps) {
       </div>
 
       {/* Footer con precios */}
-      <div className="p-4 bg-light-success/5 border-t border-light-border mt-auto">
+      <div className="p-5 bg-gradient-to-r from-light-success/10 to-emerald-500/5 border-t border-light-border/50 mt-auto">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-light-text-secondary">Desarrollo:</span>
           <span className="text-lg font-bold text-light-accent">${paquete.desarrollo.toLocaleString()}</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm font-semibold text-light-text">Total Inicial:</span>
-          <span className="text-xl font-bold text-light-success">${paquete.costoInicial.toLocaleString()}</span>
+          <motion.span 
+            className="text-xl font-bold text-light-success"
+            whileHover={{ scale: 1.05 }}
+            transition={spring.fluent}
+          >
+            ${paquete.costoInicial.toLocaleString()}
+          </motion.span>
         </div>
       </div>
-    </div>
+    </FluentGlass>
   )
 }
 
@@ -123,88 +145,121 @@ export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaP
   }
 
   return (
-    <section id="presupuesto" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+    <FluentSection
+      id="presupuesto"
+      animation="stagger"
+      paddingY="md"
+      className="bg-gradient-to-b from-light-bg to-white"
+    >
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-6"
+          variants={fluentSlideUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewport.default}
         >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-success-bg rounded-full mb-4">
-              <FaDollarSign className="text-light-success" size={20} />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
-              {presupuestoData.titulo}
-            </h2>
-            <p className="text-sm text-light-text-secondary">
-              {presupuestoData.subtitulo}
-            </p>
-          </div>
+          <motion.div 
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-success to-emerald-600 rounded-2xl mb-4 shadow-lg"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={spring.fluent}
+          >
+            <FaDollarSign className="text-white" size={24} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+            {presupuestoData.titulo}
+          </h2>
+          <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+            {presupuestoData.subtitulo}
+          </p>
+        </motion.div>
 
-          {/* Presupuesto - Cards de Paquetes Dinámicos */}
-          {presupuestoData.presupuesto.visible !== false && (
-            <div className="mb-10">
-              <div className="flex items-center gap-2 mb-6">
-                <FaDollarSign className="text-light-success text-xl" />
-                <h3 className="text-xl font-semibold text-light-text">{presupuestoData.presupuesto.titulo}</h3>
+        {/* Presupuesto - Cards de Paquetes Dinámicos */}
+        {presupuestoData.presupuesto?.visible !== false && (
+          <motion.div 
+            className="mb-6"
+            variants={fluentSlideUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewport.default}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-light-success/20 to-emerald-500/10 rounded-xl">
+                <FaDollarSign className="text-light-success text-lg" />
               </div>
-              
-              {presupuestoData.presupuesto.descripcion && (
-                <p className="text-sm text-light-text-secondary mb-6">{presupuestoData.presupuesto.descripcion}</p>
-              )}
-
-              {/* Loading skeleton */}
-              {loading ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[1, 2, 3].map((i) => (
-                    <div key={`skeleton-${i}`} className="bg-light-bg-secondary rounded-lg border border-light-border p-4 animate-pulse">
-                      <div className="h-6 bg-light-bg-tertiary rounded w-3/4 mb-4"></div>
-                      <div className="h-4 bg-light-bg-tertiary rounded w-1/2 mb-2"></div>
-                      <div className="h-4 bg-light-bg-tertiary rounded w-2/3 mb-4"></div>
-                      <div className="space-y-2">
-                        <div className="h-3 bg-light-bg-tertiary rounded"></div>
-                        <div className="h-3 bg-light-bg-tertiary rounded"></div>
-                        <div className="h-3 bg-light-bg-tertiary rounded"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : paquetes.length === 0 ? (
-                <div className="bg-light-warning/10 border border-light-warning/30 rounded-md p-4 text-center">
-                  <p className="text-sm text-light-text-secondary">No hay paquetes configurados</p>
-                </div>
-              ) : (
-                /* Cards de Paquetes */
-                <div className={`grid gap-6 ${paquetes.length === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : paquetes.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
-                  {paquetes.map((paq) => (
-                    <PaqueteCard 
-                      key={paq.id} 
-                      paquete={paq} 
-                      caracteristicas={getCaracteristicas(paq.nombre)} 
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Nota importante */}
-              {presupuestoData.presupuesto.notaImportante && (
-                <div className="mt-6 bg-light-warning/10 border-l-2 border-light-warning rounded-md p-3">
-                  <p className="text-xs text-light-text">
-                    <strong>📌 Nota importante:</strong> {presupuestoData.presupuesto.notaImportante}
-                  </p>
-                </div>
-              )}
+              <h3 className="text-xl font-semibold text-light-text">{presupuestoData.presupuesto?.titulo}</h3>
             </div>
-          )}
+            
+            {presupuestoData.presupuesto?.descripcion && (
+              <p className="text-sm text-light-text-secondary mb-6">{presupuestoData.presupuesto?.descripcion}</p>
+            )}
 
-          {/* Cronograma */}
-          {presupuestoData.cronograma.visible !== false && (
-            <div className="bg-light-bg-secondary rounded-md p-6 border border-light-border mb-10">
-              <div className="flex items-center gap-2 mb-5">
-                <FaCalendarAlt className="text-light-accent text-xl" />
+            {/* Loading skeleton */}
+            {loading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={`skeleton-${i}`} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-light-border/50 p-5 animate-pulse">
+                    <div className="h-6 bg-light-bg-tertiary rounded-lg w-3/4 mb-4"></div>
+                    <div className="h-4 bg-light-bg-tertiary rounded-lg w-1/2 mb-2"></div>
+                    <div className="h-4 bg-light-bg-tertiary rounded-lg w-2/3 mb-4"></div>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-light-bg-tertiary rounded-lg"></div>
+                      <div className="h-3 bg-light-bg-tertiary rounded-lg"></div>
+                      <div className="h-3 bg-light-bg-tertiary rounded-lg"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : paquetes.length === 0 ? (
+              <div className="bg-light-warning/10 border border-light-warning/30 rounded-xl p-5 text-center backdrop-blur-sm">
+                <p className="text-sm text-light-text-secondary">No hay paquetes configurados</p>
+              </div>
+            ) : (
+              /* Cards de Paquetes */
+              <motion.div 
+                className={`grid gap-6 ${paquetes.length === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : paquetes.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'}`}
+                variants={fluentStaggerContainer}
+                initial="hidden"
+                whileInView="visible"
+                viewport={viewport.default}
+              >
+                {paquetes.map((paq) => (
+                  <PaqueteCard 
+                    key={paq.id} 
+                    paquete={paq} 
+                    caracteristicas={getCaracteristicas(paq.nombre)} 
+                  />
+                ))}
+              </motion.div>
+            )}
+
+            {/* Nota importante */}
+            {presupuestoData.presupuesto?.notaImportante && (
+              <motion.div 
+                className="mt-6 bg-gradient-to-r from-light-warning/10 to-amber-500/5 border-l-4 border-light-warning rounded-xl p-4 backdrop-blur-sm"
+                whileHover={{ x: 4 }}
+                transition={spring.fluent}
+              >
+                <p className="text-sm text-light-text">
+                  <strong>📌 Nota importante:</strong> {presupuestoData.presupuesto?.notaImportante}
+                </p>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Cronograma */}
+        {presupuestoData.cronograma.visible !== false && (
+          <FluentReveal className="mb-6">
+            <FluentGlass
+              variant="normal"
+              className="rounded-2xl p-6"
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2 bg-gradient-to-br from-light-accent/20 to-blue-500/10 rounded-xl">
+                  <FaCalendarAlt className="text-light-accent text-lg" />
+                </div>
                 <h3 className="text-xl font-semibold text-light-text">{presupuestoData.cronograma.titulo}</h3>
               </div>
               
@@ -214,71 +269,62 @@ export default function PresupuestoYCronograma({ data }: PresupuestoYCronogramaP
                 </p>
               )}
 
-              <div className="space-y-4">
-                <div className="bg-light-bg rounded-md p-4 border border-light-border">
-                  {presupuestoData.cronograma.fases.map((fase, index) => (
-                    <div key={`fase-${fase.nombre.replaceAll(' ', '-')}`} className={`flex items-start gap-3 ${index < presupuestoData.cronograma.fases.length - 1 ? 'mb-5' : ''}`}>
-                      <div className="flex-shrink-0">
-                        <div className="flex items-center justify-center h-8 w-8 rounded-md bg-light-accent text-white text-sm font-semibold">
-                          {index + 1}
-                        </div>
-                      </div>
-                      <div className="flex-grow">
-                        <h4 className="font-medium text-light-text text-sm">
-                          {fase.nombre} ({fase.descripcion})
-                          {fase.duracionDias > 0 && (
-                            <span className="text-light-accent ml-2">• 📅 {fase.duracionDias} días</span>
-                          )}
-                        </h4>
-                        <p className="text-xs text-light-text-secondary mt-1">
-                          {fase.entregables.map((entregable, i) => (
-                            <span key={`entregable-${entregable.replaceAll(' ', '-')}`}>
-                              {i > 0 && ' | '}{entregable}
-                            </span>
-                          ))}
-                        </p>
-                      </div>
+            <div className="space-y-4">
+              <motion.div 
+                className="bg-gradient-to-br from-light-bg-secondary to-white rounded-xl p-5 border border-light-border/50"
+                variants={fluentStaggerContainer}
+                initial="hidden"
+                whileInView="visible"
+                viewport={viewport.default}
+              >
+                {presupuestoData.cronograma.fases.map((fase, index) => (
+                  <motion.div 
+                    key={`fase-${fase.nombre.replaceAll(' ', '-')}`} 
+                    className={`flex items-start gap-4 ${index < presupuestoData.cronograma.fases.length - 1 ? 'mb-5 pb-5 border-b border-light-border/30' : ''}`}
+                    variants={fluentStaggerItem}
+                  >
+                    <div className="flex-shrink-0">
+                      <motion.div 
+                        className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-light-accent to-blue-600 text-white text-sm font-semibold shadow-md"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={spring.fluent}
+                      >
+                        {index + 1}
+                      </motion.div>
                     </div>
-                  ))}
-                </div>
+                    <div className="flex-grow">
+                      <h4 className="font-medium text-light-text text-sm">
+                        {fase.nombre} ({fase.descripcion})
+                        {fase.duracionDias > 0 && (
+                          <span className="text-light-accent ml-2 bg-light-accent/10 px-2 py-0.5 rounded-full text-xs">📅 {fase.duracionDias} días</span>
+                        )}
+                      </h4>
+                      <p className="text-xs text-light-text-secondary mt-1.5">
+                        {fase.entregables.map((entregable, i) => (
+                          <span key={`entregable-${entregable.replaceAll(' ', '-')}`}>
+                            {i > 0 && ' | '}{entregable}
+                          </span>
+                        ))}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
 
-                <div className="bg-light-warning/10 border-l-2 border-light-warning rounded-md p-3">
-                  <p className="text-xs text-light-text">
-                    <strong>📌 Nota importante:</strong> Este cronograma corresponde al paquete de mayor complejidad.
-                  </p>
-                </div>
-              </div>
+              <motion.div 
+                className="bg-gradient-to-r from-light-warning/10 to-amber-500/5 border-l-4 border-light-warning rounded-xl p-4"
+                whileHover={{ x: 4 }}
+                transition={spring.fluent}
+              >
+                <p className="text-sm text-light-text">
+                  <strong>📌 Nota importante:</strong> Este cronograma corresponde al paquete de mayor complejidad.
+                </p>
+              </motion.div>
             </div>
-          )}
-
-          {/* Métodos de Pago - Sección Independiente */}
-          {presupuestoData.metodosPago?.visible !== false && (
-          <div className="bg-light-bg-secondary rounded-md p-6 border border-light-border">
-            <div className="flex items-center gap-2 mb-5">
-              <span className="text-xl">💳</span>
-              <h3 className="text-xl font-semibold text-light-text">{presupuestoData.metodosPago?.titulo || 'Métodos de Pago'}</h3>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {presupuestoData.metodosPago?.opciones?.map((metodo) => (
-                <div key={`pago-${metodo.nombre.replaceAll(' ', '-')}`} className="bg-light-bg rounded-md p-4 border border-light-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-light-success text-lg">✓</span>
-                    <span className="font-medium text-light-text text-sm">{metodo.nombre}</span>
-                  </div>
-                  {metodo.porcentaje && (
-                    <p className="text-xs text-light-accent font-semibold">{metodo.porcentaje}%</p>
-                  )}
-                  {metodo.descripcion && (
-                    <p className="text-xs text-light-text-secondary mt-1">{metodo.descripcion}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-          )}
-          
-        </motion.div>
+          </FluentGlass>
+        </FluentReveal>
+        )}
       </div>
-    </section>
+    </FluentSection>
   )
 }

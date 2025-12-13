@@ -2,9 +2,10 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaExchangeAlt, FaChevronDown, FaChevronUp } from 'react-icons/fa'
+import { ArrowLeftRight, ChevronDown, ChevronUp } from 'lucide-react'
 import ContentHeader from './ContentHeader'
 import ArrayFieldGH from './ArrayFieldGH'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { SeccionesColapsadasConfig } from '@/lib/types'
 
@@ -178,11 +179,12 @@ export default function DinamicoVsEstaticoContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader
         title="Dinámico vs Estático"
-        icon={<FaExchangeAlt className="text-gh-info" />}
+        subtitle="Comparativa técnica y recomendación de tipo de sitio web"
+        icon={ArrowLeftRight}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -191,8 +193,8 @@ export default function DinamicoVsEstaticoContent({
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
         <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
       </div>
 
@@ -200,9 +202,9 @@ export default function DinamicoVsEstaticoContent({
       <div className={`space-y-4 transition-opacity duration-200 ${!visible ? 'opacity-50' : ''}`}>
         
         {/* Subsección: Títulos */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.titulos === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.titulos === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={vis.titulos !== false} 
               onChange={(v) => handleVisChange('titulos', v)}
@@ -215,7 +217,7 @@ export default function DinamicoVsEstaticoContent({
                 type="text"
                 value={data.titulo}
                 onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
             <div>
@@ -224,7 +226,7 @@ export default function DinamicoVsEstaticoContent({
                 type="text"
                 value={data.subtitulo}
                 onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
               />
             </div>
           </div>
@@ -233,16 +235,14 @@ export default function DinamicoVsEstaticoContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SITIO ESTÁTICO */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.estatico === false ? 'opacity-50' : ''}`}>
-          <div className="flex items-center justify-between">
+        <div className={`bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden transition-opacity duration-200 ${vis.estatico === false ? 'opacity-50' : ''}`}>
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
             <button
               onClick={() => toggleSection('estatico')}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-2 text-xs font-medium text-gh-text hover:text-gh-info transition-colors"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                🔴 Sitios Estáticos
-              </span>
-              {expandedSections.estatico ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              <span className="text-base">🔴</span> Sitios Estáticos
+              {expandedSections.estatico ? <ChevronUp className="w-4 h-4 text-gh-text-muted" /> : <ChevronDown className="w-4 h-4 text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.estatico !== false} 
@@ -251,25 +251,25 @@ export default function DinamicoVsEstaticoContent({
           </div>
 
           {expandedSections.estatico && (
-            <div className="mt-4 space-y-4 p-4 bg-gh-bg-secondary/50 border border-gh-border/50 rounded-md">
+            <div className="p-4 space-y-4">
               <div>
                 <label className="block text-gh-text-muted text-xs mb-1">Título de la tarjeta</label>
                 <input
                   type="text"
                   value={data.sitioEstatico.title}
                   onChange={(e) => onChange({ ...data, sitioEstatico: { ...data.sitioEstatico, title: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                 />
               </div>
               {data.sitioEstatico.items.map((item, index) => (
-                <div key={`estatico-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border rounded-md">
+                <div key={`estatico-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border/30 rounded-md">
                   <div>
                     <label className="block text-gh-text-muted text-xs mb-1">Etiqueta</label>
                     <input
                       type="text"
                       value={item.label}
                       onChange={(e) => updateComparisonItem('sitioEstatico', index, 'label', e.target.value)}
-                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                     />
                   </div>
                   {item.value !== undefined && (
@@ -278,7 +278,7 @@ export default function DinamicoVsEstaticoContent({
                       <textarea
                         value={item.value}
                         onChange={(e) => updateComparisonItem('sitioEstatico', index, 'value', e.target.value)}
-                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                         rows={2}
                       />
                     </div>
@@ -302,16 +302,14 @@ export default function DinamicoVsEstaticoContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SITIO DINÁMICO */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.dinamico === false ? 'opacity-50' : ''}`}>
-          <div className="flex items-center justify-between">
+        <div className={`bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden transition-opacity duration-200 ${vis.dinamico === false ? 'opacity-50' : ''}`}>
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
             <button
               onClick={() => toggleSection('dinamico')}
-              className="flex items-center gap-2 text-left"
+              className="flex items-center gap-2 text-xs font-medium text-gh-text hover:text-gh-info transition-colors"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-                🔵 Sitios Dinámicos
-              </span>
-              {expandedSections.dinamico ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              <span className="text-base">🔵</span> Sitios Dinámicos
+              {expandedSections.dinamico ? <ChevronUp className="w-4 h-4 text-gh-text-muted" /> : <ChevronDown className="w-4 h-4 text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.dinamico !== false} 
@@ -320,25 +318,25 @@ export default function DinamicoVsEstaticoContent({
           </div>
 
           {expandedSections.dinamico && (
-            <div className="mt-4 space-y-4 p-4 bg-gh-bg-secondary/50 border border-gh-border/50 rounded-md">
+            <div className="p-4 space-y-4">
               <div>
                 <label className="block text-gh-text-muted text-xs mb-1">Título de la tarjeta</label>
                 <input
                   type="text"
                   value={data.sitioDinamico.title}
                   onChange={(e) => onChange({ ...data, sitioDinamico: { ...data.sitioDinamico, title: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                 />
               </div>
               {data.sitioDinamico.items.map((item, index) => (
-                <div key={`dinamico-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border rounded-md">
+                <div key={`dinamico-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border/30 rounded-md">
                   <div>
                     <label className="block text-gh-text-muted text-xs mb-1">Etiqueta</label>
                     <input
                       type="text"
                       value={item.label}
                       onChange={(e) => updateComparisonItem('sitioDinamico', index, 'label', e.target.value)}
-                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                      className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                     />
                   </div>
                   {item.value !== undefined && (
@@ -347,7 +345,7 @@ export default function DinamicoVsEstaticoContent({
                       <textarea
                         value={item.value}
                         onChange={(e) => updateComparisonItem('sitioDinamico', index, 'value', e.target.value)}
-                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                         rows={2}
                       />
                     </div>
@@ -371,16 +369,16 @@ export default function DinamicoVsEstaticoContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* RECOMENDACIÓN */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.recomendacion === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.recomendacion === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => toggleSection('recomendacion')}
               className="flex items-center gap-2 text-left"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+              <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
                 💡 Recomendación Final
               </span>
-              {expandedSections.recomendacion ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              {expandedSections.recomendacion ? <ChevronUp className="text-gh-text-muted" /> : <ChevronDown className="text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.recomendacion !== false} 
@@ -396,7 +394,7 @@ export default function DinamicoVsEstaticoContent({
                   type="text"
                   value={data.recomendacion.titulo}
                   onChange={(e) => onChange({ ...data, recomendacion: { ...data.recomendacion, titulo: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -406,7 +404,7 @@ export default function DinamicoVsEstaticoContent({
                     type="text"
                     value={data.recomendacion.subtitulo}
                     onChange={(e) => onChange({ ...data, recomendacion: { ...data.recomendacion, subtitulo: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
                 <div>
@@ -415,7 +413,7 @@ export default function DinamicoVsEstaticoContent({
                     type="text"
                     value={data.recomendacion.tipo}
                     onChange={(e) => onChange({ ...data, recomendacion: { ...data.recomendacion, tipo: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
               </div>
@@ -433,3 +431,7 @@ export default function DinamicoVsEstaticoContent({
     </motion.div>
   )
 }
+
+
+
+

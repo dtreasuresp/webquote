@@ -3,6 +3,9 @@
 import { motion } from 'framer-motion'
 import { FaCheckCircle } from 'react-icons/fa'
 import type { ConclusionData } from '@/lib/types'
+import { FluentSection, FluentGlass, FluentReveal } from '@/components/motion'
+import { fluentSlideUp } from '@/lib/animations/variants'
+import { viewport, spring } from '@/lib/animations/config'
 
 interface ConclusionProps {
   readonly data?: ConclusionData
@@ -15,80 +18,113 @@ export default function Conclusion({ data }: ConclusionProps) {
   const conclusionData = data
 
   return (
-    <section id="conclusion" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+    <FluentSection
+      id="conclusion"
+      animation="fade"
+      paddingY="md"
+      className="bg-gradient-to-b from-light-bg to-white"
+    >
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-8"
+          variants={fluentSlideUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewport.default}
         >
-          {/* Header */}
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-success-bg rounded-full mb-4">
-              <FaCheckCircle className="text-light-success" size={20} />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
-              {conclusionData.titulo}
-            </h2>
-            {conclusionData.subtitulo && (
-              <p className="text-sm text-light-text-secondary">
-                {conclusionData.subtitulo}
-              </p>
-            )}
-          </div>
-          
-          {/* Párrafo Principal */}
-          <p className="text-base leading-relaxed text-light-text-secondary max-w-4xl mx-auto text-center mb-4">
-            {conclusionData.parrafoPrincipal}
-          </p>
-          
-          {/* Párrafo Secundario */}
-          {conclusionData.parrafoSecundario && (
-            <p className="text-sm leading-relaxed text-light-text-secondary max-w-3xl mx-auto text-center mb-8">
-              {conclusionData.parrafoSecundario}
+          <motion.div 
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-success to-emerald-600 rounded-2xl mb-4 shadow-lg"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={spring.fluent}
+          >
+            <FaCheckCircle className="text-white" size={24} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+            {conclusionData.titulo}
+          </h2>
+          {conclusionData.subtitulo && (
+            <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+              {conclusionData.subtitulo}
             </p>
           )}
+        </motion.div>
+        
+        {/* Párrafo Principal */}
+        <motion.p 
+          className="text-base leading-relaxed text-light-text-secondary max-w-4xl mx-auto text-center mb-4"
+          variants={fluentSlideUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewport.default}
+        >
+          {conclusionData.parrafoPrincipal}
+        </motion.p>
+        
+        {/* Párrafo Secundario */}
+        {conclusionData.parrafoSecundario && (
+          <motion.p 
+            className="text-sm leading-relaxed text-light-text-secondary max-w-3xl mx-auto text-center mb-8"
+            variants={fluentSlideUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewport.default}
+          >
+            {conclusionData.parrafoSecundario}
+          </motion.p>
+        )}
 
-          {/* Llamada a la Acción */}
-          {conclusionData.llamadaAccion?.visible && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-light-bg-secondary border border-light-border rounded-lg p-6 text-center max-w-xl mx-auto mb-6"
+        {/* Llamada a la Acción */}
+        {conclusionData.llamadaAccion?.visible && (
+          <FluentReveal className="mb-6">
+            <FluentGlass
+              variant="normal"
+              className="rounded-2xl p-8 text-center max-w-xl mx-auto"
             >
               <h3 className="text-lg font-semibold text-light-text mb-2">
                 {conclusionData.llamadaAccion.titulo}
               </h3>
-              <p className="text-sm text-light-text-secondary mb-4">
+              <p className="text-sm text-light-text-secondary mb-5">
                 {conclusionData.llamadaAccion.descripcion}
               </p>
-              <a 
+              <motion.a 
                 href={conclusionData.llamadaAccion.urlBoton}
-                className="inline-block px-6 py-2.5 bg-light-accent text-white rounded-lg hover:bg-light-accent-hover transition-colors font-medium text-sm"
+                className="inline-block px-7 py-3 bg-gradient-to-r from-light-accent to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-light-accent transition-all font-medium text-sm shadow-lg"
+                whileHover={{ scale: 1.05, boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)' }}
+                whileTap={{ scale: 0.95 }}
+                transition={spring.fluent}
               >
                 {conclusionData.llamadaAccion.textoBoton}
-              </a>
-            </motion.div>
-          )}
+              </motion.a>
+            </FluentGlass>
+          </FluentReveal>
+        )}
 
-          {/* Firma Digital */}
-          {conclusionData.firmaDigital?.visible && (
-            <div className="text-center pt-4 border-t border-light-border">
-              <p className="text-sm text-light-text-secondary mb-1">
-                {conclusionData.firmaDigital.textoFinal}
-              </p>
-              <p className="font-semibold text-light-text">
-                {conclusionData.firmaDigital.nombreEmpresa}
-              </p>
-              <p className="text-xs text-light-text-muted">
-                {conclusionData.firmaDigital.eslogan}
-              </p>
-            </div>
-          )}
-        </motion.div>
+        {/* Firma Digital */}
+        {conclusionData.firmaDigital?.visible && (
+          <motion.div 
+            className="text-center pt-6 border-t border-light-border/50"
+            variants={fluentSlideUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewport.default}
+          >
+            <p className="text-sm text-light-text-secondary mb-1">
+              {conclusionData.firmaDigital.textoFinal}
+            </p>
+            <motion.p 
+              className="font-semibold text-light-text text-lg"
+              whileHover={{ scale: 1.02 }}
+              transition={spring.fluent}
+            >
+              {conclusionData.firmaDigital.nombreEmpresa}
+            </motion.p>
+            <p className="text-xs text-light-text-muted">
+              {conclusionData.firmaDigital.eslogan}
+            </p>
+          </motion.div>
+        )}
       </div>
-    </section>
+    </FluentSection>
   )
 }

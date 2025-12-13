@@ -29,3 +29,6 @@ export type { ObservacionesData } from './ObservacionesContent'
 
 export { default as ConclusionContent, defaultConclusion } from './ConclusionContent'
 export type { ConclusionData } from './ConclusionContent'
+
+export { default as CuotasContent, defaultCuotas } from './CuotasContent'
+export type { CuotasData } from './CuotasContent'

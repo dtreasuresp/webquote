@@ -8,7 +8,7 @@ export default function DescuentosSection() {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="space-y-6"
+      className="space-y-4"
     >
       {/* PARTE 1: Información de Descuentos */}
       <div className="bg-white/5 backdrop-blur-md rounded-lg border border-white/10 p-6">
@@ -52,5 +52,7 @@ export default function DescuentosSection() {
     </motion.div>
   )
 }
+
+
 
 

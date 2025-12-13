@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaArrowRight, FaExchangeAlt, FaCheckCircle, FaTimesCircle, FaDownload } from 'react-icons/fa'
+import { ArrowRight, ArrowLeftRight, CheckCircle2, XCircle, Download } from 'lucide-react'
 import type { PackageSnapshot } from '@/lib/types'
 import { compararSnapshots, type SnapshotComparison as SnapshotComparisonType, type SnapshotDifference } from '../utils/snapshotComparison'
 import { exportarDiffCSV, exportarDiffJSON } from '../utils/snapshotDiff'
@@ -68,20 +68,20 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ENCABEZADO */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="text-center">
-            <p className="text-sm text-gh-text-muted mb-1">Desde</p>
+            <p className="text-xs font-medium text-gh-text-muted mb-1">Desde</p>
             <p className="font-semibold text-gh-text">{snapshot1.nombre}</p>
             <p className="text-xs text-gh-text-muted">{snapshot1.createdAt?.split('T')[0]}</p>
           </div>
 
-          <FaArrowRight className="text-gh-accent-blue mx-2" />
+          <ArrowRight className="text-gh-accent-blue mx-2" />
 
           <div className="text-center">
-            <p className="text-sm text-gh-text-muted mb-1">Hacia</p>
+            <p className="text-xs font-medium text-gh-text-muted mb-1">Hacia</p>
             <p className="font-semibold text-gh-text">{snapshot2.nombre}</p>
             <p className="text-xs text-gh-text-muted">{snapshot2.createdAt?.split('T')[0]}</p>
           </div>
@@ -93,13 +93,13 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
             onClick={() => exportarDiffCSV(comparison)}
             className="px-3 py-2 rounded-lg bg-gh-bg-secondary hover:bg-gh-card border border-gh-border text-gh-text text-sm font-medium transition-all flex items-center gap-2"
           >
-            <FaDownload size={14} /> CSV
+            <Download className="w-3.5 h-3.5" /> CSV
           </button>
           <button
             onClick={() => exportarDiffJSON(comparison)}
             className="px-3 py-2 rounded-lg bg-gh-bg-secondary hover:bg-gh-card border border-gh-border text-gh-text text-sm font-medium transition-all flex items-center gap-2"
           >
-            <FaDownload size={14} /> JSON
+            <Download className="w-3.5 h-3.5" /> JSON
           </button>
 
           {showRollbackButton && onRollback && (
@@ -107,7 +107,7 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
               onClick={() => onRollback(snapshot1)}
               className="px-3 py-2 rounded-lg bg-gh-accent-blue hover:bg-gh-accent-blue/90 text-white text-sm font-medium transition-all flex items-center gap-2"
             >
-              <FaExchangeAlt size={14} /> Restaurar
+              <ArrowLeftRight className="w-3.5 h-3.5" /> Restaurar
             </button>
           )}
         </div>
@@ -129,13 +129,13 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
       >
         <div className="flex items-center gap-3 mb-2">
           {sonIdénticos ? (
-            <FaCheckCircle className="text-gh-success" size={20} />
+            <CheckCircle2 className="text-gh-success w-5 h-5" />
           ) : (
-            <FaTimesCircle className="text-gh-error" size={20} />
+            <XCircle className="text-gh-error w-5 h-5" />
           )}
           <div className="flex-1">
             {sonIdénticos ? (
-              <p className="font-semibold text-gh-success">Los snapshots son idénticos</p>
+              <p className="font-semibold text-gh-success">Las ofertas son idénticas</p>
             ) : (
               <p className="font-semibold">
                 {resumen.totalCambios} cambio{resumen.totalCambios !== 1 ? 's' : ''} detectado
@@ -282,3 +282,5 @@ export const SnapshotComparison: React.FC<SnapshotComparisonProps> = ({
 }
 
 export default SnapshotComparison
+
+

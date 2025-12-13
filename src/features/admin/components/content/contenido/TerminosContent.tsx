@@ -2,9 +2,10 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FaGavel } from 'react-icons/fa'
+import { Gavel } from 'lucide-react'
 import ContentHeader from './ContentHeader'
 import ArrayFieldGH from './ArrayFieldGH'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { TerminosCondiciones } from '@/lib/types'
 
@@ -36,11 +37,12 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader 
-        title="Términos y Condiciones" 
-        icon={<FaGavel className="text-gh-info" />}
+        title="Términos y Condiciones"
+        subtitle="Cláusulas legales y condiciones del servicio"
+        icon={Gavel}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -49,8 +51,8 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
         <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
       </div>
 
@@ -58,9 +60,9 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
       <div className={`space-y-4 transition-opacity duration-200 ${visible ? '' : 'opacity-50'}`}>
         
         {/* Subsección: Título y Subtítulo */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${visibilidad.titulo === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${visibilidad.titulo === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={visibilidad.titulo !== false} 
               onChange={(v) => updateVisibilidad('titulo', v)} 
@@ -73,7 +75,7 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
                 type="text"
                 value={data.titulo}
                 onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 placeholder="Términos y Condiciones"
               />
             </div>
@@ -83,7 +85,7 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
                 type="text"
                 value={data.subtitulo || ''}
                 onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 placeholder="Condiciones generales del servicio"
               />
             </div>
@@ -91,9 +93,9 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
         </div>
 
         {/* Subsección: Párrafos de Términos */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${visibilidad.parrafos === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${visibilidad.parrafos === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-gh-text font-medium">📋 Párrafos de Términos y Condiciones</span>
+            <span className="text-xs font-medium text-gh-text font-medium">📋 Párrafos de Términos y Condiciones</span>
             <ToggleSwitch 
               enabled={visibilidad.parrafos !== false} 
               onChange={(v) => updateVisibilidad('parrafos', v)} 
@@ -111,3 +113,7 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
     </motion.div>
   )
 }
+
+
+
+

@@ -126,7 +126,7 @@ export const HistorialAnalyticsSection: React.FC<HistorialAnalyticsSectionProps>
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
               whileHover={{ translateY: -2, scale: 1.02 }}
-              className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4 hover:border-gh-accent-blue/50 transition-all cursor-pointer"
+              className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4 hover:border-gh-accent-blue/50 transition-all cursor-pointer"
             >
               <div className="flex items-center gap-2 mb-3">
                 <Icon className={card.color} />
@@ -152,7 +152,7 @@ export const HistorialAnalyticsSection: React.FC<HistorialAnalyticsSectionProps>
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           whileHover={{ translateY: -2, scale: 1.02 }}
-          className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4 hover:border-purple-400/50 transition-all cursor-pointer"
+          className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4 hover:border-purple-400/50 transition-all cursor-pointer"
         >
           <div className="flex items-center gap-2 mb-3">
             <Eye className="text-purple-400 w-4 h-4" />
@@ -170,7 +170,7 @@ export const HistorialAnalyticsSection: React.FC<HistorialAnalyticsSectionProps>
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
           whileHover={{ translateY: -2, scale: 1.02 }}
-          className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border p-4 hover:border-gh-success/50 transition-all cursor-pointer"
+          className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl border border-gh-border/30 p-4 hover:border-gh-success/50 transition-all cursor-pointer"
         >
           <div className="flex items-center gap-2 mb-3">
             <Receipt className="text-gh-success w-4 h-4" />
@@ -197,3 +197,5 @@ export const HistorialAnalyticsSection: React.FC<HistorialAnalyticsSectionProps>
 }
 
 export default HistorialAnalyticsSection
+
+

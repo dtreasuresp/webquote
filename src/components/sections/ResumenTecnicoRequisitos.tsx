@@ -2,6 +2,10 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { FaClipboardList, FaChevronDown, FaChevronUp } from 'react-icons/fa'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { fluentHoverCard, fluentSlideUp } from '@/lib/animations/variants'
+import { spring, viewport } from '@/lib/animations/config'
 
 export default function ResumenTecnicoRequisitos() {
   const [isTableExpanded, setIsTableExpanded] = useState(false)
@@ -100,181 +104,230 @@ export default function ResumenTecnicoRequisitos() {
   ]
 
   return (
-    <section id="resumen-tecnico" className="py-20 px-4 bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+    <FluentSection 
+      id="resumen-tecnico" 
+      animation="stagger"
+      paddingY="lg"
+      className="bg-gradient-to-b from-light-bg-secondary to-light-bg"
+    >
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-6"
+          variants={fluentSlideUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewport.default}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-gray-900">
+          <motion.div 
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-accent to-indigo-600 rounded-2xl mb-4 shadow-lg"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={spring.fluent}
+          >
+            <FaClipboardList className="text-white" size={24} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
             Resumen técnico de los requisitos del cliente
           </h2>
+          <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+            Especificaciones técnicas evaluadas para tu proyecto
+          </p>
+        </motion.div>
 
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-secondary/20">
-            {/* Header con botón de expansión */}
-            <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <h3 className="text-2xl font-bold mb-2">Especificaciones Técnicas</h3>
-                  <p className="text-white/90 text-sm">
-                    {technicalData.length} aspectos técnicos evaluados
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsTableExpanded(!isTableExpanded)}
-                  className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-all transform hover:scale-105 shadow-lg ${
-                    isTableExpanded 
-                      ? 'bg-secondary text-white hover:bg-secondary-light' 
-                      : 'bg-accent text-white hover:bg-accent-dark'
-                  }`}
-                >
-                  {isTableExpanded ? (
-                    <>
-                      <span className="text-xl">▲</span>
-                      <span className="hidden sm:inline">Colapsar Tabla</span>
-                      <span className="sm:hidden">Colapsar</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-xl">▼</span>
-                      <span className="hidden sm:inline">Ver Detalles</span>
-                      <span className="sm:hidden">Ver Detalles</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Vista previa colapsada */}
-            {!isTableExpanded && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-8 text-center"
-              >
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-6">
-                  {[
-                    { label: 'Aspectos', value: '18+', icon: '📋' },
-                    { label: 'Productos', value: '~10', icon: '📦' },
-                    { label: 'Uptime', value: '99.9%', icon: '⚡' },
-                    { label: 'Carga', value: '<3s', icon: '🚀' },
-                  ].map((stat, idx) => (
-                    <div key={idx} className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/20">
-                      <div className="text-3xl mb-2">{stat.icon}</div>
-                      <div className="text-2xl font-bold text-primary mb-1">{stat.value}</div>
-                      <div className="text-xs text-gray-600">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-gray-600">
-                  👆 Haz clic en <span className="font-bold text-primary">"Ver Detalles Completos"</span> para explorar todas las especificaciones
-                </p>
-              </motion.div>
-            )}
-
-            {/* Tabla completa expandida */}
-            {isTableExpanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.4 }}
-                className="overflow-x-auto"
-              >
-                <table className="w-full">
-                  <thead className="bg-gradient-to-r from-accent/10 to-accent/20 sticky top-0">
-                    <tr className="border-b-2 border-accent">
-                      <th className="text-left p-4 font-bold text-secondary">Aspecto Técnico</th>
-                      <th className="text-left p-4 font-bold text-secondary">Especificación</th>
-                      <th className="text-left p-4 font-bold text-secondary">Justificación</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {technicalData.map((row, idx) => (
-                      <motion.tr
-                        key={idx}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.03 }}
-                        className="hover:bg-accent/5 transition-colors"
-                      >
-                        <td className="p-4 font-semibold text-gray-900">{row.aspect}</td>
-                        <td className="p-4 text-gray-700 font-medium">{row.spec}</td>
-                        <td className="p-4 text-gray-600 text-sm">{row.just}</td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Información Adicional */}
-          <div className="grid md:grid-cols-2 gap-8 mt-12">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl p-8 border-l-4 border-primary"
-            >
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">📦 Información a Mostrar por Producto</h3>
-              <ul className="space-y-3">
-                {[
-                  'Nombre del producto/servicio',
-                  'Descripción corta y detallada',
-                  'Fotografías (4 por producto)',
-                  'Especificaciones técnicas',
-                  'Precio referencial',
-                  'Disponibilidad',
-                  'Videos demostrativos',
-                  'Documentos descargables (fichas técnicas)',
-                ].map((item, idx) => (
-                  <div key={idx} className="flex gap-3">
-                    <span className="text-primary font-bold">✓</span>
-                    <span className="text-gray-700">{item}</span>
-                  </div>
-                ))}
-              </ul>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-br from-accent/10 to-accent/20 rounded-2xl p-8 border-l-4 border-accent"
-            >
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">🎯 Acciones Esperadas del Visitante</h3>
-              <ul className="space-y-3">
-                {[
-                  'Contactar por WhatsApp',
-                  'Llamar por teléfono',
-                  'Visitar tienda física',
-                  'Seguir en redes sociales',
-                  'Suscribirse a newsletter',
-                  'Dejar comentarios/reviews',
-                  'Solicitar cotización',
-                  'Compartir con amigos',
-                ].map((item, idx) => (
-                  <div key={idx} className="flex gap-3">
-                    <span className="text-accent font-bold">→</span>
-                    <span className="text-gray-700">{item}</span>
-                  </div>
-                ))}
-              </ul>
-            </motion.div>
-          </div>
-
-          {/* Consideraciones Técnicas */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-12 bg-gradient-to-r from-primary/5 to-primary-dark/5 border-2 border-primary/20 rounded-2xl p-8"
+        {/* Tabla Principal */}
+        <FluentReveal>
+          <FluentGlass
+            variant="elevated"
+            className="rounded-2xl overflow-hidden border border-light-border/50 mb-6"
           >
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">🔧 Consideraciones Técnicas Importantes</h3>
-            <div className="grid md:grid-cols-3 gap-6">
+          {/* Header con botón de expansión */}
+          <div className="bg-gradient-to-r from-light-accent to-blue-600 text-white p-5">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-1">Especificaciones Técnicas</h3>
+                <p className="text-white/80 text-sm">
+                  {technicalData.length} aspectos técnicos evaluados
+                </p>
+              </div>
+              <motion.button
+                onClick={() => setIsTableExpanded(!isTableExpanded)}
+                className={`px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all ${
+                  isTableExpanded 
+                    ? 'bg-white/20 text-white hover:bg-white/30' 
+                    : 'bg-white text-light-accent hover:bg-white/90'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={spring.fluent}
+              >
+                {isTableExpanded ? (
+                  <>
+                    <FaChevronUp size={12} />
+                    <span>Colapsar</span>
+                  </>
+                ) : (
+                  <>
+                    <FaChevronDown size={12} />
+                    <span>Ver Detalles</span>
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Vista previa colapsada */}
+          {!isTableExpanded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="p-8 text-center"
+            >
+              <FluentRevealGroup className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-6">
+                {[
+                  { label: 'Aspectos', value: '18+', icon: '📋' },
+                  { label: 'Productos', value: '~10', icon: '📦' },
+                  { label: 'Uptime', value: '99.9%', icon: '⚡' },
+                  { label: 'Carga', value: '<3s', icon: '🚀' },
+                ].map((stat, idx) => (
+                  <FluentRevealItem key={`stat-${stat.label}-${idx}`}>
+                    <motion.div 
+                      className="bg-gradient-to-br from-light-accent/5 to-light-accent/10 rounded-xl p-4 border border-light-accent/20 h-full"
+                      whileHover={fluentHoverCard}
+                    >
+                      <div className="text-2xl mb-2">{stat.icon}</div>
+                      <div className="text-xl font-bold text-light-accent mb-1">{stat.value}</div>
+                      <div className="text-xs text-light-text-secondary">{stat.label}</div>
+                    </motion.div>
+                  </FluentRevealItem>
+                ))}
+              </FluentRevealGroup>
+              <p className="text-light-text-secondary text-sm">
+                👆 Haz clic en <span className="font-medium text-light-accent">"Ver Detalles"</span> para explorar todas las especificaciones
+              </p>
+            </motion.div>
+          )}
+
+          {/* Tabla completa expandida */}
+          {isTableExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: [0.33, 1, 0.68, 1] }}
+              className="overflow-x-auto"
+            >
+              <table className="w-full">
+                <thead className="bg-light-accent/10 sticky top-0">
+                  <tr className="border-b-2 border-light-accent/30">
+                    <th className="text-left p-4 font-semibold text-light-text text-sm">Aspecto Técnico</th>
+                    <th className="text-left p-4 font-semibold text-light-text text-sm">Especificación</th>
+                    <th className="text-left p-4 font-semibold text-light-text text-sm">Justificación</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-light-border">
+                  {technicalData.map((row, idx) => (
+                    <motion.tr
+                      key={`row-${row.aspect}-${idx}`}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.02, ...spring.fluent }}
+                      className="hover:bg-light-accent/5 transition-colors"
+                    >
+                      <td className="p-4 font-medium text-light-text text-sm">{row.aspect}</td>
+                      <td className="p-4 text-light-text-secondary text-sm">{row.spec}</td>
+                      <td className="p-4 text-light-text-muted text-xs">{row.just}</td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </motion.div>
+          )}
+          </FluentGlass>
+        </FluentReveal>
+
+        {/* Información Adicional */}
+        <FluentRevealGroup className="grid md:grid-cols-2 gap-6 mb-6">
+          <FluentRevealItem>
+            <FluentGlass
+              variant="normal"
+              className="rounded-2xl p-6 border-l-4 border-light-accent h-full"
+            >
+            <h3 className="text-lg font-semibold text-light-text mb-5 flex items-center gap-2">
+              📦 Información a Mostrar por Producto
+            </h3>
+            <ul className="space-y-2.5">
+              {[
+                'Nombre del producto/servicio',
+                'Descripción corta y detallada',
+                'Fotografías (4 por producto)',
+                'Especificaciones técnicas',
+                'Precio referencial',
+                'Disponibilidad',
+                'Videos demostrativos',
+                'Documentos descargables (fichas técnicas)',
+              ].map((item, idx) => (
+                <motion.div 
+                  key={`product-info-${item.slice(0, 20)}-${idx}`} 
+                  className="flex gap-3"
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <span className="text-light-accent font-medium">✓</span>
+                  <span className="text-light-text-secondary text-sm">{item}</span>
+                </motion.div>
+              ))}
+            </ul>
+          </FluentGlass>
+        </FluentRevealItem>
+
+          <FluentRevealItem>
+            <FluentGlass
+              variant="normal"
+              className="rounded-2xl p-6 border-l-4 border-light-success h-full"
+            >
+            <h3 className="text-lg font-semibold text-light-text mb-5 flex items-center gap-2">
+              🎯 Acciones Esperadas del Visitante
+            </h3>
+            <ul className="space-y-2.5">
+              {[
+                'Contactar por WhatsApp',
+                'Llamar por teléfono',
+                'Visitar tienda física',
+                'Seguir en redes sociales',
+                'Suscribirse a newsletter',
+                'Dejar comentarios/reviews',
+                'Solicitar cotización',
+                'Compartir con amigos',
+              ].map((item, idx) => (
+                <motion.div 
+                  key={`action-${item.slice(0, 20)}-${idx}`} 
+                  className="flex gap-3"
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <span className="text-light-success font-medium">→</span>
+                  <span className="text-light-text-secondary text-sm">{item}</span>
+                </motion.div>
+              ))}
+            </ul>
+          </FluentGlass>
+        </FluentRevealItem>
+        </FluentRevealGroup>
+
+        {/* Consideraciones Técnicas */}
+        <FluentReveal>
+          <FluentGlass
+            variant="elevated"
+            className="border border-light-border/50 rounded-2xl p-8"
+          >
+            <h3 className="text-lg font-semibold text-light-text mb-6 flex items-center gap-2">
+              🔧 Consideraciones Técnicas Importantes
+            </h3>
+            <FluentRevealGroup className="grid md:grid-cols-3 gap-5">
               {[
                 {
                   icon: '📱',
@@ -292,22 +345,27 @@ export default function ResumenTecnicoRequisitos() {
                   items: ['SSL/TLS 256-bit', 'Backups diarios', 'Actualizaciones automáticas'],
                 },
               ].map((section, idx) => (
-                <div key={idx} className="bg-white rounded-lg p-6 shadow-sm">
-                  <div className="text-3xl mb-3">{section.icon}</div>
-                  <h4 className="font-bold text-gray-900 mb-3">{section.title}</h4>
-                  <ul className="space-y-2">
-                    {section.items.map((item, iidx) => (
-                      <li key={iidx} className="text-sm text-gray-700 flex gap-2">
-                        <span className="text-primary">✓</span> {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <FluentRevealItem key={`tech-${section.title}-${idx}`}>
+                  <motion.div 
+                    className="bg-light-bg-secondary rounded-xl p-5 border border-light-border/50 h-full"
+                    whileHover={fluentHoverCard}
+                  >
+                    <div className="text-2xl mb-3">{section.icon}</div>
+                    <h4 className="font-semibold text-light-text mb-3 text-sm">{section.title}</h4>
+                    <ul className="space-y-1.5">
+                      {section.items.map((item, iidx) => (
+                        <li key={`tech-item-${item}-${iidx}`} className="text-xs text-light-text-secondary flex gap-2">
+                          <span className="text-light-accent">✓</span> {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                </FluentRevealItem>
               ))}
-            </div>
-          </motion.div>
-        </motion.div>
+            </FluentRevealGroup>
+          </FluentGlass>
+        </FluentReveal>
       </div>
-    </section>
+    </FluentSection>
   )
 }

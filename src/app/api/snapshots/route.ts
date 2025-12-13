@@ -28,26 +28,25 @@ export async function POST(request: NextRequest) {
           nombre: data.nombre || '',
           quotationConfigId: data.quotationConfigId || null, // ✅ Guardar quotationConfigId desde el request
           serviciosBase: data.serviciosBase || [],
-          gestionPrecio: data.gestionPrecio || 0,
-          gestionMesesGratis: data.gestionMesesGratis || 0,
-          gestionMesesPago: data.gestionMesesPago || 0,
           desarrollo: data.desarrollo || 0,
           descuento: data.descuento || 0,
           tipo: data.tipo || '',
           descripcion: data.descripcion || '',
           emoji: data.emoji || '',
           tagline: data.tagline || '',
-          precioHosting: data.precioHosting || 0,
-          precioMailbox: data.precioMailbox || 0,
-          precioDominio: data.precioDominio || 0,
           tiempoEntrega: data.tiempoEntrega || '',
           opcionesPago: data.opcionesPago || [],
+          // Título y subtítulo para sección de pago
+          tituloSeccionPago: data.tituloSeccionPago || 'Opciones de Pago',
+          subtituloSeccionPago: data.subtituloSeccionPago || '',
           descuentoPagoUnico: data.descuentoPagoUnico || 0,
           // Sistema de descuentos
           configDescuentos: data.configDescuentos || null,
           // Método de pago y notas (condicional para compatibilidad)
           ...(data.metodoPagoPreferido !== undefined && { metodoPagoPreferido: data.metodoPagoPreferido }),
           ...(data.notasPago !== undefined && { notasPago: data.notasPago }),
+          // Métodos preferidos (nuevo array)
+          ...(data.metodosPreferidos !== undefined && { metodosPreferidos: data.metodosPreferidos }),
           descuentosGenerales: data.descuentosGenerales || null,
           descuentosPorServicio: data.descuentosPorServicio || null,
           otrosServicios: data.otrosServicios || [],
@@ -81,26 +80,25 @@ export async function PUT(request: NextRequest) {
       data: {
         nombre: data.nombre || '',
         serviciosBase: data.serviciosBase || [],
-        gestionPrecio: data.gestionPrecio || 0,
-        gestionMesesGratis: data.gestionMesesGratis || 0,
-        gestionMesesPago: data.gestionMesesPago || 0,
         desarrollo: data.desarrollo || 0,
         descuento: data.descuento || 0,
         tipo: data.tipo || '',
         descripcion: data.descripcion || '',
         emoji: data.emoji || '',
         tagline: data.tagline || '',
-        precioHosting: data.precioHosting || 0,
-        precioMailbox: data.precioMailbox || 0,
-        precioDominio: data.precioDominio || 0,
         tiempoEntrega: data.tiempoEntrega || '',
         opcionesPago: data.opcionesPago || [],
+        // Título y subtítulo para sección de pago
+        tituloSeccionPago: data.tituloSeccionPago || 'Opciones de Pago',
+        subtituloSeccionPago: data.subtituloSeccionPago || '',
         descuentoPagoUnico: data.descuentoPagoUnico || 0,
         // Sistema de descuentos
         configDescuentos: data.configDescuentos || null,
         // Método de pago y notas (condicional para compatibilidad)
         ...(data.metodoPagoPreferido !== undefined && { metodoPagoPreferido: data.metodoPagoPreferido }),
         ...(data.notasPago !== undefined && { notasPago: data.notasPago }),
+        // Métodos preferidos (nuevo array)
+        ...(data.metodosPreferidos !== undefined && { metodosPreferidos: data.metodosPreferidos }),
         descuentosGenerales: data.descuentosGenerales || null,
         descuentosPorServicio: data.descuentosPorServicio || null,
         otrosServicios: data.otrosServicios || [],

@@ -2,12 +2,13 @@
 
 import React, { ReactNode, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa'
+import { ChevronDown, type LucideIcon } from 'lucide-react'
 
 interface CollapsibleSectionProps {
   readonly id: string
   readonly title: string
-  readonly icon?: ReactNode
+  readonly subtitle?: string
+  readonly icon?: LucideIcon
   readonly isCollapsed?: boolean
   readonly onToggle?: () => void
   readonly defaultOpen?: boolean
@@ -16,6 +17,8 @@ interface CollapsibleSectionProps {
   readonly className?: string
   readonly headerClassName?: string
   readonly contentClassName?: string
+  /** Variante de estilo: 'default' (bg-gh-bg-overlay) o 'card' (bg-gh-bg-secondary con header) */
+  readonly variant?: 'default' | 'card'
 }
 
 /**
@@ -23,11 +26,16 @@ interface CollapsibleSectionProps {
  * Soporta dos modos:
  * - Controlado: usar isCollapsed + onToggle
  * - No controlado: usar defaultOpen (el estado se maneja internamente)
+ * 
+ * Variantes:
+ * - 'default': Estilo original con bg-gh-bg-overlay
+ * - 'card': Estilo PreferenciasTab con header separado
  */
 export default function CollapsibleSection({
   id,
   title,
-  icon,
+  subtitle,
+  icon: Icon,
   isCollapsed: controlledIsCollapsed,
   onToggle: controlledOnToggle,
   defaultOpen = true,
@@ -36,6 +44,7 @@ export default function CollapsibleSection({
   className = '',
   headerClassName = '',
   contentClassName = '',
+  variant = 'default',
 }: CollapsibleSectionProps) {
   // Estado interno para modo no controlado
   const [internalIsOpen, setInternalIsOpen] = useState(defaultOpen)
@@ -45,8 +54,65 @@ export default function CollapsibleSection({
   const isCollapsed = isControlled ? controlledIsCollapsed : !internalIsOpen
   const onToggle = isControlled ? controlledOnToggle : () => setInternalIsOpen(prev => !prev)
 
+  // Variante 'card' - estilo PreferenciasTab
+  if (variant === 'card') {
+    return (
+      <div className={`bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden ${className}`}>
+        {/* Header con estilo PreferenciasTab */}
+        <button
+          onClick={onToggle}
+          className={`w-full px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between hover:bg-gh-bg-tertiary/50 transition-colors ${headerClassName}`}
+          aria-expanded={!isCollapsed}
+          aria-controls={`collapsible-content-${id}`}
+        >
+          <div className="flex items-center gap-2">
+            {Icon && <Icon className="w-3.5 h-3.5 text-gh-accent" />}
+            <div className="text-left">
+              <h5 className="text-xs font-medium text-gh-text">{title}</h5>
+              {subtitle && (
+                <p className="text-[11px] text-gh-text-muted mt-0.5">{subtitle}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {rightContent && (
+              <div onClick={(e) => e.stopPropagation()}>
+                {rightContent}
+              </div>
+            )}
+            <motion.span
+              animate={{ rotate: isCollapsed ? 0 : 180 }}
+              transition={{ duration: 0.2 }}
+              className="text-gh-text-muted"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </motion.span>
+          </div>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {!isCollapsed && (
+            <motion.div
+              id={`collapsible-content-${id}`}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className={contentClassName}>
+                {children}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    )
+  }
+
+  // Variante 'default' - estilo original
   return (
-    <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg ${className}`}>
+    <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg ${className}`}>
       <div className={`flex items-center justify-between ${headerClassName}`}>
         <button
           onClick={onToggle}
@@ -54,8 +120,8 @@ export default function CollapsibleSection({
           aria-expanded={!isCollapsed}
           aria-controls={`collapsible-content-${id}`}
         >
-          <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-            {icon}
+          <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
+            {Icon && <Icon className="w-3.5 h-3.5 text-gh-accent" />}
             {title}
           </span>
           <motion.span
@@ -63,7 +129,7 @@ export default function CollapsibleSection({
             transition={{ duration: 0.2 }}
             className="text-gh-text-muted"
           >
-            <FaChevronDown size={12} />
+            <ChevronDown className="w-3 h-3" />
           </motion.span>
         </button>
         
@@ -100,12 +166,13 @@ export default function CollapsibleSection({
 export function CollapsibleContent({
   id,
   title,
-  icon,
+  subtitle,
+  icon: Icon,
   isCollapsed,
   onToggle,
   children,
   rightContent,
-}: Omit<CollapsibleSectionProps, 'className' | 'headerClassName' | 'contentClassName'>) {
+}: Omit<CollapsibleSectionProps, 'className' | 'headerClassName' | 'contentClassName' | 'variant' | 'defaultOpen'> & { isCollapsed: boolean; onToggle: () => void }) {
   return (
     <>
       <div className="flex items-center justify-between mb-3">
@@ -115,15 +182,22 @@ export function CollapsibleContent({
           aria-expanded={!isCollapsed}
           aria-controls={`collapsible-content-${id}`}
         >
-          <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
-            {icon}
-            {title}
-          </span>
-          {isCollapsed ? (
-            <FaChevronDown size={12} className="text-gh-text-muted" />
-          ) : (
-            <FaChevronUp size={12} className="text-gh-text-muted" />
-          )}
+          <div className="flex items-center gap-2">
+            {Icon && <Icon className="w-3.5 h-3.5 text-gh-accent" />}
+            <div>
+              <span className="text-xs font-medium text-gh-text">{title}</span>
+              {subtitle && (
+                <p className="text-[11px] text-gh-text-muted">{subtitle}</p>
+              )}
+            </div>
+          </div>
+          <motion.span
+            animate={{ rotate: isCollapsed ? 0 : 180 }}
+            transition={{ duration: 0.2 }}
+            className="text-gh-text-muted ml-2"
+          >
+            <ChevronDown className="w-3 h-3" />
+          </motion.span>
         </button>
         
         {rightContent && (
@@ -150,3 +224,5 @@ export function CollapsibleContent({
     </>
   )
 }
+
+

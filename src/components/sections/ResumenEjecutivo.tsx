@@ -3,6 +3,12 @@
 import { motion } from 'framer-motion'
 import { FaCheckCircle, FaTimesCircle, FaArrowRight, FaFileAlt } from 'react-icons/fa'
 import type { ResumenEjecutivoTextos, VisibilidadConfig } from '@/lib/types'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { 
+  fluentStaggerContainer, 
+  fluentStaggerItem
+} from '@/lib/animations/variants'
+import { viewport, spring } from '@/lib/animations/config'
 
 interface ResumenEjecutivoProps {
   readonly data?: ResumenEjecutivoTextos
@@ -30,160 +36,211 @@ export default function ResumenEjecutivo({ data, visibilidad, nombreCliente = 'U
   const isVisible = (key: keyof VisibilidadConfig) => visibilidad?.[key] !== false
 
   return (
-    <section id="resumen" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+    <FluentSection
+      id="resumen"
+      animation="stagger"
+      paddingY="md"
+      className="bg-gradient-to-b from-white to-light-bg"
+    >
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-        >
-          {/* Título e Introducción (controlados por tituloSeccion) */}
-          {isVisible('tituloSeccion') && (
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-light-info-bg rounded-full mb-4">
-                <FaFileAlt className="text-light-accent" size={20} />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
-                {data?.tituloSeccion || 'Presentación del Proyecto'}
-              </h2>
-              {data?.subtitulo && (
-                <p className="text-sm text-light-text-muted mb-2">
-                  {data.subtitulo}
-                </p>
-              )}
-              <p className="text-sm text-light-text-secondary max-w-3xl mx-auto">
-                {introduccion}
+        {/* Título e Introducción (controlados por tituloSeccion) */}
+        {isVisible('tituloSeccion') && (
+          <motion.div 
+            className="text-center mb-6"
+            variants={fluentStaggerItem}
+          >
+            <motion.div 
+              className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-accent/20 to-light-accent/5 backdrop-blur-sm rounded-2xl mb-4 border border-light-accent/20"
+              whileHover={{ scale: 1.1, rotate: -5 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            >
+              <FaFileAlt className="text-light-accent" size={24} />
+            </motion.div>
+            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+              {data?.tituloSeccion || 'Presentación del Proyecto'}
+            </h2>
+            {data?.subtitulo && (
+              <p className="text-sm text-light-text-muted mb-2">
+                {data.subtitulo}
               </p>
-            </div>
-          )}
+            )}
+            <p className="text-sm text-light-text-secondary max-w-3xl mx-auto leading-relaxed">
+              {introduccion}
+            </p>
+          </motion.div>
+        )}
 
-          {/* Beneficios Principales */}
-          {isVisible('beneficiosPrincipales') && (
-            <div className="mb-12">
-              <div className="grid sm:grid-cols-2 gap-3">
-                {beneficios.map((benefit, index) => (
-                  <motion.div
-                    key={`benefit-${benefit.slice(0, 30).replaceAll(' ', '-')}-${index}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-start gap-3 p-4 bg-light-success-bg/50 rounded-md border border-light-success/20"
+        {/* Beneficios Principales */}
+        {isVisible('beneficiosPrincipales') && (
+          <FluentRevealGroup className="mb-6">
+            <div className="grid sm:grid-cols-2 gap-4">
+              {beneficios.map((benefit, index) => (
+                <FluentRevealItem key={`benefit-${benefit.slice(0, 30).replaceAll(' ', '-')}-${index}`}>
+                  <FluentGlass
+                    variant="subtle"
+                    className="flex items-start gap-3 p-4 bg-gradient-to-r from-light-success/5 to-light-success/10 rounded-xl border border-light-success/20 hover:border-light-success/40 h-full"
                   >
-                    <FaCheckCircle className="text-light-success flex-shrink-0 mt-0.5" size={16} />
-                    <span className="text-sm text-light-text">{benefit}</span>
-                  </motion.div>
-                ))}
-              </div>
+                    <FaCheckCircle className="text-light-success flex-shrink-0 mt-0.5" size={18} />
+                    <span className="text-sm text-light-text leading-relaxed">{benefit}</span>
+                  </FluentGlass>
+                </FluentRevealItem>
+              ))}
             </div>
-          )}
+          </FluentRevealGroup>
+        )}
 
-          {/* Párrafo Paquetes */}
-          {isVisible('parrafoPaquetes') && (
-            <div className="mb-12 p-4 bg-light-bg-secondary rounded-md border border-light-border">
-              <p className="text-sm text-light-text-secondary">
+        {/* Párrafo Paquetes */}
+        {isVisible('parrafoPaquetes') && (
+          <FluentReveal className="mb-6">
+            <FluentGlass variant="subtle" className="p-5 rounded-2xl">
+              <p className="text-sm text-light-text-secondary leading-relaxed">
                 {data?.parrafoPaquetes || 'La propuesta está diseñada en 3 paquetes de inversión para que elijas según tus necesidades y presupuesto, todas con calidad profesional garantizada.'}
               </p>
-            </div>
-          )}
+            </FluentGlass>
+          </FluentReveal>
+        )}
 
-          {/* Diferencias Claves */}
-          {isVisible('diferenciasClave') && (
-            <div className="mb-12 rounded-lg border border-light-border overflow-hidden">
-              <div className="bg-light-bg-secondary px-5 py-3 border-b border-light-border">
+        {/* Diferencias Claves */}
+        {isVisible('diferenciasClave') && (
+          <FluentReveal className="mb-6">
+            <FluentGlass
+              variant="normal"
+              className="rounded-2xl overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-light-bg-secondary to-light-bg-tertiary px-6 py-4 border-b border-light-border/50">
                 <h3 className="text-sm font-semibold text-light-text uppercase tracking-wide">
                   {data?.diferenciasClave?.tituloSeccion || 'Diferencias Clave'}
                 </h3>
               </div>
-              <div className="p-5">
-                <p className="text-sm text-light-text-secondary mb-4">
+              <div className="p-6">
+                <p className="text-sm text-light-text-secondary mb-5 leading-relaxed">
                   {data?.diferenciasClave?.parrafoIntroduccion || 'A diferencia de otras propuestas donde el cliente gestiona su propio sitio, en este caso has solicitado que nosotros nos encargamos de toda la administración y gestión del sitio web.'}
                 </p>
                 
-                <div className="space-y-2 mb-6">
+                <motion.div 
+                  className="space-y-3 mb-6"
+                  variants={fluentStaggerContainer}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={viewport.default}
+                >
                   {diferencias.map((item, index) => (
-                    <div key={`dif-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} className="flex items-start gap-2 text-sm">
+                    <motion.div 
+                      key={`dif-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} 
+                      className="flex items-start gap-3 text-sm"
+                      variants={fluentStaggerItem}
+                    >
                       <FaCheckCircle className="text-light-success flex-shrink-0 mt-0.5" size={14} />
                       <span className="text-light-text">{item}</span>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
 
-                <div className="pt-4 border-t border-light-border">
-                  <p className="text-xs font-semibold text-light-text-secondary uppercase tracking-wide mb-3">
+                <div className="pt-5 border-t border-light-border/50">
+                  <p className="text-xs font-semibold text-light-text-secondary uppercase tracking-wide mb-4">
                     Beneficios del modelo
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {modeloBeneficios.map((benefit, index) => (
-                      <span 
+                      <motion.span 
                         key={`modelo-${benefit.slice(0, 20).replaceAll(' ', '-')}-${index}`} 
-                        className="inline-flex items-center px-2.5 py-1 bg-light-info-bg text-light-accent text-xs font-medium rounded-full"
+                        className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-light-accent/10 to-light-accent/5 text-light-accent text-xs font-medium rounded-full border border-light-accent/20"
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        transition={spring.fluent}
                       >
                         {benefit}
-                      </span>
+                      </motion.span>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </FluentGlass>
+          </FluentReveal>
+        )}
 
-          {/* Responsabilidades Grid */}
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            {/* Lo que NOSOTROS hacemos */}
-            {isVisible('responsabilidadesProveedor') && (
-              <div className="rounded-lg border border-light-border overflow-hidden">
-                <div className="bg-light-success-bg px-5 py-3 border-b border-light-success/20">
+        {/* Responsabilidades Grid */}
+        <FluentRevealGroup className="grid md:grid-cols-2 gap-6 mb-6">
+          {/* Lo que NOSOTROS hacemos */}
+          {isVisible('responsabilidadesProveedor') && (
+            <FluentRevealItem>
+              <FluentGlass
+                variant="normal"
+                className="rounded-2xl overflow-hidden h-full"
+              >
+                <div className="bg-gradient-to-r from-light-success/10 to-light-success/5 px-6 py-4 border-b border-light-success/20">
                   <h3 className="text-sm font-semibold text-light-success flex items-center gap-2">
-                    <FaCheckCircle size={14} />
+                    <FaCheckCircle size={16} />
                     Nosotros nos encargamos de
                   </h3>
                 </div>
-                <div className="p-5">
-                  <ul className="space-y-2">
+                <div className="p-6">
+                  <ul className="space-y-3">
                     {[
                       ...responsabilidades.contenido,
                       ...responsabilidades.tecnico,
                       ...responsabilidades.comunicacion,
                     ].map((item, index) => (
-                      <li key={`resp-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} className="flex items-start gap-2 text-sm text-light-text">
-                        <span className="text-light-success mt-0.5">✓</span>
+                      <motion.li 
+                        key={`resp-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} 
+                        className="flex items-start gap-3 text-sm text-light-text"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.03 }}
+                      >
+                        <span className="text-light-success mt-0.5 flex-shrink-0">✓</span>
                         {item}
-                      </li>
+                      </motion.li>
                     ))}
                   </ul>
                 </div>
-              </div>
-            )}
+              </FluentGlass>
+            </FluentRevealItem>
+          )}
 
-            {/* Lo que el cliente NO hace */}
-            {isVisible('clienteNoHace') && (
-              <div className="rounded-lg border border-light-border overflow-hidden">
-                <div className="bg-light-danger-bg px-5 py-3 border-b border-light-danger/20">
+          {/* Lo que el cliente NO hace */}
+          {isVisible('clienteNoHace') && (
+            <FluentRevealItem>
+              <FluentGlass
+                variant="normal"
+                className="rounded-2xl overflow-hidden h-full"
+              >
+                <div className="bg-gradient-to-r from-light-danger/10 to-light-danger/5 px-6 py-4 border-b border-light-danger/20">
                   <h3 className="text-sm font-semibold text-light-danger flex items-center gap-2">
-                    <FaTimesCircle size={14} />
+                    <FaTimesCircle size={16} />
                     No tienes que preocuparte de
                   </h3>
                 </div>
-                <div className="p-5">
-                  <ul className="space-y-2">
+                <div className="p-6">
+                  <ul className="space-y-3">
                     {clienteNoHace.map((item, index) => (
-                      <li key={`nohace-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} className="flex items-start gap-2 text-sm text-light-text">
-                        <span className="text-light-danger mt-0.5">✕</span>
+                      <motion.li 
+                        key={`nohace-${item.slice(0, 30).replaceAll(' ', '-')}-${index}`} 
+                        className="flex items-start gap-3 text-sm text-light-text"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.03 }}
+                      >
+                        <span className="text-light-danger mt-0.5 flex-shrink-0">✕</span>
                         {item}
-                      </li>
+                      </motion.li>
                     ))}
                   </ul>
                 </div>
-              </div>
-            )}
-          </div>
+              </FluentGlass>
+            </FluentRevealItem>
+          )}
+        </FluentRevealGroup>
 
-          {/* Flujo de Comunicación */}
-          {isVisible('flujoComunicacion') && (
-            <div className="rounded-lg border border-light-border overflow-hidden">
-              <div className="bg-light-bg-secondary px-5 py-3 border-b border-light-border">
+        {/* Flujo de Comunicación */}
+        {isVisible('flujoComunicacion') && (
+          <FluentReveal>
+            <FluentGlass
+              variant="normal"
+              className="rounded-2xl overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-light-bg-secondary to-light-bg-tertiary px-6 py-4 border-b border-light-border/50">
                 <h3 className="text-sm font-semibold text-light-text uppercase tracking-wide">
                   Flujo de Comunicación
                 </h3>
@@ -191,64 +248,73 @@ export default function ResumenEjecutivo({ data, visibilidad, nombreCliente = 'U
                   Proceso simple y transparente de gestión de cambios
                 </p>
               </div>
-              <div className="p-5">
-                <div className="space-y-4">
+              <div className="p-6">
+                <motion.div 
+                  className="space-y-5"
+                  variants={fluentStaggerContainer}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={viewport.default}
+                >
                   {flujoComunicacion.map((step, index) => (
                     <motion.div
                       key={`flujo-${step.paso}-${step.titulo.slice(0, 20).replaceAll(' ', '-')}`}
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.05 }}
+                      variants={fluentStaggerItem}
                       className="flex items-start gap-4"
                     >
                       {/* Número de paso */}
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white ${
-                        step.actor === 'cliente' ? 'bg-light-accent' : 'bg-light-success'
-                      }`}>
+                      <motion.div 
+                        className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-semibold text-white shadow-lg ${
+                          step.actor === 'cliente' 
+                            ? 'bg-gradient-to-br from-light-accent to-blue-600' 
+                            : 'bg-gradient-to-br from-light-success to-emerald-600'
+                        }`}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={spring.fluent}
+                      >
                         {step.paso}
-                      </div>
+                      </motion.div>
                       
                       {/* Contenido */}
-                      <div className="flex-1 pb-4 border-b border-light-border last:border-0">
-                        <div className="flex items-center gap-2 mb-1">
+                      <div className="flex-1 pb-5 border-b border-light-border/30 last:border-0">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                           <span className="text-lg">{step.icono}</span>
                           <h4 className="text-sm font-semibold text-light-text">{step.titulo}</h4>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
                             step.actor === 'cliente' 
-                              ? 'bg-light-info-bg text-light-accent' 
-                              : 'bg-light-success-bg text-light-success'
+                              ? 'bg-light-accent/10 text-light-accent border border-light-accent/20' 
+                              : 'bg-light-success/10 text-light-success border border-light-success/20'
                           }`}>
                             {step.actor === 'cliente' ? nombreCliente : nombreProveedor}
                           </span>
                         </div>
-                        <p className="text-sm text-light-text-secondary">{step.descripcion}</p>
+                        <p className="text-sm text-light-text-secondary leading-relaxed">{step.descripcion}</p>
                       </div>
                       
                       {/* Flecha */}
                       {index < flujoComunicacion.length - 1 && (
-                        <FaArrowRight className="text-light-border-muted hidden md:block mt-2" size={12} />
+                        <FaArrowRight className="text-light-border-muted hidden md:block mt-3" size={12} />
                       )}
                     </motion.div>
                   ))}
-                </div>
+                </motion.div>
 
                 {/* Leyenda */}
-                <div className="flex flex-wrap gap-4 mt-6 pt-4 border-t border-light-border">
+                <div className="flex flex-wrap gap-4 mt-6 pt-5 border-t border-light-border/50">
                   <div className="flex items-center gap-2 text-xs text-light-text-secondary">
-                    <div className="w-3 h-3 rounded-full bg-light-accent" />
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-light-accent to-blue-600" />
                     Cliente ({nombreCliente})
                   </div>
                   <div className="flex items-center gap-2 text-xs text-light-text-secondary">
-                    <div className="w-3 h-3 rounded-full bg-light-success" />
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-light-success to-emerald-600" />
                     Nosotros ({nombreProveedor})
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </motion.div>
+            </FluentGlass>
+          </FluentReveal>
+        )}
       </div>
-    </section>
+    </FluentSection>
   )
 }

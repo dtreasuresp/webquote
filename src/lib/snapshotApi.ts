@@ -10,9 +10,6 @@ export interface SnapshotFromDB {
   id: string
   nombre: string
   serviciosBase: ServicioBase[]
-  gestionPrecio: number
-  gestionMesesGratis: number
-  gestionMesesPago: number
   desarrollo: number
   descuento: number
   tipo?: string
@@ -22,13 +19,18 @@ export interface SnapshotFromDB {
   tiempoEntrega?: string
   // Campos para opciones de pago
   opcionesPago?: any
+  // Título y subtítulo para sección de pago en página pública
+  tituloSeccionPago?: string
+  subtituloSeccionPago?: string
   descuentoPagoUnico?: number
   // ✅ Sistema de descuentos reinventado - ConfigDescuentos
   configDescuentos?: ConfigDescuentos | null
-  // Método de pago preferido
+  // Método de pago preferido (LEGACY)
   metodoPagoPreferido?: string
   // Notas de pago
   notasPago?: string | null
+  // Múltiples métodos de pago preferidos con notas individuales
+  metodosPreferidos?: Array<{ id: string; metodo: string; nota: string }>
   // @deprecated - Campos legacy para migración, usar configDescuentos
   descuentosGenerales?: any
   descuentosPorServicio?: any
@@ -108,9 +110,6 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
     nombre: snapshot.nombre || '',
     quotationConfigId: snapshot.quotationConfigId || null,
     serviciosBase: migrarServiciosLegacy(snapshot),
-    gestionPrecio: snapshot.gestion?.precio || 0,
-    gestionMesesGratis: snapshot.gestion?.mesesGratis || 0,
-    gestionMesesPago: snapshot.gestion?.mesesPago || 0,
     desarrollo: snapshot.paquete?.desarrollo ?? snapshot.desarrollo ?? 0,
     descuento: snapshot.paquete?.descuento ?? snapshot.descuento ?? 0,
     tipo: snapshot.paquete?.tipo ?? snapshot.tipo ?? '',
@@ -120,12 +119,17 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
     tiempoEntrega: snapshot.paquete?.tiempoEntrega ?? snapshot.tiempoEntrega ?? '',
     // Mapear opciones de pago
     opcionesPago: snapshot.paquete?.opcionesPago || [],
+    // Título y subtítulo para sección de pago en página pública
+    tituloSeccionPago: snapshot.paquete?.tituloSeccionPago || 'Opciones de Pago',
+    subtituloSeccionPago: snapshot.paquete?.subtituloSeccionPago || '',
     descuentoPagoUnico: configDescuentos.descuentoPagoUnico ?? 0,
     // ✅ Sistema de descuentos reinventado
     configDescuentos: configDescuentos,
     // Método de pago preferido y notas
     metodoPagoPreferido: snapshot.paquete?.metodoPagoPreferido || '',
     notasPago: snapshot.paquete?.notasPago || null,
+    // Múltiples métodos de pago preferidos
+    metodosPreferidos: snapshot.paquete?.metodosPreferidos || [],
     // @deprecated - Mantener para compatibilidad con BD existente
     descuentosGenerales: configDescuentos.tipoDescuento === 'general' 
       ? configDescuentos.descuentoGeneral 
@@ -197,11 +201,6 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
     nombre: dbSnapshot.nombre,
     quotationConfigId: dbSnapshot.quotationConfigId || undefined,
     serviciosBase: dbSnapshot.serviciosBase || [],
-    gestion: {
-      precio: dbSnapshot.gestionPrecio,
-      mesesGratis: dbSnapshot.gestionMesesGratis,
-      mesesPago: dbSnapshot.gestionMesesPago,
-    },
     paquete: {
       desarrollo: dbSnapshot.desarrollo,
       descuento: dbSnapshot.descuento,
@@ -212,12 +211,17 @@ export function convertDBToSnapshot(dbSnapshot: SnapshotFromDB) {
       tiempoEntrega: dbSnapshot.tiempoEntrega || '',
       // Opciones de pago
       opcionesPago: (dbSnapshot.opcionesPago as any[]) || [],
+      // Título y subtítulo para sección de pago en página pública
+      tituloSeccionPago: (dbSnapshot as any).tituloSeccionPago || 'Opciones de Pago',
+      subtituloSeccionPago: (dbSnapshot as any).subtituloSeccionPago || '',
       // ✅ Sistema de descuentos reinventado
       configDescuentos: configDescuentos,
       descuentoPagoUnico: configDescuentos.descuentoPagoUnico,
       // Método de pago preferido y notas
       metodoPagoPreferido: dbSnapshot.metodoPagoPreferido || '',
       notasPago: dbSnapshot.notasPago || '',
+      // Múltiples métodos de pago preferidos
+      metodosPreferidos: (dbSnapshot as any).metodosPreferidos || [],
       // @deprecated - Mantener para compatibilidad legacy (formato antiguo con arrays)
       descuentosGenerales: configDescuentos.tipoDescuento === 'general' 
         ? configDescuentos.descuentoGeneral 
@@ -264,6 +268,7 @@ export async function obtenerSnapshotsCompleto() {
     const response = await fetch('/api/snapshots/all', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
     })
 
     if (!response.ok) throw new Error('Error al obtener snapshots completo')

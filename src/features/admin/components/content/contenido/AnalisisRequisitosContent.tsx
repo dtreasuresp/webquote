@@ -2,9 +2,11 @@
 
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FaClipboardList, FaChevronDown, FaChevronUp, FaPlus, FaTrash, FaImage, FaUpload, FaLink, FaSpinner, FaCheck, FaPalette } from 'react-icons/fa'
+import { ClipboardList, ChevronDown, ChevronUp, Plus, Trash2, Image as ImageIcon, Upload, Link, Loader2, Check, Palette } from 'lucide-react'
+import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import ContentHeader from './ContentHeader'
 import ArrayFieldGH from './ArrayFieldGH'
+import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import ColorPickerInput from '@/features/admin/components/ColorPickerInput'
 import DialogoGenerico, { DialogTab } from '@/features/admin/components/DialogoGenerico'
@@ -506,7 +508,7 @@ export default function AnalisisRequisitosContent({
     {
       id: 'upload',
       label: 'Subir Archivo',
-      icon: FaUpload,
+      icon: Upload,
       content: (
         <>
           <div
@@ -517,7 +519,7 @@ export default function AnalisisRequisitosContent({
             className={`relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${isDragging ? 'border-[#238636] bg-[#238636]/10' : 'border-[#30363d] hover:border-[#238636]/50 hover:bg-[#161b22]'}`}
           >
             <input ref={fileInputRef} type="file" accept={acceptedFormats} onChange={handleFileSelect} className="hidden" />
-            <FaUpload className={`mx-auto text-3xl mb-3 ${isDragging ? 'text-[#3fb950]' : 'text-[#8b949e]'}`} />
+            <Upload className={`mx-auto text-3xl mb-3 ${isDragging ? 'text-[#3fb950]' : 'text-[#8b949e]'}`} />
             <p className="text-sm text-[#c9d1d9] font-medium mb-1">
               {isDragging ? 'Suelta la imagen aquí' : 'Arrastra una imagen o haz click para seleccionar'}
             </p>
@@ -537,7 +539,7 @@ export default function AnalisisRequisitosContent({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[#c9d1d9] font-medium truncate">{importFileName}</p>
-                  <p className="text-xs text-[#3fb950] flex items-center gap-1 mt-1"><FaCheck /> Imagen cargada correctamente</p>
+                  <p className="text-xs text-[#3fb950] flex items-center gap-1 mt-1"><Check /> Imagen cargada correctamente</p>
                 </div>
               </div>
             </motion.div>
@@ -548,7 +550,7 @@ export default function AnalisisRequisitosContent({
     {
       id: 'url',
       label: 'Desde URL',
-      icon: FaLink,
+      icon: Link,
       content: (
         <>
           <div className="space-y-3">
@@ -557,7 +559,7 @@ export default function AnalisisRequisitosContent({
               <div className="flex gap-2">
                 <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://ejemplo.com/logo.png" className="flex-1 px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#c9d1d9] focus:border-[#238636] focus:ring-1 focus:ring-[#238636]/50 focus:outline-none" />
                 <button onClick={handleUrlImport} disabled={importIsLoading || !imageUrl.trim()} className="px-4 py-2 bg-gradient-to-r from-[#238636] to-[#2ea043] text-white rounded-md text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                  {importIsLoading ? <FaSpinner className="animate-spin" /> : 'Cargar'}
+                  {importIsLoading ? <Loader2 className="animate-spin" /> : 'Cargar'}
                 </button>
               </div>
             </div>
@@ -576,7 +578,7 @@ export default function AnalisisRequisitosContent({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[#c9d1d9] font-medium truncate">{importFileName}</p>
-                  <p className="text-xs text-[#3fb950] flex items-center gap-1 mt-1"><FaCheck /> Imagen cargada correctamente</p>
+                  <p className="text-xs text-[#3fb950] flex items-center gap-1 mt-1"><Check /> Imagen cargada correctamente</p>
                 </div>
               </div>
             </motion.div>
@@ -670,11 +672,12 @@ export default function AnalisisRequisitosContent({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <ContentHeader
         title="Análisis de Requisitos"
-        icon={<FaClipboardList className="text-gh-info" />}
+        subtitle="Entendiendo las necesidades de tu proyecto"
+        icon={ClipboardList}
         updatedAt={updatedAt}
         onGuardar={onGuardar}
         onReset={onReset}
@@ -682,9 +685,9 @@ export default function AnalisisRequisitosContent({
         hasChanges={hasChanges}
       />
 
-      {/* Toggle de visibilidad global - Fila 2 */}
-      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border rounded-lg">
-        <span className="text-sm text-gh-text">Mostrar sección en la página pública</span>
+      {/* Toggle de visibilidad global */}
+      <div className="flex items-center justify-between p-3 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
+        <span className="text-xs font-medium text-gh-text">Mostrar sección en la página pública</span>
         <ToggleSwitch enabled={visible} onChange={onVisibleChange} />
       </div>
 
@@ -694,32 +697,32 @@ export default function AnalisisRequisitosContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* 📌 TÍTULO Y SUBTÍTULO */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="p-4 bg-gh-bg-overlay border border-gh-border rounded-lg">
-          <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-sm text-gh-text font-medium">📌 Título y Subtítulo</span>
+        <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center justify-between">
+            <span className="flex items-center gap-2 text-xs font-medium text-gh-text">📌 Título y Subtítulo</span>
             <ToggleSwitch 
               enabled={true} 
               onChange={() => {}} 
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-gh-text-muted text-xs mb-1">Título de la sección</label>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Título de la sección</label>
               <input
                 type="text"
                 value={data.titulo}
                 onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
                 placeholder="Análisis de Requisitos"
               />
             </div>
             <div>
-              <label className="block text-gh-text-muted text-xs mb-1">Subtítulo</label>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Subtítulo</label>
               <input
                 type="text"
                 value={data.subtitulo}
                 onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-                className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
                 placeholder="Entendiendo las necesidades de tu proyecto"
               />
             </div>
@@ -729,16 +732,16 @@ export default function AnalisisRequisitosContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* INFORMACIÓN DEL CLIENTE */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.informacion === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.informacion === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => toggleSection('informacion')}
               className="flex items-center gap-2 text-left"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+              <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
                 📋 Información General del Cliente
               </span>
-              {expandedSections.informacion ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              {expandedSections.informacion ? <ChevronUp className="text-gh-text-muted" /> : <ChevronDown className="text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.informacion !== false} 
@@ -755,7 +758,7 @@ export default function AnalisisRequisitosContent({
                     type="text"
                     value={data.informacionCliente.empresa}
                     onChange={(e) => onChange({ ...data, informacionCliente: { ...data.informacionCliente, empresa: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -764,7 +767,7 @@ export default function AnalisisRequisitosContent({
                     type="text"
                     value={data.informacionCliente.sector}
                     onChange={(e) => onChange({ ...data, informacionCliente: { ...data.informacionCliente, sector: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                   />
                 </div>
               </div>
@@ -774,7 +777,7 @@ export default function AnalisisRequisitosContent({
                   type="text"
                   value={data.informacionCliente.ubicacion}
                   onChange={(e) => onChange({ ...data, informacionCliente: { ...data.informacionCliente, ubicacion: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 />
               </div>
               <div>
@@ -783,7 +786,7 @@ export default function AnalisisRequisitosContent({
                   type="text"
                   value={data.informacionCliente.trayectoria}
                   onChange={(e) => onChange({ ...data, informacionCliente: { ...data.informacionCliente, trayectoria: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 />
               </div>
             </div>
@@ -793,16 +796,16 @@ export default function AnalisisRequisitosContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* PROPUESTA DE VALOR */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.propuesta === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.propuesta === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => toggleSection('propuesta')}
               className="flex items-center gap-2 text-left"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+              <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
                 🎯 Propuesta de Valor y Posicionamiento
               </span>
-              {expandedSections.propuesta ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              {expandedSections.propuesta ? <ChevronUp className="text-gh-text-muted" /> : <ChevronDown className="text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.propuesta !== false} 
@@ -823,7 +826,7 @@ export default function AnalisisRequisitosContent({
                 <textarea
                   value={data.propuestaValor.mision}
                   onChange={(e) => onChange({ ...data, propuestaValor: { ...data.propuestaValor, mision: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                   rows={2}
                 />
               </div>
@@ -840,16 +843,16 @@ export default function AnalisisRequisitosContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* IDENTIDAD VISUAL */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.identidad === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.identidad === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => toggleSection('identidad')}
               className="flex items-center gap-2 text-left"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+              <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
                 🎨 Identidad Visual
               </span>
-              {expandedSections.identidad ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              {expandedSections.identidad ? <ChevronUp className="text-gh-text-muted" /> : <ChevronDown className="text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.identidad !== false} 
@@ -862,11 +865,11 @@ export default function AnalisisRequisitosContent({
               
               {/* Logo Corporativo */}
               <div>
-                <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">🖼️ Logo Corporativo</label>
-                <div className="p-3 bg-gh-bg-tertiary border border-gh-border rounded-md">
+                <label className="block text-gh-text font-medium text-xs mb-2">🖼️ Logo Corporativo</label>
+                <div className="p-3 bg-gh-bg-tertiary border border-gh-border/30 rounded-md">
                   {data.identidadVisual.logoCorporativo ? (
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 border border-gh-border rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                      <div className="w-20 h-20 border border-gh-border/30 rounded-lg overflow-hidden bg-white flex items-center justify-center">
                         <img
                           src={data.identidadVisual.logoCorporativo}
                           alt="Logo corporativo"
@@ -874,7 +877,7 @@ export default function AnalisisRequisitosContent({
                         />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-gh-text font-medium truncate">
+                        <p className="text-xs font-medium text-gh-text font-medium truncate">
                           {data.identidadVisual.logoFileName || 'Logo'}
                         </p>
                         <p className="text-xs text-gh-text-muted mt-1">Logo importado correctamente</p>
@@ -883,26 +886,26 @@ export default function AnalisisRequisitosContent({
                             onClick={() => setIsImportModalOpen(true)}
                             className="px-3 py-1.5 text-xs font-medium text-gh-info bg-gh-info/10 border border-gh-info/30 rounded-md hover:bg-gh-info/20 transition-colors flex items-center gap-1.5"
                           >
-                            <FaUpload size={10} /> Cambiar
+                            <Upload className="w-2.5 h-2.5" /> Cambiar
                           </button>
                           <button
                             onClick={handleLogoRemove}
                             className="px-3 py-1.5 text-xs font-medium text-gh-danger bg-gh-danger/10 border border-gh-danger/30 rounded-md hover:bg-gh-danger/20 transition-colors flex items-center gap-1.5"
                           >
-                            <FaTrash size={10} /> Eliminar
+                            <Trash2 className="w-2.5 h-2.5" /> Eliminar
                           </button>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center py-4">
-                      <FaImage className="mx-auto text-3xl text-gh-text-muted mb-2" />
-                      <p className="text-sm text-gh-text-muted mb-3">No hay logo importado</p>
+                      <ImageIcon className="mx-auto text-3xl text-gh-text-muted mb-2" />
+                      <p className="text-xs font-medium text-gh-text-muted mb-3">No hay logo importado</p>
                       <button
                         onClick={() => setIsImportModalOpen(true)}
                         className="px-4 py-2 text-xs font-medium text-white bg-gh-success rounded-md hover:bg-gh-success/90 transition-colors flex items-center gap-1.5 mx-auto"
                       >
-                        <FaUpload size={10} /> Importar Logo
+                        <Upload className="w-2.5 h-2.5" /> Importar Logo
                       </button>
                     </div>
                   )}
@@ -911,7 +914,7 @@ export default function AnalisisRequisitosContent({
 
               {/* Colores Corporativos */}
               <div>
-                <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">🎨 Colores Corporativos</label>
+                <label className="block text-gh-text font-medium text-xs mb-2">🎨 Colores Corporativos</label>
                 <p className="text-gh-text-muted text-xs mb-3 italic">
                   El orden define la jerarquía: el primer color será el Primario, el segundo el Secundario, etc.
                 </p>
@@ -935,13 +938,13 @@ export default function AnalisisRequisitosContent({
                         value={color.nombre}
                         onChange={(e) => handleUpdateColor('coloresCorporativos', index, 'nombre', e.target.value)}
                         placeholder="Nombre del color"
-                        className="flex-1 px-3 py-1.5 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="flex-1 px-3 py-1.5 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       />
                       <button
                         onClick={() => handleRemoveColor('coloresCorporativos', index)}
                         className="p-1.5 text-gh-danger hover:bg-gh-danger/10 rounded"
                       >
-                        <FaTrash size={10} />
+                        <Trash2 className="w-2.5 h-2.5" />
                       </button>
                     </div>
                   ))}
@@ -949,14 +952,14 @@ export default function AnalisisRequisitosContent({
                     onClick={() => handleAddColor('coloresCorporativos')}
                     className="w-full px-3 py-2 text-xs font-medium text-gh-text-muted hover:text-gh-text bg-gh-bg-secondary border border-gh-border border-dashed rounded-md hover:bg-gh-bg-tertiary transition-colors flex items-center justify-center gap-1.5"
                   >
-                    <FaPlus size={10} /> Agregar Color
+                    <Plus className="w-2.5 h-2.5" /> Agregar Color
                   </button>
                 </div>
               </div>
 
               {/* Colores a Evitar */}
               <div>
-                <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">🚫 Colores a Evitar</label>
+                <label className="block text-gh-text font-medium text-xs mb-2">🚫 Colores a Evitar</label>
                 <div className="space-y-2">
                   {data.identidadVisual.coloresEvitar.map((color, index) => (
                     <div key={`evitar-${index}`} className="flex items-center gap-2">
@@ -970,13 +973,13 @@ export default function AnalisisRequisitosContent({
                         value={color.nombre}
                         onChange={(e) => handleUpdateColor('coloresEvitar', index, 'nombre', e.target.value)}
                         placeholder="Nombre del color"
-                        className="flex-1 px-3 py-1.5 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                        className="flex-1 px-3 py-1.5 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                       />
                       <button
                         onClick={() => handleRemoveColor('coloresEvitar', index)}
                         className="p-1.5 text-gh-danger hover:bg-gh-danger/10 rounded"
                       >
-                        <FaTrash size={10} />
+                        <Trash2 className="w-2.5 h-2.5" />
                       </button>
                     </div>
                   ))}
@@ -984,43 +987,43 @@ export default function AnalisisRequisitosContent({
                     onClick={() => handleAddColor('coloresEvitar')}
                     className="w-full px-3 py-2 text-xs font-medium text-gh-text-muted hover:text-gh-text bg-gh-bg-secondary border border-gh-border border-dashed rounded-md hover:bg-gh-bg-tertiary transition-colors flex items-center justify-center gap-1.5"
                   >
-                    <FaPlus size={10} /> Agregar Color a Evitar
+                    <Plus className="w-2.5 h-2.5" /> Agregar Color a Evitar
                   </button>
                 </div>
               </div>
 
               {/* Estilo Visual */}
               <div>
-                <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">✨ Estilo Visual</label>
-                <select
+                <DropdownSelect
+                  label="✨ Estilo Visual"
                   value={data.identidadVisual.estiloVisual}
-                  onChange={(e) => onChange({ ...data, identidadVisual: { ...data.identidadVisual, estiloVisual: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
-                >
-                  <option value="Profesional y Corporativo">Profesional y Corporativo</option>
-                  <option value="Minimalista">Minimalista</option>
-                  <option value="Moderno">Moderno</option>
-                  <option value="Clásico">Clásico</option>
-                  <option value="Creativo">Creativo</option>
-                  <option value="Elegante">Elegante</option>
-                  <option value="Juvenil">Juvenil</option>
-                  <option value="Tecnológico">Tecnológico</option>
-                </select>
+                  onChange={(val) => onChange({ ...data, identidadVisual: { ...data.identidadVisual, estiloVisual: val } })}
+                  options={[
+                    { value: 'Profesional y Corporativo', label: 'Profesional y Corporativo' },
+                    { value: 'Minimalista', label: 'Minimalista' },
+                    { value: 'Moderno', label: 'Moderno' },
+                    { value: 'Clásico', label: 'Clásico' },
+                    { value: 'Creativo', label: 'Creativo' },
+                    { value: 'Elegante', label: 'Elegante' },
+                    { value: 'Juvenil', label: 'Juvenil' },
+                    { value: 'Tecnológico', label: 'Tecnológico' }
+                  ]}
+                />
               </div>
 
               {/* Contenido Disponible */}
               <div>
-                <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">📄 Contenido Disponible</label>
+                <label className="block text-gh-text font-medium text-xs mb-2">📄 Contenido Disponible</label>
                 <div className="space-y-2">
                   {data.identidadVisual.contenidoDisponible.map((contenido, index) => (
-                    <div key={`contenido-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border rounded-md">
+                    <div key={`contenido-${index}`} className="p-3 bg-gh-bg-tertiary border border-gh-border/30 rounded-md">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-gh-text-muted">Item {index + 1}</span>
                         <button
                           onClick={() => handleRemoveContenido(index)}
                           className="p-1.5 text-gh-danger hover:bg-gh-danger/10 rounded"
                         >
-                          <FaTrash size={10} />
+                          <Trash2 className="w-2.5 h-2.5" />
                         </button>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
@@ -1029,21 +1032,21 @@ export default function AnalisisRequisitosContent({
                           value={contenido.item}
                           onChange={(e) => handleUpdateContenido(index, 'item', e.target.value)}
                           placeholder="Item"
-                          className="px-2 py-1.5 bg-gh-bg-secondary border border-gh-border rounded text-sm text-gh-text"
+                          className="px-2 py-1.5 bg-gh-bg-secondary border border-gh-border/30 rounded text-xs font-medium text-gh-text"
                         />
                         <input
                           type="text"
                           value={contenido.status}
                           onChange={(e) => handleUpdateContenido(index, 'status', e.target.value)}
                           placeholder="Estado"
-                          className="px-2 py-1.5 bg-gh-bg-secondary border border-gh-border rounded text-sm text-gh-text"
+                          className="px-2 py-1.5 bg-gh-bg-secondary border border-gh-border/30 rounded text-xs font-medium text-gh-text"
                         />
                         <input
                           type="text"
                           value={contenido.note}
                           onChange={(e) => handleUpdateContenido(index, 'note', e.target.value)}
                           placeholder="Nota"
-                          className="px-2 py-1.5 bg-gh-bg-secondary border border-gh-border rounded text-sm text-gh-text"
+                          className="px-2 py-1.5 bg-gh-bg-secondary border border-gh-border/30 rounded text-xs font-medium text-gh-text"
                         />
                       </div>
                     </div>
@@ -1052,7 +1055,7 @@ export default function AnalisisRequisitosContent({
                     onClick={handleAddContenido}
                     className="w-full px-3 py-2 text-xs font-medium text-gh-text-muted hover:text-gh-text bg-gh-bg-secondary border border-gh-border border-dashed rounded-md hover:bg-gh-bg-tertiary transition-colors flex items-center justify-center gap-1.5"
                   >
-                    <FaPlus size={10} /> Agregar Contenido
+                    <Plus className="w-2.5 h-2.5" /> Agregar Contenido
                   </button>
                 </div>
               </div>
@@ -1063,16 +1066,16 @@ export default function AnalisisRequisitosContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* OBJETIVOS DEL SITIO */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.objetivos === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.objetivos === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => toggleSection('objetivos')}
               className="flex items-center gap-2 text-left"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+              <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
                 💼 Objetivos del Sitio Web
               </span>
-              {expandedSections.objetivos ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              {expandedSections.objetivos ? <ChevronUp className="text-gh-text-muted" /> : <ChevronDown className="text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.objetivos !== false} 
@@ -1101,16 +1104,16 @@ export default function AnalisisRequisitosContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* ESTRUCTURA DEL CATÁLOGO */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.estructura === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.estructura === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => toggleSection('estructura')}
               className="flex items-center gap-2 text-left"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+              <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
                 📄 Estructura y Contenido del Sitio
               </span>
-              {expandedSections.estructura ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              {expandedSections.estructura ? <ChevronUp className="text-gh-text-muted" /> : <ChevronDown className="text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.estructura !== false} 
@@ -1133,7 +1136,7 @@ export default function AnalisisRequisitosContent({
                     type="text"
                     value={data.estructuraCatalogo.cantidadProductos}
                     onChange={(e) => onChange({ ...data, estructuraCatalogo: { ...data.estructuraCatalogo, cantidadProductos: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
                 <div>
@@ -1142,7 +1145,7 @@ export default function AnalisisRequisitosContent({
                     type="text"
                     value={data.estructuraCatalogo.categoriasPrincipales}
                     onChange={(e) => onChange({ ...data, estructuraCatalogo: { ...data.estructuraCatalogo, categoriasPrincipales: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
                 <div>
@@ -1151,7 +1154,7 @@ export default function AnalisisRequisitosContent({
                     type="text"
                     value={data.estructuraCatalogo.fotosPorProducto}
                     onChange={(e) => onChange({ ...data, estructuraCatalogo: { ...data.estructuraCatalogo, fotosPorProducto: e.target.value } })}
-                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md text-sm text-gh-text"
+                    className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text"
                   />
                 </div>
               </div>
@@ -1168,16 +1171,16 @@ export default function AnalisisRequisitosContent({
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* FUNCIONALIDADES */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className={`p-4 bg-gh-bg-overlay border border-gh-border rounded-lg transition-opacity duration-200 ${vis.funcionalidades === false ? 'opacity-50' : ''}`}>
+        <div className={`p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg transition-opacity duration-200 ${vis.funcionalidades === false ? 'opacity-50' : ''}`}>
           <div className="flex items-center justify-between">
             <button
               onClick={() => toggleSection('funcionalidades')}
               className="flex items-center gap-2 text-left"
             >
-              <span className="flex items-center gap-2 text-sm text-gh-text font-medium">
+              <span className="flex items-center gap-2 text-xs font-medium text-gh-text font-medium">
                 🔧 Funcionalidades Especiales
               </span>
-              {expandedSections.funcionalidades ? <FaChevronUp className="text-gh-text-muted" /> : <FaChevronDown className="text-gh-text-muted" />}
+              {expandedSections.funcionalidades ? <ChevronUp className="text-gh-text-muted" /> : <ChevronDown className="text-gh-text-muted" />}
             </button>
             <ToggleSwitch 
               enabled={vis.funcionalidades !== false} 
@@ -1210,7 +1213,7 @@ export default function AnalisisRequisitosContent({
         isOpen={isImportModalOpen}
         onClose={handleCloseImportModal}
         title="Importar Logo Corporativo"
-        icon={FaImage}
+        icon={ImageIcon}
         variant="premium"
         type="neutral"
         size="md"
@@ -1227,7 +1230,7 @@ export default function AnalisisRequisitosContent({
               Cancelar
             </button>
             <button onClick={handleConfirmImport} disabled={!importPreview} className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#238636] to-[#2ea043] rounded-md hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-[#238636]/20">
-              <FaCheck /> Importar Logo
+              <Check /> Importar Logo
             </button>
           </>
         }
@@ -1241,7 +1244,7 @@ export default function AnalisisRequisitosContent({
           setImportedImageForDetection(null)
         }}
         title="Colores Detectados del Logo"
-        icon={FaPalette}
+        icon={Palette}
         iconClassName="text-white text-sm"
         variant="premium"
         type="warning"
@@ -1257,11 +1260,11 @@ export default function AnalisisRequisitosContent({
             </button>
             {hasExistingColors && (
               <button onClick={handleColorReplace} disabled={selectedColorCount === 0} className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#d29922] to-[#f0b429] rounded-md hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-[#d29922]/20">
-                <FaCheck /> Sustituir ({selectedColorCount})
+                <Check /> Sustituir ({selectedColorCount})
               </button>
             )}
             <button onClick={handleColorAdd} disabled={selectedColorCount === 0} className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#238636] to-[#2ea043] rounded-md hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-[#238636]/20">
-              <FaCheck /> Agregar ({selectedColorCount})
+              <Check /> Agregar ({selectedColorCount})
             </button>
           </>
         }
@@ -1278,7 +1281,7 @@ export default function AnalisisRequisitosContent({
         {/* Loading */}
         {colorDetectionLoading && (
           <div className="flex items-center justify-center py-8">
-            <FaSpinner className="animate-spin text-2xl text-[#58a6ff] mr-2" />
+            <Loader2 className="animate-spin text-2xl text-[#58a6ff] mr-2" />
             <span className="text-[#8b949e]">Detectando colores...</span>
           </div>
         )}
@@ -1316,7 +1319,7 @@ export default function AnalisisRequisitosContent({
                     </div>
                     <p className="text-xs text-[#8b949e] font-mono uppercase">{color.hex}</p>
                   </div>
-                  {color.selected && <FaCheck className="text-[#3fb950] flex-shrink-0" />}
+                  {color.selected && <Check className="text-[#3fb950] flex-shrink-0" />}
                 </button>
               ))}
             </div>
@@ -1326,3 +1329,7 @@ export default function AnalisisRequisitosContent({
     </motion.div>
   )
 }
+
+
+
+

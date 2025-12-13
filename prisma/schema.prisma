@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,75 +9,48 @@ datasource db {
 }
 
 model QuotationConfig {
-  id                  String    @id @default(cuid())
-  
-  // Información de la Cotización
-  numero              String    @unique @default("")
-  versionNumber       Int       @default(1)
-  fechaEmision        DateTime  @default(now())
-  tiempoValidez       Int       @default(30)
-  fechaVencimiento    DateTime
-  presupuesto         String    @default("")
-  moneda              String    @default("USD")
-  
-  // Información del Cliente
-  empresa             String    @default("")
-  sector              String    @default("")
-  ubicacion           String    @default("")
-  emailCliente        String    @default("")
-  whatsappCliente     String    @default("")
-  
-  // Información del Proveedor
-  profesional         String    @default("")
-  empresaProveedor    String    @default("")
-  emailProveedor      String    @default("")
-  whatsappProveedor   String    @default("")
-  ubicacionProveedor  String    @default("")
-  
-  // Tiempo de vigencia del contrato
-  tiempoVigenciaValor Int       @default(12)
-  tiempoVigenciaUnidad String   @default("meses")  // "días", "meses", "años"
-  
-  // Configuración del Hero (por cotización)
-  heroTituloMain      String    @default("PROPUESTA DE COTIZACIÓN")
-  heroTituloSub       String    @default("PÁGINA CATÁLOGO DINÁMICA")
-  
-  // Estados de control
-  activo              Boolean   @default(true)
-  isGlobal            Boolean   @default(false)
-  
-  // ==================== TEMPLATES REUTILIZABLES ====================
-  // Servicios Base template (JSON Array)
-  serviciosBaseTemplate       Json?
-  // Servicios Opcionales template (JSON Array)
-  serviciosOpcionalesTemplate Json?
-  // Opciones de Pago template (JSON Array)
-  opcionesPagoTemplate        Json?
-  // Configuración de Descuentos template (JSON)
-  configDescuentosTemplate    Json?
-  // Descripciones de Paquete templates (JSON Array)
+  id                            String                @id @default(cuid())
+  numero                        String                @unique @default("")
+  fechaEmision                  DateTime              @default(now())
+  tiempoValidez                 Int                   @default(30)
+  fechaVencimiento              DateTime
+  presupuesto                   String                @default("")
+  moneda                        String                @default("USD")
+  empresa                       String                @default("")
+  sector                        String                @default("")
+  ubicacion                     String                @default("")
+  profesional                   String                @default("")
+  empresaProveedor              String                @default("")
+  ubicacionProveedor            String                @default("")
+  createdAt                     DateTime              @default(now())
+  updatedAt                     DateTime              @updatedAt
+  heroTituloMain                String                @default("PROPUESTA DE COTIZACIÓN")
+  heroTituloSub                 String                @default("PÁGINA CATÁLOGO DINÁMICA")
+  tiempoVigenciaUnidad          String                @default("meses")
+  tiempoVigenciaValor           Int                   @default(12)
+  emailCliente                  String                @default("")
+  whatsappCliente               String                @default("")
+  activo                        Boolean               @default(true)
+  emailProveedor                String                @default("")
+  isGlobal                      Boolean               @default(false)
+  versionNumber                 Int                   @default(1)
+  whatsappProveedor             String                @default("")
+  configDescuentosTemplate      Json?
+  estilosConfig                 Json?
+  metodoPagoPreferido           String?               @default("")
+  notasPago                     String?               @default("")
+  opcionesPagoTemplate          Json?
+  serviciosBaseTemplate         Json?
+  serviciosOpcionalesTemplate   Json?
+  contenidoGeneral              Json?
+  editorState                   Json?
   descripcionesPaqueteTemplates Json?
-  // Método de pago preferido a nivel de cotización
-  metodoPagoPreferido         String?   @default("")
-  // Notas de pago a nivel de cotización
-  notasPago                   String?   @default("")
-  // Configuración de estilos (JSON)
-  estilosConfig               Json?
-  
-  // ==================== CONTENIDO GENERAL DINÁMICO ====================
-  // Contenido editable: FAQ, Garantías, Contacto, Resumen, Términos
-  contenidoGeneral            Json?
-  
-  // ==================== ESTADO DEL EDITOR ====================
-  // Estado de secciones colapsadas/expandidas y otras preferencias del editor
-  editorState                 Json?
-  
-  // Relaciones
-  snapshots           PackageSnapshot[]
-  
-  // Control
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  metodosPreferidos             Json?
+  packagesSnapshot              Json?
+  packagesSnapshotAt            DateTime?
+  snapshots                     PackageSnapshot[]
+  User                          User?
+  UserQuotationAccess           UserQuotationAccess[]
 
   @@index([createdAt])
   @@index([isGlobal])
@@ -88,96 +58,291 @@ model QuotationConfig {
 }
 
 model PackageSnapshot {
-  id                  String   @id @default(cuid())
-  nombre              String
-  
-  // Servicios Base (JSON Array)
-  serviciosBase       Json
-  
-  // Gestión
-  gestionPrecio       Float
-  gestionMesesGratis  Int
-  gestionMesesPago    Int
-  
-  // Paquete
-  desarrollo          Float
-  descuento           Int
-  tipo                String?
-  descripcion         String?
-  emoji               String?
-  tagline             String?
-  precioHosting       Float?
-  precioMailbox       Float?
-  precioDominio       Float?
-  tiempoEntrega       String?
-  opcionesPago        Json?     // Array de { nombre, porcentaje, descripcion }
-  descuentoPagoUnico  Int?      // Porcentaje de descuento por pago único
-  
-  // ✅ NUEVO SISTEMA DE DESCUENTOS - ConfigDescuentos completo
-  configDescuentos    Json?
-  
-  // Método de pago preferido para este paquete
-  metodoPagoPreferido String?   @default("")
-  // Notas de pago para este paquete
-  notasPago           String?
-  
-  // @deprecated - Descuentos Generales (JSON) - mantener para compatibilidad
-  descuentosGenerales Json?
-  
-  // @deprecated - Descuentos por Servicio (JSON) - mantener para compatibilidad  
+  id                    String           @id @default(cuid())
+  nombre                String
+  serviciosBase         Json
+  desarrollo            Float
+  descuento             Int
+  tipo                  String?
+  descripcion           String?
+  emoji                 String?
+  tagline               String?
+  tiempoEntrega         String?
+  opcionesPago          Json?
+  descuentoPagoUnico    Int?
+  otrosServicios        Json
+  costoInicial          Float
+  costoAño1            Float
+  costoAño2            Float
+  activo                Boolean          @default(true)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  quotationConfigId     String?
+  descuentosGenerales   Json?
   descuentosPorServicio Json?
-  
-  // Otros Servicios (JSON)
-  otrosServicios      Json
-  
-  // Costos
-  costoInicial        Float
-  costoAño1           Float
-  costoAño2           Float
-  
-  // Relación con QuotationConfig
-  quotationConfigId   String?
-  quotationConfig     QuotationConfig? @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
-  
-  // Metadata
-  activo              Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  configDescuentos      Json?
+  metodoPagoPreferido   String?          @default("")
+  notasPago             String?
+  subtituloSeccionPago  String?
+  tituloSeccionPago     String?          @default("Opciones de Pago")
+  metodosPreferidos     Json?
+  quotationConfig       QuotationConfig? @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
   @@index([quotationConfigId])
 }
 
 model UserPreferences {
-  id                          String   @id @default(cuid())
-  userId                      String   @unique
-  
-  // Preferencias del Modal
-  cerrarModalAlGuardar        Boolean  @default(false)
-  mostrarConfirmacionGuardado Boolean  @default(true)
-  validarDatosAntes           Boolean  @default(true)
-  
-  // Preferencia para limpiar formularios al crear nueva cotización
-  limpiarFormulariosAlCrear   Boolean  @default(true)
-  
-  // Mantener datos (templates) al crear nueva cotización
-  mantenerDatosAlCrearCotizacion Boolean @default(false)
-  
-  // ==================== PREFERENCIAS DE SINCRONIZACIÓN ====================
-  // Destino de guardado: 'local' = solo localStorage, 'cloud' = solo BD, 'ambos' = ambos
-  destinoGuardado             String   @default("ambos")
-  // Intervalo de verificación de conexión (valor numérico)
-  intervaloVerificacionConexion Int    @default(30)
-  // Unidad del intervalo: 'segundos' o 'minutos'
-  unidadIntervaloConexion     String   @default("segundos")
-  // Sincronizar automáticamente al recuperar conexión
-  sincronizarAlRecuperarConexion Boolean @default(true)
-  // Mostrar notificación cuando se usa cache local
-  mostrarNotificacionCacheLocal Boolean @default(true)
-  
-  // Control
-  createdAt                   DateTime @default(now())
-  updatedAt                   DateTime @updatedAt
+  id                             String   @id @default(cuid())
+  userId                         String   @unique
+  cerrarModalAlGuardar           Boolean  @default(false)
+  mostrarConfirmacionGuardado    Boolean  @default(true)
+  validarDatosAntes              Boolean  @default(true)
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+  limpiarFormulariosAlCrear      Boolean  @default(true)
+  destinoGuardado                String   @default("ambos")
+  intervaloVerificacionConexion  Int      @default(30)
+  mantenerDatosAlCrearCotizacion Boolean  @default(false)
+  mostrarNotificacionCacheLocal  Boolean  @default(true)
+  sincronizarAlRecuperarConexion Boolean  @default(true)
+  unidadIntervaloConexion        String   @default("segundos")
 
   @@index([userId])
+}
+
+model FinancialTemplate {
+  id                   String   @id
+  userId               String
+  nombre               String
+  desarrollo           Float    @default(0)
+  descuento            Int      @default(0)
+  opcionesPago         Json?
+  tituloSeccionPago    String?  @default("Opciones de Pago")
+  subtituloSeccionPago String?
+  metodosPreferidos    Json?
+  notasPago            String?
+  configDescuentos     Json?
+  descuentoPagoUnico   Int?     @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime
+
+  @@index([userId])
+}
+
+model Permission {
+  id              String            @id @default(cuid())
+  code            String            @unique
+  name            String
+  description     String?
+  category        String
+  isSystem        Boolean           @default(false)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  RolePermission  RolePermission[]
+  RolePermissions RolePermissions[]
+  UserPermission  UserPermission[]
+
+  @@index([category])
+  @@index([code])
+  @@index([isActive])
+}
+
+// ==================== MODELO ROLE DINÁMICO ====================
+model Role {
+  id              String            @id @default(cuid())
+  name            String            @unique
+  displayName     String
+  description     String?
+  hierarchy       Int               @default(50)
+  color           String?
+  isSystem        Boolean           @default(false)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  users           User[]            @relation("UserRole")
+  permissions     RolePermissions[]
+
+  @@index([hierarchy])
+  @@index([isActive])
+}
+
+// ==================== PERMISOS POR ROL (NUEVO - usa roleId) ====================
+model RolePermissions {
+  id            String     @id @default(cuid())
+  roleId        String
+  permissionId  String
+  accessLevel   String     @default("full")
+
+  role          Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+// ==================== LEGACY: RolePermission (usa enum, se migrará) ====================
+model RolePermission {
+  id           String     @id
+  role         UserRole
+  permissionId String
+  enabled      Boolean    @default(true)
+  Permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+  @@index([permissionId])
+  @@index([role])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([sessionToken])
+  @@index([userId])
+}
+
+model User {
+  id                  String                @id @default(cuid())
+  username            String                @unique
+  email               String?               @unique
+  passwordHash        String
+  role                UserRole              @default(CLIENT)
+  // Campo para migración gradual al modelo Role dinámico
+  roleId              String?
+  roleRef             Role?                 @relation("UserRole", fields: [roleId], references: [id])
+  nombre              String                @default("")
+  empresa             String                @default("")
+  telefono            String                @default("")
+  quotationAssignedId String?               @unique
+  activo              Boolean               @default(true)
+  lastLogin           DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  createdBy           String?
+  avatarUrl           String?
+  Session             Session[]
+  QuotationConfig     QuotationConfig?      @relation(fields: [quotationAssignedId], references: [id])
+  UserPermission      UserPermission[]
+  UserQuotationAccess UserQuotationAccess[]
+  AuditLog            AuditLog[]
+  
+  // Relaciones de backup
+  UserBackup          UserBackup[]
+  BackupConfig        BackupConfig?
+
+  @@index([activo])
+  @@index([email])
+  @@index([quotationAssignedId])
+  @@index([role])
+  @@index([roleId])
+  @@index([username])
+}
+
+model UserPermission {
+  id           String     @id
+  userId       String
+  permissionId String
+  granted      Boolean
+  Permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  User         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([permissionId])
+  @@index([userId])
+}
+
+model UserQuotationAccess {
+  id                String          @id
+  userId            String
+  quotationConfigId String
+  canEdit           Boolean         @default(true)
+  canDelete         Boolean         @default(false)
+  assignedAt        DateTime        @default(now())
+  assignedBy        String?
+  isDefault         Boolean         @default(false)
+  QuotationConfig   QuotationConfig @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
+  User              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, quotationConfigId])
+  @@index([quotationConfigId])
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum UserRole {
+  ADMIN
+  CLIENT
+  SUPER_ADMIN
+}
+
+// ==================== SISTEMA DE AUDITORÍA ====================
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String?
+  userId      String?
+  userName    String
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([entityType])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ==================== SISTEMA DE BACKUPS ====================
+model UserBackup {
+  id           String    @id @default(cuid())
+  userId       String
+  User         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  nombre       String
+  descripcion  String?
+  tipo         String    @default("manual")
+  version      String?
+  data         Json
+  size         Int?
+  estado       String    @default("completado")
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime?
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([tipo])
+}
+
+model BackupConfig {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  User                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  autoBackupEnabled   Boolean   @default(false)
+  autoBackupFrequency String    @default("weekly")
+  autoBackupRetention Int       @default(5)
+  notifyOnBackup      Boolean   @default(true)
+  notifyOnRestore     Boolean   @default(true)
+  lastAutoBackup      DateTime?
+  nextAutoBackup      DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }

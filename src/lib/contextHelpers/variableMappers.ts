@@ -4,6 +4,7 @@
  */
 
 import type { PackageSnapshot, ServicioBase } from '@/lib/types'
+import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
 export interface NormalizedPackageVariables {
   // Paquete base
@@ -26,16 +27,6 @@ export interface NormalizedPackageVariables {
     mesesPago: number
   }>
 
-  // Gestión
-  gestionPrecio: number
-  gestionMesesGratis: number
-  gestionMesesPago: number
-
-  // Infraestructura
-  precioHosting: number
-  precioMailbox: number
-  precioDominio: number
-
   // Servicios opcionales
   serviciosOpcionales: Array<{
     nombre: string
@@ -54,10 +45,14 @@ export interface NormalizedPackageVariables {
  * Convierte un snapshot a variables normalizadas
  */
 export function normalizeSnapshot(snapshot: PackageSnapshot): NormalizedPackageVariables {
+  const preview = calcularPreviewDescuentos(snapshot)
+  // Usar descuentoDirectoAplicado del nuevo sistema, o calcular ahorro total
+  const descuentoEfectivo = preview.descuentoDirectoAplicado > 0 ? preview.descuentoDirectoAplicado : Math.round(preview.porcentajeAhorro)
+  
   return {
     nombre: snapshot.nombre,
     desarrollo: snapshot.paquete.desarrollo,
-    descuento: snapshot.paquete.descuento,
+    descuento: descuentoEfectivo,
     tipo: snapshot.paquete.tipo || '',
     descripcion: snapshot.paquete.descripcion || '',
     emoji: snapshot.paquete.emoji || '📦',
@@ -72,14 +67,6 @@ export function normalizeSnapshot(snapshot: PackageSnapshot): NormalizedPackageV
       mesesGratis: s.mesesGratis,
       mesesPago: s.mesesPago,
     })),
-
-    gestionPrecio: snapshot.gestion.precio,
-    gestionMesesGratis: snapshot.gestion.mesesGratis,
-    gestionMesesPago: snapshot.gestion.mesesPago,
-
-    precioHosting: snapshot.paquete.precioHosting || 0,
-    precioMailbox: snapshot.paquete.precioMailbox || 0,
-    precioDominio: snapshot.paquete.precioDominio || 0,
 
     serviciosOpcionales: snapshot.otrosServicios,
 
@@ -123,16 +110,6 @@ export function createNominatedVariables(
     variables[`${prefix}ServicioBase${servicio.nombre}MesesGratis`] = servicio.mesesGratis
     variables[`${prefix}ServicioBase${servicio.nombre}MesesPago`] = servicio.mesesPago
   })
-
-  // Variables de gestión
-  variables[`${prefix}GestionPrecio`] = normalized.gestionPrecio
-  variables[`${prefix}GestionMesesGratis`] = normalized.gestionMesesGratis
-  variables[`${prefix}GestionMesesPago`] = normalized.gestionMesesPago
-
-  // Variables de infraestructura
-  variables[`${prefix}PrecioHosting`] = normalized.precioHosting
-  variables[`${prefix}PrecioMailbox`] = normalized.precioMailbox
-  variables[`${prefix}PrecioDominio`] = normalized.precioDominio
 
   // Array de servicios opcionales
   variables[`${prefix}ServiciosOpcionales`] = normalized.serviciosOpcionales

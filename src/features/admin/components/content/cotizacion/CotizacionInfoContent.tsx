@@ -1,8 +1,9 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
-import { FaFileAlt, FaTag, FaCalendar, FaDollarSign, FaCalculator, FaCheck, FaExclamationTriangle } from 'react-icons/fa'
+import { FileText, Tag, Calendar, DollarSign, Calculator, Check, AlertTriangle } from 'lucide-react'
+import { DropdownSelect } from '@/components/ui/DropdownSelect'
+import DatePicker from '@/components/ui/DatePicker'
 import { QuotationConfig } from '@/lib/types'
 
 interface CotizacionInfoContentProps {
@@ -25,229 +26,237 @@ export default function CotizacionInfoContent({
   const estaConfigurada = cotizacionConfig?.heroTituloSub && cotizacionConfig?.fechaEmision
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gh-text flex items-center gap-2 uppercase tracking-wide">
-          <FaFileAlt className="text-gh-info" /> Información de Cotización
-        </h4>
-        <span className={`text-xs px-2 py-1 rounded flex items-center gap-1.5 ${
+        <div>
+          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
+            <FileText className="w-4 h-4 text-gh-accent" />
+            Información de Cotización
+          </h3>
+          <p className="text-xs text-gh-text-muted mt-0.5">
+            Datos generales y fechas de la cotización
+          </p>
+        </div>
+        <span className={`text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5 border ${
           estaConfigurada 
-            ? 'bg-gh-success/10 text-gh-success' 
-            : 'bg-gh-warning/10 text-gh-warning'
+            ? 'bg-gh-success/10 text-gh-success border-gh-success/30' 
+            : 'bg-gh-warning/10 text-gh-warning border-gh-warning/30'
         }`}>
           {estaConfigurada ? (
-            <><FaCheck size={10} /> Configurada</>
+            <><Check className="w-3 h-3" /> Configurada</>
           ) : (
-            <><FaExclamationTriangle size={10} /> Incompleta</>
+            <><AlertTriangle className="w-3 h-3" /> Incompleta</>
           )}
         </span>
       </div>
 
-      {/* Formulario */}
-      <div className="space-y-4 p-6 bg-gh-bg-overlay border border-gh-border rounded-lg">
-
-      {/* Título Secundario (Hero) */}
-      <div>
-        <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Nombre de la cotización</label>
-        <input
-          type="text"
-          value={cotizacionConfig?.heroTituloSub || ''}
-          onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, heroTituloSub: e.target.value } : null)}
-          className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text placeholder-gh-text-muted"
-          placeholder="Ej: PÁGINA CATÁLOGO DINÁMICA"
-        />
-        <p className="text-gh-text-muted text-xs mt-2">Se muestra en la página principal</p>
+      {/* Formulario Principal */}
+      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+        {/* Sub-header: Nombre */}
+        <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30">
+          <h5 className="text-xs font-medium text-gh-text">Nombre de la Cotización</h5>
+        </div>
+        <div className="p-4">
+          <input
+            type="text"
+            value={cotizacionConfig?.heroTituloSub || ''}
+            onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, heroTituloSub: e.target.value } : null)}
+            className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
+            placeholder="Ej: PÁGINA CATÁLOGO DINÁMICA"
+          />
+          <p className="text-[11px] text-gh-text-muted mt-1.5">Se muestra en la página principal</p>
+        </div>
       </div>
 
-      {/* GRUPO 1: Identificación */}
-      <div className="pt-4 border-t border-gh-border">
-        <h5 className="text-xs font-semibold text-gh-text mb-4 flex items-center gap-2 uppercase tracking-wide">
-          <FaTag className="text-gh-warning" /> Identificación
-        </h5>
-        <div className="grid md:grid-cols-2 gap-3">
-          {/* Número (readonly) */}
-          <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Número</label>
-            <input
-              type="text"
-              value={cotizacionConfig?.numero || ''}
-              disabled
-              className="w-full px-3 py-2 bg-gh-bg-secondary text-gh-text-muted border border-gh-border rounded-md focus:outline-none text-xs cursor-not-allowed"
-              placeholder="Auto-generado"
-            />
-            <p className="text-gh-text-muted text-xs mt-2">Se genera automáticamente</p>
-          </div>
-
-          {/* Título Principal (Hero) */}
-          <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Título Principal</label>
-            <input
-              type="text"
-              value={cotizacionConfig?.heroTituloMain || ''}
-              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, heroTituloMain: e.target.value } : null)}
-              placeholder="Ej: Propuesta de Cotización"
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text placeholder-gh-text-muted"
-            />
-            <p className="text-gh-text-muted text-xs mt-2">Título principal del Hero</p>
+      {/* Identificación */}
+      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center gap-2">
+          <Tag className="w-3.5 h-3.5 text-gh-accent" />
+          <h5 className="text-xs font-medium text-gh-text">Identificación</h5>
+        </div>
+        <div className="p-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Número</label>
+              <input
+                type="text"
+                value={cotizacionConfig?.numero || ''}
+                disabled
+                className="w-full px-3 py-2 bg-gh-bg-tertiary/30 text-gh-text-muted border border-gh-border/20 rounded-md text-sm cursor-not-allowed"
+                placeholder="Auto-generado"
+              />
+              <p className="text-[11px] text-gh-text-muted mt-1">Se genera automáticamente</p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Título Principal</label>
+              <input
+                type="text"
+                value={cotizacionConfig?.heroTituloMain || ''}
+                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, heroTituloMain: e.target.value } : null)}
+                placeholder="Ej: Propuesta de Cotización"
+                className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
+              />
+              <p className="text-[11px] text-gh-text-muted mt-1">Título principal del Hero</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* GRUPO 2: Fechas */}
-      <div className="pt-4 border-t border-gh-border">
-        <h5 className="text-xs font-semibold text-gh-text mb-4 flex items-center gap-2 uppercase tracking-wide">
-          <FaCalendar className="text-gh-warning" /> Fechas
-        </h5>
-        <div className="grid md:grid-cols-3 gap-3">
-          {/* Fecha Emisión */}
-          <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Fecha Emisión</label>
-            <input
-              type="date"
-              value={cotizacionConfig?.fechaEmision ? new Date(cotizacionConfig.fechaEmision).toISOString().split('T')[0] : ''}
-              onChange={(e) => {
-                const newFecha = new Date(e.target.value)
-                const newFechaVencimiento = calcularFechaVencimiento(newFecha, cotizacionConfig?.tiempoValidez || 30)
-                if (cotizacionConfig) {
-                  setCotizacionConfig({
-                    ...cotizacionConfig,
-                    fechaEmision: newFecha.toISOString(),
-                    fechaVencimiento: newFechaVencimiento.toISOString(),
-                  })
-                }
-              }}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
-            />
-          </div>
-
-          {/* Tiempo Validez */}
-          <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Validez (días)</label>
-            <input
-              type="number"
-              value={cotizacionConfig?.tiempoValidez || 30}
-              onChange={(e) => {
-                const newValue = parseInt(e.target.value) || 30
-                if (cotizacionConfig) {
-                  const newFechaVencimiento = calcularFechaVencimiento(new Date(cotizacionConfig.fechaEmision), newValue)
-                  setCotizacionConfig({
-                    ...cotizacionConfig,
-                    tiempoValidez: newValue,
-                    fechaVencimiento: newFechaVencimiento.toISOString(),
-                  })
-                }
-              }}
-              min="1"
-              max="365"
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
-            />
-          </div>
-
-          {/* Fecha Vencimiento (readonly) */}
-          <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Vencimiento</label>
-            <input
-              type="text"
-              value={cotizacionConfig?.fechaVencimiento ? formatearFechaLarga(cotizacionConfig.fechaVencimiento) : ''}
-              disabled
-              className="w-full px-3 py-2 bg-gh-bg-secondary text-gh-text-muted border border-gh-border rounded-md focus:outline-none text-xs cursor-not-allowed"
-            />
-            {erroresValidacionCotizacion.fechas && (
-              <p className="text-red-500 text-xs mt-2">{erroresValidacionCotizacion.fechas}</p>
-            )}
+      {/* Fechas */}
+      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center gap-2">
+          <Calendar className="w-3.5 h-3.5 text-gh-accent" />
+          <h5 className="text-xs font-medium text-gh-text">Fechas</h5>
+        </div>
+        <div className="p-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Fecha Emisión</label>
+              <DatePicker
+                value={cotizacionConfig?.fechaEmision || null}
+                onChange={(iso) => {
+                  if (!iso) {
+                    if (cotizacionConfig) setCotizacionConfig({ ...cotizacionConfig, fechaEmision: '', fechaVencimiento: '' })
+                    return
+                  }
+                  const newFecha = new Date(iso)
+                  const newFechaVencimiento = calcularFechaVencimiento(newFecha, cotizacionConfig?.tiempoValidez || 30)
+                  if (cotizacionConfig) {
+                    setCotizacionConfig({
+                      ...cotizacionConfig,
+                      fechaEmision: newFecha.toISOString(),
+                      fechaVencimiento: newFechaVencimiento.toISOString(),
+                    })
+                  }
+                }}
+                placeholder="dd/mm/aaaa"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Validez (días)</label>
+              <input
+                type="number"
+                value={cotizacionConfig?.tiempoValidez || 30}
+                onChange={(e) => {
+                  const newValue = parseInt(e.target.value) || 30
+                  if (cotizacionConfig) {
+                    const newFechaVencimiento = calcularFechaVencimiento(new Date(cotizacionConfig.fechaEmision), newValue)
+                    setCotizacionConfig({
+                      ...cotizacionConfig,
+                      tiempoValidez: newValue,
+                      fechaVencimiento: newFechaVencimiento.toISOString(),
+                    })
+                  }
+                }}
+                min="1"
+                max="365"
+                className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Vencimiento</label>
+              <input
+                type="text"
+                value={cotizacionConfig?.fechaVencimiento ? formatearFechaLarga(cotizacionConfig.fechaVencimiento) : ''}
+                disabled
+                className="w-full px-3 py-2 bg-gh-bg-tertiary/30 text-gh-text-muted border border-gh-border/20 rounded-md text-sm cursor-not-allowed"
+              />
+              {erroresValidacionCotizacion.fechas && (
+                <p className="text-[11px] text-gh-danger mt-1">{erroresValidacionCotizacion.fechas}</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* GRUPO 3: Presupuesto */}
-      <div className="pt-4 border-t border-gh-border">
-        <h5 className="text-xs font-semibold text-gh-text mb-4 flex items-center gap-2 uppercase tracking-wide">
-          <FaDollarSign className="text-gh-success" /> Presupuesto
-        </h5>
-        <div className="grid md:grid-cols-2 gap-3">
-          {/* Presupuesto */}
-          <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Monto</label>
-            <input
-              type="text"
-              value={cotizacionConfig?.presupuesto || ''}
-              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, presupuesto: e.target.value } : null)}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text placeholder-gh-text-muted"
-              placeholder="Ej: Menos de $300 USD"
-            />
-          </div>
-
-          {/* Moneda */}
-          <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Moneda</label>
-            <select
-              value={cotizacionConfig?.moneda || 'USD'}
-              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, moneda: e.target.value } : null)}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
-            >
-              <option>USD</option>
-              <option>EUR</option>
-              <option>CUP</option>
-              <option>MXN</option>
-            </select>
+      {/* Presupuesto */}
+      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center gap-2">
+          <DollarSign className="w-3.5 h-3.5 text-gh-accent" />
+          <h5 className="text-xs font-medium text-gh-text">Presupuesto</h5>
+        </div>
+        <div className="p-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Monto</label>
+              <input
+                type="text"
+                value={cotizacionConfig?.presupuesto || ''}
+                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, presupuesto: e.target.value } : null)}
+                className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
+                placeholder="Ej: Menos de $300 USD"
+              />
+            </div>
+            <div>
+              <DropdownSelect
+                label="Moneda"
+                value={cotizacionConfig?.moneda || 'USD'}
+                onChange={(val) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, moneda: val } : null)}
+                options={[
+                  { value: 'USD', label: 'USD' },
+                  { value: 'EUR', label: 'EUR' },
+                  { value: 'CUP', label: 'CUP' },
+                  { value: 'MXN', label: 'MXN' }
+                ]}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* GRUPO 4: Vigencia del Contrato */}
-      <div className="pt-4 border-t border-gh-border">
-        <h5 className="text-xs font-semibold text-gh-text mb-4 flex items-center gap-2 uppercase tracking-wide">
-          <FaCalculator className="text-gh-info" /> Vigencia del Contrato
-        </h5>
-        <div className="grid md:grid-cols-3 gap-3">
-          {/* Valor */}
-          <div>
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Valor</label>
-            <input
-              type="number"
-              value={cotizacionConfig?.tiempoVigenciaValor || 12}
-              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, tiempoVigenciaValor: parseInt(e.target.value) || 12 } : null)}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
-              min="1"
-              max="365"
-            />
-          </div>
-
-          {/* Unidad */}
-          <div className="md:col-span-2">
-            <label className="block text-gh-text font-medium text-xs mb-2 uppercase tracking-wide">Unidad de Tiempo</label>
-            <select
-              value={cotizacionConfig?.tiempoVigenciaUnidad || 'meses'}
-              onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, tiempoVigenciaUnidad: e.target.value } : null)}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none text-sm text-gh-text"
-            >
-              <option value="días">Días</option>
-              <option value="meses">Meses</option>
-              <option value="años">Años</option>
-            </select>
+      {/* Vigencia del Contrato */}
+      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center gap-2">
+          <Calculator className="w-3.5 h-3.5 text-gh-accent" />
+          <h5 className="text-xs font-medium text-gh-text">Vigencia del Contrato</h5>
+        </div>
+        <div className="p-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gh-text mb-1.5">Tiempo</label>
+              <input
+                type="number"
+                value={cotizacionConfig?.tiempoVigenciaValor || 12}
+                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, tiempoVigenciaValor: parseInt(e.target.value) || 12 } : null)}
+                className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
+                min="1"
+                max="365"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <DropdownSelect
+                label="Unidad de Tiempo"
+                value={cotizacionConfig?.tiempoVigenciaUnidad || 'meses'}
+                onChange={(val) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, tiempoVigenciaUnidad: val } : null)}
+                options={[
+                  { value: 'días', label: 'Días' },
+                  { value: 'meses', label: 'Meses' },
+                  { value: 'años', label: 'Años' }
+                ]}
+              />
+            </div>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Footer Resumen */}
-      <div className="p-4 bg-gh-bg-secondary rounded-lg border border-gh-border text-xs flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-        <span className="text-gh-text-muted">
-          Número: <span className="text-gh-text font-medium">{cotizacionConfig?.numero || '—'}</span>
-        </span>
-        <span className="text-gh-text-muted">
-          Validez: <span className="text-gh-text font-medium">{cotizacionConfig?.tiempoValidez || 30} días</span>
-        </span>
-        <span className="text-gh-text-muted">
-          Moneda: <span className="text-gh-text font-medium">{cotizacionConfig?.moneda || 'USD'}</span>
-        </span>
+      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg p-3">
+        <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between text-xs">
+          <span className="text-gh-text-muted">
+            Número: <span className="text-gh-text font-medium">{cotizacionConfig?.numero || '—'}</span>
+          </span>
+          <span className="text-gh-text-muted">
+            Validez: <span className="text-gh-text font-medium">{cotizacionConfig?.tiempoValidez || 30} días</span>
+          </span>
+          <span className="text-gh-text-muted">
+            Moneda: <span className="text-gh-text font-medium">{cotizacionConfig?.moneda || 'USD'}</span>
+          </span>
+        </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
+
+

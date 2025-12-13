@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { PackageSnapshot, ServicioBase, OtroServicio, QuotationConfig } from '@/lib/types'
+import { PackageSnapshot, ServicioBase, OtroServicio, QuotationConfig, ConfigDescuentos } from '@/lib/types'
 import { 
   crearSnapshot, 
   actualizarSnapshot,
   eliminarSnapshot
 } from '@/lib/snapshotApi'
+import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
 interface UseToastActions {
   error: (message: string) => void
@@ -16,8 +17,7 @@ interface UseSnapshotCRUDProps {
   snapshots: PackageSnapshot[]
   serviciosBase: ServicioBase[]
   serviciosOpcionales: OtroServicio[]
-  gestion: { precio: number; mesesGratis: number; mesesPago: number }
-  paqueteActual: { nombre: string; desarrollo: number; descuento: number; tipo: string; descripcion: string; activo: boolean }
+  paqueteActual: { nombre: string; desarrollo: number; descuento: number; tipo: string; descripcion: string; activo: boolean; configDescuentos?: ConfigDescuentos }
   cotizacionConfig: QuotationConfig | null
   snapshotEditando: PackageSnapshot | null
   snapshotOriginalJson: string | null
@@ -58,7 +58,8 @@ export function useSnapshotCRUD(
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const calcularCostoInicialSnapshot = (snapshot: PackageSnapshot): number => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     const serviciosBaseMes1 = snapshot.serviciosBase.reduce((sum, s) => {
       if (s.nombre.toLowerCase() !== 'gestión') {
         return sum + (s.precio || 0)
@@ -69,7 +70,8 @@ export function useSnapshotCRUD(
   }
 
   const calcularCostoAño1Snapshot = (snapshot: PackageSnapshot): number => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => {
       return sum + (s.precio * s.mesesPago)
     }, 0)
@@ -94,7 +96,7 @@ export function useSnapshotCRUD(
     const datosActuales = {
       nombre: props.paqueteActual.nombre.trim().toLowerCase(),
       desarrollo: props.paqueteActual.desarrollo,
-      descuento: props.paqueteActual.descuento,
+      configDescuentos: JSON.stringify(props.paqueteActual.configDescuentos),
       tipo: props.paqueteActual.tipo?.trim().toLowerCase() || '',
       descripcion: props.paqueteActual.descripcion?.trim().toLowerCase() || '',
       serviciosBase: props.serviciosBase
@@ -109,7 +111,7 @@ export function useSnapshotCRUD(
       const datosSnapshot = {
         nombre: snapshot.nombre.trim().toLowerCase(),
         desarrollo: snapshot.paquete.desarrollo,
-        descuento: snapshot.paquete.descuento,
+        configDescuentos: JSON.stringify(snapshot.paquete.configDescuentos),
         tipo: snapshot.paquete.tipo?.trim().toLowerCase() || '',
         descripcion: snapshot.paquete.descripcion?.trim().toLowerCase() || '',
         serviciosBase: snapshot.serviciosBase
@@ -123,7 +125,7 @@ export function useSnapshotCRUD(
       if (
         datosActuales.nombre === datosSnapshot.nombre &&
         datosActuales.desarrollo === datosSnapshot.desarrollo &&
-        datosActuales.descuento === datosSnapshot.descuento &&
+        datosActuales.configDescuentos === datosSnapshot.configDescuentos &&
         datosActuales.tipo === datosSnapshot.tipo &&
         datosActuales.descripcion === datosSnapshot.descripcion &&
         JSON.stringify(datosActuales.serviciosBase) === JSON.stringify(datosSnapshot.serviciosBase) &&
@@ -144,8 +146,7 @@ export function useSnapshotCRUD(
     const todoEsValido =
       props.paqueteActual.nombre &&
       props.paqueteActual.desarrollo > 0 &&
-      props.serviciosBase.every(s => s.precio > 0 && (s.mesesGratis + s.mesesPago === 12 || s.mesesPago > 0)) &&
-      props.gestion.mesesGratis + props.gestion.mesesPago === 12
+      props.serviciosBase.every(s => s.precio > 0 && (s.mesesGratis + s.mesesPago === 12 || s.mesesPago > 0))
 
     if (!todoEsValido) {
       props.mostrarDialogoGenerico({
@@ -200,11 +201,6 @@ export function useSnapshotCRUD(
         nombre: props.paqueteActual.nombre,
         quotationConfigId: props.cotizacionConfig?.id,
         serviciosBase: props.serviciosBase.map(s => ({ ...s })),
-        gestion: {
-          precio: props.gestion.precio,
-          mesesGratis: props.gestion.mesesGratis,
-          mesesPago: props.gestion.mesesPago,
-        },
         paquete: {
           desarrollo: props.paqueteActual.desarrollo,
           descuento: props.paqueteActual.descuento,
@@ -311,7 +307,6 @@ export function useSnapshotCRUD(
       nombre: props.snapshotEditando.nombre,
       paquete: props.snapshotEditando.paquete,
       serviciosBase: props.snapshotEditando.serviciosBase,
-      gestion: props.snapshotEditando.gestion,
       otrosServicios: props.snapshotEditando.otrosServicios,
       costos: props.snapshotEditando.costos,
       activo: props.snapshotEditando.activo,
@@ -331,8 +326,7 @@ export function useSnapshotCRUD(
           JSON.stringify(props.snapshotEditando.paquete) !== JSON.stringify(original.paquete)
         )
       case 'servicios-base':
-        return JSON.stringify(props.snapshotEditando.serviciosBase) !== JSON.stringify(original.serviciosBase) ||
-               JSON.stringify(props.snapshotEditando.gestion) !== JSON.stringify(original.gestion)
+        return JSON.stringify(props.snapshotEditando.serviciosBase) !== JSON.stringify(original.serviciosBase)
       case 'otros-servicios':
         return JSON.stringify(props.snapshotEditando.otrosServicios) !== JSON.stringify(original.otrosServicios)
       case 'descuentos':
@@ -350,7 +344,6 @@ export function useSnapshotCRUD(
       nombre: props.snapshotEditando.nombre,
       paquete: props.snapshotEditando.paquete,
       serviciosBase: props.snapshotEditando.serviciosBase,
-      gestion: props.snapshotEditando.gestion,
       otrosServicios: props.snapshotEditando.otrosServicios,
       costos: props.snapshotEditando.costos,
       activo: props.snapshotEditando.activo,
@@ -377,7 +370,6 @@ export function useSnapshotCRUD(
           nombre: snapshotActualizado.nombre,
           paquete: snapshotActualizado.paquete,
           serviciosBase: snapshotActualizado.serviciosBase,
-          gestion: snapshotActualizado.gestion,
           otrosServicios: snapshotActualizado.otrosServicios,
           costos: snapshotActualizado.costos,
           activo: snapshotActualizado.activo,

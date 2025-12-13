@@ -2,9 +2,10 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { FaPlus, FaTrash, FaEdit, FaTimes, FaCheck } from 'react-icons/fa'
-import type { Servicio, Package, GestionConfig, ServicioBase, PackageSnapshot, OtroServicio } from '@/lib/types'
+import { Plus, Trash2, Edit, X, Check } from 'lucide-react'
+import type { Servicio, Package, ServicioBase, PackageSnapshot, OtroServicio } from '@/lib/types'
 import { crearSnapshot } from '@/lib/snapshotApi'
+import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
 interface ServiciosOpcionalesSectionProps {
   readonly serviciosOpcionales: Servicio[]
@@ -13,7 +14,6 @@ interface ServiciosOpcionalesSectionProps {
   readonly setSnapshots: (snapshots: PackageSnapshot[]) => void
   readonly serviciosBase: ServicioBase[]
   readonly paqueteActual: Package
-  readonly gestion: GestionConfig
   readonly todoEsValido: boolean
   readonly refreshSnapshots: () => Promise<void>
 }
@@ -25,7 +25,6 @@ export default function ServiciosOpcionalesSection({
   setSnapshots,
   serviciosBase,
   paqueteActual,
-  gestion,
   todoEsValido,
   refreshSnapshots,
 }: ServiciosOpcionalesSectionProps) {
@@ -96,7 +95,8 @@ export default function ServiciosOpcionalesSection({
   }
 
   const calcularCostoInicialSnapshot = (snapshot: PackageSnapshot) => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     const serviciosBaseMes1 = snapshot.serviciosBase.reduce((sum, s) => {
       if (s.nombre.toLowerCase() !== 'gestión') {
         return sum + (s.precio || 0)
@@ -107,7 +107,8 @@ export default function ServiciosOpcionalesSection({
   }
 
   const calcularCostoAño1Snapshot = (snapshot: PackageSnapshot) => {
-    const desarrolloConDescuento = snapshot.paquete.desarrollo * (1 - snapshot.paquete.descuento / 100)
+    const preview = calcularPreviewDescuentos(snapshot)
+    const desarrolloConDescuento = preview.desarrolloConDescuento
     const serviciosBaseCosto = snapshot.serviciosBase.reduce((sum, s) => {
       return sum + (s.precio * s.mesesPago)
     }, 0)
@@ -145,11 +146,6 @@ export default function ServiciosOpcionalesSection({
         id: Date.now().toString(),
         nombre: paqueteActual.nombre,
         serviciosBase: serviciosBase.map(s => ({ ...s })),
-        gestion: {
-          precio: gestion.precio,
-          mesesGratis: gestion.mesesGratis,
-          mesesPago: gestion.mesesPago,
-        },
         paquete: {
           desarrollo: paqueteActual.desarrollo,
           descuento: paqueteActual.descuento,
@@ -192,10 +188,10 @@ export default function ServiciosOpcionalesSection({
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="space-y-6"
+      className="space-y-4"
     >
       {/* PARTE 1: Servicios Opcionales Existentes */}
-      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border p-6">
+      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border/30 p-6">
         <h3 className="text-xl font-bold text-gh-text mb-4 flex items-center gap-2">
           ✨ Servicios Opcionales
         </h3>
@@ -227,7 +223,7 @@ export default function ServiciosOpcionalesSection({
                           nombre: e.target.value,
                         })
                       }
-                      className="px-3 py-1.5 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                      className="px-3 py-1.5 bg-gh-bg/10 border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                     />
                     <input
                       type="number"
@@ -239,7 +235,7 @@ export default function ServiciosOpcionalesSection({
                           precio: Number.parseFloat(e.target.value) || 0,
                         })
                       }
-                      className="px-3 py-1.5 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                      className="px-3 py-1.5 bg-gh-bg/10 border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                       min="0"
                     />
                     <input
@@ -252,7 +248,7 @@ export default function ServiciosOpcionalesSection({
                           mesesGratis: Number.parseInt(e.target.value, 10) || 0,
                         })
                       }
-                      className="px-3 py-1.5 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                      className="px-3 py-1.5 bg-gh-bg/10 border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                       min="0"
                       max="12"
                     />
@@ -266,7 +262,7 @@ export default function ServiciosOpcionalesSection({
                           mesesPago: Number.parseInt(e.target.value, 10) || 0,
                         })
                       }
-                      className="px-3 py-1.5 bg-gh-bg/10 border border-gh-border rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                      className="px-3 py-1.5 bg-gh-bg/10 border border-gh-border/30 rounded-md text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                       min="1"
                       max="12"
                     />
@@ -279,14 +275,14 @@ export default function ServiciosOpcionalesSection({
                         onClick={guardarEditarServicioOpcional}
                         className="p-1.5 bg-gh-btn-secondary text-gh-text rounded-md hover:bg-gh-bg-secondary transition-all"
                       >
-                        <FaCheck className="text-sm" />
+                        <Check className="text-sm" />
                       </button>
                       <button
                         aria-label="Cancelar edición servicio opcional"
                         onClick={cancelarEditarServicioOpcional}
                         className="p-1.5 bg-gh-bg-secondary text-gh-text rounded-md hover:bg-gh-bg transition-all"
                       >
-                        <FaTimes className="text-sm" />
+                        <X className="text-sm" />
                       </button>
                     </div>
                   </>
@@ -303,14 +299,14 @@ export default function ServiciosOpcionalesSection({
                         onClick={() => abrirEditarServicioOpcional(servicio)}
                         className="p-1.5 bg-gh-bg/10 text-gh-text hover:bg-gh-bg rounded-md transition-all"
                       >
-                        <FaEdit className="text-sm" />
+                        <Edit className="text-sm" />
                       </button>
                       <button
                         aria-label="Eliminar servicio opcional"
                         onClick={() => eliminarServicioOpcional(servicio.id)}
                         className="p-1.5 bg-gh-bg/10 text-gh-text hover:bg-gh-bg rounded-md transition-all"
                       >
-                        <FaTrash className="text-sm" />
+                        <Trash2 className="text-sm" />
                       </button>
                     </div>
                   </>
@@ -324,7 +320,7 @@ export default function ServiciosOpcionalesSection({
       </div>
 
       {/* PARTE 2: Agregar Nuevo Servicio Opcional */}
-      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border p-6">
+      <div className="bg-gh-bg-secondary backdrop-blur-md rounded-lg border border-gh-border/30 p-6">
         <h3 className="text-xl font-bold text-gh-text mb-4 flex items-center gap-2">
           ➕ Agregar Nuevo Servicio
         </h3>
@@ -341,7 +337,7 @@ export default function ServiciosOpcionalesSection({
                 placeholder="Ej: API REST"
                 value={nuevoServicio.nombre}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, nombre: e.target.value })}
-                className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
               />
             </div>
             <div>
@@ -354,7 +350,7 @@ export default function ServiciosOpcionalesSection({
                 placeholder="0.00"
                 value={nuevoServicio.precio}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, precio: Number.parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                 min="0"
               />
             </div>
@@ -371,7 +367,7 @@ export default function ServiciosOpcionalesSection({
                 placeholder="0"
                 value={nuevoServicio.mesesGratis}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, mesesGratis: Number.parseInt(e.target.value, 10) || 0 })}
-                className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                 min="0"
                 max="12"
               />
@@ -386,7 +382,7 @@ export default function ServiciosOpcionalesSection({
                 placeholder="12"
                 value={nuevoServicio.mesesPago}
                 onChange={(e) => setNuevoServicio({ ...nuevoServicio, mesesPago: Number.parseInt(e.target.value, 10) || 12 })}
-                className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
+                className="w-full px-4 py-2 bg-gh-bg/10 border border-gh-border/30 rounded-lg text-gh-text placeholder-gh-text-muted focus:border-gh-success focus:ring-1 focus:ring-gh-success focus:outline-none"
                 min="1"
                 max="12"
               />
@@ -397,7 +393,7 @@ export default function ServiciosOpcionalesSection({
             onClick={agregarServicioOpcional}
             className="w-full px-4 py-2.5 bg-white text-[#0a0a0f] font-semibold rounded-lg hover:bg-white/90 transition-all flex items-center justify-center gap-2"
           >
-            <FaPlus className="text-sm" />
+            <Plus className="text-sm" />
             Agregar Servicio
           </button>
         </div>
@@ -420,6 +416,8 @@ export default function ServiciosOpcionalesSection({
     </motion.div>
   )
 }
+
+
 
 
 

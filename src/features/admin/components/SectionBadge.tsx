@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaCheckCircle, FaExclamationCircle } from 'react-icons/fa'
+import { CheckCircle2, AlertCircle } from 'lucide-react'
 
 interface SectionBadgeProps {
   readonly isValid: boolean
@@ -16,17 +16,19 @@ export default function SectionBadge({ isValid, title }: SectionBadgeProps) {
       className="flex items-center gap-2"
     >
       {isValid ? (
-        <div className="flex items-center gap-2 px-3 py-1 bg-gh-bg-secondary border border-gh-border rounded-full">
-          <FaCheckCircle className="text-gh-text text-sm" />
+        <div className="flex items-center gap-2 px-3 py-1 bg-gh-bg-secondary border border-gh-border/30 rounded-full">
+          <CheckCircle2 className="text-gh-text text-sm" />
           <span className="text-xs font-medium text-gh-text">{title}</span>
         </div>
       ) : (
-        <div className="flex items-center gap-2 px-3 py-1 bg-gh-bg-secondary border border-gh-border rounded-full">
-          <FaExclamationCircle className="text-gh-text text-sm" />
+        <div className="flex items-center gap-2 px-3 py-1 bg-gh-bg-secondary border border-gh-border/30 rounded-full">
+          <AlertCircle className="text-gh-text text-sm" />
           <span className="text-xs font-medium text-gh-text">{title}</span>
         </div>
       )}
     </motion.div>
   )
 }
+
+
 

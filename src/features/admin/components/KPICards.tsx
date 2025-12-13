@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { PackageSnapshot } from '@/lib/types'
-import { FaBox, FaCheckCircle, FaClock } from 'react-icons/fa'
+import { Package, CheckCircle2, Clock } from 'lucide-react'
 
 interface KPICardsProps {
   readonly snapshots: readonly PackageSnapshot[]
@@ -26,19 +26,19 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
     {
       titulo: 'Total Paquetes',
       valor: totalSnapshots,
-      icono: FaBox,
+      icono: Package,
       id: 'total-paquetes'
     },
     {
       titulo: 'Paquetes Activos',
       valor: paquetesActivos,
-      icono: FaCheckCircle,
+      icono: CheckCircle2,
       id: 'paquetes-activos'
     },
     {
       titulo: 'Último Cambio',
       valor: ultimoCambio,
-      icono: FaClock,
+      icono: Clock,
       id: 'ultimo-cambio'
     }
   ]
@@ -77,5 +77,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
     </div>
   )
 }
+
+
 
 

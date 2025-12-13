@@ -17,18 +17,18 @@
 
 import React, { useEffect, useState } from 'react'
 import { 
-  FaCloud, 
-  FaCloudUploadAlt, 
-  FaSync, 
-  FaExclamationTriangle, 
-  FaCheck,
-  FaSpinner,
-  FaDatabase,
-  FaExchangeAlt,
-  FaCodeBranch,
-  FaWifi
-} from 'react-icons/fa'
-import { MdWavingHand } from 'react-icons/md'
+  Cloud, 
+  CloudUpload, 
+  RefreshCw, 
+  AlertTriangle, 
+  Check,
+  Loader2,
+  Database,
+  ArrowLeftRight,
+  GitBranch,
+  Wifi,
+  Hand
+} from 'lucide-react'
 import type { SyncStatus } from '@/lib/cache/types'
 import type { LoadingPhase } from '../hooks/useLoadingPhase'
 
@@ -66,7 +66,7 @@ interface StatusConfig {
 // Configuración de estados visuales por fase
 const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
   'welcome': {
-    icon: MdWavingHand,
+    icon: Hand,
     color: 'text-yellow-500',
     bgColor: 'bg-yellow-50',
     text: '¡Bienvenido a WebQuote!',
@@ -74,7 +74,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: false
   },
   'checking-connection': {
-    icon: FaWifi,
+    icon: Wifi,
     color: 'text-blue-500',
     bgColor: 'bg-blue-50',
     text: 'Estamos verificando si hay conexión a la nube...',
@@ -82,7 +82,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: true
   },
   'syncing-from-db': {
-    icon: FaDatabase,
+    icon: Database,
     color: 'text-blue-500',
     bgColor: 'bg-blue-50',
     text: 'Existe conexión! Sincronizando desde la nube...',
@@ -90,7 +90,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: true
   },
   'updating-analytics': {
-    icon: FaSync,
+    icon: RefreshCw,
     color: 'text-blue-500',
     bgColor: 'bg-blue-50',
     text: 'Estamos actualizando la analítica...',
@@ -98,7 +98,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: true
   },
   'synced': {
-    icon: FaCheck,
+    icon: Check,
     color: 'text-green-500',
     bgColor: 'bg-green-50',
     text: 'Listo! WebQuote está sincronizado desde la nube',
@@ -106,7 +106,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: false
   },
   'offline-cached': {
-    icon: FaCloud,
+    icon: Cloud,
     color: 'text-amber-500',
     bgColor: 'bg-amber-50',
     text: 'Lo siento, no hay conexión a la nube. Mostrando datos locales',
@@ -114,7 +114,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: false
   },
   'offline-empty': {
-    icon: FaExclamationTriangle,
+    icon: AlertTriangle,
     color: 'text-red-500',
     bgColor: 'bg-red-50',
     text: 'Qué mal, no hay conexión a la nube y tampoco datos locales',
@@ -122,7 +122,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: false
   },
   'reconnecting': {
-    icon: FaWifi,
+    icon: Wifi,
     color: 'text-green-500',
     bgColor: 'bg-green-50',
     text: 'Perfecto, se ha restablecido la conexión con la nube. Procedemos a sincronizar...',
@@ -130,7 +130,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: true
   },
   'merging': {
-    icon: FaCodeBranch,
+    icon: GitBranch,
     color: 'text-purple-500',
     bgColor: 'bg-purple-50',
     text: 'Según tu elección, estamos fusionando los datos entre la nube y los locales...',
@@ -138,7 +138,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: true
   },
   'comparing': {
-    icon: FaExchangeAlt,
+    icon: ArrowLeftRight,
     color: 'text-orange-500',
     bgColor: 'bg-orange-50',
     text: 'Comparando diferencias entre la nube y los locales...',
@@ -146,7 +146,7 @@ const PHASE_CONFIGS: Record<LoadingPhase, StatusConfig> = {
     spin: true
   },
   'error': {
-    icon: FaExclamationTriangle,
+    icon: AlertTriangle,
     color: 'text-red-500',
     bgColor: 'bg-red-50',
     text: 'Atención! Hubo un error de sincronización con la nube',
@@ -206,7 +206,7 @@ export function SyncStatusIndicator({
     // Prioridad 2: Estado de no online sin loadingPhase
     if (!isOnline) {
       return {
-        icon: FaCloud,
+        icon: Cloud,
         color: 'text-gray-500',
         bgColor: 'bg-gray-100',
         text: 'Sin conexión',
@@ -219,7 +219,7 @@ export function SyncStatusIndicator({
     // Prioridad 3: isLoading genérico
     if (isLoading) {
       return {
-        icon: FaSpinner,
+        icon: Loader2,
         color: 'text-blue-500',
         bgColor: 'bg-blue-50',
         text: 'Cargando...',
@@ -235,7 +235,7 @@ export function SyncStatusIndicator({
       
       case 'pending':
         return {
-          icon: FaSync,
+          icon: RefreshCw,
           color: 'text-amber-500',
           bgColor: 'bg-amber-50',
           text: isDirty ? 'Cambios sin guardar' : 'Pendiente',
@@ -248,7 +248,7 @@ export function SyncStatusIndicator({
       
       case 'conflict':
         return {
-          icon: FaExclamationTriangle,
+          icon: AlertTriangle,
           color: 'text-red-500',
           bgColor: 'bg-red-50',
           text: 'Conflicto detectado',
@@ -262,7 +262,7 @@ export function SyncStatusIndicator({
       default:
         if (isDirty) {
           return {
-            icon: FaCloudUploadAlt,
+            icon: CloudUpload,
             color: 'text-amber-500',
             bgColor: 'bg-amber-50',
             text: 'Cambios sin guardar',
@@ -271,7 +271,7 @@ export function SyncStatusIndicator({
           }
         }
         return {
-          icon: FaCloud,
+          icon: Cloud,
           color: 'text-gray-400',
           bgColor: 'bg-gray-50',
           text: 'Listo',
@@ -340,3 +340,5 @@ export function SyncStatusIndicator({
 }
 
 export default SyncStatusIndicator
+
+

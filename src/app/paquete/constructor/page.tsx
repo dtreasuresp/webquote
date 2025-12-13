@@ -28,11 +28,6 @@ interface PackageSnapshot {
   id: string
   nombre: string
   serviciosBase: ServicioBase[]
-  gestion: {
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-  }
   paquete: {
     desarrollo: number
     descuento: number

@@ -9,10 +9,10 @@ import { Prisma } from '@prisma/client'
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const { seccion, datos, timestamp, visibilidad } = await request.json()
 
     if (!id) {
@@ -47,6 +47,7 @@ export async function PATCH(
       'fortalezas': 'fortalezas',
       'dinamico': 'dinamicoVsEstatico',
       'presupuesto': 'presupuestoCronograma',
+      'cuotas': 'cuotas',
       'tabla': 'tablaComparativa',
       'observaciones': 'observaciones',
       'conclusion': 'conclusion',

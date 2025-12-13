@@ -3,6 +3,12 @@
 import { motion } from 'framer-motion'
 import { FaClipboardList, FaImage } from 'react-icons/fa'
 import type { AnalisisRequisitosData } from '@/lib/types'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { 
+  fluentStaggerContainer, 
+  fluentStaggerItem
+} from '@/lib/animations/variants'
+import { viewport } from '@/lib/animations/config'
 
 interface AnalisisRequisitosProps {
   readonly data?: AnalisisRequisitosData
@@ -14,28 +20,34 @@ export default function AnalisisRequisitos({ data }: AnalisisRequisitosProps) {
   
   const analisisData = data
   return (
-    <section id="analisis" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+    <FluentSection 
+      id="analisis" 
+      animation="stagger" 
+      paddingY="md"
+      className="bg-gradient-to-b from-light-bg to-white"
+    >
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-6"
+          variants={fluentStaggerItem}
         >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-info-bg rounded-full mb-4">
-              <FaClipboardList className="text-light-accent" size={20} />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
-              {analisisData.titulo}
-            </h2>
-            <p className="text-sm text-light-text-secondary">
-              {analisisData.subtitulo}
-            </p>
-          </div>
+          <motion.div 
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-accent/20 to-light-accent/5 backdrop-blur-sm rounded-2xl mb-4 border border-light-accent/20"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+          >
+            <FaClipboardList className="text-light-accent" size={24} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+            {analisisData.titulo}
+          </h2>
+          <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+            {analisisData.subtitulo}
+          </p>
+        </motion.div>
 
-          <div className="space-y-8">
+        <FluentRevealGroup className="space-y-6">
             {/* Información General */}
             <InfoCard title="📋 Información general del cliente">
               <table className="w-full text-sm">
@@ -254,24 +266,25 @@ export default function AnalisisRequisitos({ data }: AnalisisRequisitosProps) {
               </div>
             </InfoCard>
 
-          </div>
-        </motion.div>
+        </FluentRevealGroup>
       </div>
-    </section>
+    </FluentSection>
   )
 }
 
 function InfoCard({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="bg-light-bg p-6 rounded-md border border-light-border"
-    >
-      <h3 className="text-lg font-semibold mb-4 text-light-text">{title}</h3>
-      {children}
-    </motion.div>
+    <FluentRevealItem>
+      <FluentGlass
+        variant="normal"
+        className="p-6 rounded-2xl"
+      >
+        <h3 className="text-lg font-semibold mb-4 text-light-text flex items-center gap-2">
+          {title}
+        </h3>
+        {children}
+      </FluentGlass>
+    </FluentRevealItem>
   )
 }
 

@@ -3,6 +3,11 @@
 import { motion } from 'framer-motion'
 import { FaExclamationTriangle, FaLightbulb } from 'react-icons/fa'
 import type { ObservacionesData } from '@/lib/types'
+import { FluentSection, FluentGlass, FluentReveal, FluentRevealGroup, FluentRevealItem } from '@/components/motion'
+import { 
+  fluentSlideUp
+} from '@/lib/animations/variants'
+import { viewport, spring } from '@/lib/animations/config'
 
 // Función para obtener color según prioridad
 function getPriorityBorderColor(priority: 'alta' | 'media' | 'baja'): string {
@@ -35,35 +40,43 @@ export default function ObservacionesYRecomendaciones({ data }: ObservacionesYRe
   const observacionesData = data
 
   return (
-    <section id="observaciones" className="py-6 md:py-8 px-4 bg-light-bg font-github">
+    <FluentSection 
+      id="observaciones" 
+      animation="stagger"
+      paddingY="md"
+      className="bg-gradient-to-b from-light-bg to-white"
+    >
       <div className="max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-6"
+          variants={fluentSlideUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewport.default}
         >
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-light-warning-bg rounded-full mb-4">
-              <FaExclamationTriangle className="text-light-warning" size={20} />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
-              {observacionesData.titulo}
-            </h2>
-            <p className="text-sm text-light-text-secondary">
-              {observacionesData.subtitulo}
-            </p>
-          </div>
+          <motion.div 
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-light-warning to-amber-600 rounded-2xl mb-4 shadow-lg"
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={spring.fluent}
+          >
+            <FaExclamationTriangle className="text-white" size={24} />
+          </motion.div>
+          <h2 className="text-2xl md:text-3xl font-semibold text-light-text mb-2">
+            {observacionesData.titulo}
+          </h2>
+          <p className="text-sm text-light-text-secondary max-w-2xl mx-auto">
+            {observacionesData.subtitulo}
+          </p>
+        </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Puntos de Atención */}
-            {observacionesData.puntosAtencion.visible && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="bg-light-bg-secondary rounded-md p-6 border border-light-border"
+        <FluentRevealGroup className="grid md:grid-cols-2 gap-6">
+          {/* Puntos de Atención */}
+          {observacionesData.puntosAtencion.visible && (
+            <FluentRevealItem>
+              <FluentGlass
+                variant="normal"
+                className="rounded-2xl p-6 h-full"
               >
                 <div className="flex items-center gap-2 mb-5">
                   <FaExclamationTriangle className="text-light-danger text-xl" />
@@ -90,16 +103,16 @@ export default function ObservacionesYRecomendaciones({ data }: ObservacionesYRe
                     </div>
                   ))}
                 </div>
-              </motion.div>
-            )}
+              </FluentGlass>
+            </FluentRevealItem>
+          )}
 
-            {/* Recomendaciones */}
-            {observacionesData.recomendaciones.visible && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="bg-light-bg-secondary rounded-md p-6 border border-light-border"
+          {/* Recomendaciones */}
+          {observacionesData.recomendaciones.visible && (
+            <FluentRevealItem>
+              <FluentGlass
+                variant="normal"
+                className="rounded-2xl p-6 h-full"
               >
                 <div className="flex items-center gap-2 mb-5">
                   <FaLightbulb className="text-light-warning text-xl" />
@@ -138,23 +151,24 @@ export default function ObservacionesYRecomendaciones({ data }: ObservacionesYRe
                     </div>
                   ))}
                 </div>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Nota Final */}
-          {observacionesData.notaFinal && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-center text-sm text-light-text-secondary mt-6 italic"
-            >
-              {observacionesData.notaFinal}
-            </motion.p>
+              </FluentGlass>
+            </FluentRevealItem>
           )}
-        </motion.div>
+        </FluentRevealGroup>
+
+        {/* Nota Final */}
+        {observacionesData.notaFinal && (
+          <motion.p
+            variants={fluentSlideUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewport.default}
+            className="text-center text-sm text-light-text-secondary mt-8 italic bg-light-bg-secondary/50 backdrop-blur-sm py-4 px-6 rounded-xl border border-light-border/30"
+          >
+            {observacionesData.notaFinal}
+          </motion.p>
+        )}
       </div>
-    </section>
+    </FluentSection>
   )
 }

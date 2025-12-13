@@ -10,7 +10,7 @@
 
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { FaExclamationCircle, FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa'
+import { AlertCircle, CheckCircle2, XCircle, X } from 'lucide-react'
 import type { AdvancedValidationResult } from '../utils/advancedValidators'
 
 // ==================== TIPOS ====================
@@ -78,7 +78,7 @@ export const ValidationFeedback: React.FC<ValidationFeedbackProps> = ({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 flex-1">
-                  <FaTimesCircle className="text-gh-error mt-1 flex-shrink-0 text-lg" />
+                  <XCircle className="text-gh-error mt-1 flex-shrink-0 text-lg" />
                   <div className="flex-1">
                     <h3 className="font-semibold text-gh-error mb-2">Errores encontrados</h3>
 
@@ -114,7 +114,7 @@ export const ValidationFeedback: React.FC<ValidationFeedbackProps> = ({
                     onClick={onDismiss}
                     className="text-gh-error hover:text-gh-error-hover flex-shrink-0 mt-1"
                   >
-                    <FaTimes size={16} />
+                    <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -132,7 +132,7 @@ export const ValidationFeedback: React.FC<ValidationFeedbackProps> = ({
               exit={{ opacity: 0, scale: 0.95 }}
             >
               <div className="flex items-start gap-3">
-                <FaExclamationCircle className="text-gh-warning mt-1 flex-shrink-0 text-lg" />
+                <AlertCircle className="text-gh-warning mt-1 flex-shrink-0 text-lg" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-gh-warning mb-2">Advertencias</h3>
                   <div className="space-y-1">
@@ -159,7 +159,7 @@ export const ValidationFeedback: React.FC<ValidationFeedbackProps> = ({
               exit={{ opacity: 0, scale: 0.95 }}
             >
               <div className="flex items-start gap-3">
-                <FaExclamationCircle className="text-gh-error mt-1 flex-shrink-0 text-lg" />
+                <AlertCircle className="text-gh-error mt-1 flex-shrink-0 text-lg" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-gh-error mb-2">Dependencias rotas</h3>
                   <div className="space-y-1">
@@ -201,7 +201,7 @@ export const TabValidationBadge: React.FC<TabValidationBadgeProps> = ({
   if (!tieneErrores) {
     return (
       <div className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-gh-success/10 text-gh-success">
-        <FaCheckCircle size={12} />
+        <CheckCircle2 className="w-3 h-3" />
         <span>OK</span>
       </div>
     )
@@ -217,7 +217,7 @@ export const TabValidationBadge: React.FC<TabValidationBadgeProps> = ({
 
   return (
     <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border ${colorClases[tipoTab]}`}>
-      <FaTimesCircle size={12} />
+      <XCircle className="w-3 h-3" />
       <span>{errores.length} error(es)</span>
     </div>
   )
@@ -245,7 +245,7 @@ export const ValidationCard: React.FC<ValidationCardProps> = ({
     return (
       <div className="rounded-lg bg-gh-success/10 border border-gh-success/30 p-4">
         <div className="flex items-center gap-2 text-gh-success">
-          <FaCheckCircle size={20} />
+          <CheckCircle2 className="w-5 h-5" />
           <span className="font-semibold">Todas las validaciones pasaron</span>
         </div>
       </div>
@@ -259,10 +259,10 @@ export const ValidationCard: React.FC<ValidationCardProps> = ({
       {/* ENCABEZADO */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-2">
-          <FaTimesCircle className="text-gh-error text-lg mt-0.5" />
+          <XCircle className="text-gh-error text-lg mt-0.5" />
           <div>
             <h3 className="font-semibold text-gh-text">{titulo}</h3>
-            <p className="text-sm text-gh-text-secondary mt-1">
+            <p className="text-xs font-medium text-gh-text-secondary mt-1">
               {result.errores.length} error(es) encontrado(s)
             </p>
           </div>
@@ -283,13 +283,13 @@ export const ValidationCard: React.FC<ValidationCardProps> = ({
         <div className="space-y-3">
           {Object.entries(result.erroresPorTab).map(([tab, errores]) => (
             <div key={tab} className="border border-gh-border/30 rounded p-3">
-              <h4 className="font-medium text-sm text-gh-text capitalize mb-2">
+              <h4 className="font-medium text-xs font-medium text-gh-text capitalize mb-2">
                 TAB: {tab}
                 <span className="text-xs text-gh-error ml-2">({errores.length})</span>
               </h4>
               <div className="space-y-1">
                 {(mostrarTodos ? errores : errores.slice(0, 2)).map((error) => (
-                  <div key={error} className="text-sm text-gh-text-secondary flex items-start gap-2">
+                  <div key={error} className="text-xs font-medium text-gh-text-secondary flex items-start gap-2">
                     <span className="text-gh-error mt-1">•</span>
                     <span>{error}</span>
                   </div>
@@ -307,7 +307,7 @@ export const ValidationCard: React.FC<ValidationCardProps> = ({
 
       {/* RESUMEN */}
       {modoResumen && (
-        <div className="text-sm text-gh-text-secondary">
+        <div className="text-xs font-medium text-gh-text-secondary">
           {Object.keys(result.erroresPorTab).length} TAB(s) con errores
         </div>
       )}
@@ -342,7 +342,7 @@ export const ValidationIndicator: React.FC<ValidationIndicatorProps> = ({
   if (result.valido) {
     return (
       <div className={`flex items-center gap-2 text-gh-success ${tamañoClases[tamaño]}`}>
-        <FaCheckCircle />
+        <CheckCircle2 />
         <span>Validado</span>
       </div>
     )
@@ -350,8 +350,10 @@ export const ValidationIndicator: React.FC<ValidationIndicatorProps> = ({
 
   return (
     <div className={`flex items-center gap-2 text-gh-error ${tamañoClases[tamaño]}`}>
-      <FaTimesCircle />
+      <XCircle />
       <span>{result.errores.length} error(es)</span>
     </div>
   )
 }
+
+

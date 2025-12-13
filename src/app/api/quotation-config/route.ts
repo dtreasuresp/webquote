@@ -12,14 +12,18 @@ const calcularFechaVencimiento = (fechaEmision: Date, dias: number): Date => {
   return vencimiento
 }
 
-// GET: Obtener la cotización más reciente
+// GET: Obtener la cotización ACTIVA (isGlobal: true)
 export async function GET(request: NextRequest) {
   try {
-    await prisma.$queryRaw`SELECT 1`
+    // [AUDIT] Buscar cotización activa
+    console.log('[AUDIT] GET /api/quotation-config - Buscando cotización activa (isGlobal: true)')
     
     const cotizacion = await prisma.quotationConfig.findFirst({
-      orderBy: { createdAt: 'desc' },
+      where: { isGlobal: true },
+      orderBy: { updatedAt: 'desc' },
     })
+    
+    console.log('[AUDIT] Cotización encontrada:', cotizacion?.id, cotizacion?.numero, 'isGlobal:', cotizacion?.isGlobal)
 
     if (!cotizacion) {
       return NextResponse.json(null, { status: 404 })
@@ -63,6 +67,11 @@ export async function POST(request: NextRequest) {
     const fechaEmision = new Date(data.fechaEmision || new Date())
     const fechaVencimiento = calcularFechaVencimiento(fechaEmision, data.tiempoValidez || 30)
 
+    // [AUDIT] Log de creación de cotización
+    console.log('[AUDIT] POST /api/quotation-config - Creando nueva cotización')
+    console.log('[AUDIT] Número generado:', numeroGenerado)
+    console.log('[AUDIT] Stack trace:', new Error('AUDIT_TRACE').stack?.split('\n').slice(0, 5).join('\n'))
+    
     const cotizacion = await prisma.quotationConfig.create({
       data: {
         numero: numeroGenerado,
@@ -92,19 +101,26 @@ export async function POST(request: NextRequest) {
         descripcionesPaqueteTemplates: data.descripcionesPaqueteTemplates || null,
         metodoPagoPreferido: data.metodoPagoPreferido || '',
         notasPago: data.notasPago || '',
+        metodosPreferidos: data.metodosPreferidos || null,
         estilosConfig: data.estilosConfig || null,
         // Contenido General Dinámico
         contenidoGeneral: data.contenidoGeneral || null,
       },
     })
+    
+    console.log('[AUDIT] Cotización creada:', cotizacion.id, cotizacion.numero)
 
+    // FIX: Devolver estructura {success, data} consistente con otros endpoints
     return NextResponse.json(
       {
-        ...cotizacion,
-        fechaEmision: cotizacion.fechaEmision.toISOString(),
-        fechaVencimiento: cotizacion.fechaVencimiento.toISOString(),
-        createdAt: cotizacion.createdAt.toISOString(),
-        updatedAt: cotizacion.updatedAt.toISOString(),
+        success: true,
+        data: {
+          ...cotizacion,
+          fechaEmision: cotizacion.fechaEmision.toISOString(),
+          fechaVencimiento: cotizacion.fechaVencimiento.toISOString(),
+          createdAt: cotizacion.createdAt.toISOString(),
+          updatedAt: cotizacion.updatedAt.toISOString(),
+        }
       },
       { status: 201 }
     )
@@ -120,9 +136,6 @@ export async function POST(request: NextRequest) {
 // PUT: Actualizar cotización existente (mantiene número, incrementa versión)
 export async function PUT(request: NextRequest) {
   try {
-    // Verificar conexión primero
-    await prisma.$queryRaw`SELECT 1`
-
     // Priorizar cotización activa/global; si no hay, tomar la más reciente
     let cotizacion = await prisma.quotationConfig.findFirst({
       where: {

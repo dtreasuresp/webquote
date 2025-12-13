@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import type { ServicioBase, GestionConfig, Package, Servicio, PackageSnapshot, QuotationConfig, UserPreferences, DialogConfig } from '@/lib/types'
+import type { ServicioBase, Package, Servicio, PackageSnapshot, QuotationConfig, UserPreferences, DialogConfig } from '@/lib/types'
 
 type ValidationState = 'ok' | 'pendiente' | 'error'
 
@@ -37,12 +37,6 @@ export function useAdminState() {
 
   const [editandoServicioBaseId, setEditandoServicioBaseId] = useState<string | null>(null)
   const [servicioBaseEditando, setServicioBaseEditando] = useState<ServicioBase | null>(null)
-
-  const [gestion, setGestion] = useState<GestionConfig>({
-    precio: 0,
-    mesesGratis: 0,
-    mesesPago: 12,
-  })
 
   // Definición de Paquetes
   const [paqueteActual, setPaqueteActual] = useState<Package>({
@@ -184,10 +178,6 @@ export function useAdminState() {
     setEditandoServicioBaseId,
     servicioBaseEditando,
     setServicioBaseEditando,
-
-    // Gestión
-    gestion,
-    setGestion,
 
     // Paquete Actual
     paqueteActual,
