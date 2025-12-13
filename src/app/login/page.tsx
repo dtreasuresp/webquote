@@ -17,14 +17,16 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // ✅ Si ya está autenticado, redirigir a la página principal
+  // PERO NO durante el proceso de login (evita interferir con el callback)
   useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
+    if (status === 'authenticated' && session?.user && !isSubmitting) {
       console.log('[AUTH] Usuario ya autenticado - Redirigiendo a /')
       router.push('/')
     }
-  }, [status, session, router])
+  }, [status, session, router, isSubmitting])
 
   // Mostrar mensaje de error si viene de callback
   useEffect(() => {
@@ -40,6 +42,7 @@ function LoginContent() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+    setIsSubmitting(true)
 
     try {
       const result = await signIn('credentials', {
@@ -55,20 +58,23 @@ function LoginContent() {
           setError(result.error)
         }
         setLoading(false)
+        setIsSubmitting(false)
         return
       }
 
       if (result?.ok) {
         setSuccess(true)
-        // ✅ OPTIMIZACIÓN: Redirect INMEDIATO sin esperar useSession
-        // Esto evita el bloqueo de esperar a que useSession se actualice
+        // ✅ Esperar un momento antes de redirigir para que NextAuth complete el callback
+        await new Promise(resolve => setTimeout(resolve, 500))
         const callbackUrl = searchParams.get('callbackUrl') || '/'
         router.push(callbackUrl)
+        // Mantener isSubmitting=true para evitar que el useEffect interfiera
       }
     } catch (err) {
       console.error('Error en login:', err)
       setError('Error al iniciar sesión. Intenta de nuevo.')
       setLoading(false)
+      setIsSubmitting(false)
     }
   }
 
