@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# build logs
+build.log
+build-output.txt
+
+# vscode
+.vscode/settings.json

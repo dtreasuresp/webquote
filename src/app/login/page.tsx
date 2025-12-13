@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, Suspense } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaUser, FaLock, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -9,6 +9,7 @@ import { FaUser, FaLock, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaEye,
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session, status } = useSession()
   
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -16,7 +17,14 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [redirecting, setRedirecting] = useState(false)
+
+  // ✅ Si ya está autenticado, redirigir a la página principal
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      console.log('[AUTH] Usuario ya autenticado - Redirigiendo a /')
+      router.push('/')
+    }
+  }, [status, session, router])
 
   // Mostrar mensaje de error si viene de callback
   useEffect(() => {
@@ -52,7 +60,6 @@ function LoginContent() {
 
       if (result?.ok) {
         setSuccess(true)
-        setRedirecting(true)
         // ✅ OPTIMIZACIÓN: Redirect INMEDIATO sin esperar useSession
         // Esto evita el bloqueo de esperar a que useSession se actualice
         const callbackUrl = searchParams.get('callbackUrl') || '/'
@@ -67,6 +74,15 @@ function LoginContent() {
 
   // Loading inicial mientras verifica sesión
   if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#0d1117] flex items-center justify-center">
+        <FaSpinner className="animate-spin text-[#58a6ff] text-4xl" />
+      </div>
+    )
+  }
+
+  // Si está autenticado, mostrar loading mientras redirige
+  if (status === 'authenticated') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#0d1117] flex items-center justify-center">
         <FaSpinner className="animate-spin text-[#58a6ff] text-4xl" />
@@ -200,19 +216,25 @@ function LoginContent() {
                   : 'bg-gradient-to-r from-[#238636] to-[#2ea043] hover:from-[#2ea043] hover:to-[#3fb950] shadow-lg shadow-[#238636]/25'
               }`}
             >
-              {loading ? (
-                <>
-                  <FaSpinner className="animate-spin" />
-                  Iniciando sesión...
-                </>
-              ) : success ? (
-                <>
-                  <FaCheckCircle />
-                  Redirigiendo...
-                </>
-              ) : (
-                'Iniciar Sesión'
-              )}
+              {(() => {
+                if (loading) {
+                  return (
+                    <>
+                      <FaSpinner className="animate-spin" />
+                      Iniciando sesión...
+                    </>
+                  )
+                }
+                if (success) {
+                  return (
+                    <>
+                      <FaCheckCircle />
+                      Redirigiendo...
+                    </>
+                  )
+                }
+                return 'Iniciar Sesión'
+              })()}
             </motion.button>
           </form>
 
@@ -225,13 +247,14 @@ function LoginContent() {
         </div>
 
         {/* Marca de agua */}
-        <div>
-        <p className="text-center mt-6 text-xs text-[#484f58]">
+        <div className="text-center mt-6 text-xs text-[#484f58]">
+          <p>  
           Sistema de Cotizaciones Online
-        </p>
-        <p className="text-center mt-6 text-xs text-[#484f58]">
+          <br />
+          Empresa de Soluciones de Negocios 
+          <br />
           DG TECNOVA © {new Date().getFullYear()}
-        </p>
+          </p>
         </div>
       </motion.div>
     </div>

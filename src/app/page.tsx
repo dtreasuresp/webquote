@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
+import { useSession } from 'next-auth/react'
 import Navigation from '@/components/layout/Navigation'
 import Hero from '@/components/sections/Hero'
 import ResumenEjecutivo from '@/components/sections/ResumenEjecutivo'
@@ -43,21 +44,36 @@ import { useEventTracking } from '@/features/admin/hooks'
 
 function HomeContent() {
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
   const [cotizacion, setCotizacion] = useState<QuotationConfig | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { trackProposalViewed, trackOfertaSectionViewed } = useEventTracking()
   
-  // Cargar cotización activa al montar
+  // ✅ Cargar cotización del usuario (middleware ya verificó autenticación)
   useEffect(() => {
     const fetchCotizacion = async () => {
       try {
         const res = await fetch('/api/quotation-config')
+
+        if (res.status === 403) {
+          const data = await res.json()
+          setError(data.error || 'No tiene cotización asignada')
+          setLoading(false)
+          return
+        }
+
         if (res.ok) {
           const data = await res.json()
           setCotizacion(data)
+          setError(null)
+        } else {
+          const data = await res.json()
+          setError(data.error || 'Error al cargar cotización')
         }
       } catch (error) {
         console.error('Error loading quotation:', error)
+        setError('Error de conexión con el servidor')
       } finally {
         setLoading(false)
       }
@@ -172,6 +188,22 @@ function HomeContent() {
       applyCSSVariables(cssVars)
     }
   }, [analisisData?.identidadVisual?.coloresCorporativos])
+
+  // Mostrar mensaje de error si no tiene cotización asignada
+  if (error) {
+    return (
+      <main className="bg-light-bg font-github min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-8 bg-white border border-light-border rounded-lg shadow-sm">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Sin Acceso</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <p className="text-sm text-gray-500">
+            Usuario: <span className="font-mono font-semibold">{session?.user?.username}</span>
+          </p>
+        </div>
+      </main>
+    )
+  }
 
   if (loading) {
     return (

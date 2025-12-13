@@ -1,15 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
+    // ✅ Verificar sesión del usuario
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      console.log('[AUTH] GET /api/snapshots - Sin sesión, acceso denegado')
+      return NextResponse.json(
+        { error: 'No autenticado. Por favor inicie sesión.' },
+        { status: 401 }
+      )
+    }
+
+    console.log('[AUTH] Usuario autenticado:', session.user.username, 'Role:', session.user.role)
+    
+    // Si es SUPER_ADMIN o ADMIN sin quotationAssignedId, retornar todos los snapshots activos
+    if ((session.user.role === 'SUPER_ADMIN' || session.user.role === 'ADMIN') && !session.user.quotationAssignedId) {
+      console.log('[AUDIT] Admin/SuperAdmin sin cotización asignada - Retornando todos los snapshots activos')
+      
+      const snapshots = await prisma.packageSnapshot.findMany({
+        where: { activo: true },
+        orderBy: { createdAt: 'desc' },
+      })
+      
+      return NextResponse.json(snapshots)
+    }
+
+    // ✅ Filtrar por quotationConfigId del usuario
+    if (!session.user.quotationAssignedId) {
+      console.log('[AUTH] Usuario sin cotización asignada - Retornando array vacío')
+      return NextResponse.json([])
+    }
+
+    console.log('[AUDIT] Filtrando snapshots por quotationConfigId:', session.user.quotationAssignedId)
+    
     const snapshots = await prisma.packageSnapshot.findMany({
-      where: { activo: true },
+      where: { 
+        activo: true,
+        quotationConfigId: session.user.quotationAssignedId 
+      },
       orderBy: { createdAt: 'desc' },
     })
+    
+    console.log('[AUDIT] Snapshots encontrados:', snapshots.length)
     return NextResponse.json(snapshots)
   } catch (error) {
     console.error('Error en GET /api/snapshots:', error)

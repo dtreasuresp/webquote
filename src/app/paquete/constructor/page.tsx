@@ -6,7 +6,7 @@ import { FaArrowLeft, FaCheckCircle, FaCalendar } from 'react-icons/fa'
 import { useEffect, useState } from 'react'
 import PackageCostSummary from '@/components/sections/PackageCostSummary'
 import PaymentOptions from '@/components/sections/PaymentOptions'
-import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
+import { obtenerSnapshots } from '@/lib/snapshotApi'
 import SECTION_STYLES from '@/lib/styleConstants'
 
 interface ServicioBase {
@@ -51,6 +51,8 @@ interface PackageSnapshot {
 }
 
 export default function ConstructorPage() {
+  const router = useRouter()
+  const { data: session, status } = useSession()
   const [snapshotConstructor, setSnapshotConstructor] = useState<PackageSnapshot | null>(null)
   const [cargando, setCargando] = useState(true)
   const [medallaEmoji, setMedallaEmoji] = useState('📦')
@@ -58,8 +60,19 @@ export default function ConstructorPage() {
 
   useEffect(() => {
     const cargarSnapshot = async () => {
+      // Esperar a que se cargue el estado de la sesión
+      if (status === 'loading') return
+
+      // Si no hay sesión, redirigir al login
+      if (status === 'unauthenticated') {
+        console.log('[AUTH] Usuario no autenticado - Redirigiendo a login')
+        router.push('/login')
+        return
+      }
+
       try {
-        const snapshots = await obtenerSnapshotsCompleto()
+        // Usar obtenerSnapshots (filtrado por usuario) en lugar de obtenerSnapshotsCompleto
+        const snapshots = await obtenerSnapshots()
         const activos = snapshots.filter(s => s.activo)
         
         // Ordenar por inversión anual (año1)
