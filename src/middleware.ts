@@ -47,16 +47,15 @@ export async function middleware(request: NextRequest) {
   })
 
   // 🚪 Si está autenticado e intenta acceder al login → Homepage
-  // EXCEPCIÓN: Permitir si viene con parámetros de NextAuth (error, callbackUrl)
+  // EXCEPCIÓN: NO redirigir si viene desde NextAuth (evitar loops)
   if (isAuthRoute && isAuthenticated) {
-    const hasAuthParams = request.nextUrl.searchParams.has('error') || 
-                         request.nextUrl.searchParams.has('callbackUrl')
+    // Permitir si tiene cualquier query param (es parte del flujo de NextAuth)
+    const hasQueryParams = request.nextUrl.search.length > 0
     
-    if (!hasAuthParams) {
-      console.log('[MIDDLEWARE] Usuario autenticado intentando acceder a /login → Redirect /')
+    if (!hasQueryParams) {
       return NextResponse.redirect(new URL('/', request.url))
     }
-    console.log('[MIDDLEWARE] Permitiendo acceso a /login (tiene parámetros de NextAuth)')
+    // Si tiene query params, dejar pasar (NextAuth está manejando el flujo)
   }
 
   // 🔒 Si intenta acceder a ruta protegida sin autenticación → Login
