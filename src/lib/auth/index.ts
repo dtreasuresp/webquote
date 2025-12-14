@@ -53,14 +53,16 @@ declare module "next-auth/jwt" {
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
+      id: "credentials",
       name: "credentials",
       credentials: {
         username: { label: "Usuario", type: "text" },
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
-        console.log('[AUTH] Iniciando authorize...')
+        console.log('[AUTH] ==================== AUTHORIZE INICIADO ====================')
         console.log('[AUTH] Username recibido:', credentials?.username)
+        console.log('[AUTH] Password recibido (length):', credentials?.password?.length)
         
         if (!credentials?.username || !credentials?.password) {
           console.log('[AUTH] ERROR: Credenciales faltantes')

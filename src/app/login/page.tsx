@@ -33,15 +33,28 @@ function LoginContent() {
     try {
       const callbackUrl = searchParams.get('callbackUrl') || '/'
       
-      // Dejar que NextAuth maneje todo automáticamente
-      await signIn('credentials', {
+      // Usar redirect: false para manejar el resultado
+      const result = await signIn('credentials', {
         username,
         password,
+        redirect: false,
         callbackUrl,
       })
-      
-      // Si llegamos aquí sin redirección, hubo un error
-      setError('Usuario o contraseña incorrectos')
+
+      if (result?.error) {
+        setError('Usuario o contraseña incorrectos')
+        setLoading(false)
+        return
+      }
+
+      if (result?.ok) {
+        // Forzar navegación completa (recarga la página)
+        window.location.href = callbackUrl
+        return
+      }
+
+      // Caso no esperado
+      setError('Error al iniciar sesión')
       setLoading(false)
     } catch (error) {
       console.error('[LOGIN] Error:', error)
