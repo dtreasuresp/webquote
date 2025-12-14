@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { requireReadPermission, requireFullPermission } from '@/lib/apiProtection'
 
 /**
  * GET /api/audit-logs
  * Lista logs de auditoría con paginación y filtros
+ * Requiere: logs.view (read) o logs.view_all (full para ver de todos los usuarios)
  */
 export async function GET(request: Request) {
+  // Protección: Requiere permiso de lectura de logs
+  const { session, error, accessLevel } = await requireReadPermission('logs.view')
+  if (error) return error
+
   try {
     const { searchParams } = new URL(request.url)
     
@@ -24,6 +30,11 @@ export async function GET(request: Request) {
 
     // Construir where
     const where: Record<string, unknown> = {}
+
+    // Filtrar por usuario si no tiene acceso completo
+    if (accessLevel !== 'full') {
+      where.userId = session.user.id
+    }
 
     if (action) {
       where.action = { contains: action }
@@ -49,6 +60,14 @@ export async function GET(request: Request) {
 
     // Si es exportación CSV
     if (format === 'csv') {
+      // Exportar requiere permiso full
+      if (accessLevel !== 'full') {
+        return NextResponse.json(
+          { error: 'No tiene permisos para exportar logs' },
+          { status: 403 }
+        )
+      }
+
       const allLogs = await prisma.auditLog.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -102,8 +121,13 @@ export async function GET(request: Request) {
 /**
  * POST /api/audit-logs
  * Crea un nuevo log de auditoría (uso interno)
+ * Requiere: logs.manage (full) - Solo para uso del sistema
  */
 export async function POST(request: Request) {
+  // Protección: Requiere permiso full para crear logs manualmente
+  const { error } = await requireFullPermission('logs.manage')
+  if (error) return error
+
   try {
     const body = await request.json()
     const { action, entityType, entityId, userId, userName, details, ipAddress } = body

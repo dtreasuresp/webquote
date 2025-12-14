@@ -20,6 +20,7 @@ import {
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
+import { usePermission } from '@/hooks/usePermission'
 
 // ==================== TIPOS ====================
 
@@ -58,6 +59,9 @@ interface Permission {
 // ==================== COMPONENTE ====================
 
 export default function PermisosUsuarioContent() {
+  // Permisos granulares
+  const userPermsConfig = usePermission('security.user_permissions')
+  
   // Estado
   const [users, setUsers] = useState<User[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
@@ -373,14 +377,16 @@ export default function PermisosUsuarioContent() {
                 </div>
               </div>
 
-              {/* Botón agregar */}
-              <button
-                onClick={() => handleAddPermission(user)}
-                className="flex items-center gap-1 px-2 py-1 text-[10px] text-gh-accent hover:bg-gh-accent/10 rounded transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-                Agregar
-              </button>
+              {/* Botón agregar (solo si puede asignar) */}
+              {userPermsConfig.canAssign && (
+                <button
+                  onClick={() => handleAddPermission(user)}
+                  className="flex items-center gap-1 px-2 py-1 text-[10px] text-gh-accent hover:bg-gh-accent/10 rounded transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                  Agregar
+                </button>
+              )}
             </div>
 
             {/* Permisos individuales */}
@@ -404,12 +410,14 @@ export default function PermisosUsuarioContent() {
                         <X className="w-2.5 h-2.5" />
                       )}
                       <span>{up.Permission.name}</span>
-                      <button
-                        onClick={() => handleRemovePermission(up.id)}
-                        className="ml-1 hover:opacity-70 transition-opacity"
-                      >
-                        <Trash2 className="w-2.5 h-2.5" />
-                      </button>
+                      {userPermsConfig.canRevoke && (
+                        <button
+                          onClick={() => handleRemovePermission(up.id)}
+                          className="ml-1 hover:opacity-70 transition-opacity"
+                        >
+                          <Trash2 className="w-2.5 h-2.5" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

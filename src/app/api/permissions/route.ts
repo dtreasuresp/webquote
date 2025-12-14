@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
 
 /**
  * GET /api/permissions
  * Lista todos los permisos
+ * Requiere: security.permissions.view (read)
  */
 export async function GET() {
+  // Protección: Requiere permiso de lectura de permisos
+  const { error } = await requireReadPermission('security.permissions.view')
+  if (error) return error
+
   try {
     const permissions = await prisma.permission.findMany({
       orderBy: [
@@ -27,8 +33,13 @@ export async function GET() {
 /**
  * POST /api/permissions
  * Crea un nuevo permiso
+ * Requiere: security.permissions.create (write) - Solo SUPER_ADMIN
  */
 export async function POST(request: Request) {
+  // Protección: Requiere permiso de escritura para crear permisos
+  const { session, error } = await requireWritePermission('security.permissions.create')
+  if (error) return error
+
   try {
     const body = await request.json()
     const { code, name, description, category } = body
@@ -66,7 +77,8 @@ export async function POST(request: Request) {
         action: 'permission.created',
         entityType: 'Permission',
         entityId: permission.id,
-        userName: 'SYSTEM',
+        userId: session.user.id,
+        userName: session.user.name || session.user.email || 'SYSTEM',
         details: { code: permission.code, name: permission.name, category: permission.category },
       },
     })

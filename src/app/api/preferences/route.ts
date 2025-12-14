@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
 
 /**
  * GET /api/preferences
  * Obtiene las preferencias del usuario actual
+ * Requiere: config.view (read)
  */
 export async function GET(request: NextRequest) {
+  // Protección: Requiere permiso de lectura de configuración
+  const { session, error } = await requireReadPermission('config.view')
+  if (error) return error
+
   try {
-    // Verificar sesión y permisos
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
-    }
-    
     const userId = 'default-user'
     let preferences = await prisma.userPreferences.findUnique({
       where: { userId },
@@ -68,18 +63,14 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/preferences
  * Actualiza las preferencias del usuario
+ * Requiere: config.edit_general (write)
  */
 export async function POST(request: NextRequest) {
-  try {
-    // Verificar sesión y permisos
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
-    }
+  // Protección: Requiere permiso de escritura en configuración
+  const { session, error } = await requireWritePermission('config.edit_general')
+  if (error) return error
 
+  try {
     const body = await request.json()
     const userId = 'default-user'
 

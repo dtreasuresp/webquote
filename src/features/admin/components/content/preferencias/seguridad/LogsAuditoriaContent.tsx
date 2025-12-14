@@ -19,6 +19,7 @@ import {
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 import DatePicker from '@/components/ui/DatePicker'
+import { usePermission } from '@/hooks/usePermission'
 
 // ==================== TIPOS ====================
 
@@ -64,6 +65,9 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 // ==================== COMPONENTE ====================
 
 export default function LogsAuditoriaContent() {
+  // Permisos granulares
+  const logsPerms = usePermission('logs')
+  
   // Estado
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
@@ -199,7 +203,7 @@ export default function LogsAuditoriaContent() {
             Logs de Auditoría
           </h3>
           <p className="text-xs text-gh-text-muted mt-0.5">
-            Historial de cambios en el sistema de seguridad
+            Historial de cambios en el sistema
           </p>
         </div>
 
@@ -213,14 +217,16 @@ export default function LogsAuditoriaContent() {
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
 
-          {/* Exportar */}
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-accent/10 text-gh-accent border border-gh-accent/30 rounded-md hover:bg-gh-accent/20 transition-colors text-xs font-medium"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Exportar CSV
-          </button>
+          {/* Exportar (solo si tiene accessLevel full) */}
+          {logsPerms.canExport && (
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-accent/10 text-gh-accent border border-gh-accent/30 rounded-md hover:bg-gh-accent/20 transition-colors text-xs font-medium"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Exportar CSV
+            </button>
+          )}
         </div>
       </div>
 

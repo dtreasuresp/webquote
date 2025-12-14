@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateNextQuotationNumber, updateQuotationVersion } from '@/lib/utils/quotationNumber'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -15,22 +14,16 @@ const calcularFechaVencimiento = (fechaEmision: Date, dias: number): Date => {
 }
 
 // GET: Obtener cotización según usuario autenticado
+// Requiere: quotations.view (read)
 export async function GET(request: NextRequest) {
-  try {
-    // ✅ Verificar sesión del usuario
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user) {
-      console.log('[AUTH] GET /api/quotation-config - Sin sesión, acceso denegado')
-      return NextResponse.json(
-        { error: 'No autenticado. Por favor inicie sesión.' },
-        { status: 401 }
-      )
-    }
+  // Protección: Requiere permiso de lectura de cotizaciones
+  const { session, error, accessLevel } = await requireReadPermission('quotations.view')
+  if (error) return error
 
-    console.log('[AUTH] Usuario autenticado:', session.user.username, 'Role:', session.user.role)
+  try {
+    console.log('[AUTH] Usuario autenticado:', session.user.username, 'Role:', session.user.role, 'AccessLevel:', accessLevel)
     
-    // Si es SUPER_ADMIN o ADMIN sin quotationAssignedId, buscar cotización global
+    // Si es SUPER_ADMIN o ADMIN con acceso full, buscar cotización global
     if ((session.user.role === 'SUPER_ADMIN' || session.user.role === 'ADMIN') && !session.user.quotationAssignedId) {
       console.log('[AUDIT] Admin/SuperAdmin sin cotización asignada - Buscando cotización global (isGlobal: true)')
       
@@ -101,7 +94,12 @@ export async function GET(request: NextRequest) {
 }
 
 // POST: Crear nueva cotización
+// Requiere: quotations.create (write)
 export async function POST(request: NextRequest) {
+  // Protección: Requiere permiso de escritura para crear cotizaciones
+  const { session, error } = await requireWritePermission('quotations.create')
+  if (error) return error
+
   try {
     const data = await request.json()
 
@@ -159,14 +157,13 @@ export async function POST(request: NextRequest) {
     console.log('[AUDIT] Cotización creada:', cotizacion.id, cotizacion.numero)
 
     // Audit log
-    const session = await getServerSession(authOptions)
     await prisma.auditLog.create({
       data: {
         action: 'quotation.created',
         entityType: 'QuotationConfig',
         entityId: cotizacion.id,
-        userId: session?.user?.id,
-        userName: session?.user?.username || 'Sistema',
+        userId: session.user.id,
+        userName: session.user.username || session.user.name || 'Sistema',
         details: {
           numero: cotizacion.numero,
           empresa: cotizacion.empresa,
@@ -201,7 +198,12 @@ export async function POST(request: NextRequest) {
 }
 
 // PUT: Actualizar cotización existente (mantiene número, incrementa versión)
+// Requiere: quotations.edit (write)
 export async function PUT(request: NextRequest) {
+  // Protección: Requiere permiso de escritura para editar cotizaciones
+  const { session, error } = await requireWritePermission('quotations.edit')
+  if (error) return error
+
   try {
     // Priorizar cotización activa/global; si no hay, tomar la más reciente
     let cotizacion = await prisma.quotationConfig.findFirst({
@@ -270,14 +272,13 @@ export async function PUT(request: NextRequest) {
     })
 
     // Audit log
-    const session = await getServerSession(authOptions)
     await prisma.auditLog.create({
       data: {
         action: 'quotation.updated',
         entityType: 'QuotationConfig',
         entityId: cotizacionActualizada.id,
-        userId: session?.user?.id,
-        userName: session?.user?.username || 'Sistema',
+        userId: session.user.id,
+        userName: session.user.username || session.user.name || 'Sistema',
         details: {
           numero: cotizacionActualizada.numero,
           empresa: cotizacionActualizada.empresa,
