@@ -59,10 +59,15 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
+        console.log('[AUTH] Iniciando authorize...')
+        console.log('[AUTH] Username recibido:', credentials?.username)
+        
         if (!credentials?.username || !credentials?.password) {
+          console.log('[AUTH] ERROR: Credenciales faltantes')
           throw new Error("Credenciales requeridas");
         }
 
+        console.log('[AUTH] Buscando usuario en BD...')
         // Buscar usuario por username
         const user = await prisma.user.findUnique({
           where: { username: credentials.username },
@@ -81,29 +86,39 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
+          console.log('[AUTH] ERROR: Usuario no encontrado')
           throw new Error("Usuario no encontrado");
         }
 
+        console.log('[AUTH] Usuario encontrado:', user.username, 'activo:', user.activo)
+
         if (!user.activo) {
+          console.log('[AUTH] ERROR: Usuario desactivado')
           throw new Error("Usuario desactivado. Contacte al administrador.");
         }
 
+        console.log('[AUTH] Verificando contraseña...')
         // Verificar contraseña
         const isValidPassword = await bcrypt.compare(
           credentials.password,
           user.passwordHash
         );
 
+        console.log('[AUTH] Contraseña válida:', isValidPassword)
+
         if (!isValidPassword) {
+          console.log('[AUTH] ERROR: Contraseña incorrecta')
           throw new Error("Contraseña incorrecta");
         }
 
+        console.log('[AUTH] Actualizando último login...')
         // Actualizar último login
         await prisma.user.update({
           where: { id: user.id },
           data: { lastLogin: new Date() },
         });
 
+        console.log('[AUTH] ✅ Autenticación exitosa para:', user.username)
         return {
           id: user.id,
           username: user.username,
