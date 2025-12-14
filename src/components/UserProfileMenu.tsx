@@ -137,6 +137,17 @@ export function UserProfileMenu({
 
   const handleSignOut = async () => {
     setIsOpen(false);
+    
+    // Registrar logout en audit log antes de cerrar sesión
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      console.error('Error logging logout:', error);
+    }
+    
     await signOut({ callbackUrl: '/login' });
   };
 

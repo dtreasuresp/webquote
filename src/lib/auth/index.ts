@@ -23,6 +23,7 @@ declare module "next-auth" {
       nombre: string;
       quotationAssignedId?: string | null;
       avatarUrl?: string | null;
+      permissions?: Array<string | { code: string; granted: boolean }>;
     };
   }
   
@@ -35,6 +36,7 @@ declare module "next-auth" {
     nombre: string;
     quotationAssignedId?: string | null;
     avatarUrl?: string | null;
+    permissions?: Array<string | { code: string; granted: boolean }>;
   }
 }
 
@@ -47,6 +49,7 @@ declare module "next-auth/jwt" {
     nombre: string;
     quotationAssignedId?: string | null;
     avatarUrl?: string | null;
+    permissions?: Array<string | { code: string; granted: boolean }>;
   }
 }
 
@@ -120,6 +123,22 @@ export const authOptions: NextAuthOptions = {
           data: { lastLogin: new Date() },
         });
 
+        // Crear log de auditoría para login
+        await prisma.auditLog.create({
+          data: {
+            action: 'login',
+            entityType: 'auth',
+            entityId: user.id,
+            userId: user.id,
+            userName: user.username,
+            details: {
+              email: user.email,
+              role: user.role,
+              timestamp: new Date().toISOString(),
+            },
+          },
+        });
+
         console.log('[AUTH] ✅ Autenticación exitosa para:', user.username)
         return {
           id: user.id,
@@ -146,6 +165,53 @@ export const authOptions: NextAuthOptions = {
         token.nombre = user.nombre;
         token.quotationAssignedId = user.quotationAssignedId;
         token.avatarUrl = user.avatarUrl;
+        
+        // Cargar permisos del usuario
+        const userFromDb = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { 
+            roleId: true,
+            UserPermission: {
+              include: {
+                Permission: {
+                  select: { code: true }
+                }
+              }
+            }
+          },
+        });
+
+        const permissionCodes: string[] = [];
+
+        // 1. Permisos del rol (RolePermissions)
+        if (userFromDb?.roleId) {
+          const rolePerms = await prisma.rolePermissions.findMany({
+            where: { 
+              roleId: userFromDb.roleId,
+              accessLevel: { not: 'none' }
+            },
+            include: {
+              permission: {
+                select: { code: true }
+              }
+            }
+          });
+          
+          rolePerms.forEach(rp => {
+            if (!permissionCodes.includes(rp.permission.code)) {
+              permissionCodes.push(rp.permission.code);
+            }
+          });
+        }
+
+        // 2. Permisos directos del usuario (UserPermission)
+        userFromDb?.UserPermission.forEach(up => {
+          if (!permissionCodes.includes(up.Permission.code)) {
+            permissionCodes.push(up.Permission.code);
+          }
+        });
+
+        token.permissions = permissionCodes;
       }
       return token;
     },
@@ -162,6 +228,7 @@ export const authOptions: NextAuthOptions = {
           nombre: token.nombre,
           quotationAssignedId: token.quotationAssignedId,
           avatarUrl: token.avatarUrl,
+          permissions: token.permissions as string[] | undefined,
         };
       }
       return session;

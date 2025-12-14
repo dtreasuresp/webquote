@@ -15,8 +15,7 @@ import type { PaquetesCaracteristicasData, MetodosPagoData } from '@/features/ad
 import { defaultPaquetesCaracteristicas, defaultMetodosPago } from '@/features/admin/components/content/oferta'
 // Tipos para presupuestoCronograma
 import type { FaseCronograma, PresupuestoCronogramaData, MetodoPagoCuotas } from '@/lib/types'
-import Toast from '@/components/layout/Toast'
-import { useToast } from '@/features/admin/hooks/useToast'
+import { useToast } from '@/components/providers/ToastProvider'
 import { obtenerSnapshotsCompleto, crearSnapshot, actualizarSnapshot, eliminarSnapshot } from '@/lib/snapshotApi'
 import { useSnapshotsRefresh } from '@/features/admin/hooks/useSnapshots'
 import { compararQuotations, validarQuotation } from '@/lib/utils/validation'
@@ -6440,8 +6439,6 @@ export default function Administrador() {
         />
       )}
       
-      {/* Toast Notifications */}
-      <Toast messages={toast.messages} onRemove={toast.removeToast} />
       </div>
     </AnalyticsProvider>
   )

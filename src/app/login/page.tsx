@@ -33,14 +33,25 @@ function LoginContent() {
     try {
       const callbackUrl = searchParams.get('callbackUrl') || '/'
       
-      // Llamar a signIn con redirect (NextAuth maneja todo)
-      // Si hay error, NextAuth redirige a /login?error=CredentialsSignin
-      // Si es exitoso, redirige al callbackUrl
-      await signIn('credentials', {
+      // Llamar a signIn SIN redirect para manejar errores en el modal
+      const result = await signIn('credentials', {
         username,
         password,
-        callbackUrl,
+        redirect: false, // No redirigir automáticamente
       })
+
+      if (result?.error) {
+        // Mostrar error en el modal
+        setError('Usuario o contraseña incorrectos')
+        setLoading(false)
+      } else if (result?.ok) {
+        // Login exitoso - redirigir manualmente
+        window.location.href = callbackUrl
+      } else {
+        // Error inesperado
+        setError('Error inesperado al iniciar sesión')
+        setLoading(false)
+      }
     } catch (error) {
       console.error('[LOGIN] Error:', error)
       setError('Error inesperado al iniciar sesión')

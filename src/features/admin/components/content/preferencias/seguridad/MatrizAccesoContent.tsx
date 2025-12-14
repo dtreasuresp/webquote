@@ -1,18 +1,25 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
-import { 
-  LayoutGrid, 
+import { useToast } from '@/components/providers/ToastProvider'
+import {
+  LayoutGrid,
   Loader2,
-  AlertCircle,
-  X,
   Save,
   Check,
   Eye,
   Ban,
-  RefreshCw
+  RefreshCw,
+  Search,
+  Filter,
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
+import { DropdownSelect } from '@/components/ui/DropdownSelect'
+import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 
 // ==================== TIPOS ====================
 
@@ -40,18 +47,20 @@ interface RolePermissionMap {
 
 // Categorías
 const CATEGORIES = [
-  { value: 'users', label: 'Usuarios', icon: '👥' },
-  { value: 'quotations', label: 'Cotizaciones', icon: '📄' },
-  { value: 'packages', label: 'Paquetes', icon: '📦' },
-  { value: 'services', label: 'Servicios', icon: '🔧' },
-  { value: 'config', label: 'Configuración', icon: '⚙️' },
-  { value: 'security', label: 'Seguridad', icon: '🛡️' },
-  { value: 'backups', label: 'Backups', icon: '💾' },
+  { value: 'Usuarios', label: 'Usuarios', icon: '👥' },
+  { value: 'Cotizaciones', label: 'Cotizaciones', icon: '📄' },
+  { value: 'Paquetes', label: 'Paquetes', icon: '📦' },
+  { value: 'Servicios', label: 'Servicios', icon: '🔧' },
+  { value: 'Sistema', label: 'Sistema', icon: '⚙️' },
+  { value: 'Backups', label: 'Backups', icon: '💾' },
 ]
 
 // ==================== COMPONENTE ====================
 
 export default function MatrizAccesoContent() {
+  // Sesión
+  const { data: session } = useSession()
+  
   // Estado
   const [roles, setRoles] = useState<Role[]>([])
   const [permissions, setPermissions] = useState<Permission[]>([])
@@ -59,17 +68,23 @@ export default function MatrizAccesoContent() {
   const [originalMatrix, setOriginalMatrix] = useState<RolePermissionMap>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
+  const toast = useToast()
   
-  // Filtro de categoría
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [accessLevelFilter, setAccessLevelFilter] = useState<string>('all')
+  const [roleFilter, setRoleFilter] = useState<string>('all')
+  
+  // Paginación
+  const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(10)
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Cargar datos
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      setError(null)
 
       const [rolesRes, permissionsRes, matrixRes] = await Promise.all([
         fetch('/api/roles'),
@@ -83,19 +98,19 @@ export default function MatrizAccesoContent() {
 
       const rolesData = await rolesRes.json()
       const permissionsData = await permissionsRes.json()
-      const matrixData = await matrixRes.json()
+      const matrixResponse = await matrixRes.json()
 
       setRoles(rolesData)
       setPermissions(permissionsData)
-      setMatrix(matrixData)
-      setOriginalMatrix(JSON.parse(JSON.stringify(matrixData)))
+      setMatrix(matrixResponse.matrix || {}) // Extraer solo la matriz
+      setOriginalMatrix(JSON.parse(JSON.stringify(matrixResponse.matrix || {})))
       setHasChanges(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido')
+      toast.error(err instanceof Error ? err.message : 'Error al cargar datos')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [toast])
 
   useEffect(() => {
     fetchData()
@@ -108,13 +123,55 @@ export default function MatrizAccesoContent() {
     setHasChanges(matrixStr !== originalStr)
   }, [matrix, originalMatrix])
 
-  // Filtrar permisos por categoría
-  const filteredPermissions = categoryFilter === 'all' 
-    ? permissions 
-    : permissions.filter(p => p.category === categoryFilter)
+  // Filtrar permisos
+  const filteredPermissions = permissions.filter(perm => {
+    const matchesSearch = 
+      perm.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      perm.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = categoryFilter === 'all' || perm.category === categoryFilter
+    
+    // Filtrar por accessLevel (verificar si algún rol tiene ese nivel)
+    if (accessLevelFilter !== 'all') {
+      const hasAccessLevel = roles.some(role => {
+        const access = matrix[role.id]?.[perm.id]
+        return access === accessLevelFilter
+      })
+      if (!hasAccessLevel) return false
+    }
+    
+    return matchesSearch && matchesCategory
+  })
 
-  // Agrupar permisos por categoría
-  const groupedPermissions = filteredPermissions.reduce((acc, perm) => {
+  // Filtrar roles
+  const filteredRoles = roleFilter === 'all' 
+    ? roles 
+    : roles.filter(r => r.id === roleFilter)
+
+  // Paginar permisos
+  const paginatedPermissions = itemsPerPage === 'all' 
+    ? filteredPermissions 
+    : filteredPermissions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const totalPages = itemsPerPage === 'all' 
+    ? 1 
+    : Math.ceil(filteredPermissions.length / itemsPerPage)
+
+  // Reset a página 1 al filtrar
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, categoryFilter, accessLevelFilter, roleFilter, itemsPerPage])
+
+  // Limpiar filtros
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setCategoryFilter('all')
+    setAccessLevelFilter('all')
+    setRoleFilter('all')
+    setCurrentPage(1)
+  }
+
+  // Agrupar permisos por categoría (usar paginatedPermissions)
+  const groupedPermissions = paginatedPermissions.reduce((acc, perm) => {
     if (!acc[perm.category]) {
       acc[perm.category] = []
     }
@@ -147,18 +204,50 @@ export default function MatrizAccesoContent() {
     try {
       setSaving(true)
       
+      // Verificar si el usuario es SUPER_ADMIN
+      const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+      
+      // Solo filtrar roles del sistema si NO es SUPER_ADMIN
+      const systemRoleIds = isSuperAdmin 
+        ? new Set<string>() // SUPER_ADMIN puede modificar todo
+        : new Set(roles.filter(r => r.isSystem).map(r => r.id)) // Otros roles no pueden modificar roles del sistema
+      
+      // Transformar la matriz a formato de updates
+      const updates: Array<{ roleId: string; permissionId: string; accessLevel: string }> = []
+      
+      for (const roleId in matrix) {
+        // Saltar roles del sistema si el usuario NO es SUPER_ADMIN
+        if (systemRoleIds.has(roleId)) {
+          continue
+        }
+        
+        for (const permissionId in matrix[roleId]) {
+          updates.push({
+            roleId,
+            permissionId,
+            accessLevel: matrix[roleId][permissionId],
+          })
+        }
+      }
+      
       const res = await fetch('/api/role-permissions', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(matrix),
+        body: JSON.stringify({ updates }),
       })
       
-      if (!res.ok) throw new Error('Error al guardar')
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Error al guardar')
+      }
       
+      // Actualizar originalMatrix para reflejar los cambios guardados
+      // Sin necesidad de recargar desde el servidor
       setOriginalMatrix(JSON.parse(JSON.stringify(matrix)))
       setHasChanges(false)
+      toast.success('✅ Permisos actualizados correctamente')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
+      toast.error(err instanceof Error ? err.message : 'Error al guardar')
     } finally {
       setSaving(false)
     }
@@ -310,43 +399,86 @@ export default function MatrizAccesoContent() {
         </span>
       </div>
 
-      {/* Filtro de categoría */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <button
-          onClick={() => setCategoryFilter('all')}
-          className={`px-2 py-1 rounded text-[10px] transition-colors ${
-            categoryFilter === 'all' 
-              ? 'bg-gh-accent/20 text-gh-accent' 
-              : 'text-gh-text-muted hover:bg-gh-bg-tertiary'
-          }`}
-        >
-          Todas
-        </button>
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.value}
-            onClick={() => setCategoryFilter(cat.value)}
-            className={`px-2 py-1 rounded text-[10px] transition-colors ${
-              categoryFilter === cat.value 
-                ? 'bg-gh-accent/20 text-gh-accent' 
-                : 'text-gh-text-muted hover:bg-gh-bg-tertiary'
-            }`}
-          >
-            {cat.icon} {cat.label}
-          </button>
-        ))}
-      </div>
+      {/* Filtros */}
+      <div className="flex flex-col gap-3">
+        {/* Primera fila: Search + Filtros de categoría, nivel de acceso y rol */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gh-text-muted" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar permisos..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-gh-bg-secondary border border-gh-border/30 rounded-md text-gh-text-primary placeholder:text-gh-text-muted focus:outline-none focus:border-gh-accent/50 transition-colors"
+            />
+          </div>
 
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-2 p-3 bg-gh-danger/10 border border-gh-danger/30 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-gh-danger" />
-          <span className="text-xs text-gh-danger">{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
-            <X className="w-3.5 h-3.5 text-gh-danger hover:text-gh-danger/80" />
-          </button>
+          {/* Categoría */}
+          <DropdownSelect
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            options={[
+              { value: 'all', label: 'Todas las categorías' },
+              ...CATEGORIES.map(cat => ({ 
+                value: cat.value, 
+                label: `${cat.icon} ${cat.label}` 
+              }))
+            ]}
+            placeholder="Categoría"
+            className="min-w-[180px]"
+          />
+
+          {/* Nivel de acceso */}
+          <DropdownSelect
+            value={accessLevelFilter}
+            onChange={setAccessLevelFilter}
+            options={[
+              { value: 'all', label: 'Todos los niveles' },
+              { value: 'full', label: '✓ Acceso total' },
+              { value: 'readonly', label: '👁️ Solo lectura' },
+              { value: 'none', label: '✗ Sin acceso' }
+            ]}
+            placeholder="Nivel de acceso"
+            className="min-w-[160px]"
+          />
+
+          {/* Filtro por rol */}
+          <DropdownSelect
+            value={roleFilter}
+            onChange={setRoleFilter}
+            options={[
+              { value: 'all', label: 'Todos los roles' },
+              ...roles.map(role => ({ 
+                value: role.id, 
+                label: role.nombre 
+              }))
+            ]}
+            placeholder="Rol"
+            className="min-w-[160px]"
+          />
+
+          {/* Botón limpiar filtros */}
+          {(searchTerm || categoryFilter !== 'all' || accessLevelFilter !== 'all' || roleFilter !== 'all') && (
+            <button
+              onClick={handleClearFilters}
+              className="flex items-center gap-1 px-2 py-1.5 text-xs text-gh-text-muted hover:text-gh-text-primary border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              Limpiar
+            </button>
+          )}
         </div>
-      )}
+
+        {/* Segunda fila: ItemsPerPageSelector */}
+        <ItemsPerPageSelector
+          value={itemsPerPage}
+          onChange={setItemsPerPage}
+          total={filteredPermissions.length}
+          className="w-fit"
+        />
+      </div>
 
       {/* Tabla de matriz */}
       <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-auto">
@@ -415,6 +547,51 @@ export default function MatrizAccesoContent() {
           </tbody>
         </table>
       </div>
+
+      {/* Empty state o navegación */}
+      {paginatedPermissions.length === 0 ? (
+        <div className="py-12 text-center">
+          <Filter className="w-12 h-12 mx-auto text-gh-text-muted/30 mb-3" />
+          <p className="text-sm text-gh-text-muted">
+            {searchTerm || categoryFilter !== 'all' || accessLevelFilter !== 'all' || roleFilter !== 'all'
+              ? 'No se encontraron permisos con los filtros aplicados'
+              : 'No hay permisos para mostrar'}
+          </p>
+        </div>
+      ) : totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center justify-between pt-2"
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Anterior
+          </motion.button>
+
+          <span className="text-xs text-gh-text-muted">
+            Página {currentPage} de {totalPages}
+          </span>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            Siguiente
+            <ChevronRight className="w-3.5 h-3.5" />
+          </motion.button>
+        </motion.div>
+      )}
     </div>
   )
 }

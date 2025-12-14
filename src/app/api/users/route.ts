@@ -6,9 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, hashPassword, generateUsername, generateTemporaryPassword } from '@/lib/auth'
 import { prisma } from "@/lib/prisma";
-import { hashPassword, generateUsername, generateTemporaryPassword } from "@/lib/auth";
 
 // GET: Listar usuarios
 export async function GET(request: NextRequest) {
@@ -54,7 +53,7 @@ export async function GET(request: NextRequest) {
             Permission: true,
           },
         } : false,
-        QuotationConfig: {
+        quotationAssigned: {
           select: {
             id: true,
             empresa: true,
@@ -180,6 +179,25 @@ export async function POST(request: NextRequest) {
         createdAt: true,
       },
     });
+
+    // Log de auditoría
+    await prisma.auditLog.create({
+      data: {
+        action: 'user.created',
+        entityType: 'User',
+        entityId: user.id,
+        userId: session.user.id || null,
+        userName: session.user.username || 'SYSTEM',
+        details: {
+          username: user.username,
+          nombre: user.nombre,
+          role: user.role,
+          empresa: user.empresa,
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null,
+        userAgent: request.headers.get('user-agent') || null,
+      },
+    })
 
     return NextResponse.json({
       user,

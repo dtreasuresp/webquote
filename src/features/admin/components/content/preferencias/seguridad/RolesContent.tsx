@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { useSession } from 'next-auth/react'
 import { 
   Shield, 
   Plus, 
@@ -11,9 +12,16 @@ import {
   Loader2,
   AlertCircle,
   Check,
-  X
+  X,
+  Search,
+  Filter,
+  Eye,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
+import { useRequirePermission } from '@/hooks'
+import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 
 // ==================== TIPOS ====================
 
@@ -38,15 +46,29 @@ interface RoleFormData {
   description: string
   hierarchy: number
   color: string
+  isSystem?: boolean
 }
 
 // ==================== COMPONENTE ====================
 
 export default function RolesContent() {
+  // Permisos
+  const canManageRoles = useRequirePermission('security.roles.manage')
+  const canViewRoles = useRequirePermission('security.roles.view')
+  
   // Estado
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showActiveOnly, setShowActiveOnly] = useState(false)
+  const [showSystemOnly, setShowSystemOnly] = useState(false)
+  
+  // Paginación
+  const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(10)
+  const [currentPage, setCurrentPage] = useState(1)
   
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -61,6 +83,7 @@ export default function RolesContent() {
     description: '',
     hierarchy: 50,
     color: '#6B7280',
+    isSystem: false,
   })
 
   // Colores predefinidos
@@ -106,13 +129,19 @@ export default function RolesContent() {
       description: '',
       hierarchy: 50,
       color: '#6B7280',
+      isSystem: false,
     })
     setIsModalOpen(true)
   }
 
+  // Obtener sesión para verificar permisos
+  const { data: session } = useSession()
+  const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+
   // Abrir modal editar
   const handleEdit = (role: Role) => {
-    if (role.isSystem) return // No editar roles del sistema
+    // Solo SUPER_ADMIN puede editar roles del sistema
+    if (role.isSystem && !isSuperAdmin) return
     setModalMode('edit')
     setSelectedRole(role)
     setFormData({
@@ -121,6 +150,7 @@ export default function RolesContent() {
       description: role.description || '',
       hierarchy: role.hierarchy,
       color: role.color || '#6B7280',
+      isSystem: role.isSystem,
     })
     setIsModalOpen(true)
   }
@@ -158,7 +188,8 @@ export default function RolesContent() {
 
   // Eliminar rol
   const handleDelete = async (role: Role) => {
-    if (role.isSystem) return
+    // Solo SUPER_ADMIN puede eliminar roles del sistema
+    if (role.isSystem && !isSuperAdmin) return
     if (!confirm(`¿Eliminar el rol "${role.displayName}"?`)) return
     
     try {
@@ -172,7 +203,8 @@ export default function RolesContent() {
 
   // Toggle activo
   const handleToggleActive = async (role: Role) => {
-    if (role.isSystem) return
+    // Solo SUPER_ADMIN puede modificar estado de roles del sistema
+    if (role.isSystem && !isSuperAdmin) return
     
     try {
       const res = await fetch(`/api/roles/${role.id}`, {
@@ -185,6 +217,38 @@ export default function RolesContent() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al actualizar')
     }
+  }
+
+  // Filtrar roles
+  const filteredRoles = roles.filter(role => {
+    const matchesSearch = 
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.displayName.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesActive = !showActiveOnly || role.isActive
+    const matchesSystem = !showSystemOnly || role.isSystem
+    return matchesSearch && matchesActive && matchesSystem
+  })
+
+  // Paginar roles
+  const paginatedRoles = itemsPerPage === 'all' 
+    ? filteredRoles 
+    : filteredRoles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const totalPages = itemsPerPage === 'all' 
+    ? 1 
+    : Math.ceil(filteredRoles.length / itemsPerPage)
+
+  // Reset a página 1 al filtrar
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, showActiveOnly, showSystemOnly, itemsPerPage])
+
+  // Limpiar filtros
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setShowActiveOnly(false)
+    setShowSystemOnly(false)
+    setCurrentPage(1)
   }
 
   // ==================== RENDER ====================
@@ -211,13 +275,78 @@ export default function RolesContent() {
             Administra los roles y niveles de acceso del sistema
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Nuevo Rol
-        </button>
+        {canManageRoles && (
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Nuevo Rol
+          </button>
+        )}
+      </div>
+
+      {/* Filtros */}
+      <div className="flex flex-col gap-3">
+        {/* Primera fila: Search + Toggles */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Búsqueda */}
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gh-text-muted" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por nombre..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-gh-bg-secondary border border-gh-border/30 rounded-md text-gh-text-primary placeholder:text-gh-text-muted focus:outline-none focus:border-gh-accent/50 transition-colors"
+            />
+          </div>
+
+          {/* Toggle Solo activos */}
+          <button
+            onClick={() => setShowActiveOnly(!showActiveOnly)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border transition-colors ${
+              showActiveOnly
+                ? 'bg-gh-accent/10 text-gh-accent border-gh-accent/30'
+                : 'bg-gh-bg-secondary text-gh-text-muted border-gh-border/30 hover:bg-gh-bg-tertiary'
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            Solo activos
+          </button>
+
+          {/* Toggle Solo sistema */}
+          <button
+            onClick={() => setShowSystemOnly(!showSystemOnly)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border transition-colors ${
+              showSystemOnly
+                ? 'bg-gh-accent/10 text-gh-accent border-gh-accent/30'
+                : 'bg-gh-bg-secondary text-gh-text-muted border-gh-border/30 hover:bg-gh-bg-tertiary'
+            }`}
+          >
+            <Filter className="w-3.5 h-3.5" />
+            Solo sistema
+          </button>
+
+          {/* Botón limpiar filtros */}
+          {(searchTerm || showActiveOnly || showSystemOnly) && (
+            <button
+              onClick={handleClearFilters}
+              className="flex items-center gap-1 px-2 py-1.5 text-xs text-gh-text-muted hover:text-gh-text-primary border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              Limpiar
+            </button>
+          )}
+        </div>
+
+        {/* Segunda fila: ItemsPerPageSelector */}
+        <ItemsPerPageSelector
+          value={itemsPerPage}
+          onChange={setItemsPerPage}
+          total={filteredRoles.length}
+          className="w-fit"
+        />
       </div>
 
       {/* Error */}
@@ -245,14 +374,24 @@ export default function RolesContent() {
             </tr>
           </thead>
           <tbody>
-            {roles.map((role, index) => (
-              <motion.tr
-                key={role.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="border-b border-gh-border/10 hover:bg-gh-bg-tertiary/20 transition-colors"
-              >
+            {paginatedRoles.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-gh-text-muted">
+                  <Filter className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                  {searchTerm || showActiveOnly || showSystemOnly 
+                    ? 'No se encontraron roles con los filtros aplicados'
+                    : 'No hay roles disponibles'}
+                </td>
+              </tr>
+            ) : (
+              paginatedRoles.map((role, index) => (
+                <motion.tr
+                  key={role.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="border-b border-gh-border/10 hover:bg-gh-bg-tertiary/20 transition-colors"
+                >
                 {/* Rol */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
@@ -304,7 +443,7 @@ export default function RolesContent() {
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => handleToggleActive(role)}
-                    disabled={role.isSystem}
+                    disabled={role.isSystem && !isSuperAdmin}
                     className={`
                       inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
                       transition-colors
@@ -312,7 +451,7 @@ export default function RolesContent() {
                         ? 'bg-gh-success/10 text-gh-success' 
                         : 'bg-gh-text-muted/10 text-gh-text-muted'
                       }
-                      ${role.isSystem ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:opacity-80'}
+                      ${(role.isSystem && !isSuperAdmin) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:opacity-80'}
                     `}
                   >
                     {role.isActive ? (
@@ -332,48 +471,85 @@ export default function RolesContent() {
                 {/* Acciones */}
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => handleEdit(role)}
-                      disabled={role.isSystem}
-                      className={`
-                        p-1.5 rounded-md transition-colors
-                        ${role.isSystem 
-                          ? 'text-gh-text-muted/40 cursor-not-allowed' 
-                          : 'text-gh-text-muted hover:text-gh-accent hover:bg-gh-accent/10'
-                        }
-                      `}
-                      title={role.isSystem ? 'Rol del sistema' : 'Editar'}
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(role)}
-                      disabled={role.isSystem}
-                      className={`
-                        p-1.5 rounded-md transition-colors
-                        ${role.isSystem 
-                          ? 'text-gh-text-muted/40 cursor-not-allowed' 
-                          : 'text-gh-text-muted hover:text-gh-danger hover:bg-gh-danger/10'
-                        }
-                      `}
-                      title={role.isSystem ? 'Rol del sistema' : 'Eliminar'}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {canManageRoles && (
+                      <>
+                        <button
+                          onClick={() => handleEdit(role)}
+                          disabled={role.isSystem && !isSuperAdmin}
+                          className={`
+                            p-1.5 rounded-md transition-colors
+                            ${(role.isSystem && !isSuperAdmin)
+                              ? 'text-gh-text-muted/40 cursor-not-allowed' 
+                              : 'text-gh-text-muted hover:text-gh-accent hover:bg-gh-accent/10'
+                            }
+                          `}
+                          title={(role.isSystem && !isSuperAdmin) ? 'Solo SUPER_ADMIN puede editar roles del sistema' : 'Editar'}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(role)}
+                          disabled={role.isSystem && !isSuperAdmin}
+                          className={`
+                            p-1.5 rounded-md transition-colors
+                            ${(role.isSystem && !isSuperAdmin)
+                              ? 'text-gh-text-muted/40 cursor-not-allowed' 
+                              : 'text-gh-text-muted hover:text-gh-danger hover:bg-gh-danger/10'
+                            }
+                          `}
+                          title={(role.isSystem && !isSuperAdmin) ? 'Solo SUPER_ADMIN puede eliminar roles del sistema' : 'Eliminar'}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
+                    {!canManageRoles && canViewRoles && (
+                      <span className="text-[10px] text-gh-text-muted px-2">Solo lectura</span>
+                    )}
                   </div>
                 </td>
               </motion.tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
-
-        {roles.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-gh-text-muted">
-            <Shield className="w-8 h-8 mb-2 opacity-40" />
-            <p className="text-sm">No hay roles configurados</p>
-          </div>
-        )}
       </div>
+
+      {/* Navegación */}
+      {totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center justify-between pt-2"
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Anterior
+          </motion.button>
+
+          <span className="text-xs text-gh-text-muted">
+            Página {currentPage} de {totalPages}
+          </span>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            Siguiente
+            <ChevronRight className="w-3.5 h-3.5" />
+          </motion.button>
+        </motion.div>
+      )}
 
       {/* Modal Crear/Editar */}
       <DialogoGenericoDinamico
@@ -487,6 +663,35 @@ export default function RolesContent() {
                 />
               </div>
             </div>
+
+            {/* Rol del Sistema - Solo SUPER_ADMIN */}
+            {isSuperAdmin && (
+              <div className="pt-3 border-t border-gh-border/30">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gh-text mb-1">
+                      Rol del Sistema
+                    </label>
+                    <p className="text-xs text-gh-text-muted">
+                      Los roles del sistema solo pueden ser modificados por SUPER_ADMIN y tienen protección especial
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, isSystem: !prev.isSystem }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      formData.isSystem ? 'bg-gh-accent' : 'bg-gh-border'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        formData.isSystem ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         }
         actions={[

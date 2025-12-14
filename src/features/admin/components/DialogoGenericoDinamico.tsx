@@ -135,18 +135,23 @@ export default function DialogoGenericoDinamico({
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  // Inicializar formData con valores default
+  // Inicializar formData con valores default SOLO cuando el modal se abre
   useEffect(() => {
-    if (contentType === 'form' && formConfig) {
+    if (isOpen && contentType === 'form' && formConfig && !isInitialized) {
       const initialData: Record<string, any> = {}
       formConfig.fields.forEach(field => {
         initialData[field.id] = field.value ?? ''
       })
       setFormData(initialData)
       setFormErrors({})
+      setIsInitialized(true)
+    } else if (!isOpen) {
+      // Resetear flag cuando se cierra el modal
+      setIsInitialized(false)
     }
-  }, [contentType, formConfig, isOpen])
+  }, [isOpen, contentType, formConfig, isInitialized])
 
   // Cerrar con ESC
   useEffect(() => {

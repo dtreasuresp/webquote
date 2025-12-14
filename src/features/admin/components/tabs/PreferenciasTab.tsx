@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Save } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { UserPreferences } from '@/lib/types'
@@ -32,6 +32,9 @@ export default function PreferenciasTab({
   
   const [activeSection, setActiveSection] = useState<SidebarSection>('general')
   const [activeSecuritySubSection, setActiveSecuritySubSection] = useState<SecuritySubSection>('roles')
+
+  // Memoizar quotations para evitar re-renders innecesarios
+  const memoizedQuotations = useMemo(() => quotations, [quotations.length])
 
   return (
     <div className="pl-2 pr-6 py-6 flex gap-6 items-stretch">
@@ -81,7 +84,7 @@ export default function PreferenciasTab({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <UserManagementPanel quotations={quotations} />
+              <UserManagementPanel quotations={memoizedQuotations} />
             </motion.div>
           )}
 

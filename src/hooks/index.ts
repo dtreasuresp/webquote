@@ -17,3 +17,12 @@ export type { UseTabSyncOptions, UseTabSyncReturn } from './useTabSync'
 
 // UI hooks
 export { useCollapsibleState } from './useCollapsibleState'
+
+// Permission hooks
+export { 
+  useRequirePermission,
+  useRequireAnyPermission,
+  useRequireAllPermissions,
+  usePermissionCheck
+} from './useRequirePermission'
+export { default as usePermission } from './useRequirePermission'

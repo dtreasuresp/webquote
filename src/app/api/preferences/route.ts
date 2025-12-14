@@ -117,6 +117,24 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        action: 'preferences.updated',
+        entityType: 'UserPreferences',
+        entityId: preferences.id,
+        userId: session?.user?.id,
+        userName: session?.user?.username || 'Sistema',
+        details: {
+          cambios: Object.keys(body),
+          destinoGuardado: body.destinoGuardado,
+          sincronizacionActiva: body.sincronizarAlRecuperarConexion,
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      },
+    })
+
     const res = NextResponse.json({
       success: true,
       data: preferences,

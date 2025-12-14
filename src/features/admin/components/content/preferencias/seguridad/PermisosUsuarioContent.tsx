@@ -12,10 +12,14 @@ import {
   Trash2,
   Check,
   Shield,
-  Key
+  Key,
+  Filter,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
+import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 
 // ==================== TIPOS ====================
 
@@ -60,8 +64,15 @@ export default function PermisosUsuarioContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  // Búsqueda
+  // Búsqueda y filtros
   const [searchTerm, setSearchTerm] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'with-permissions' | 'without-permissions'>('all')
+  
+  // Paginación
+  const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(10)
+  const [currentPage, setCurrentPage] = useState(1)
   
   // Usuario seleccionado
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -104,11 +115,54 @@ export default function PermisosUsuarioContent() {
   }, [fetchData])
 
   // Filtrar usuarios
-  const filteredUsers = users.filter(user => 
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
+  const filteredUsers = users.filter(user => {
+    // Búsqueda por texto
+    const matchesSearch = !searchTerm || 
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+    
+    // Filtro por rol
+    const matchesRole = roleFilter === 'all' || user.roleRef?.id === roleFilter
+    
+    // Filtro por estado de permisos
+    const matchesStatus = 
+      statusFilter === 'all' ||
+      (statusFilter === 'with-permissions' && user.UserPermission.length > 0) ||
+      (statusFilter === 'without-permissions' && user.UserPermission.length === 0)
+    
+    return matchesSearch && matchesRole && matchesStatus
+  })
+
+  // Paginación
+  const paginatedUsers = itemsPerPage === 'all' 
+    ? filteredUsers 
+    : filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  
+  const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(filteredUsers.length / itemsPerPage)
+
+  // Reset página cuando cambien filtros
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, categoryFilter, roleFilter, statusFilter, itemsPerPage])
+
+  // Limpiar filtros
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setCategoryFilter('all')
+    setRoleFilter('all')
+    setStatusFilter('all')
+  }
+
+  // Obtener roles únicos
+  const uniqueRoles = users
+    .filter(u => u.roleRef)
+    .reduce((acc, user) => {
+      if (user.roleRef && !acc.find(r => r.id === user.roleRef!.id)) {
+        acc.push(user.roleRef)
+      }
+      return acc
+    }, [] as Array<{ id: string; displayName: string; color: string | null }>)
 
   // Abrir modal para agregar permiso
   const handleAddPermission = (user: User) => {
@@ -194,15 +248,68 @@ export default function PermisosUsuarioContent() {
         </div>
       </div>
 
-      {/* Búsqueda */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gh-text-muted" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Buscar usuario..."
-          className="w-full pl-8 pr-3 py-1.5 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs text-gh-text placeholder:text-gh-text-muted focus:outline-none focus:ring-1 focus:ring-gh-accent"
+      {/* Filtros */}
+      <div className="flex flex-col gap-3">
+        {/* Primera fila: Search + Filtros */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gh-text-muted" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar usuario..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-gh-bg-secondary border border-gh-border/30 rounded-md text-gh-text-primary placeholder:text-gh-text-muted focus:outline-none focus:border-gh-accent/50 transition-colors"
+            />
+          </div>
+
+          {/* Rol */}
+          <DropdownSelect
+            value={roleFilter}
+            onChange={setRoleFilter}
+            options={[
+              { value: 'all', label: 'Todos los roles' },
+              ...uniqueRoles.map(role => ({ 
+                value: role.id, 
+                label: role.displayName 
+              }))
+            ]}
+            placeholder="Rol"
+            className="min-w-[160px]"
+          />
+
+          {/* Estado de permisos */}
+          <DropdownSelect
+            value={statusFilter}
+            onChange={(value) => setStatusFilter(value as typeof statusFilter)}
+            options={[
+              { value: 'all', label: 'Todos los estados' },
+              { value: 'with-permissions', label: 'Con permisos individuales' },
+              { value: 'without-permissions', label: 'Sin permisos individuales' }
+            ]}
+            placeholder="Estado"
+            className="min-w-[200px]"
+          />
+
+          {/* Botón limpiar filtros */}
+          {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+            <button
+              onClick={handleClearFilters}
+              className="flex items-center gap-1 px-2 py-1.5 text-xs text-gh-text-muted hover:text-gh-text-primary border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              Limpiar
+            </button>
+          )}
+        </div>
+
+        {/* Segunda fila: ItemsPerPageSelector */}
+        <ItemsPerPageSelector
+          value={itemsPerPage}
+          onChange={setItemsPerPage}
+          total={filteredUsers.length}
+          className="w-fit"
         />
       </div>
 
@@ -218,8 +325,18 @@ export default function PermisosUsuarioContent() {
       )}
 
       {/* Lista de usuarios */}
-      <div className="space-y-3">
-        {filteredUsers.map((user, index) => (
+      {paginatedUsers.length === 0 ? (
+        <div className="py-12 text-center">
+          <Filter className="w-12 h-12 mx-auto text-gh-text-muted/30 mb-3" />
+          <p className="text-sm text-gh-text-muted">
+            {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
+              ? 'No se encontraron usuarios con los filtros aplicados'
+              : 'No hay usuarios para mostrar'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {paginatedUsers.map((user, index) => (
           <motion.div
             key={user.id}
             initial={{ opacity: 0, y: 10 }}
@@ -304,9 +421,47 @@ export default function PermisosUsuarioContent() {
             </div>
           </motion.div>
         ))}
-      </div>
+        </div>
+      )}
 
-      {filteredUsers.length === 0 && (
+      {/* Navegación */}
+      {totalPages > 1 && paginatedUsers.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center justify-between pt-2"
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Anterior
+          </motion.button>
+
+          <span className="text-xs text-gh-text-muted">
+            Página {currentPage} de {totalPages}
+          </span>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            Siguiente
+            <ChevronRight className="w-3.5 h-3.5" />
+          </motion.button>
+        </motion.div>
+      )}
+
+      {/* Legacy empty state - can be removed */}
+      {filteredUsers.length === 0 && false && (
         <div className="flex flex-col items-center justify-center py-12 text-gh-text-muted">
           <Users className="w-8 h-8 mb-2 opacity-40" />
           <p className="text-sm">No se encontraron usuarios</p>

@@ -6,8 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from 'next-auth'
+import { authOptions, hashPassword, generateTemporaryPassword } from '@/lib/auth'
 import { prisma } from "@/lib/prisma";
-import { hashPassword, generateTemporaryPassword } from "@/lib/auth";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -133,6 +134,25 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       },
     });
 
+    // Log de auditoría
+    const session = await getServerSession(authOptions)
+    await prisma.auditLog.create({
+      data: {
+        action: resetPassword ? 'user.password_reset' : 'user.updated',
+        entityType: 'User',
+        entityId: id,
+        userId: session?.user?.id || null,
+        userName: session?.user?.username || 'SYSTEM',
+        details: {
+          username: existingUser.username,
+          changes: updateData,
+          resetPassword: !!resetPassword,
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null,
+        userAgent: request.headers.get('user-agent') || null,
+      },
+    })
+
     return NextResponse.json({
       user,
       ...(newPassword && { newPassword }),
@@ -166,6 +186,25 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Eliminar usuario
     await prisma.user.delete({ where: { id } });
+
+    // Log de auditoría
+    const session = await getServerSession(authOptions)
+    await prisma.auditLog.create({
+      data: {
+        action: 'user.deleted',
+        entityType: 'User',
+        entityId: id,
+        userId: session?.user?.id || null,
+        userName: session?.user?.username || 'SYSTEM',
+        details: {
+          username: existingUser.username,
+          nombre: existingUser.nombre,
+          role: existingUser.role,
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null,
+        userAgent: request.headers.get('user-agent') || null,
+      },
+    })
 
     return NextResponse.json({
       message: "Usuario eliminado exitosamente",

@@ -6,7 +6,6 @@
  */
 
 import { prisma } from '@/lib/prisma';
-import { randomUUID } from 'crypto'
 import { UserRole } from '@prisma/client';
 
 // Tipo para los códigos de permisos
@@ -27,8 +26,16 @@ export type PermissionCode =
   | 'services.edit'
   | 'config.view'
   | 'config.edit'
-  | 'permissions.manage'
-  | 'roles.manage'
+  | 'security.roles.view'
+  | 'security.roles.manage'
+  | 'security.permissions.view'
+  | 'security.permissions.manage'
+  | 'security.matrix.view'
+  | 'security.matrix.manage'
+  | 'security.user_permissions.view'
+  | 'security.user_permissions.manage'
+  | 'security.logs.view'
+  | 'security.logs.export'
   | 'backups.view'
   | 'backups.create'
   | 'backups.restore'
@@ -110,24 +117,38 @@ export async function getUserPermissions(userId: string): Promise<Map<string, bo
     return new Map();
   }
 
-  // 2. Obtener permisos del rol
-  const rolePermissions = await prisma.rolePermission.findMany({
-    where: { role: user.role },
-    include: { Permission: true },
+  // 2. Obtener roleId del usuario
+  const userWithRole = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, roleId: true },
   });
 
-  // 3. Obtener permisos personalizados del usuario (override)
+  if (!userWithRole) {
+    return new Map();
+  }
+
+  // 3. Obtener permisos del rol desde tabla NUEVA (RolePermissions)
+  let rolePermissions: any[] = [];
+  if (userWithRole.roleId) {
+    rolePermissions = await prisma.rolePermissions.findMany({
+      where: { roleId: userWithRole.roleId },
+      include: { permission: true },
+    });
+  }
+
+  // 4. Obtener permisos personalizados del usuario (override)
   const userPermissions = await prisma.userPermission.findMany({
     where: { userId },
     include: { Permission: true },
   });
 
-  // 4. Construir mapa de permisos
+  // 5. Construir mapa de permisos
   const permissionMap = new Map<string, boolean>();
 
-  // Agregar permisos del rol
+  // Agregar permisos del rol (accessLevel: none/read/write/full)
   for (const rp of rolePermissions) {
-    permissionMap.set(rp.Permission.code, rp.enabled);
+    // Cualquier accessLevel diferente de 'none' se considera habilitado
+    permissionMap.set(rp.permission.code, rp.accessLevel !== 'none');
   }
 
   // Aplicar overrides del usuario
@@ -204,18 +225,18 @@ export async function getPermissionsByCategory(): Promise<Record<string, Array<{
 /**
  * Obtiene la configuración de permisos de un rol
  * 
- * @param role - Rol a consultar
+ * @param roleId - ID del rol a consultar
  * @returns Mapa de permisos con código -> habilitado
  */
-export async function getRolePermissions(role: UserRole): Promise<Map<string, boolean>> {
-  const rolePermissions = await prisma.rolePermission.findMany({
-    where: { role },
-    include: { Permission: true },
+export async function getRolePermissions(roleId: string): Promise<Map<string, boolean>> {
+  const rolePermissions = await prisma.rolePermissions.findMany({
+    where: { roleId },
+    include: { permission: true },
   });
 
   const permissionMap = new Map<string, boolean>();
   for (const rp of rolePermissions) {
-    permissionMap.set(rp.Permission.code, rp.enabled);
+    permissionMap.set(rp.permission.code, rp.accessLevel !== 'none');
   }
 
   return permissionMap;
@@ -224,14 +245,14 @@ export async function getRolePermissions(role: UserRole): Promise<Map<string, bo
 /**
  * Actualiza un permiso de rol
  * 
- * @param role - Rol a actualizar
+ * @param roleId - ID del rol a actualizar
  * @param permissionCode - Código del permiso
- * @param enabled - Si el permiso está habilitado o no
+ * @param accessLevel - Nivel de acceso: none, read, write, full
  */
 export async function updateRolePermission(
-  role: UserRole,
+  roleId: string,
   permissionCode: string,
-  enabled: boolean
+  accessLevel: string
 ): Promise<void> {
   const permission = await prisma.permission.findUnique({
     where: { code: permissionCode },
@@ -241,19 +262,18 @@ export async function updateRolePermission(
     throw new Error(`Permiso no encontrado: ${permissionCode}`);
   }
 
-  await prisma.rolePermission.upsert({
+  await prisma.rolePermissions.upsert({
     where: {
-      role_permissionId: {
-        role,
+      roleId_permissionId: {
+        roleId,
         permissionId: permission.id,
       },
     },
-    update: { enabled },
+    update: { accessLevel },
     create: {
-      id: randomUUID(),
-      role,
+      roleId,
       permissionId: permission.id,
-      enabled,
+      accessLevel,
     },
   });
 }

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 
 /**
@@ -8,6 +10,8 @@ import prisma from '@/lib/prisma'
  */
 export async function GET() {
   try {
+    console.log('[API RolePermissions] Iniciando consulta...')
+    
     const rolePermissions = await prisma.rolePermissions.findMany({
       include: {
         role: {
@@ -29,6 +33,8 @@ export async function GET() {
       },
     })
 
+    console.log('[API RolePermissions] Permisos encontrados:', rolePermissions.length)
+
     // Construir matriz { roleId: { permissionId: accessLevel } }
     const matrix: Record<string, Record<string, string>> = {}
     
@@ -39,6 +45,8 @@ export async function GET() {
       matrix[rp.roleId][rp.permissionId] = rp.accessLevel
     }
 
+    console.log('[API RolePermissions] Matriz construida con', Object.keys(matrix).length, 'roles')
+
     return NextResponse.json({
       matrix,
       rolePermissions, // También enviar lista plana para referencia
@@ -46,7 +54,7 @@ export async function GET() {
   } catch (error) {
     console.error('[API RolePermissions] Error fetching matrix:', error)
     return NextResponse.json(
-      { error: 'Error al obtener matriz de permisos' },
+      { error: 'Error al obtener matriz de permisos', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
@@ -59,8 +67,16 @@ export async function GET() {
  */
 export async function PUT(request: Request) {
   try {
+    // Obtener sesión para validar permisos
+    const session = await getServerSession(authOptions)
+    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+    
     const body = await request.json()
     const { updates } = body
+    
+    console.log('[PUT RolePermissions] Received updates:', updates?.length || 0)
+    console.log('[PUT RolePermissions] User role:', session?.user?.role)
+    console.log('[PUT RolePermissions] First update:', updates?.[0])
 
     if (!Array.isArray(updates)) {
       return NextResponse.json(
@@ -69,58 +85,86 @@ export async function PUT(request: Request) {
       )
     }
 
-    // Verificar que ningún rol sea del sistema
+    // Obtener todos los roleIds únicos
     const roleIds = [...new Set(updates.map((u: { roleId: string }) => u.roleId))]
-    const systemRoles = await prisma.role.findMany({
-      where: { 
-        id: { in: roleIds },
-        isSystem: true,
-      },
-    })
 
-    if (systemRoles.length > 0) {
-      return NextResponse.json(
-        { error: 'No se pueden modificar permisos de roles del sistema' },
-        { status: 403 }
-      )
+    // Verificar que ningún rol sea del sistema (SOLO si NO es SUPER_ADMIN)
+    if (!isSuperAdmin) {
+      console.log('[PUT RolePermissions] Checking roles:', roleIds)
+      
+      const systemRoles = await prisma.role.findMany({
+        where: { 
+          id: { in: roleIds },
+          isSystem: true,
+        },
+      })
+      
+      console.log('[PUT RolePermissions] System roles found:', systemRoles.length)
+
+      if (systemRoles.length > 0) {
+        return NextResponse.json(
+          { error: 'No se pueden modificar permisos de roles del sistema' },
+          { status: 403 }
+        )
+      }
+    } else {
+      console.log('[PUT RolePermissions] SUPER_ADMIN - Permitiendo modificación de roles del sistema')
     }
 
-    // Procesar updates
-    const results = []
+    // Procesar updates en paralelo para máxima velocidad
+    console.log('[PUT RolePermissions] Processing', updates.length, 'updates in parallel')
+    
+    // Separar updates en deletes y upserts
+    const deletePromises: Promise<any>[] = []
+    const upsertPromises: Promise<any>[] = []
     
     for (const update of updates) {
       const { roleId, permissionId, accessLevel } = update
 
       if (!roleId || !permissionId || !accessLevel) {
+        console.log('[PUT RolePermissions] Skipping invalid update:', update)
         continue
       }
 
-      // Verificar si ya existe
-      const existing = await prisma.rolePermissions.findUnique({
-        where: {
-          roleId_permissionId: { roleId, permissionId },
-        },
-      })
-
       if (accessLevel === 'none') {
-        // Si es 'none', eliminar la asociación si existe
-        if (existing) {
-          await prisma.rolePermissions.delete({
-            where: { id: existing.id },
+        // Eliminar si existe
+        deletePromises.push(
+          prisma.rolePermissions.deleteMany({
+            where: { roleId, permissionId },
           })
-        }
+        )
       } else {
-        // Upsert
-        const result = await prisma.rolePermissions.upsert({
-          where: {
-            roleId_permissionId: { roleId, permissionId },
-          },
-          update: { accessLevel },
-          create: { roleId, permissionId, accessLevel },
-        })
-        results.push(result)
+        // Upsert en paralelo
+        upsertPromises.push(
+          prisma.rolePermissions.upsert({
+            where: {
+              roleId_permissionId: { roleId, permissionId },
+            },
+            update: { accessLevel },
+            create: { roleId, permissionId, accessLevel },
+          })
+        )
       }
     }
+
+    console.log('[PUT RolePermissions] Parallel operations:', { 
+      deletes: deletePromises.length, 
+      upserts: upsertPromises.length 
+    })
+
+    // Ejecutar todas las operaciones en paralelo
+    const [deleteResults, upsertResults] = await Promise.all([
+      Promise.all(deletePromises),
+      Promise.all(upsertPromises),
+    ])
+
+    const deletedCount = deleteResults.reduce((sum, r) => sum + (r.count || 0), 0)
+    const upsertedCount = upsertResults.length
+
+    console.log('[PUT RolePermissions] Completed:', { 
+      deleted: deletedCount, 
+      upserted: upsertedCount 
+    })
 
     // Log de auditoría
     await prisma.auditLog.create({
@@ -133,13 +177,16 @@ export async function PUT(request: Request) {
         details: { 
           count: updates.length,
           roleIds,
+          deleted: deletedCount,
+          upserted: upsertedCount,
         },
       },
     })
 
     return NextResponse.json({ 
       success: true, 
-      updated: results.length,
+      deleted: deletedCount,
+      upserted: upsertedCount,
     })
   } catch (error) {
     console.error('[API RolePermissions] Error updating matrix:', error)
@@ -166,11 +213,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verificar que el rol no sea del sistema
+    // Verificar sesión y rol
+    const session = await getServerSession(authOptions)
+    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+
+    // Verificar que el rol no sea del sistema (excepto SUPER_ADMIN)
     const role = await prisma.role.findUnique({ where: { id: roleId } })
-    if (role?.isSystem) {
+    if (role?.isSystem && !isSuperAdmin) {
       return NextResponse.json(
-        { error: 'No se pueden modificar permisos de roles del sistema' },
+        { error: 'Solo SUPER_ADMIN puede modificar permisos de roles del sistema' },
         { status: 403 }
       )
     }

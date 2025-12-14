@@ -139,7 +139,6 @@ model Permission {
   isSystem        Boolean           @default(false)
   isActive        Boolean           @default(true)
   createdAt       DateTime          @default(now())
-  RolePermission  RolePermission[]
   RolePermissions RolePermissions[]
   UserPermission  UserPermission[]
 
@@ -183,19 +182,6 @@ model RolePermissions {
   @@index([permissionId])
 }
 
-// ==================== LEGACY: RolePermission (usa enum, se migrará) ====================
-model RolePermission {
-  id           String     @id
-  role         UserRole
-  permissionId String
-  enabled      Boolean    @default(true)
-  Permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
-  @@unique([role, permissionId])
-  @@index([permissionId])
-  @@index([role])
-}
-
 model Session {
   id           String   @id
   sessionToken String   @unique
@@ -227,7 +213,7 @@ model User {
   createdBy           String?
   avatarUrl           String?
   Session             Session[]
-  QuotationConfig     QuotationConfig?      @relation(fields: [quotationAssignedId], references: [id])
+  quotationAssigned   QuotationConfig?      @relation(fields: [quotationAssignedId], references: [id])
   UserPermission      UserPermission[]
   UserQuotationAccess UserQuotationAccess[]
   AuditLog            AuditLog[]

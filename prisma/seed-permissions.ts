@@ -34,8 +34,6 @@ const PERMISSIONS = [
   // Sistema
   { code: 'config.view', name: 'Ver configuración', category: 'Sistema', description: 'Ver configuración del sistema' },
   { code: 'config.edit', name: 'Editar configuración', category: 'Sistema', description: 'Modificar configuración del sistema' },
-  { code: 'permissions.manage', name: 'Gestionar permisos', category: 'Sistema', description: 'Configurar permisos por rol' },
-  { code: 'roles.manage', name: 'Gestionar roles', category: 'Sistema', description: 'Crear/modificar roles de usuario' },
   
   // Backups
   { code: 'backups.view', name: 'Ver backups', category: 'Backups', description: 'Visualizar lista de backups propios' },
@@ -44,6 +42,18 @@ const PERMISSIONS = [
   { code: 'backups.delete', name: 'Eliminar backups', category: 'Backups', description: 'Eliminar backups existentes' },
   { code: 'backups.manage_all', name: 'Gestionar todos los backups', category: 'Backups', description: 'Ver y gestionar backups de todos los usuarios' },
   { code: 'backups.configure', name: 'Configurar backups', category: 'Backups', description: 'Modificar configuración de backups del sistema' },
+  
+  // Seguridad
+  { code: 'security.roles.view', name: 'Ver roles', category: 'Seguridad', description: 'Visualizar roles del sistema' },
+  { code: 'security.roles.manage', name: 'Gestionar roles', category: 'Seguridad', description: 'Crear/modificar/eliminar roles' },
+  { code: 'security.permissions.view', name: 'Ver permisos', category: 'Seguridad', description: 'Visualizar permisos del sistema' },
+  { code: 'security.permissions.manage', name: 'Gestionar permisos', category: 'Seguridad', description: 'Crear/modificar/eliminar permisos' },
+  { code: 'security.matrix.view', name: 'Ver matriz de acceso', category: 'Seguridad', description: 'Ver asignación de permisos por rol' },
+  { code: 'security.matrix.manage', name: 'Gestionar matriz de acceso', category: 'Seguridad', description: 'Modificar asignación de permisos por rol' },
+  { code: 'security.user_permissions.view', name: 'Ver permisos de usuarios', category: 'Seguridad', description: 'Ver permisos individuales de usuarios' },
+  { code: 'security.user_permissions.manage', name: 'Gestionar permisos de usuarios', category: 'Seguridad', description: 'Asignar/revocar permisos individuales' },
+  { code: 'security.logs.view', name: 'Ver logs de auditoría', category: 'Seguridad', description: 'Visualizar logs de auditoría del sistema' },
+  { code: 'security.logs.export', name: 'Exportar logs', category: 'Seguridad', description: 'Exportar logs de auditoría a CSV' },
 ];
 
 // Permisos por rol (true = habilitado por defecto)
@@ -65,14 +75,22 @@ const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     'services.edit': true,
     'config.view': true,
     'config.edit': true,
-    'permissions.manage': true,
-    'roles.manage': true,
     'backups.view': true,
     'backups.create': true,
     'backups.restore': true,
     'backups.delete': true,
     'backups.manage_all': true,
     'backups.configure': true,
+    'security.roles.view': true,
+    'security.roles.manage': true,
+    'security.permissions.view': true,
+    'security.permissions.manage': true,
+    'security.matrix.view': true,
+    'security.matrix.manage': true,
+    'security.user_permissions.view': true,
+    'security.user_permissions.manage': true,
+    'security.logs.view': true,
+    'security.logs.export': true,
   },
   ADMIN: {
     'users.view': true,      // Solo puede ver CLIENT
@@ -91,14 +109,22 @@ const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     'services.edit': true,
     'config.view': true,
     'config.edit': false,
-    'permissions.manage': false,
-    'roles.manage': false,
     'backups.view': true,
     'backups.create': true,
     'backups.restore': true,
     'backups.delete': false,
     'backups.manage_all': false,
     'backups.configure': false,
+    'security.roles.view': true,
+    'security.roles.manage': false,
+    'security.permissions.view': true,
+    'security.permissions.manage': false,
+    'security.matrix.view': true,
+    'security.matrix.manage': false,
+    'security.user_permissions.view': true,
+    'security.user_permissions.manage': false,
+    'security.logs.view': true,
+    'security.logs.export': false,
   },
   CLIENT: {
     'users.view': false,
@@ -117,14 +143,22 @@ const ROLE_PERMISSIONS: Record<UserRole, Record<string, boolean>> = {
     'services.edit': false,
     'config.view': false,
     'config.edit': false,
-    'permissions.manage': false,
-    'roles.manage': false,
     'backups.view': false,
     'backups.create': false,
     'backups.restore': false,
     'backups.delete': false,
     'backups.manage_all': false,
     'backups.configure': false,
+    'security.roles.view': false,
+    'security.roles.manage': false,
+    'security.permissions.view': false,
+    'security.permissions.manage': false,
+    'security.matrix.view': false,
+    'security.matrix.manage': false,
+    'security.user_permissions.view': false,
+    'security.user_permissions.manage': false,
+    'security.logs.view': false,
+    'security.logs.export': false,
   },
 };
 
@@ -146,13 +180,27 @@ async function main() {
     console.log(`  ✅ ${perm.code}: ${perm.name}`);
   }
 
-  // 2. Asignar permisos a roles
-  console.log('\n👥 Asignando permisos a roles...');
+  // 2. Obtener todos los roles del sistema
+  console.log('\n👥 Obteniendo roles del sistema...');
+  const roles = await prisma.role.findMany();
+  console.log(`  Encontrados ${roles.length} roles`);
+
+  // Crear mapa de nombre de rol -> ID de rol
+  const roleMap = new Map(roles.map(r => [r.name, r.id]));
+
+  // 3. Asignar permisos a roles usando tabla NUEVA (RolePermissions)
+  console.log('\n🔐 Asignando permisos a roles...');
   const permissions = await prisma.permission.findMany();
   const permissionMap = new Map(permissions.map(p => [p.code, p.id]));
 
-  for (const [role, perms] of Object.entries(ROLE_PERMISSIONS)) {
-    console.log(`\n  Rol: ${role}`);
+  for (const [roleName, perms] of Object.entries(ROLE_PERMISSIONS)) {
+    const roleId = roleMap.get(roleName);
+    if (!roleId) {
+      console.log(`  ⚠️ Rol no encontrado: ${roleName}`);
+      continue;
+    }
+
+    console.log(`\n  Rol: ${roleName} (ID: ${roleId})`);
     for (const [code, enabled] of Object.entries(perms)) {
       const permissionId = permissionMap.get(code);
       if (!permissionId) {
@@ -160,18 +208,21 @@ async function main() {
         continue;
       }
 
-      await prisma.rolePermission.upsert({
+      // Usar tabla NUEVA: RolePermissions
+      await prisma.rolePermissions.upsert({
         where: {
-          role_permissionId: {
-            role: role as UserRole,
+          roleId_permissionId: {
+            roleId,
             permissionId,
           },
         },
-        update: { enabled },
+        update: { 
+          accessLevel: enabled ? 'full' : 'none' 
+        },
         create: {
-          role: role as UserRole,
+          roleId,
           permissionId,
-          enabled,
+          accessLevel: enabled ? 'full' : 'none',
         },
       });
       console.log(`    ${enabled ? '✅' : '❌'} ${code}`);

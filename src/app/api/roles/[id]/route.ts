@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { hasPermission } from '@/lib/permissions'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -50,7 +53,28 @@ export async function PUT(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params
     const body = await request.json()
-    const { name, displayName, description, hierarchy, color } = body
+    const { name, displayName, description, hierarchy, color, isSystem } = body
+
+    // Verificar sesión y permisos
+    const session = await getServerSession(authOptions)
+    const canManageRoles = await hasPermission(session, 'security.roles.manage')
+    
+    if (!canManageRoles) {
+      return NextResponse.json(
+        { error: 'No tiene permisos para gestionar roles' },
+        { status: 403 }
+      )
+    }
+
+    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+
+    // Solo SUPER_ADMIN puede cambiar el flag isSystem
+    if (isSystem !== undefined && !isSuperAdmin) {
+      return NextResponse.json(
+        { error: 'Solo SUPER_ADMIN puede cambiar el estado de rol del sistema' },
+        { status: 403 }
+      )
+    }
 
     // Buscar rol existente
     const existing = await prisma.role.findUnique({ where: { id } })
@@ -61,10 +85,10 @@ export async function PUT(request: Request, { params }: RouteParams) {
       )
     }
 
-    // No permitir editar roles del sistema
-    if (existing.isSystem) {
+    // Solo SUPER_ADMIN puede editar roles del sistema
+    if (existing.isSystem && !isSuperAdmin) {
       return NextResponse.json(
-        { error: 'No se pueden editar roles del sistema' },
+        { error: 'Solo SUPER_ADMIN puede editar roles del sistema' },
         { status: 403 }
       )
     }
@@ -96,6 +120,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
         description: description !== undefined ? description : existing.description,
         hierarchy: hierarchy !== undefined ? hierarchy : existing.hierarchy,
         color: color !== undefined ? color : existing.color,
+        isSystem: isSystem !== undefined ? isSystem : existing.isSystem,
       },
     })
 
@@ -133,6 +158,19 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const { id } = await params
     const body = await request.json()
 
+    // Verificar sesión y permisos
+    const session = await getServerSession(authOptions)
+    const canManageRoles = await hasPermission(session, 'security.roles.manage')
+    
+    if (!canManageRoles) {
+      return NextResponse.json(
+        { error: 'No tiene permisos para gestionar roles' },
+        { status: 403 }
+      )
+    }
+
+    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+
     const existing = await prisma.role.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json(
@@ -141,9 +179,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       )
     }
 
-    if (existing.isSystem) {
+    // Solo SUPER_ADMIN puede modificar roles del sistema
+    if (existing.isSystem && !isSuperAdmin) {
       return NextResponse.json(
-        { error: 'No se pueden modificar roles del sistema' },
+        { error: 'Solo SUPER_ADMIN puede modificar roles del sistema' },
         { status: 403 }
       )
     }
@@ -171,6 +210,19 @@ export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params
 
+    // Verificar sesión y permisos
+    const session = await getServerSession(authOptions)
+    const canManageRoles = await hasPermission(session, 'security.roles.manage')
+    
+    if (!canManageRoles) {
+      return NextResponse.json(
+        { error: 'No tiene permisos para gestionar roles' },
+        { status: 403 }
+      )
+    }
+
+    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+
     const existing = await prisma.role.findUnique({ 
       where: { id },
       include: {
@@ -187,9 +239,10 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       )
     }
 
-    if (existing.isSystem) {
+    // Solo SUPER_ADMIN puede eliminar roles del sistema
+    if (existing.isSystem && !isSuperAdmin) {
       return NextResponse.json(
-        { error: 'No se pueden eliminar roles del sistema' },
+        { error: 'Solo SUPER_ADMIN puede eliminar roles del sistema' },
         { status: 403 }
       )
     }

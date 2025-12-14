@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     if (!session.user.quotationAssignedId) {
       console.log('[AUTH] Usuario sin cotización asignada:', session.user.username)
       return NextResponse.json(
-        { error: 'No tiene cotización asignada. Contacte al administrador.' },
+        { error: 'Lo sentimos. Su usuario no tiene cotización asignada. Contacte al administrador.' },
         { status: 403 }
       )
     }
@@ -158,6 +158,25 @@ export async function POST(request: NextRequest) {
     
     console.log('[AUDIT] Cotización creada:', cotizacion.id, cotizacion.numero)
 
+    // Audit log
+    const session = await getServerSession(authOptions)
+    await prisma.auditLog.create({
+      data: {
+        action: 'quotation.created',
+        entityType: 'QuotationConfig',
+        entityId: cotizacion.id,
+        userId: session?.user?.id,
+        userName: session?.user?.username || 'Sistema',
+        details: {
+          numero: cotizacion.numero,
+          empresa: cotizacion.empresa,
+          versionNumber: cotizacion.versionNumber,
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      },
+    })
+
     // FIX: Devolver estructura {success, data} consistente con otros endpoints
     return NextResponse.json(
       {
@@ -247,6 +266,27 @@ export async function PUT(request: NextRequest) {
         tiempoVigenciaUnidad: data.tiempoVigenciaUnidad ?? cotizacion?.tiempoVigenciaUnidad ?? 'meses',
         heroTituloMain: data.heroTituloMain ?? cotizacion?.heroTituloMain ?? 'PROPUESTA DE COTIZACIÓN',
         heroTituloSub: data.heroTituloSub ?? cotizacion?.heroTituloSub ?? 'PÁGINA CATÁLOGO DINÁMICA',
+      },
+    })
+
+    // Audit log
+    const session = await getServerSession(authOptions)
+    await prisma.auditLog.create({
+      data: {
+        action: 'quotation.updated',
+        entityType: 'QuotationConfig',
+        entityId: cotizacionActualizada.id,
+        userId: session?.user?.id,
+        userName: session?.user?.username || 'Sistema',
+        details: {
+          numero: cotizacionActualizada.numero,
+          empresa: cotizacionActualizada.empresa,
+          versionAnterior: cotizacionActual.versionNumber,
+          versionNueva: nuevaVersion,
+          cambios: Object.keys(data),
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
       },
     })
 

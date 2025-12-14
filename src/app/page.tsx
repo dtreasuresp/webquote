@@ -190,23 +190,8 @@ function HomeContent() {
     }
   }, [analisisData?.identidadVisual?.coloresCorporativos])
 
-  // Mostrar mensaje de error si no tiene cotización asignada
-  if (error) {
-    return (
-      <main className="bg-light-bg font-github min-h-screen flex items-center justify-center">
-        <div className="max-w-md mx-auto text-center p-8 bg-white border border-light-border rounded-lg shadow-sm">
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Sin Acceso</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <p className="text-sm text-gray-500">
-            Usuario: <span className="font-mono font-semibold">{session?.user?.username}</span>
-          </p>
-        </div>
-      </main>
-    )
-  }
-
-  if (loading) {
+  // Mostrar skeleton mientras carga la sesión O la cotización
+  if (loading || !session) {
     return (
       <main className="bg-light-bg font-github min-h-screen">
         <Navigation />
@@ -221,7 +206,7 @@ function HomeContent() {
                 <div className="h-7 w-1/3 mx-auto bg-light-bg-tertiary rounded-lg animate-pulse" />
                 <div className="h-5 w-40 mx-auto bg-light-bg-tertiary rounded-lg animate-pulse mt-4" />
               </div>
-              
+
               {/* Cards skeleton */}
               <div className="grid md:grid-cols-2 gap-8 mt-12 bg-light-bg-secondary border border-light-border rounded-lg p-8">
                 {/* Card izquierda */}
@@ -234,30 +219,37 @@ function HomeContent() {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Card derecha */}
-                <div className="space-y-6">
-                  <div>
-                    <div className="h-6 w-24 bg-light-bg-tertiary rounded animate-pulse mb-4" />
-                    <div className="space-y-2">
-                      {['empresa', 'sector', 'ubicacion'].map((item) => (
-                        <div key={`skel-para-${item}`} className="h-4 w-full bg-light-bg-tertiary rounded animate-pulse" />
-                      ))}
+                <div className="space-y-3">
+                  <div className="h-6 w-48 bg-light-bg-tertiary rounded animate-pulse mb-4" />
+                  {['empresa', 'contacto', 'email', 'telefono'].map((item) => (
+                    <div key={`skel-right-${item}`} className="flex justify-between py-2 border-b border-light-border">
+                      <div className="h-4 w-24 bg-light-bg-tertiary rounded animate-pulse" />
+                      <div className="h-4 w-40 bg-light-bg-tertiary rounded animate-pulse" />
                     </div>
-                  </div>
-                  <div>
-                    <div className="h-6 w-20 bg-light-bg-tertiary rounded animate-pulse mb-4" />
-                    <div className="space-y-2">
-                      {['prof', 'emp', 'email', 'whats', 'ubic'].map((item) => (
-                        <div key={`skel-de-${item}`} className="h-4 w-full bg-light-bg-tertiary rounded animate-pulse" />
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </section>
+      </main>
+    )
+  }
+
+  // Mostrar mensaje de error si no tiene cotización asignada
+  if (error) {
+    return (
+      <main className="bg-light-bg font-github min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-8 bg-white border border-light-border rounded-lg shadow-sm">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Sin Acceso</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <p className="text-sm text-gray-500">
+            Usuario: <span className="font-mono font-semibold">{session?.user?.username}</span>
+          </p>
+        </div>
       </main>
     )
   }

@@ -97,6 +97,25 @@ export async function POST(request: NextRequest) {
         },
       })
 
+    // Audit log
+    const session = await getServerSession(authOptions)
+    await prisma.auditLog.create({
+      data: {
+        action: 'snapshot.created',
+        entityType: 'PackageSnapshot',
+        entityId: snapshot.id,
+        userId: session?.user?.id,
+        userName: session?.user?.username || 'Sistema',
+        details: {
+          nombre: snapshot.nombre,
+          tipo: snapshot.tipo,
+          quotationConfigId: snapshot.quotationConfigId,
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      },
+    })
+
     return NextResponse.json(snapshot, { status: 201 })
   } catch (error) {
     console.error('Error en POST /api/snapshots:', error)
@@ -149,6 +168,25 @@ export async function PUT(request: NextRequest) {
       },
     })
 
+    // Audit log
+    const session = await getServerSession(authOptions)
+    await prisma.auditLog.create({
+      data: {
+        action: 'snapshot.updated',
+        entityType: 'PackageSnapshot',
+        entityId: snapshot.id,
+        userId: session?.user?.id,
+        userName: session?.user?.username || 'Sistema',
+        details: {
+          nombre: snapshot.nombre,
+          tipo: snapshot.tipo,
+          cambios: Object.keys(data),
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      },
+    })
+
     return NextResponse.json(snapshot)
   } catch (error) {
     console.error('Error en PUT /api/snapshots:', error)
@@ -168,6 +206,24 @@ export async function DELETE(request: NextRequest) {
     // Eliminar permanentemente de la base de datos (hard delete)
     const snapshot = await prisma.packageSnapshot.delete({
       where: { id },
+    })
+
+    // Audit log
+    const session = await getServerSession(authOptions)
+    await prisma.auditLog.create({
+      data: {
+        action: 'snapshot.deleted',
+        entityType: 'PackageSnapshot',
+        entityId: snapshot.id,
+        userId: session?.user?.id,
+        userName: session?.user?.username || 'Sistema',
+        details: {
+          nombre: snapshot.nombre,
+          tipo: snapshot.tipo,
+        },
+        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      },
     })
 
     return NextResponse.json({ success: true, deleted: snapshot })

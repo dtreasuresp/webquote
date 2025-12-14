@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { 
   Key, 
@@ -14,11 +15,13 @@ import {
   X,
   Filter,
   Search,
-  Zap
+  Zap,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
-import ToggleItem from '@/features/admin/components/ToggleItem'
+import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 
 // ==================== TIPOS ====================
 
@@ -46,19 +49,22 @@ interface PermissionFormData {
 
 // Categorías predefinidas
 const CATEGORIES = [
-  { value: 'users', label: 'Usuarios', icon: '👥' },
-  { value: 'quotations', label: 'Cotizaciones', icon: '📄' },
-  { value: 'packages', label: 'Paquetes', icon: '📦' },
-  { value: 'services', label: 'Servicios', icon: '🔧' },
-  { value: 'config', label: 'Configuración', icon: '⚙️' },
-  { value: 'security', label: 'Seguridad', icon: '🛡️' },
-  { value: 'backups', label: 'Backups', icon: '💾' },
-  { value: 'other', label: 'Otros', icon: '📌' },
+  { value: 'Usuarios', label: 'Usuarios', icon: '👥' },
+  { value: 'Cotizaciones', label: 'Cotizaciones', icon: '📄' },
+  { value: 'Paquetes', label: 'Paquetes', icon: '📦' },
+  { value: 'Servicios', label: 'Servicios', icon: '🔧' },
+  { value: 'Sistema', label: 'Sistema', icon: '⚙️' },
+  { value: 'Backups', label: 'Backups', icon: '💾' },
+  { value: 'Otros', label: 'Otros', icon: '📌' },
 ]
 
 // ==================== COMPONENTE ====================
 
 export default function PermisosContent() {
+  // Sesión para verificar rol
+  const { data: session } = useSession()
+  const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+  
   // Estado
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +74,10 @@ export default function PermisosContent() {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [showSystemOnly, setShowSystemOnly] = useState(false)
+  
+  // Paginación
+  const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(10)
+  const [currentPage, setCurrentPage] = useState(1)
   
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -80,7 +90,7 @@ export default function PermisosContent() {
     code: '',
     name: '',
     description: '',
-    category: 'other',
+    category: 'Otros',
   })
 
   // Cargar permisos
@@ -113,8 +123,29 @@ export default function PermisosContent() {
     return matchesSearch && matchesCategory && matchesSystem
   })
 
-  // Agrupar por categoría
-  const groupedPermissions = filteredPermissions.reduce((acc, perm) => {
+  // Paginar permisos
+  const paginatedPermissions = itemsPerPage === 'all' 
+    ? filteredPermissions 
+    : filteredPermissions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const totalPages = itemsPerPage === 'all' 
+    ? 1 
+    : Math.ceil(filteredPermissions.length / itemsPerPage)
+
+  // Reset a página 1 al filtrar
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, categoryFilter, showSystemOnly, itemsPerPage])
+
+  // Limpiar filtros
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setCategoryFilter('all')
+    setShowSystemOnly(false)
+  }
+
+  // Agrupar por categoría (usar paginatedPermissions en vez de filteredPermissions)
+  const groupedPermissions = paginatedPermissions.reduce((acc, perm) => {
     if (!acc[perm.category]) {
       acc[perm.category] = []
     }
@@ -130,14 +161,15 @@ export default function PermisosContent() {
       code: '',
       name: '',
       description: '',
-      category: 'other',
+      category: 'Otros',
     })
     setIsModalOpen(true)
   }
 
   // Abrir modal editar
   const handleEdit = (permission: Permission) => {
-    if (permission.isSystem) return
+    // SUPER_ADMIN puede editar permisos del sistema
+    if (permission.isSystem && !isSuperAdmin) return
     setModalMode('edit')
     setSelectedPermission(permission)
     setFormData({
@@ -182,7 +214,8 @@ export default function PermisosContent() {
 
   // Eliminar permiso
   const handleDelete = async (permission: Permission) => {
-    if (permission.isSystem) return
+    // SUPER_ADMIN puede eliminar permisos del sistema
+    if (permission.isSystem && !isSuperAdmin) return
     if (!confirm(`¿Eliminar el permiso "${permission.name}"?`)) return
     
     try {
@@ -273,17 +306,37 @@ export default function PermisosContent() {
           />
         </div>
 
-        {/* Solo sistema */}
-        <div className="min-w-[160px]">
-          <ToggleItem
-            enabled={showSystemOnly}
-            onChange={(v) => setShowSystemOnly(v)}
-            title="Solo sistema"
-            description="Mostrar únicamente permisos del sistema"
-            showBadge={false}
-          />
-        </div>
+        {/* Solo sistema - Toggle button */}
+        <button
+          onClick={() => setShowSystemOnly(!showSystemOnly)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border transition-colors ${
+            showSystemOnly
+              ? 'bg-gh-accent/10 text-gh-accent border-gh-accent/30'
+              : 'bg-gh-bg-secondary text-gh-text-muted border-gh-border/30 hover:bg-gh-bg-tertiary'
+          }`}
+        >
+          <Filter className="w-3.5 h-3.5" />
+          Solo sistema
+        </button>
+
+        {/* Botón limpiar filtros */}
+        {(searchTerm || categoryFilter !== 'all' || showSystemOnly) && (
+          <button
+            onClick={handleClearFilters}
+            className="flex items-center gap-1 px-2 py-1.5 text-xs text-gh-text-muted hover:text-gh-text-primary border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            Limpiar
+          </button>
+        )}
       </div>
+
+      {/* Paginación */}
+      <ItemsPerPageSelector
+        value={itemsPerPage}
+        onChange={setItemsPerPage}
+        total={filteredPermissions.length}
+      />
 
       {/* Error */}
       {error && (
@@ -370,27 +423,29 @@ export default function PermisosContent() {
                       {/* Acciones */}
                       <button
                         onClick={() => handleEdit(perm)}
-                        disabled={perm.isSystem}
+                        disabled={perm.isSystem && !isSuperAdmin}
                         className={`
                           p-1 rounded transition-colors
-                          ${perm.isSystem 
+                          ${(perm.isSystem && !isSuperAdmin)
                             ? 'text-gh-text-muted/40 cursor-not-allowed' 
                             : 'text-gh-text-muted hover:text-gh-accent hover:bg-gh-accent/10'
                           }
                         `}
+                        title={perm.isSystem && !isSuperAdmin ? 'Solo SUPER_ADMIN puede editar permisos del sistema' : 'Editar permiso'}
                       >
                         <Pencil className="w-3 h-3" />
                       </button>
                       <button
                         onClick={() => handleDelete(perm)}
-                        disabled={perm.isSystem}
+                        disabled={perm.isSystem && !isSuperAdmin}
                         className={`
                           p-1 rounded transition-colors
-                          ${perm.isSystem 
+                          ${(perm.isSystem && !isSuperAdmin)
                             ? 'text-gh-text-muted/40 cursor-not-allowed' 
                             : 'text-gh-text-muted hover:text-gh-danger hover:bg-gh-danger/10'
                           }
                         `}
+                        title={perm.isSystem && !isSuperAdmin ? 'Solo SUPER_ADMIN puede eliminar permisos del sistema' : 'Eliminar permiso'}
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -403,10 +458,42 @@ export default function PermisosContent() {
         })}
       </div>
 
-      {filteredPermissions.length === 0 && (
+      {/* Mensaje vacío */}
+      {paginatedPermissions.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-gh-text-muted">
           <Key className="w-8 h-8 mb-2 opacity-40" />
-          <p className="text-sm">No se encontraron permisos</p>
+          <p className="text-sm">
+            {searchTerm || categoryFilter !== 'all' || showSystemOnly
+              ? 'No se encontraron permisos con los filtros aplicados'
+              : 'No hay permisos disponibles'}
+          </p>
+        </div>
+      )}
+
+      {/* Navegación */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Anterior
+          </button>
+
+          <span className="text-xs text-gh-text-muted">
+            Página {currentPage} de {totalPages}
+          </span>
+
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            Siguiente
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 

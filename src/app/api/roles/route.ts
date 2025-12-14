@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { hasPermission } from '@/lib/permissions'
 
 /**
  * GET /api/roles
@@ -36,7 +39,28 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, displayName, description, hierarchy, color } = body
+    const { name, displayName, description, hierarchy, color, isSystem } = body
+
+    // Verificar sesión y permisos
+    const session = await getServerSession(authOptions)
+    const canManageRoles = await hasPermission(session, 'security.roles.manage')
+    
+    if (!canManageRoles) {
+      return NextResponse.json(
+        { error: 'No tiene permisos para gestionar roles' },
+        { status: 403 }
+      )
+    }
+
+    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+
+    // Solo SUPER_ADMIN puede crear roles del sistema
+    if (isSystem && !isSuperAdmin) {
+      return NextResponse.json(
+        { error: 'Solo SUPER_ADMIN puede crear roles del sistema' },
+        { status: 403 }
+      )
+    }
 
     // Validaciones
     if (!name || !displayName) {
@@ -78,7 +102,7 @@ export async function POST(request: Request) {
         description: description || null,
         hierarchy: hierarchy || 50,
         color: color || null,
-        isSystem: false,
+        isSystem: isSystem || false,
         isActive: true,
       },
     })

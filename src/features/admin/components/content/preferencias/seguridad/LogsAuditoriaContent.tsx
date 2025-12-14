@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   FileText, 
@@ -17,6 +17,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
+import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 import DatePicker from '@/components/ui/DatePicker'
 
 // ==================== TIPOS ====================
@@ -37,7 +38,7 @@ interface AuditLog {
 interface PaginationInfo {
   total: number
   page: number
-  pageSize: number
+  pageSize: number | 'all'
   totalPages: number
 }
 
@@ -65,14 +66,12 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 export default function LogsAuditoriaContent() {
   // Estado
   const [logs, setLogs] = useState<AuditLog[]>([])
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    total: 0,
-    page: 1,
-    pageSize: 20,
-    totalPages: 0,
-  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Paginación
+  const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(10)
+  const [currentPage, setCurrentPage] = useState(1)
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('')
@@ -81,43 +80,54 @@ export default function LogsAuditoriaContent() {
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
 
-  // Cargar logs
+  // Cargar logs (carga completa en cliente, paginación local)
   const fetchLogs = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        pageSize: pagination.pageSize.toString(),
-      })
-
+      // Construir parámetros con filtros
+      const params = new URLSearchParams()
       if (searchTerm) params.set('search', searchTerm)
       if (actionFilter !== 'all') params.set('action', actionFilter)
       if (entityFilter !== 'all') params.set('entityType', entityFilter)
       if (dateFrom) params.set('dateFrom', dateFrom)
       if (dateTo) params.set('dateTo', dateTo)
+      // Parámetro limit muy alto para obtener TODOS los logs sin paginación servidor
+      params.set('limit', '10000')
 
+      // Cargar TODOS los logs
       const res = await fetch(`/api/audit-logs?${params.toString()}`)
       if (!res.ok) throw new Error('Error al cargar logs')
       
       const data = await res.json()
-      setLogs(data.logs)
-      setPagination(prev => ({
-        ...prev,
-        total: data.total,
-        totalPages: data.totalPages,
-      }))
+      setLogs(data.logs || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
       setLoading(false)
     }
-  }, [pagination.page, pagination.pageSize, searchTerm, actionFilter, entityFilter, dateFrom, dateTo])
+  }, [searchTerm, actionFilter, entityFilter, dateFrom, dateTo])
 
+  // Cargar logs al montar el componente
   useEffect(() => {
     fetchLogs()
   }, [fetchLogs])
+
+  // Reset a página 1 al cambiar filtros o itemsPerPage
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, actionFilter, entityFilter, dateFrom, dateTo, itemsPerPage])
+
+  // Limpiar filtros
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setActionFilter('all')
+    setEntityFilter('all')
+    setDateFrom('')
+    setDateTo('')
+    setCurrentPage(1)
+  }
 
   // Exportar a CSV
   const handleExport = async () => {
@@ -128,19 +138,19 @@ export default function LogsAuditoriaContent() {
       if (entityFilter !== 'all') params.set('entityType', entityFilter)
       if (dateFrom) params.set('dateFrom', dateFrom)
       if (dateTo) params.set('dateTo', dateTo)
-      params.set('export', 'csv')
+      params.set('format', 'csv')
 
       const res = await fetch(`/api/audit-logs?${params.toString()}`)
       if (!res.ok) throw new Error('Error al exportar')
-      
+
       const blob = await res.blob()
-      const url = window.URL.createObjectURL(blob)
+      const url = globalThis.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
       a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`
       document.body.appendChild(a)
       a.click()
-      window.URL.revokeObjectURL(url)
+      globalThis.URL.revokeObjectURL(url)
       a.remove()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al exportar')
@@ -164,9 +174,18 @@ export default function LogsAuditoriaContent() {
     return ACTION_LABELS[action] || { label: action, color: 'text-gh-text' }
   }
 
-  // Entidades únicas para filtro
+  // Entidades y acciones únicas para filtros
   const uniqueEntities = [...new Set(logs.map(l => l.entityType))]
   const uniqueActions = [...new Set(logs.map(l => l.action))]
+
+  // Paginar logs (slice cliente)
+  const paginatedLogs = itemsPerPage === 'all' 
+    ? logs 
+    : logs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const totalPages = itemsPerPage === 'all' 
+    ? 1 
+    : Math.ceil(logs.length / itemsPerPage)
 
   // ==================== RENDER ====================
 
@@ -264,7 +283,27 @@ export default function LogsAuditoriaContent() {
             className="w-36"
           />
         </div>
+
+        {/* Botón limpiar filtros */}
+        {(searchTerm || actionFilter !== 'all' || entityFilter !== 'all' || dateFrom || dateTo) && (
+          <button
+            onClick={handleClearFilters}
+            className="flex items-center gap-1 px-2 py-1.5 text-xs text-gh-text-muted hover:text-gh-text-primary border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            Limpiar
+          </button>
+        )}
       </div>
+
+      {/* ItemsPerPageSelector */}
+      <ItemsPerPageSelector
+        value={itemsPerPage}
+        onChange={(value) => setItemsPerPage(value)}
+        total={logs.length}
+        displayed={paginatedLogs.length}
+        className="w-fit"
+      />
 
       {/* Error */}
       {error && (
@@ -298,7 +337,7 @@ export default function LogsAuditoriaContent() {
                 </tr>
               </thead>
               <tbody>
-                {logs.map((log, index) => {
+                {paginatedLogs.map((log, index) => {
                   const actionInfo = getActionLabel(log.action)
                   
                   return (
@@ -358,7 +397,7 @@ export default function LogsAuditoriaContent() {
               </tbody>
             </table>
 
-            {logs.length === 0 && (
+            {paginatedLogs.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-gh-text-muted">
                 <FileText className="w-8 h-8 mb-2 opacity-40" />
                 <p className="text-sm">No se encontraron logs</p>
@@ -367,34 +406,39 @@ export default function LogsAuditoriaContent() {
           </div>
 
           {/* Paginación */}
-          {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between">
+          {totalPages > 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center justify-between pt-2"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                Anterior
+              </motion.button>
+                
               <span className="text-xs text-gh-text-muted">
-                Mostrando {logs.length} de {pagination.total} registros
+                Página {currentPage} de {totalPages}
               </span>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                  disabled={pagination.page === 1}
-                  className="p-1.5 text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
                 
-                <span className="text-xs text-gh-text">
-                  Página {pagination.page} de {pagination.totalPages}
-                </span>
-                
-                <button
-                  onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                  disabled={pagination.page === pagination.totalPages}
-                  className="p-1.5 text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              >
+                Siguiente
+                <ChevronRight className="w-3.5 h-3.5" />
+              </motion.button>
+            </motion.div>
           )}
         </>
       )}

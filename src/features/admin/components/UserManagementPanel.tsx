@@ -38,6 +38,7 @@ interface User {
   activo: boolean
   createdAt: string
   updatedAt: string
+  lastLogin?: string | null
 }
 
 interface UserManagementPanelProps {
@@ -54,6 +55,34 @@ function getBaseNumber(numero: string | number): string {
   const numStr = String(numero)
   // Remover sufijo de versión (V1, V2, -V1, -V2, .V1, .V2, etc.)
   return numStr.replace(/[-.]?V\d+$/i, '')
+}
+
+// ==================== HELPERS ====================
+
+/**
+ * Determina el estado de conexión del usuario
+ * @returns 'online' | 'offline' | 'never' con su color correspondiente
+ */
+function getUserStatus(lastLogin?: string | null): {
+  status: 'online' | 'offline' | 'never'
+  color: string
+  label: string
+} {
+  if (!lastLogin) {
+    return { status: 'never', color: 'bg-amber-500', label: 'Nunca ha iniciado sesión' }
+  }
+
+  const lastLoginDate = new Date(lastLogin)
+  const now = new Date()
+  const diffMinutes = (now.getTime() - lastLoginDate.getTime()) / (1000 * 60)
+
+  // Online: menos de 5 minutos desde último login
+  if (diffMinutes < 5) {
+    return { status: 'online', color: 'bg-green-500', label: 'En línea' }
+  }
+
+  // Offline: más de 5 minutos
+  return { status: 'offline', color: 'bg-red-500', label: 'Desconectado' }
 }
 
 /**
@@ -118,6 +147,9 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [generatedPassword, setGeneratedPassword] = useState<string>('')
   const [copiedPassword, setCopiedPassword] = useState(false)
+  const [isPasswordReset, setIsPasswordReset] = useState(false) // true = reset, false = nuevo usuario
+  const [userToReset, setUserToReset] = useState<User | null>(null)
+  const [showResetConfirmDialog, setShowResetConfirmDialog] = useState(false)
   const [saving, setSaving] = useState(false)
 
   // Agrupar cotizaciones por número base
@@ -156,9 +188,11 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
     }
   }, [])
 
+  // Cargar usuarios solo al montar el componente (no cuando fetchUsers cambie)
   useEffect(() => {
     fetchUsers()
-  }, [fetchUsers])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ==================== HANDLERS ====================
 
@@ -188,6 +222,16 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
     setCopiedPassword(false)
   }
 
+  const handleOpenResetDialog = (user: User) => {
+    setUserToReset(user)
+    setShowResetConfirmDialog(true)
+  }
+
+  const handleCloseResetDialog = () => {
+    setShowResetConfirmDialog(false)
+    setUserToReset(null)
+  }
+
   const handleCloseDeleteDialog = () => {
     setShowDeleteDialog(false)
     setUserToDelete(null)
@@ -205,7 +249,7 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
 
   // ==================== SAVE USER ====================
 
-  const handleSaveUser = async (formData: Record<string, any>) => {
+  const handleSaveUser = useCallback(async (formData: Record<string, any>) => {
     setSaving(true)
     try {
       const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users'
@@ -216,7 +260,7 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
         email: formData.email || null,
         telefono: formData.telefono || null,
         role: formData.role,
-        quotationAssignedId: formData.quotationAssignedId || null,
+        quotationId: formData.quotationAssignedId || null, // Backend espera 'quotationId'
       }
 
       // Solo para creación, incluir empresa para generar username
@@ -240,11 +284,49 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
       // Si es nuevo usuario, mostrar contraseña generada
       if (!editingUser && result.temporaryPassword) {
         setGeneratedPassword(result.temporaryPassword)
+        setIsPasswordReset(false) // Es un nuevo usuario
         setShowPasswordDialog(true)
       }
 
       await fetchUsers()
       handleCloseUserDialog()
+    } catch (err) {
+      console.error('Error:', err)
+      throw err
+    } finally {
+      setSaving(false)
+    }
+  }, [editingUser, fetchUsers])
+
+  // ==================== RESET PASSWORD ====================
+
+  const handleResetPassword = async () => {
+    if (!userToReset) return
+
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/users/${userToReset.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resetPassword: true }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al resetear contraseña')
+      }
+
+      const result = await response.json()
+
+      // Mostrar la nueva contraseña generada
+      if (result.newPassword) {
+        setGeneratedPassword(result.newPassword)
+        setIsPasswordReset(true) // Es un reset de contraseña
+        setShowPasswordDialog(true)
+      }
+
+      await fetchUsers()
+      handleCloseResetDialog()
     } catch (err) {
       console.error('Error:', err)
       throw err
@@ -345,10 +427,11 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
     return baseFields
   }
 
-  const formConfig: DialogFormConfig = {
+  // Memorizar formConfig para evitar recreaciones innecesarias que resetean el formulario
+  const formConfig: DialogFormConfig = useMemo(() => ({
     fields: getFormFields(),
     onSubmit: handleSaveUser,
-  }
+  }), [editingUser, availableRoles, groupedQuotations, handleSaveUser]) // Solo recrear cuando cambien estas dependencias
 
   // ==================== RENDER ====================
 
@@ -458,11 +541,18 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div>
-                        <p className="text-gh-text text-xs">{user.nombre}</p>
-                        {user.email && (
-                          <p className="text-[10px] text-gh-text-muted">{user.email}</p>
-                        )}
+                      <div className="flex items-center gap-2">
+                        {/* Indicador de estado */}
+                        <div 
+                          className={`w-2 h-2 rounded-full ${getUserStatus(user.lastLogin).color} animate-pulse`}
+                          title={getUserStatus(user.lastLogin).label}
+                        />
+                        <div>
+                          <p className="text-gh-text text-xs">{user.nombre}</p>
+                          {user.email && (
+                            <p className="text-[10px] text-gh-text-muted">{user.email}</p>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -514,6 +604,23 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
                           })()}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenResetDialog(user)}
+                          className="p-1.5 text-gh-text-muted hover:text-amber-500 hover:bg-amber-500/10 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Resetear contraseña"
+                          disabled={(() => {
+                            const currentRole = session?.user?.role
+                            // SUPER_ADMIN puede resetear todas las contraseñas
+                            if (currentRole === 'SUPER_ADMIN') return false
+                            // ADMIN puede resetear contraseñas de CLIENTE, pero no de ADMIN ni SUPER_ADMIN
+                            if (currentRole === 'ADMIN') {
+                              return user.role !== 'CLIENT'
+                            }
+                            return true
+                          })()}
+                        >
+                          <Key className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleOpenDeleteDialog(user)}
@@ -578,11 +685,12 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
       <DialogoGenericoDinamico
         isOpen={showPasswordDialog}
         onClose={handleClosePasswordDialog}
-        title="Usuario Creado Exitosamente"
-        description="Guarda estas credenciales. La contraseña no se puede recuperar después."
+        title={isPasswordReset ? 'Contraseña Reseteada Exitosamente' : 'Usuario Creado Exitosamente'}
+        description="Contraseña generada automáticamente"
         contentType="custom"
         content={
           <div className="space-y-4">
+            <p>Guarda estas credenciales temporales, porque se mostrará sólo una vez y no se puede recuperar después.</p>
             <div className="bg-gh-bg-tertiary border border-gh-border/30 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -617,6 +725,47 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
             label: 'Entendido',
             variant: 'primary',
             onClick: handleClosePasswordDialog,
+          },
+        ]}
+      />
+
+      {/* Dialog para confirmar reset de contraseña */}
+      <DialogoGenericoDinamico
+        isOpen={showResetConfirmDialog}
+        onClose={handleCloseResetDialog}
+        title="Resetear Contraseña"
+        description={`¿Resetear la contraseña de "${userToReset?.nombre}" (@${userToReset?.username})?`}
+        contentType="custom"
+        content={
+          <div className="space-y-3">
+            <p className="text-sm text-gh-text">
+              Se generará una nueva contraseña temporal que deberás entregar al usuario.
+            </p>
+            <div className="flex items-start gap-2 text-amber-500 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+              <Key className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium mb-1">Importante:</p>
+                <p>La contraseña se mostrará solo una vez. Asegúrate de guardarla antes de cerrar el modal.</p>
+              </div>
+            </div>
+          </div>
+        }
+        type="warning"
+        size="md"
+        variant="premium"
+        actions={[
+          {
+            id: 'cancel',
+            label: 'Cancelar',
+            variant: 'secondary',
+            onClick: handleCloseResetDialog,
+          },
+          {
+            id: 'confirm',
+            label: saving ? 'Reseteando...' : 'Resetear Contraseña',
+            variant: 'danger',
+            onClick: handleResetPassword,
+            loading: saving,
           },
         ]}
       />
