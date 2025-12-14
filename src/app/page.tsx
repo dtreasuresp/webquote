@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import Navigation from '@/components/layout/Navigation'
 import Hero from '@/components/sections/Hero'
 import ResumenEjecutivo from '@/components/sections/ResumenEjecutivo'
@@ -291,10 +292,12 @@ function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-light-bg font-github" />}>
-      <AnalyticsProvider>
-        <HomeContent />
-      </AnalyticsProvider>
-    </Suspense>
+    <ProtectedRoute>
+      <Suspense fallback={<div className="min-h-screen bg-light-bg font-github" />}>
+        <AnalyticsProvider>
+          <HomeContent />
+        </AnalyticsProvider>
+      </Suspense>
+    </ProtectedRoute>
   )
 }
