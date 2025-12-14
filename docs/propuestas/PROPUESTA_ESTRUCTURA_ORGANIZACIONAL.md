@@ -1,8 +1,28 @@
 # Propuesta: Estructura Organizacional Jerárquica
 
 **Fecha**: 14 de diciembre de 2025  
-**Estado**: Propuesta  
-**Prioridad**: Media  
+**Estado**: ⏸️ **PROPUESTA - NO INICIADA**
+**Prioridad**: BAJA (post Fases 1-7 de permisos granulares)
+**Impacto**: Requerida para escalabilidad a múltiples equipos/departamentos
+**Estimado**: 8-10 horas (3-4 sprints después de permisos granulares)
+
+## 🟡 ESTADO ACTUAL (14/12/2025)
+
+### ✅ Completado
+- ✅ Propuesta documentada y revisada
+- ✅ Modelos Prisma definidos
+
+### ⏭️ Pendiente
+- ⏳ Crear migración de Prisma (agregar 4 nuevos modelos)
+- ⏳ Crear APIs de gestión organizacional
+- ⏳ Crear componentes UI (OrganizationTree, Selectors, OrgChart)
+- ⏳ Integración con UserManagementPanel
+- ⏳ Testing e2e de estructura jerárquica
+
+### 🛑 Bloqueadores
+- **NINGUNO**: Esta propuesta es ortogonal a permisos granulares
+- **Fase 0 completada:** ✅ Sistema de paginación/filtros implementado (v1.2.0)
+- **Recomendación**: Implementar DESPUÉS de completar Fases 1-7 de PROPUESTA_SISTEMA_PERMISOS_GRANULAR.md (ahora sin bloqueadores)  
 
 ## 📋 Resumen
 

@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { 
   Key, 
@@ -22,6 +21,7 @@ import {
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
+import { usePermission } from '@/hooks'
 
 // ==================== TIPOS ====================
 
@@ -61,9 +61,8 @@ const CATEGORIES = [
 // ==================== COMPONENTE ====================
 
 export default function PermisosContent() {
-  // Sesión para verificar rol
-  const { data: session } = useSession()
-  const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+  // Permisos granulares
+  const permsPerms = usePermission('security.permissions')
   
   // Estado
   const [permissions, setPermissions] = useState<Permission[]>([])
@@ -112,6 +111,25 @@ export default function PermisosContent() {
   useEffect(() => {
     fetchPermissions()
   }, [fetchPermissions])
+
+  // Control de acceso
+  if (permsPerms.isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      </div>
+    )
+  }
+
+  if (!permsPerms.canView) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <Lock className="w-16 h-16 text-red-500" />
+        <h3 className="text-xl font-semibold text-gray-800">Acceso Denegado</h3>
+        <p className="text-gray-600">No tienes permisos para ver la gestión de permisos</p>
+      </div>
+    )
+  }
 
   // Filtrar permisos
   const filteredPermissions = permissions.filter(perm => {
@@ -169,7 +187,7 @@ export default function PermisosContent() {
   // Abrir modal editar
   const handleEdit = (permission: Permission) => {
     // SUPER_ADMIN puede editar permisos del sistema
-    if (permission.isSystem && !isSuperAdmin) return
+    if (permission.isSystem && !permsPerms.isSuperAdmin) return
     setModalMode('edit')
     setSelectedPermission(permission)
     setFormData({
@@ -215,7 +233,7 @@ export default function PermisosContent() {
   // Eliminar permiso
   const handleDelete = async (permission: Permission) => {
     // SUPER_ADMIN puede eliminar permisos del sistema
-    if (permission.isSystem && !isSuperAdmin) return
+    if (permission.isSystem && !permsPerms.isSuperAdmin) return
     if (!confirm(`¿Eliminar el permiso "${permission.name}"?`)) return
     
     try {
@@ -266,13 +284,15 @@ export default function PermisosContent() {
             Define los permisos disponibles en el sistema
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Nuevo Permiso
-        </button>
+        {permsPerms.canCreate && (
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Nuevo Permiso
+          </button>
+        )}
       </div>
 
       {/* Filtros */}
@@ -423,29 +443,29 @@ export default function PermisosContent() {
                       {/* Acciones */}
                       <button
                         onClick={() => handleEdit(perm)}
-                        disabled={perm.isSystem && !isSuperAdmin}
+                        disabled={(perm.isSystem && !permsPerms.isSuperAdmin) || !permsPerms.canEdit}
                         className={`
                           p-1 rounded transition-colors
-                          ${(perm.isSystem && !isSuperAdmin)
+                          ${((perm.isSystem && !permsPerms.isSuperAdmin) || !permsPerms.canEdit)
                             ? 'text-gh-text-muted/40 cursor-not-allowed' 
                             : 'text-gh-text-muted hover:text-gh-accent hover:bg-gh-accent/10'
                           }
                         `}
-                        title={perm.isSystem && !isSuperAdmin ? 'Solo SUPER_ADMIN puede editar permisos del sistema' : 'Editar permiso'}
+                        title={(perm.isSystem && !permsPerms.isSuperAdmin) ? 'Solo SUPER_ADMIN puede editar permisos del sistema' : !permsPerms.canEdit ? 'No tienes permiso para editar' : 'Editar permiso'}
                       >
                         <Pencil className="w-3 h-3" />
                       </button>
                       <button
                         onClick={() => handleDelete(perm)}
-                        disabled={perm.isSystem && !isSuperAdmin}
+                        disabled={(perm.isSystem && !permsPerms.isSuperAdmin) || !permsPerms.canDelete}
                         className={`
                           p-1 rounded transition-colors
-                          ${(perm.isSystem && !isSuperAdmin)
+                          ${((perm.isSystem && !permsPerms.isSuperAdmin) || !permsPerms.canDelete)
                             ? 'text-gh-text-muted/40 cursor-not-allowed' 
                             : 'text-gh-text-muted hover:text-gh-danger hover:bg-gh-danger/10'
                           }
                         `}
-                        title={perm.isSystem && !isSuperAdmin ? 'Solo SUPER_ADMIN puede eliminar permisos del sistema' : 'Eliminar permiso'}
+                        title={(perm.isSystem && !permsPerms.isSuperAdmin) ? 'Solo SUPER_ADMIN puede eliminar permisos del sistema' : !permsPerms.canDelete ? 'No tienes permiso para eliminar' : 'Eliminar permiso'}
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>

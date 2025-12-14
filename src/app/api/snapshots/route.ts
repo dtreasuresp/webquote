@@ -1,29 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireReadPermission, requireWritePermission, requireFullPermission } from '@/lib/apiProtection'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export async function GET(request: NextRequest) {
-  try {
-    // ✅ Verificar sesión del usuario
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user) {
-      console.log('[AUTH] GET /api/snapshots - Sin sesión, acceso denegado')
-      return NextResponse.json(
-        { error: 'No autenticado. Por favor inicie sesión.' },
-        { status: 401 }
-      )
-    }
+  const { session, error, accessLevel } = await requireReadPermission('packages.view')
+  if (error) return error
 
-    console.log('[AUTH] Usuario autenticado:', session.user.username, 'Role:', session.user.role)
+  try {
+    console.log('[AUTH] Usuario autenticado:', session.user.username, 'Access Level:', accessLevel)
     
-    // Si es SUPER_ADMIN o ADMIN sin quotationAssignedId, retornar todos los snapshots activos
-    if ((session.user.role === 'SUPER_ADMIN' || session.user.role === 'ADMIN') && !session.user.quotationAssignedId) {
-      console.log('[AUDIT] Admin/SuperAdmin sin cotización asignada - Retornando todos los snapshots activos')
+    // Determinar si puede ver todos los snapshots basado en accessLevel
+    const canViewAll = accessLevel === 'full' || session.user.role === 'SUPER_ADMIN'
+    
+    if (canViewAll && !session.user.quotationAssignedId) {
+      console.log('[AUDIT] Usuario con acceso completo - Retornando todos los snapshots activos')
       
       const snapshots = await prisma.packageSnapshot.findMany({
         where: { activo: true },
@@ -33,7 +26,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(snapshots)
     }
 
-    // ✅ Filtrar por quotationConfigId del usuario
+    // Filtrar por quotationConfigId del usuario
     if (!session.user.quotationAssignedId) {
       console.log('[AUTH] Usuario sin cotización asignada - Retornando array vacío')
       return NextResponse.json([])
@@ -60,6 +53,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const { session, error } = await requireWritePermission('packages.manage')
+  if (error) return error
+
   try {
     const data = await request.json()
     // Nuevo esquema: serviciosBase (JSON) + gestion* + desarrollo/ descuento + costos
@@ -98,7 +94,6 @@ export async function POST(request: NextRequest) {
       })
 
     // Audit log
-    const session = await getServerSession(authOptions)
     await prisma.auditLog.create({
       data: {
         action: 'snapshot.created',
@@ -124,6 +119,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const { session, error } = await requireWritePermission('packages.manage')
+  if (error) return error
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
@@ -169,7 +167,6 @@ export async function PUT(request: NextRequest) {
     })
 
     // Audit log
-    const session = await getServerSession(authOptions)
     await prisma.auditLog.create({
       data: {
         action: 'snapshot.updated',
@@ -195,6 +192,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const { session, error } = await requireFullPermission('packages.manage')
+  if (error) return error
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
@@ -209,7 +209,6 @@ export async function DELETE(request: NextRequest) {
     })
 
     // Audit log
-    const session = await getServerSession(authOptions)
     await prisma.auditLog.create({
       data: {
         action: 'snapshot.deleted',

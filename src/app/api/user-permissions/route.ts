@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { randomUUID } from 'node:crypto'
+import { requireReadPermission, requireFullPermission } from '@/lib/apiProtection'
 
 /**
  * GET /api/user-permissions
  * Lista permisos de usuario con filtros opcionales
  */
 export async function GET(request: Request) {
+  const { session, error } = await requireReadPermission('security.user_permissions.view')
+  if (error) return error
+
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
@@ -51,6 +55,9 @@ export async function GET(request: Request) {
  * Crea un override de permiso para un usuario
  */
 export async function POST(request: Request) {
+  const { session, error } = await requireFullPermission('security.user_permissions.manage')
+  if (error) return error
+
   try {
     const body = await request.json()
     const { userId, permissionId, granted } = body

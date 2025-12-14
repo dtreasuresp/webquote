@@ -18,11 +18,23 @@ export type { UseTabSyncOptions, UseTabSyncReturn } from './useTabSync'
 // UI hooks
 export { useCollapsibleState } from './useCollapsibleState'
 
-// Permission hooks
+// Permission hooks (básicos - compatibilidad)
 export { 
   useRequirePermission,
   useRequireAnyPermission,
   useRequireAllPermissions,
   usePermissionCheck
 } from './useRequirePermission'
-export { default as usePermission } from './useRequirePermission'
+
+// Permission hooks (mejorados con Access Levels)
+export { 
+  usePermission,
+  useMultiplePermissions
+} from './usePermission'
+export type { 
+  AccessLevel,
+  PermissionInfo
+} from './usePermission'
+
+// Export por defecto (hook mejorado)
+export { default } from './usePermission'

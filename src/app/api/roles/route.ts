@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
-import { hasPermission } from '@/lib/permissions'
+import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
 
 /**
  * GET /api/roles
  * Lista todos los roles con conteo de usuarios y permisos
+ * Require: security.roles.view (read+)
  */
 export async function GET() {
   try {
+    // ✅ Verificar permiso de lectura
+    const { error } = await requireReadPermission('security.roles.view')
+    if (error) return error
+
     const roles = await prisma.role.findMany({
       orderBy: { hierarchy: 'desc' },
       include: {
@@ -35,19 +38,21 @@ export async function GET() {
 /**
  * POST /api/roles
  * Crea un nuevo rol personalizado
+ * Require: security.roles.manage (write+)
  */
 export async function POST(request: Request) {
   try {
+    // ✅ Verificar permiso de escritura
+    const { error } = await requireWritePermission('security.roles.manage')
+    if (error) return error
+
     const body = await request.json()
     const { name, displayName, description, hierarchy, color, isSystem } = body
 
-    // Verificar sesión y permisos
-    const session = await getServerSession(authOptions)
-    const canManageRoles = await hasPermission(session, 'security.roles.manage')
-    
-    if (!canManageRoles) {
+    // Validaciones
+    if (!name || !displayName) {
       return NextResponse.json(
-        { error: 'No tiene permisos para gestionar roles' },
+        { error: 'Nombre y displayName son requeridos' },
         { status: 403 }
       )
     }

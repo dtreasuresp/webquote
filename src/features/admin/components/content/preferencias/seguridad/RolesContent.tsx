@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { useSession } from 'next-auth/react'
 import { 
   Shield, 
   Plus, 
@@ -20,7 +19,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
-import { useRequirePermission } from '@/hooks'
+import { usePermission } from '@/hooks'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 
 // ==================== TIPOS ====================
@@ -52,9 +51,8 @@ interface RoleFormData {
 // ==================== COMPONENTE ====================
 
 export default function RolesContent() {
-  // Permisos
-  const canManageRoles = useRequirePermission('security.roles.manage')
-  const canViewRoles = useRequirePermission('security.roles.view')
+  // ✅ Permisos con Access Levels
+  const rolesPerms = usePermission('security.roles')
   
   // Estado
   const [roles, setRoles] = useState<Role[]>([])
@@ -98,6 +96,24 @@ export default function RolesContent() {
     '#DB2777', // pink
     '#6B7280', // gray
   ]
+  
+  // ✅ Control de acceso basado en Access Levels
+  if (rolesPerms.isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-gh-accent" />
+      </div>
+    )
+  }
+
+  if (!rolesPerms.canView) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <Lock className="w-16 h-16 text-gh-text-muted/40" />
+        <p className="text-gh-text-muted">No tienes permiso para ver roles</p>
+      </div>
+    )
+  }
 
   // Cargar roles
   const fetchRoles = useCallback(async () => {
@@ -134,14 +150,10 @@ export default function RolesContent() {
     setIsModalOpen(true)
   }
 
-  // Obtener sesión para verificar permisos
-  const { data: session } = useSession()
-  const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
-
   // Abrir modal editar
   const handleEdit = (role: Role) => {
     // Solo SUPER_ADMIN puede editar roles del sistema
-    if (role.isSystem && !isSuperAdmin) return
+    if (role.isSystem && !rolesPerms.isSuperAdmin) return
     setModalMode('edit')
     setSelectedRole(role)
     setFormData({
@@ -189,7 +201,7 @@ export default function RolesContent() {
   // Eliminar rol
   const handleDelete = async (role: Role) => {
     // Solo SUPER_ADMIN puede eliminar roles del sistema
-    if (role.isSystem && !isSuperAdmin) return
+    if (role.isSystem && !rolesPerms.isSuperAdmin) return
     if (!confirm(`¿Eliminar el rol "${role.displayName}"?`)) return
     
     try {
@@ -204,7 +216,7 @@ export default function RolesContent() {
   // Toggle activo
   const handleToggleActive = async (role: Role) => {
     // Solo SUPER_ADMIN puede modificar estado de roles del sistema
-    if (role.isSystem && !isSuperAdmin) return
+    if (role.isSystem && !rolesPerms.isSuperAdmin) return
     
     try {
       const res = await fetch(`/api/roles/${role.id}`, {
@@ -275,7 +287,7 @@ export default function RolesContent() {
             Administra los roles y niveles de acceso del sistema
           </p>
         </div>
-        {canManageRoles && (
+        {rolesPerms.canCreate && (
           <button
             onClick={handleCreate}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
@@ -443,7 +455,7 @@ export default function RolesContent() {
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => handleToggleActive(role)}
-                    disabled={role.isSystem && !isSuperAdmin}
+                    disabled={role.isSystem && !rolesPerms.isSuperAdmin}
                     className={`
                       inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
                       transition-colors
@@ -451,7 +463,7 @@ export default function RolesContent() {
                         ? 'bg-gh-success/10 text-gh-success' 
                         : 'bg-gh-text-muted/10 text-gh-text-muted'
                       }
-                      ${(role.isSystem && !isSuperAdmin) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:opacity-80'}
+                      ${(role.isSystem && !rolesPerms.isSuperAdmin) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:opacity-80'}
                     `}
                   >
                     {role.isActive ? (
@@ -471,39 +483,39 @@ export default function RolesContent() {
                 {/* Acciones */}
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    {canManageRoles && (
+                    {rolesPerms.canEdit && (
                       <>
                         <button
                           onClick={() => handleEdit(role)}
-                          disabled={role.isSystem && !isSuperAdmin}
+                          disabled={role.isSystem && !rolesPerms.isSuperAdmin}
                           className={`
                             p-1.5 rounded-md transition-colors
-                            ${(role.isSystem && !isSuperAdmin)
+                            ${(role.isSystem && !rolesPerms.isSuperAdmin)
                               ? 'text-gh-text-muted/40 cursor-not-allowed' 
                               : 'text-gh-text-muted hover:text-gh-accent hover:bg-gh-accent/10'
                             }
                           `}
-                          title={(role.isSystem && !isSuperAdmin) ? 'Solo SUPER_ADMIN puede editar roles del sistema' : 'Editar'}
+                          title={(role.isSystem && !rolesPerms.isSuperAdmin) ? 'Solo SUPER_ADMIN puede editar roles del sistema' : 'Editar'}
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(role)}
-                          disabled={role.isSystem && !isSuperAdmin}
+                          disabled={role.isSystem && !rolesPerms.isSuperAdmin}
                           className={`
                             p-1.5 rounded-md transition-colors
-                            ${(role.isSystem && !isSuperAdmin)
+                            ${(role.isSystem && !rolesPerms.isSuperAdmin)
                               ? 'text-gh-text-muted/40 cursor-not-allowed' 
                               : 'text-gh-text-muted hover:text-gh-danger hover:bg-gh-danger/10'
                             }
                           `}
-                          title={(role.isSystem && !isSuperAdmin) ? 'Solo SUPER_ADMIN puede eliminar roles del sistema' : 'Eliminar'}
+                          title={(role.isSystem && !rolesPerms.isSuperAdmin) ? 'Solo SUPER_ADMIN puede eliminar roles del sistema' : 'Eliminar'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </>
                     )}
-                    {!canManageRoles && canViewRoles && (
+                    {!rolesPerms.canEdit && rolesPerms.canView && (
                       <span className="text-[10px] text-gh-text-muted px-2">Solo lectura</span>
                     )}
                   </div>
@@ -665,7 +677,7 @@ export default function RolesContent() {
             </div>
 
             {/* Rol del Sistema - Solo SUPER_ADMIN */}
-            {isSuperAdmin && (
+            {rolesPerms.isSuperAdmin && (
               <div className="pt-3 border-t border-gh-border/30">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">

@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { useToast } from '@/components/providers/ToastProvider'
 import {
@@ -16,10 +15,12 @@ import {
   Filter,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Lock
 } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
+import { usePermission } from '@/hooks'
 
 // ==================== TIPOS ====================
 
@@ -58,8 +59,9 @@ const CATEGORIES = [
 // ==================== COMPONENTE ====================
 
 export default function MatrizAccesoContent() {
-  // Sesión
-  const { data: session } = useSession()
+  // Permisos granulares
+  const matrixPerms = usePermission('security.matrix')
+  const toast = useToast()
   
   // Estado
   const [roles, setRoles] = useState<Role[]>([])
@@ -69,7 +71,6 @@ export default function MatrizAccesoContent() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
-  const toast = useToast()
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('')
@@ -115,6 +116,25 @@ export default function MatrizAccesoContent() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  // Control de acceso
+  if (matrixPerms.isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      </div>
+    )
+  }
+
+  if (!matrixPerms.canView) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <Lock className="w-16 h-16 text-red-500" />
+        <h3 className="text-xl font-semibold text-gray-800">Acceso Denegado</h3>
+        <p className="text-gray-600">No tienes permisos para ver la matriz de acceso</p>
+      </div>
+    )
+  }
 
   // Detectar cambios
   useEffect(() => {
@@ -186,8 +206,8 @@ export default function MatrizAccesoContent() {
     if (role?.name === 'SUPER_ADMIN') return // SUPER_ADMIN siempre tiene full
 
     const currentLevel = matrix[roleId]?.[permissionId] || 'none'
-    const levels: Array<'full' | 'readonly' | 'none'> = ['none', 'readonly', 'full']
-    const currentIndex = levels.indexOf(currentLevel)
+    const levels: Array<'none' | 'read' | 'write' | 'full'> = ['none', 'read', 'write', 'full']
+    const currentIndex = levels.indexOf(currentLevel as 'none' | 'read' | 'write' | 'full')
     const nextLevel = levels[(currentIndex + 1) % levels.length]
 
     setMatrix(prev => ({
@@ -204,11 +224,8 @@ export default function MatrizAccesoContent() {
     try {
       setSaving(true)
       
-      // Verificar si el usuario es SUPER_ADMIN
-      const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
-      
       // Solo filtrar roles del sistema si NO es SUPER_ADMIN
-      const systemRoleIds = isSuperAdmin 
+      const systemRoleIds = matrixPerms.isSuperAdmin 
         ? new Set<string>() // SUPER_ADMIN puede modificar todo
         : new Set(roles.filter(r => r.isSystem).map(r => r.id)) // Otros roles no pueden modificar roles del sistema
       
@@ -275,7 +292,13 @@ export default function MatrizAccesoContent() {
         text: 'text-gh-success',
         border: 'border-gh-success/30'
       },
-      readonly: { 
+      write: { 
+        icon: Check, 
+        bg: 'bg-gh-warning/20', 
+        text: 'text-gh-warning',
+        border: 'border-gh-warning/30'
+      },
+      read: { 
         icon: Eye, 
         bg: 'bg-gh-accent/20', 
         text: 'text-gh-accent',
@@ -289,7 +312,11 @@ export default function MatrizAccesoContent() {
       },
     }
 
-    const { icon: Icon, bg, text, border } = config[level]
+    // Validar que el level existe en config
+    const accessLevel = level as keyof typeof config
+    const configForLevel = config[accessLevel] || config.none
+
+    const { icon: Icon, bg, text, border } = configForLevel
 
     return (
       <button
@@ -356,24 +383,26 @@ export default function MatrizAccesoContent() {
           )}
 
           {/* Botón guardar */}
-          <button
-            onClick={handleSave}
-            disabled={!hasChanges || saving}
-            className={`
-              flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-              ${hasChanges 
-                ? 'bg-gh-success/10 text-gh-success border border-gh-success/30 hover:bg-gh-success/20' 
-                : 'bg-gh-bg-tertiary text-gh-text-muted border border-gh-border/30 cursor-not-allowed'
-              }
-            `}
-          >
-            {saving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Save className="w-3.5 h-3.5" />
-            )}
-            Guardar
-          </button>
+          {matrixPerms.canEdit && (
+            <button
+              onClick={handleSave}
+              disabled={!hasChanges || saving}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+                ${hasChanges 
+                  ? 'bg-gh-success/10 text-gh-success border border-gh-success/30 hover:bg-gh-success/20' 
+                  : 'bg-gh-bg-tertiary text-gh-text-muted border border-gh-border/30 cursor-not-allowed'
+                }
+              `}
+            >
+              {saving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              Guardar
+            </button>
+          )}
         </div>
       </div>
 
@@ -383,19 +412,25 @@ export default function MatrizAccesoContent() {
           <div className="w-4 h-4 rounded bg-gh-success/20 flex items-center justify-center">
             <Check className="w-2.5 h-2.5 text-gh-success" />
           </div>
-          Acceso total
+          Acceso completo (FULL)
+        </span>
+        <span className="flex items-center gap-1">
+          <div className="w-4 h-4 rounded bg-gh-warning/20 flex items-center justify-center">
+            <Check className="w-2.5 h-2.5 text-gh-warning" />
+          </div>
+          Lectura + Escritura (WRITE)
         </span>
         <span className="flex items-center gap-1">
           <div className="w-4 h-4 rounded bg-gh-accent/20 flex items-center justify-center">
             <Eye className="w-2.5 h-2.5 text-gh-accent" />
           </div>
-          Solo lectura
+          Solo lectura (READ)
         </span>
         <span className="flex items-center gap-1">
           <div className="w-4 h-4 rounded bg-gh-text-muted/10 flex items-center justify-center">
             <Ban className="w-2.5 h-2.5 text-gh-text-muted/40" />
           </div>
-          Sin acceso
+          Sin acceso (NONE)
         </span>
       </div>
 
@@ -436,12 +471,13 @@ export default function MatrizAccesoContent() {
             onChange={setAccessLevelFilter}
             options={[
               { value: 'all', label: 'Todos los niveles' },
-              { value: 'full', label: '✓ Acceso total' },
-              { value: 'readonly', label: '👁️ Solo lectura' },
-              { value: 'none', label: '✗ Sin acceso' }
+              { value: 'full', label: '✓ Acceso completo (FULL)' },
+              { value: 'write', label: '✓ Lectura + Escritura (WRITE)' },
+              { value: 'read', label: '👁️ Solo lectura (READ)' },
+              { value: 'none', label: '✗ Sin acceso (NONE)' }
             ]}
             placeholder="Nivel de acceso"
-            className="min-w-[160px]"
+            className="min-w-[180px]"
           />
 
           {/* Filtro por rol */}

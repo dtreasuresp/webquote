@@ -997,7 +997,7 @@ export default function PaquetesCaracteristicasContent({
             onChange={(e) => onChange({ ...data, notaImportante: e.target.value })}
             className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-info focus:ring-1 focus:ring-gh-info/50 focus:outline-none transition-colors resize-y min-h-[60px]"
             rows={2}
-            placeholder="Los precios pueden variar según requerimientos específicos..."
+            placeholder="Puede escribir en este campo cualquier nota importante que quieras mostrar en la sección de características."
           />
         </div>
       </div>

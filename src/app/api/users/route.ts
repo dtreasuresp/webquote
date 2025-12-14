@@ -1,30 +1,32 @@
 /**
  * API para gestión de usuarios
- * GET: Listar todos los usuarios
- * POST: Crear nuevo usuario
+ * GET: Listar todos los usuarios (require: users.view)
+ * POST: Crear nuevo usuario (require: users.create)
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from 'next-auth'
 import { authOptions, hashPassword, generateUsername, generateTemporaryPassword } from '@/lib/auth'
 import { prisma } from "@/lib/prisma";
+import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
 
 // GET: Listar usuarios
 export async function GET(request: NextRequest) {
   try {
-    // Verificar sesión y permisos
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
-    }
+    // ✅ Verificar permiso de lectura
+    const { session, error, accessLevel } = await requireReadPermission('users.view')
+    if (error) return error
 
     const { searchParams } = new URL(request.url)
     const includePermissions = searchParams.get('includePermissions') === 'true'
 
+    // Aplicar filtro según Access Level
+    const canViewAll = accessLevel === 'full' || accessLevel === 'write'
+    
     const users = await prisma.user.findMany({
+      // Si no tiene acceso completo, solo ver usuarios de su empresa
+      where: canViewAll ? undefined : {
+        empresa: session!.user.empresa,
+      },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -66,14 +68,16 @@ export async function GET(request: NextRequest) {
     // Si se solicitan permisos, devolver array plano para compatibilidad
     if (includePermissions) {
       const res = NextResponse.json(users)
-      res.headers.set('x-user-id', session.user.id || '')
-      res.headers.set('x-user-role', session.user.role || '')
+      res.headers.set('x-user-id', session!.user.id || '')
+      res.headers.set('x-user-role', session!.user.role || '')
+      res.headers.set('x-access-level', accessLevel || 'none')
       return res
     }
 
     const res = NextResponse.json({ users })
-    res.headers.set('x-user-id', session.user.id || '')
-    res.headers.set('x-user-role', session.user.role || '')
+    res.headers.set('x-user-id', session!.user.id || '')
+    res.headers.set('x-user-role', session!.user.role || '')
+    res.headers.set('x-access-level', accessLevel || 'none')
     return res
   } catch (error) {
     console.error("Error al listar usuarios:", error);
@@ -87,14 +91,9 @@ export async function GET(request: NextRequest) {
 // POST: Crear usuario
 export async function POST(request: NextRequest) {
   try {
-    // Verificar sesión y permisos
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
-      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
-    }
+    // ✅ Verificar permiso de escritura para crear usuarios
+    const { session, error } = await requireWritePermission('users.create')
+    if (error) return error
 
     const body = await request.json();
     const { empresa, nombre, email, telefono, quotationId, role = "CLIENT" } = body;

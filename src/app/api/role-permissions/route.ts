@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { requireReadPermission, requireFullPermission } from '@/lib/apiProtection'
 
 /**
  * GET /api/role-permissions
  * Obtiene la matriz de permisos por rol
  * Formato: { roleId: { permissionId: accessLevel } }
+ * Require: security.matrix.view (read+)
  */
 export async function GET() {
   try {
+    // ✅ Verificar permiso de lectura
+    const { error } = await requireReadPermission('security.matrix.view')
+    if (error) return error
+
     console.log('[API RolePermissions] Iniciando consulta...')
     
     const rolePermissions = await prisma.rolePermissions.findMany({
@@ -64,18 +68,21 @@ export async function GET() {
  * PUT /api/role-permissions
  * Actualiza múltiples permisos de rol en batch
  * Body: { updates: [{ roleId, permissionId, accessLevel }] }
+ * Require: security.matrix.manage (full)
  */
 export async function PUT(request: Request) {
   try {
-    // Obtener sesión para validar permisos
-    const session = await getServerSession(authOptions)
-    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+    // ✅ Verificar permiso completo
+    const { session, error } = await requireFullPermission('security.matrix.manage')
+    if (error) return error
+
+    const isSuperAdmin = session!.user.role === 'SUPER_ADMIN'
     
     const body = await request.json()
     const { updates } = body
     
     console.log('[PUT RolePermissions] Received updates:', updates?.length || 0)
-    console.log('[PUT RolePermissions] User role:', session?.user?.role)
+    console.log('[PUT RolePermissions] User role:', session!.user.role)
     console.log('[PUT RolePermissions] First update:', updates?.[0])
 
     if (!Array.isArray(updates)) {

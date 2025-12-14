@@ -6,9 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from 'next-auth'
-import { authOptions, hashPassword, generateTemporaryPassword } from '@/lib/auth'
+import { generateTemporaryPassword, hashPassword } from '@/lib/auth'
 import { prisma } from "@/lib/prisma";
+import { requireReadPermission, requireWritePermission, requireFullPermission } from '@/lib/apiProtection'
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -16,6 +16,9 @@ interface RouteParams {
 
 // GET: Obtener usuario por ID
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const { session, error } = await requireReadPermission('users.view')
+  if (error) return error
+
   try {
     const { id } = await params;
 
@@ -63,6 +66,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // PATCH: Actualizar usuario
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  const { session, error } = await requireWritePermission('users.manage')
+  if (error) return error
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -169,6 +175,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 // DELETE: Eliminar usuario
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const { session, error } = await requireFullPermission('users.manage')
+  if (error) return error
+
   try {
     const { id } = await params;
 
@@ -188,7 +197,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await prisma.user.delete({ where: { id } });
 
     // Log de auditoría
-    const session = await getServerSession(authOptions)
     await prisma.auditLog.create({
       data: {
         action: 'user.deleted',

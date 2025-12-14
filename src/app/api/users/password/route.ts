@@ -10,22 +10,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions, hashPassword, verifyPassword } from '@/lib/auth';
+import { hashPassword, verifyPassword } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { canResetPassword } from '@/lib/auth/permissions';
+import { requireAuth } from '@/lib/apiProtection';
 
 export async function PUT(request: NextRequest) {
-  try {
-    // Verificar autenticación
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      );
-    }
+  const { session, error } = await requireAuth()
+  if (error) return error
 
+  try {
     const body = await request.json();
     const { userId, currentPassword, newPassword, isAdminReset } = body;
 

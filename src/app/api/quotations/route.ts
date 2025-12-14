@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
 
 // Forzar que esta ruta sea dinámica (no cacheada)
 export const dynamic = 'force-dynamic'
@@ -11,6 +12,9 @@ export const revalidate = 0
  * OPTIMIZADO: Solo campos esenciales para listado (excluye JSON pesados como contenidoGeneral)
  */
 export async function GET(request: NextRequest) {
+  const { session, error, accessLevel } = await requireReadPermission('quotations.view')
+  if (error) return error
+
   try {
     // Seleccionar solo campos necesarios para el listado
     // Excluimos: contenidoGeneral (~463KB por versión), packagesSnapshot, estilosConfig, etc.
@@ -91,6 +95,9 @@ export async function GET(request: NextRequest) {
  * Body: { quotationConfig: QuotationConfig, packageSnapshotId?: string }
  */
 export async function POST(request: NextRequest) {
+  const { session, error, accessLevel } = await requireWritePermission('quotations.manage')
+  if (error) return error
+
   try {
     const body = await request.json()
     const { quotationConfig, packageSnapshotId } = body

@@ -101,7 +101,7 @@ export function useInitialLoad(options: UseInitialLoadOptions = {}): UseInitialL
     try {
       // Timeout de 5 segundos para evitar cuelgues
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      const timeoutId: NodeJS.Timeout = setTimeout(() => controller.abort(), 5000)
       
       const response = await fetch('/api/health', { 
         method: 'GET',
