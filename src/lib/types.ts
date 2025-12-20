@@ -18,6 +18,7 @@ export interface Organization {
   // Jerarquía
   parentId?: string | null
   level?: OrganizationLevel
+  nivel?: string // Campo de nivel como string (RAIZ, EMPRESA, etc)
   
   // Contacto
   email?: string

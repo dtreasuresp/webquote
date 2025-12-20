@@ -466,7 +466,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
         isOpen={showConfigDialog}
         onClose={() => setShowConfigDialog(false)}
         title="Configurar Reportes Automáticos"
-        description="Establece la hora y frecuencia para generar reportes automáticamente"
+        description="Establece la hora y frecuencia"
         type="info"
         size="md"
         variant="premium"

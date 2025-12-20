@@ -19,6 +19,7 @@ import { usePermission } from '@/hooks'
 import { useToast } from '@/components/providers/ToastProvider'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 import { Organization, OrganizationNode } from '@/lib/types'
+import { getLevelIcon, formatLevel, getLevelColor } from '@/lib/organizationHelper'
 
 // ==================== TIPOS ====================
 
@@ -45,11 +46,13 @@ export default function OrganizacionContent() {
 
   // Estado
   const [organizations, setOrganizations] = useState<OrganizationNode[]>([])
+  const [allOrganizations, setAllOrganizations] = useState<Organization[]>([])
   const [hierarchyView, setHierarchyView] = useState(true)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showDialogo, setShowDialogo] = useState(false)
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null)
+  const [selectedParentId, setSelectedParentId] = useState<string | undefined>(undefined)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
@@ -79,6 +82,13 @@ export default function OrganizacionContent() {
       
       const data = await response.json()
       setOrganizations(data)
+      
+      // Cargar también lista plana para selector de padre
+      const allResponse = await fetch('/api/organizations?includeHierarchy=false')
+      if (allResponse.ok) {
+        const allData = await allResponse.json()
+        setAllOrganizations(allData)
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Error desconocido'
       console.error('[LoadOrganizations] Error:', errorMsg)
@@ -109,8 +119,17 @@ export default function OrganizacionContent() {
         sector: formData.sector || '',
         descripcion: formData.descripcion,
         email: formData.email,
-        telefono: formData.telefono,
-        parentId: formData.parentId
+        telefono: formData.telefono
+      }
+
+      // Al crear, incluir parentId si existe
+      if (!editingOrg && selectedParentId) {
+        organizationData.parentId = selectedParentId
+      }
+
+      // Al editar, incluir parentId del formulario si fue cambiado
+      if (editingOrg && formData.parentId) {
+        organizationData.parentId = formData.parentId === 'raiz' ? undefined : formData.parentId
       }
 
       const response = await fetch(url, {
@@ -119,15 +138,19 @@ export default function OrganizacionContent() {
         body: JSON.stringify(organizationData)
       })
 
-      if (!response.ok) throw new Error('Error al guardar')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }))
+        throw new Error(errorData.error || `HTTP ${response.status}`)
+      }
       
       toast.success(editingOrg ? 'Organización actualizada' : 'Organización creada')
       setShowDialogo(false)
       setEditingOrg(null)
+      setSelectedParentId(undefined)
       await loadOrganizations()
     } catch (error) {
       console.error('Error:', error)
-      toast.error('Error al guardar organización')
+      toast.error(error instanceof Error ? error.message : 'Error al guardar organización')
     }
   }
 
@@ -183,15 +206,35 @@ export default function OrganizacionContent() {
           {!hasChildren && <div className="w-3.5" />}
 
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-gh-text truncate">{node.nombre}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{getLevelIcon(node.nivel as any)}</span>
+              <p className="text-xs font-medium text-gh-text truncate">{node.nombre}</p>
+              <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${getLevelColor(node.nivel as any)}`}>
+                {formatLevel(node.nivel as any)}
+              </span>
+            </div>
             <p className="text-xs text-gh-text-muted">{node.sector}</p>
           </div>
 
           <div className="flex items-center gap-1">
+            {canWrite && (
+              <button
+                onClick={() => {
+                  setEditingOrg(null)
+                  setSelectedParentId(node.id)
+                  setShowDialogo(true)
+                }}
+                className="p-1 hover:bg-gh-success/20 text-gh-success rounded transition-colors"
+                title="Crear hijo"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            )}
             {canEdit && (
               <button
                 onClick={() => {
                   setEditingOrg(node)
+                  setSelectedParentId(node.parentId || undefined)
                   setShowDialogo(true)
                 }}
                 className="p-1 hover:bg-gh-info/20 text-gh-info rounded transition-colors"
@@ -250,11 +293,12 @@ export default function OrganizacionContent() {
             <button
               onClick={() => {
                 setEditingOrg(null)
+                setSelectedParentId(undefined)
                 setShowDialogo(true)
               }}
               className="flex items-center gap-2 px-3 py-2 bg-gh-success text-white rounded-md text-xs font-medium hover:bg-gh-success/90 transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" /> Nueva
+              <Plus className="w-3.5 h-3.5" /> Nueva (Superior)
             </button>
           )}
           <button
@@ -400,12 +444,37 @@ export default function OrganizacionContent() {
             setShowDialogo(false)
             setEditingOrg(null)
           }}
-          title={editingOrg ? 'Editar Organización' : 'Nueva Organización'}
+          title={editingOrg ? 'Editar Organización' : selectedParentId ? `Nueva Organización bajo ${allOrganizations.find(o => o.id === selectedParentId)?.nombre}` : 'Nueva Organización (Raíz)'}
           contentType="form"
           formConfig={{
             fields: [
               { id: 'nombre', label: 'Nombre', type: 'text', placeholder: 'Nombre de la organización', required: true, value: editingOrg?.nombre || '' },
               { id: 'sector', label: 'Sector', type: 'text', placeholder: 'Sector', required: true, value: editingOrg?.sector || '' },
+              ...(editingOrg ? [{
+                id: 'parentId',
+                label: 'Organización Padre',
+                type: 'select' as const,
+                value: editingOrg.parentId || 'raiz',
+                options: [
+                  { value: 'raiz', label: 'Sin Padre (Raíz)' },
+                  ...allOrganizations
+                    .filter(org => org.id !== editingOrg.id) // No permitir que sea padre de sí mismo
+                    .map(org => ({
+                      value: org.id,
+                      label: `${org.nombre} (${formatLevel(org.nivel as any)})`
+                    }))
+                ]
+              }] : []),
+              ...(!editingOrg && selectedParentId ? [{
+                id: 'parentId',
+                label: 'Organización Padre',
+                type: 'select' as const,
+                value: selectedParentId || '',
+                options: allOrganizations.map(org => ({
+                  value: org.id,
+                  label: `${org.nombre} (${formatLevel(org.nivel as any)})`
+                }))
+              }] : []),
               { id: 'descripcion', label: 'Descripción', type: 'textarea', placeholder: 'Descripción', value: editingOrg?.descripcion || '' },
               { id: 'email', label: 'Email', type: 'email', placeholder: 'email@example.com', value: editingOrg?.email || '' },
               { id: 'telefono', label: 'Teléfono', type: 'text', placeholder: '+1234567890', value: editingOrg?.telefono || '' }

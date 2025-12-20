@@ -165,6 +165,7 @@ model Organization {
   parentId      String?
   parent        Organization? @relation("OrganizationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children      Organization[] @relation("OrganizationHierarchy")
+  nivel         String    @default("RAIZ")  // RAIZ, EMPRESA, DEPARTAMENTO, EQUIPO, PROYECTO
   
   // Contacto
   email         String?

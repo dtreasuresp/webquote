@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
 import { createAuditLog } from '@/lib/audit/auditHelper'
+import { calculateOrganizationLevel, validateHierarchyTransition } from '@/lib/organizationHelper'
 
 /**
  * GET /api/organizations
@@ -83,7 +84,19 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         )
       }
+
+      // Validar que la transición es válida
+      const { valid, reason } = await validateHierarchyTransition(parentId)
+      if (!valid) {
+        return NextResponse.json(
+          { error: reason || 'Transición jerárquica inválida' },
+          { status: 400 }
+        )
+      }
     }
+
+    // Calcular nivel automáticamente
+    const nivel = await calculateOrganizationLevel(parentId)
 
     // Crear organización
     const org = await prisma.organization.create({
@@ -94,6 +107,7 @@ export async function POST(request: NextRequest) {
         parentId,
         email,
         telefono,
+        nivel,
         createdBy: session?.user?.id || 'SYSTEM',
         updatedBy: session?.user?.id || 'SYSTEM'
       }
@@ -117,9 +131,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(org, { status: 201 })
   } catch (error) {
-    console.error('[API Organizations POST] Error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+    console.error('[API Organizations POST] Error:', errorMessage, error)
     return NextResponse.json(
-      { error: 'Error al crear organización' },
+      { error: errorMessage || 'Error al crear organización' },
       { status: 500 }
     )
   }

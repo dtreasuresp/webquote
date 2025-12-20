@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireReadPermission, requireWritePermission, requireFullPermission } from '@/lib/apiProtection'
 import { createAuditLog } from '@/lib/audit/auditHelper'
+import { calculateOrganizationLevel, validateHierarchyTransition } from '@/lib/organizationHelper'
 
 /**
  * GET /api/organizations/[id]
@@ -60,7 +61,7 @@ export async function PUT(
 
   try {
     const body = await request.json()
-    const { nombre, sector, descripcion, email, telefono } = body
+    const { nombre, sector, descripcion, email, telefono, parentId } = body
 
     // Verificar que existe
     const existing = await prisma.organization.findUnique({
@@ -74,7 +75,113 @@ export async function PUT(
       )
     }
 
-    // Actualizar
+    // Si se intenta cambiar parentId, validar la transición
+    if (parentId !== undefined && parentId !== existing.parentId) {
+      // Validar que el nuevo padre existe
+      if (parentId) {
+        const newParent = await prisma.organization.findUnique({
+          where: { id: parentId }
+        })
+        if (!newParent) {
+          return NextResponse.json(
+            { error: 'Organización padre no existe' },
+            { status: 404 }
+          )
+        }
+
+        // Validar que la transición es válida
+        const { valid, reason } = await validateHierarchyTransition(parentId)
+        if (!valid) {
+          return NextResponse.json(
+            { error: reason || 'Transición jerárquica inválida' },
+            { status: 400 }
+          )
+        }
+
+        // Calcular nuevo nivel basado en el nuevo padre
+        const newNivel = await calculateOrganizationLevel(parentId)
+        
+        // Actualizar con nuevo parentId y nivel
+        const org = await prisma.organization.update({
+          where: { id },
+          data: {
+            ...(nombre !== undefined && { nombre }),
+            ...(sector !== undefined && { sector }),
+            ...(descripcion !== undefined && { descripcion }),
+            ...(email !== undefined && { email }),
+            ...(telefono !== undefined && { telefono }),
+            parentId,
+            nivel: newNivel,
+            updatedBy: session?.user?.id || 'SYSTEM'
+          }
+        })
+
+        // Auditar cambios
+        const cambios = Object.keys(body).filter(key => body[key] !== existing[key as keyof typeof existing])
+        
+        if (cambios.length > 0) {
+          await createAuditLog({
+            action: 'ORG_UPDATED',
+            entityType: 'ORGANIZATION',
+            entityId: org.id,
+            actorId: session?.user?.id,
+            actorName: session?.user?.username || 'Sistema',
+            details: {
+              cambios,
+              valores: body,
+              parentIdChanged: true,
+              newParentId: parentId,
+              newNivel: newNivel
+            },
+            ipAddress: request.headers.get('x-forwarded-for') || undefined,
+            userAgent: request.headers.get('user-agent') || undefined
+          })
+        }
+
+        return NextResponse.json(org)
+      } else {
+        // Cambiar a RAIZ (sin padre)
+        const org = await prisma.organization.update({
+          where: { id },
+          data: {
+            ...(nombre !== undefined && { nombre }),
+            ...(sector !== undefined && { sector }),
+            ...(descripcion !== undefined && { descripcion }),
+            ...(email !== undefined && { email }),
+            ...(telefono !== undefined && { telefono }),
+            parentId: null,
+            nivel: 'RAIZ',
+            updatedBy: session?.user?.id || 'SYSTEM'
+          }
+        })
+
+        // Auditar cambios
+        const cambios = Object.keys(body).filter(key => body[key] !== existing[key as keyof typeof existing])
+        
+        if (cambios.length > 0) {
+          await createAuditLog({
+            action: 'ORG_UPDATED',
+            entityType: 'ORGANIZATION',
+            entityId: org.id,
+            actorId: session?.user?.id,
+            actorName: session?.user?.username || 'Sistema',
+            details: {
+              cambios,
+              valores: body,
+              parentIdChanged: true,
+              newParentId: null,
+              newNivel: 'RAIZ'
+            },
+            ipAddress: request.headers.get('x-forwarded-for') || undefined,
+            userAgent: request.headers.get('user-agent') || undefined
+          })
+        }
+
+        return NextResponse.json(org)
+      }
+    }
+
+    // Actualizar sin cambiar parentId
     const org = await prisma.organization.update({
       where: { id },
       data: {
@@ -108,9 +215,10 @@ export async function PUT(
 
     return NextResponse.json(org)
   } catch (error) {
-    console.error('[API Organizations PUT] Error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+    console.error('[API Organizations PUT] Error:', errorMessage, error)
     return NextResponse.json(
-      { error: 'Error al actualizar organización' },
+      { error: errorMessage || 'Error al actualizar organización' },
       { status: 500 }
     )
   }
