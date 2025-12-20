@@ -65,12 +65,24 @@ export default function OrganizacionContent() {
     try {
       setLoading(true)
       const response = await fetch(`/api/organizations?includeHierarchy=${hierarchyView}`)
-      if (!response.ok) throw new Error('Error al cargar organizaciones')
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }))
+        const errorMessage = errorData?.error || `Error ${response.status}`
+        console.error('[LoadOrganizations] API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorMessage
+        })
+        throw new Error(errorMessage)
+      }
+      
       const data = await response.json()
       setOrganizations(data)
     } catch (error) {
-      console.error('Error:', error)
-      toast.error('Error al cargar organizaciones')
+      const errorMsg = error instanceof Error ? error.message : 'Error desconocido'
+      console.error('[LoadOrganizations] Error:', errorMsg)
+      toast.error(`No se pudieron cargar las organizaciones: ${errorMsg}`)
     } finally {
       setLoading(false)
     }
