@@ -18,6 +18,7 @@ import type { QuotationConfig, PackageSnapshot } from '@/lib/types'
 import { useOfflineStatus } from './useOfflineStatus'
 import { useAutoSave } from './useAutoSave'
 import { useTabSync } from './useTabSync'
+import { useUserPreferencesStore } from '@/stores/userPreferencesStore'
 
 export interface UseQuotationCacheOptions {
   /** ID de la cotización */
@@ -87,6 +88,7 @@ export function useQuotationCache(
 
   // Hooks auxiliares
   const { isOnline } = useOfflineStatus()
+  const guardarAutomaticamente = useUserPreferencesStore((s) => s.guardarAutomaticamente ?? true)
   
   // Ref para evitar carreras de condición
   const loadingRef = useRef(false)
@@ -94,10 +96,11 @@ export function useQuotationCache(
   // Calcular si hay cambios
   const isDirty = quotationId ? quotationCache.isDirty(quotationId) : false
 
-  // Auto-guardado local
+  // Auto-guardado local - respeta la preferencia del usuario
   useAutoSave(quotation, {
     interval: autoSaveInterval,
     enabled: enabled && !!quotationId,
+    respectUserPreference: true,
     onSave: (success) => {
       if (success && quotationId) {
         setSyncStatus(quotationCache.getSyncStatus(quotationId))

@@ -66,6 +66,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // 📄 Si está autenticado pero no tiene cotización asignada → /sin-cotizacion
+  // Esto evita el "flash" de la Home antes de redirigir desde el cliente.
+  // Excepción: ADMIN/SUPER_ADMIN pueden usar cotización global.
+  if (pathname === '/' && isAuthenticated) {
+    const userRole = token?.role as string | undefined
+    const quotationAssignedId = (token as any)?.quotationAssignedId as string | undefined
+
+    const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'
+
+    if (!isAdmin && !quotationAssignedId) {
+      return NextResponse.redirect(new URL('/sin-cotizacion', request.url))
+    }
+  }
+
   // 👨‍💼 Si intenta acceder a admin sin rol adecuado → Homepage o Login
   if (isAdminRoute) {
     if (!isAuthenticated) {

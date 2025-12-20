@@ -39,13 +39,11 @@ interface Permission {
   category: string
   isSystem: boolean
 }
-
 interface RolePermissionMap {
   [roleId: string]: {
-    [permissionId: string]: 'full' | 'readonly' | 'none'
+    [permissionId: string]: 'none' | 'read' | 'write' | 'full'
   }
 }
-
 // Categorías
 const CATEGORIES = [
   { value: 'Usuarios', label: 'Usuarios', icon: '👥' },
@@ -488,7 +486,7 @@ export default function MatrizAccesoContent() {
               { value: 'all', label: 'Todos los roles' },
               ...roles.map(role => ({ 
                 value: role.id, 
-                label: role.nombre 
+                label: role.displayName
               }))
             ]}
             placeholder="Rol"

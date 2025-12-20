@@ -8,10 +8,11 @@ import {
   LayoutGrid, 
   Users, 
   FileText,
+  Database,
   ChevronRight
 } from 'lucide-react'
 
-export type SecuritySection = 'roles' | 'permisos' | 'matriz' | 'usuarios-permisos' | 'logs'
+export type SecuritySection = 'roles' | 'permisos' | 'matriz' | 'usuarios-permisos' | 'logs' | 'backups'
 
 interface SeguridadSidebarProps {
   activeSection: SecuritySection
@@ -48,6 +49,12 @@ const securitySections = [
     label: 'Logs de Auditoría',
     icon: FileText,
     description: 'Historial de cambios',
+  },
+  {
+    id: 'backups' as SecuritySection,
+    label: 'Backups',
+    icon: Database,
+    description: 'Copias de seguridad',
   },
 ]
 

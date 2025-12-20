@@ -29,6 +29,14 @@ export async function GET(request: NextRequest) {
         empresa: true,
         sector: true,
         ubicacion: true,
+        // Usuario asignado (relación inversa)
+        User: {
+          select: {
+            username: true,
+            nombre: true,
+            email: true
+          }
+        },
         emailCliente: true,
         whatsappCliente: true,
         // Datos del proveedor

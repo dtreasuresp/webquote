@@ -60,6 +60,12 @@ import {
 // Analytics y Tracking
 import { AnalyticsProvider } from '@/features/admin/contexts'
 import { useEventTracking } from '@/features/admin/hooks'
+import { useUserPreferencesStore, useQuotationStore, useServicesStore, useDiscountsStore, usePaymentStore, useSnapshotStore, useValidationStore, useTemplateStore, useModalStore } from '@/stores'
+import { useUIStore } from '@/stores/uiStore'
+import { useDataStore } from '@/stores/dataStore'
+import { useModalDataStore } from '@/stores/modalDataStore'
+import { useQuotationSyncStore } from '@/stores/quotationSyncStore'
+import { useQuotationSync } from '@/hooks/useQuotationSync'
 const PackageHistoryContent = lazy(() => import('@/features/admin/components/comparisons').then(mod => ({ default: mod.PackageHistoryContent })))
 const PackageCompareContent = lazy(() => import('@/features/admin/components/comparisons').then(mod => ({ default: mod.PackageCompareContent })))
 
@@ -92,9 +98,92 @@ export default function Administrador() {
   // Hook para notificaciones toast
   const toast = useToast()
 
+  // ==================== SINCRONIZACIÓN GLOBAL DE COTIZACIONES ====================
+  // Hook para emitir eventos de sincronización cuando se guardan cotizaciones
+  const emitQuotationSync = useQuotationSync()
+
   // ==================== SISTEMA DE CACHÉ Y SINCRONIZACIÓN ====================
   // Estado para el ID de cotización actual (se establece al seleccionar/crear cotización)
-  const [quotationId, setQuotationId] = useState<string | null>(null)
+  // 🟢 PHASE 4: quotationId moved to store selector
+  const quotationId = useQuotationStore((s) => s.quotationId)
+  
+  // 🟢 PHASE 1.2: Selectores del quotationStore (Integración gradual)
+  // Estos mantienen sincronización con useState sin reemplazarlos aún
+  const storeQuotationId = useQuotationStore((s) => s.quotationId)
+  const storeConfig = useQuotationStore((s) => s.config)
+  const storeCurrent = useQuotationStore((s) => s.current)
+  const storeIsLoading = useQuotationStore((s) => s.isLoading)
+  const storeErrors = useQuotationStore((s) => s.errors)
+  const storeReadOnly = useQuotationStore((s) => s.readOnly)
+  const storeIsDirty = useQuotationStore((s) => s.isDirty)
+  const storeHasShownAlert = useQuotationStore((s) => s.hasShownAlert)
+  const { loadQuotation, updateQuotation, saveQuotation, resetQuotation, setReadOnly: setStoreReadOnly, setHasShownAlert: setStoreHasShownAlert, setValidationErrors: setStoreValidationErrors } = useQuotationStore()
+  
+  // 🟢 PHASE 1.2: Selectores del servicesStore (Integración gradual)
+  const storeBaseServices = useServicesStore((s) => s.baseServices)
+  const storeNewBaseService = useServicesStore((s) => s.newBaseService)
+  const storeEditingBaseId = useServicesStore((s) => s.editingBaseId)
+  const storeEditingBase = useServicesStore((s) => s.editingBase)
+  const storeNewService = useServicesStore((s) => s.newService)
+  const storeEditingId = useServicesStore((s) => s.editingId)
+  const storeEditing = useServicesStore((s) => s.editing)
+  const storeOptionalServices = useServicesStore((s) => s.optionalServices)
+  const storeServicesIsLoading = useServicesStore((s) => s.isLoading)
+  const storeServicesErrors = useServicesStore((s) => s.errors)
+  const { loadBaseServices, addBaseService, updateBaseService, deleteBaseService, startEditingBase, cancelEditingBase, setNewBaseService, loadOptionalServices, addOptionalService, updateOptionalService, deleteOptionalService, startEditing, cancelEditing, setNewService, setBaseServices, setOptionalServices } = useServicesStore()
+  
+  // 🟢 PHASE 1.2: Selectores del discountsStore (Integración gradual)
+  const storeDiscountsConfig = useDiscountsStore((s) => s.config)
+  const storeDiscountsLoading = useDiscountsStore((s) => s.isLoading)
+  const storeDiscountsErrors = useDiscountsStore((s) => s.errors)
+  const storeExpandedGroups = useDiscountsStore((s) => s.expandedGroups)
+  const { loadConfig: loadDiscountsConfig, updateConfig: updateDiscountsConfig, saveConfig: saveDiscountsConfig, setConfig: setDiscountsConfig, toggleExpanded: toggleExpandedDiscounts, resetDiscounts } = useDiscountsStore()
+  
+  // 🟢 PHASE 1.2: Selectores del paymentStore (Integración gradual)
+  const storeCurrentPackage = usePaymentStore((s) => s.currentPackage)
+  const storePaymentOptions = usePaymentStore((s) => s.paymentOptions)
+  const storePreferredMethod = usePaymentStore((s) => s.preferredMethod)
+  const storePaymentNotes = usePaymentStore((s) => s.notes)
+  const storePreferredMethods = usePaymentStore((s) => s.preferredMethods)
+  const storePaymentLoading = usePaymentStore((s) => s.isLoading)
+  const storePaymentErrors = usePaymentStore((s) => s.errors)
+  const { setCurrentPackage: setStoreCurrentPackage, setPaymentOptions: setStorePaymentOptions, setPreferredMethod: setStorePreferredMethod, setPreferredMethods: setStorePreferredMethods, updateNotes: updateStoreNotes, loadPaymentMethods, savePaymentPreferences } = usePaymentStore()
+  
+  // 🟢 PHASE 2.1: Selectores del snapshotStore (Integración gradual)
+  const storeSnapshots = useSnapshotStore((s) => s.snapshots)
+  const storeSnapshotActual = useSnapshotStore((s) => s.snapshotActual)
+  const storeSnapshotSeleccionado = useSnapshotStore((s) => s.snapshotSeleccionado)
+  const storeEditandoSnapshotId = useSnapshotStore((s) => s.editandoSnapshotId)
+  const storeNuevoSnapshot = useSnapshotStore((s) => s.nuevoSnapshot)
+  const storeComparando = useSnapshotStore((s) => s.comparando)
+  const storeResultadoComparacion = useSnapshotStore((s) => s.resultadoComparacion)
+  const storeSnapshotsHistoria = useSnapshotStore((s) => s.snapshotsHistoria)
+  const storeSnapshotLoading = useSnapshotStore((s) => s.isLoading)
+  const storeSnapshotErrors = useSnapshotStore((s) => s.errors)
+  const { loadSnapshots: loadSnapshotsStore, createSnapshot, updateSnapshot, deleteSnapshot, compareSnapshots, selectSnapshot, setSnapshotActual, startEditing: startEditingSnapshot, cancelEditing: cancelEditingSnapshot, setNewSnapshot, startComparison, resetSnapshots, setSnapshots, setSnapshotEditando } = useSnapshotStore()
+  
+  // 🟢 PHASE 2.2: Selectores del validationStore (Integración gradual)
+  const storeTabValidation = useValidationStore((s) => s.tabValidation)
+  const storeCurrentTab = useValidationStore((s) => s.currentTab)
+  const storeIsValidating = useValidationStore((s) => s.isValidating)
+  const storeValidationErrors = useValidationStore((s) => s.errors)
+  const storeQuotationFieldErrors = useValidationStore((s) => s.quotationFieldErrors)
+  const { validateTab, setTabValid, clearTabValidation, clearAllValidations, setCurrentTab: setStoreCurrentTab, setQuotationFieldErrors: setStoreQuotationFieldErrors, clearQuotationFieldErrors: clearStoreQuotationFieldErrors } = useValidationStore()
+  
+  // 🟢 PHASE 2.3: Selectores del templateStore (Integración gradual)
+  const storeDescriptionTemplates = useTemplateStore((s) => s.descriptionTemplates)
+  const storeFinancialTemplates = useTemplateStore((s) => s.financialTemplates)
+  const storeSelectedDescriptionTemplate = useTemplateStore((s) => s.selectedDescriptionTemplate)
+  const storeSelectedFinancialTemplate = useTemplateStore((s) => s.selectedFinancialTemplate)
+  const storeTemplateLoading = useTemplateStore((s) => s.isLoading)
+  const storeTemplateErrors = useTemplateStore((s) => s.errors)
+  const { loadDescriptionTemplates, createDescriptionTemplate, updateDescriptionTemplate, deleteDescriptionTemplate, loadFinancialTemplates, createFinancialTemplate, updateFinancialTemplate, deleteFinancialTemplate, selectDescriptionTemplate, selectFinancialTemplate, setDescriptionTemplates: setStoreDescriptionTemplates, setFinancialTemplates: setStoreFinancialTemplates } = useTemplateStore()
+  
+  // PHASE 3.1: modalStore integration
+  const storeModals = useModalStore((s) => s.modals)
+  const storeActiveModalId = useModalStore((s) => s.activeModalId)
+  const storeIsAnyModalOpen = useModalStore((s) => Object.keys(s.modals).length > 0)
+  const { openModal, closeModal, closeAllModals, setActiveModal, updateModalConfig, setModalLoading, setModalError, resetModals } = useModalStore()
   
   // Detectar estado de conexión
   const { isOnline, wasOffline } = useOfflineStatus()
@@ -203,25 +292,16 @@ export default function Administrador() {
 
   const loadPreferencesCallback = async () => {
     try {
-      console.log('⚙️ [loadPreferencesCallback] Cargando preferencias desde BD...')
-      const response = await fetch('/api/preferences')
-      const data = await response.json()
-      if (data.success) {
-        console.log('⚙️ [loadPreferencesCallback] Preferencias cargadas:', data.data ? 'Sí' : 'No')
-        setUserPreferences(data.data || null)
-        // ✅ Guardar en cache local para modo offline
-        if (data.data) {
-          cachePreferences(data.data)
-          console.log('💾 [loadPreferencesCallback] Preferencias guardadas en cache local')
-        }
-      }
+      console.log('⚙️ [loadPreferencesCallback] Delegando carga de preferencias al store...')
+      await useUserPreferencesStore.getState().loadPreferences()
+      console.log('⚙️ [loadPreferencesCallback] Preferencias cargadas en store')
     } catch (error) {
-      console.error('Error cargando preferences:', error)
-      // ✅ Intentar cargar desde cache local si BD falla
-      const cachedData = getCachedPreferences<typeof userPreferences>()
+      console.error('Error cargando preferences via store:', error)
+      // Intentar cargar desde cache local como fallback
+      const cachedData = getCachedPreferences<any>()
       if (cachedData) {
         console.log('⚙️ [loadPreferencesCallback] Usando preferencias desde cache local')
-        setUserPreferences(cachedData)
+        useUserPreferencesStore.setState(cachedData as any)
         return
       }
       throw error
@@ -321,14 +401,14 @@ export default function Administrador() {
           toast.info('📦 Trabajando con datos en cache local (modo offline)')
         }
       }
-      setCargandoSnapshots(false)
+      // 🟢 PHASE 4.2: cargandoSnapshots state now from store - no need to set it
     },
     onError: (error) => {
       console.error('❌ Error en carga inicial:', error)
       // ✅ Actualizar metadatos de sincronización fallida
       updateCacheMetadata(false)
-      setErrorSnapshots(error)
-      setCargandoSnapshots(false)
+      // 🟢 PHASE 4.2: setErrorSnapshots now managed by store
+      // setErrorSnapshots(error)
     }
   })
 
@@ -386,105 +466,95 @@ export default function Administrador() {
   }
 
   // ==================== ESTADOS COTIZACIÓN ====================
-  const [cotizacionConfig, setCotizacionConfig] = useState<QuotationConfig | null>(null)
-  const [cargandoCotizacion, setCargandoCotizacion] = useState(false)
-
-  // Sincronizar quotationId con cotizacionConfig para activar el sistema de caché
-  useEffect(() => {
-    if (cotizacionConfig?.id) {
-      setQuotationId(cotizacionConfig.id)
-    } else {
-      setQuotationId(null)
+  // 🟢 PHASE 5.1: cotizacionConfig migrado a storeConfig
+  const cotizacionConfig = storeConfig
+  const { setConfig: setStoreConfig } = useQuotationStore()
+  const setCotizacionConfig = (config: QuotationConfig | null) => {
+    setStoreConfig(config as any)
+    if (config?.id && quotationId !== config.id) {
+      loadQuotation(config.id)
     }
-  }, [cotizacionConfig?.id])
-  const [erroresValidacionCotizacion, setErroresValidacionCotizacion] = useState<{
-    emailProveedor?: string
-    whatsappProveedor?: string
-    emailCliente?: string
-    whatsappCliente?: string
-    fechas?: string
-    empresa?: string
-    profesional?: string
-    numero?: string
-    version?: string
-  }>({})
+  }
+
+  // 🟢 PHASE 4: quotationId sync - now directly using store selector
+
+  const erroresValidacionCotizacion = storeQuotationFieldErrors
+  const setErroresValidacionCotizacion = setStoreQuotationFieldErrors
+  const clearErroresValidacionCotizacion = clearStoreQuotationFieldErrors
 
   // Estados principales
-  const [serviciosBase, setServiciosBase] = useState<ServicioBase[]>([
-    { id: '1', nombre: 'Hosting', precio: 28, mesesGratis: 3, mesesPago: 9 },
-    { id: '2', nombre: 'Mailbox', precio: 4, mesesGratis: 3, mesesPago: 9 },
-    { id: '3', nombre: 'Dominio', precio: 18, mesesGratis: 3, mesesPago: 9 },
-  ])
+  const serviciosBase = storeBaseServices
+  const setServiciosBase = setBaseServices
 
-  const [nuevoServicioBase, setNuevoServicioBase] = useState<{
-    nombre: string
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-    frecuenciaPago: 'mensual' | 'anual'
-  }>({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12, frecuenciaPago: 'mensual' })
+  const nuevoServicioBase = storeNewBaseService
+  const setNuevoServicioBase = setNewBaseService
 
-  const [editandoServicioBaseId, setEditandoServicioBaseId] = useState<string | null>(null)
-  const [servicioBaseEditando, setServicioBaseEditando] = useState<ServicioBase | null>(null)
+  const editandoServicioBaseId = storeEditingBaseId
+  const setEditandoServicioBaseId = (id: string | null) => id ? null : cancelEditingBase()
+  const servicioBaseEditando = storeEditingBase
+  const setServicioBaseEditando = (svc: ServicioBase | null) => svc ? startEditingBase(svc) : cancelEditingBase()
 
   // Definición de Paquetes
-  const [paqueteActual, setPaqueteActual] = useState<Package>({
-    nombre: '',
-    desarrollo: 0,
-    descuento: 0,
-    activo: true,
-    tipo: '',
-    descripcion: '',
-  })
+  const paqueteActual = storeCurrentPackage
+  const setPaqueteActual = setStoreCurrentPackage
 
   // ==================== ESTADOS FINANCIERO (para OfertaTab) ====================
-  const [opcionesPagoActual, setOpcionesPagoActual] = useState<OpcionPago[]>([])
-  const [metodoPagoPreferido, setMetodoPagoPreferido] = useState<string>('')
-  const [notasPago, setNotasPago] = useState<string>('')
-  const [metodosPreferidos, setMetodosPreferidos] = useState<MetodoPreferido[]>([])
-  const [configDescuentosActual, setConfigDescuentosActual] = useState<ConfigDescuentos>(getDefaultConfigDescuentos())
+  const opcionesPagoActual = storePaymentOptions
+  const setOpcionesPagoActual = setStorePaymentOptions
+  const metodoPagoPreferido = storePreferredMethod
+  const setMetodoPagoPreferido = setStorePreferredMethod
+  const notasPago = storePaymentNotes
+  const setNotasPago = updateStoreNotes
+  const metodosPreferidos = storePreferredMethods
+  const setMetodosPreferidos = setStorePreferredMethods
+  const configDescuentosActual = storeDiscountsConfig
+  const setConfigDescuentosActual = setDiscountsConfig
 
   // Estados legacy eliminados: otrosServicios y servicios (ahora unificados en serviciosOpcionales)
-  const [nuevoServicio, setNuevoServicio] = useState<{
-    nombre: string
-    precio: number
-    mesesGratis: number
-    mesesPago: number
-    frecuenciaPago: 'mensual' | 'anual'
-  }>({ 
-    nombre: '', 
-    precio: 0,
-    mesesGratis: 0,
-    mesesPago: 12,
-    frecuenciaPago: 'mensual'
-  })
-  const [editandoServicioId, setEditandoServicioId] = useState<string | null>(null)
-  const [servicioEditando, setServicioEditando] = useState<Servicio | null>(null)
+  const nuevoServicio = storeNewService
+  const setNuevoServicio = setNewService
+  const editandoServicioId = storeEditingId
+  const setEditandoServicioId = (id: string | null) => id ? null : cancelEditing()
+  const servicioEditando = storeEditing
+  const setServicioEditando = (svc: Servicio | null) => svc ? startEditing(svc) : cancelEditing()
   
   // Estado unificado (fase inicial): representación única para servicios opcionales evitando duplicados en snapshot.
   // En esta primera fase se poblará desde ambos arrays legacy (otrosServicios y servicios) al cargar configuración.
-  const [serviciosOpcionales, setServiciosOpcionales] = useState<Servicio[]>([])
-  const [snapshots, setSnapshots] = useState<PackageSnapshot[]>([])
-  const [showModalEditar, setShowModalEditar] = useState(false)
-  const [activePageTab, setActivePageTab] = useState<string>('analytics')
+  const serviciosOpcionales = storeOptionalServices
+  const setServiciosOpcionales = setOptionalServices
+  // 🟢 PHASE 4.3: Snapshot migrations from useState to Zustand
+  const snapshots = useSnapshotStore((s) => s.snapshots)
+  // 🟢 PHASE 5.2: showModalEditar migrated to uiStore
+  const showModalEditar = useUIStore((s) => s.showModalEditar)
+  const setShowModalEditar = useUIStore((s) => s.setShowModalEditar)
+  const activePageTab = useUIStore((s) => s.activePageTab)
+  const setActivePageTab = useUIStore((s) => s.setActivePageTab)
   const { trackAdminTabViewed } = useEventTracking()
-  const [snapshotEditando, setSnapshotEditando] = useState<PackageSnapshot | null>(null)
+  const snapshotEditando = useSnapshotStore((s) => s.snapshotSeleccionado)
   // Estado para comparar cambios en el modal (versión original serializada)
-  const [snapshotOriginalJson, setSnapshotOriginalJson] = useState<string | null>(null)
+  const snapshotOriginalJson = useDataStore((s) => s.snapshotOriginalJson)
+  const setSnapshotOriginalJson = useDataStore((s) => s.setSnapshotOriginalJson)
   // Ref para foco inicial en modal
   const nombrePaqueteInputRef = useRef<HTMLInputElement | null>(null)
   // Ref para scroll del contenedor modal
   const modalScrollContainerRef = useRef<HTMLDivElement>(null)
   const descripcionTextareaRef = useRef<HTMLTextAreaElement>(null)
-  const [cargandoSnapshots, setCargandoSnapshots] = useState(true)
-  const [errorSnapshots, setErrorSnapshots] = useState<string | null>(null)
+  // 🟢 PHASE 4.2: snapshot loading state moved to store selector
+  const cargandoSnapshots = storeSnapshotLoading
+  // 🟢 PHASE 4.2: snapshot errors - convert from Record to string for component compatibility
+  const errorSnapshots = storeSnapshotErrors ? Object.values(storeSnapshotErrors)[0] || null : null
   
   // ==================== ESTADOS QUOTATIONS Y PREFERENCIAS ====================
-  const [quotations, setQuotations] = useState<QuotationConfig[]>([])
-  const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null)
+  const quotations = useDataStore((s) => s.quotations)
+  const setQuotations = useDataStore((s) => s.setQuotations)
+  // User preferences are managed by Zustand store - use individual selectors to avoid infinite loop
+  const userPreferencesId = useUserPreferencesStore((s) => s.id)
+  const prefIntervalo = useUserPreferencesStore((s) => s.intervaloVerificacionConexion)
+  const prefUnidad = useUserPreferencesStore((s) => s.unidadIntervaloConexion)
   
   // Estado para controlar si hay cambios locales pendientes (para modal de reconexión)
-  const [hasPendingLocalChanges, setHasPendingLocalChanges] = useState(false)
+  const hasPendingLocalChanges = useDataStore((s) => s.hasPendingLocalChanges)
+  const setHasPendingLocalChanges = (v: boolean) => useDataStore.getState().setPendingChanges(v)
   
   // Ref para guardar el intervalo inicial (se aplica solo al guardar preferencias)
   const intervaloInicialRef = useRef<number | null>(null)
@@ -494,9 +564,9 @@ export default function Administrador() {
   
   // Efecto para guardar el intervalo inicial cuando se cargan preferencias por primera vez
   useEffect(() => {
-    if (userPreferences && intervaloInicialRef.current === null) {
-      const valor = userPreferences.intervaloVerificacionConexion || 30
-      const unidad = userPreferences.unidadIntervaloConexion || 'segundos'
+    if (userPreferencesId && intervaloInicialRef.current === null) {
+      const valor = prefIntervalo || 30
+      const unidad = prefUnidad || 'segundos'
       const intervaloMs = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
       intervaloInicialRef.current = intervaloMs
       // Aplicar el intervalo guardado en BD al cargar
@@ -504,7 +574,7 @@ export default function Administrador() {
       console.log(`⏱️ Intervalo inicial de polling aplicado: ${intervaloMs}ms`)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPreferences?.id]) // Solo cuando cambia el ID (primera carga)
+  }, [userPreferencesId]) // Solo cuando cambia el ID (primera carga)
 
   // Efecto para manejar reconexión con lógica inteligente
   useEffect(() => {
@@ -520,7 +590,7 @@ export default function Administrador() {
         setShowConnectionRecoveryDialog(true)
       } else {
         // No hay cambios locales - sincronizar automáticamente si está habilitado
-        if (userPreferences?.sincronizarAlRecuperarConexion !== false) {
+        if (useUserPreferencesStore.getState().sincronizarAlRecuperarConexion !== false) {
           console.log('🔄 Sin cambios locales - Sincronizando automáticamente...')
           refreshFromServer().then(() => {
             // Limpiar flag de reconexión después de sincronizar
@@ -536,72 +606,71 @@ export default function Administrador() {
       }
       
       // Mostrar notificación si está habilitado
-      if (userPreferences?.mostrarNotificacionCacheLocal !== false) {
+      if (useUserPreferencesStore.getState().mostrarNotificacionCacheLocal !== false) {
         toast.success('✅ Conexión a la base de datos restablecida')
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectionPolling.hasReconnected])
   
+  // 🟢 PHASE 4.3: Store synchronization deferred to PHASE 5
+  // Batch 3 requires type harmonization between stores and lib/types
+  // Recommended approach: Create type adapters or update store types to match lib/types
+  // This will be completed in PHASE 5 cleanup
+  
   // Estado para la cotización actual (información general)
-  const [cotizacionActual, setCotizacionActual] = useState<Partial<QuotationConfig>>({
-    numero: '',
-    fechaEmision: new Date().toISOString().split('T')[0],
-    tiempoValidez: 30,
-    empresa: '',
-    sector: '',
-    ubicacion: '',
-    emailCliente: '',
-    whatsappCliente: '',
-    profesional: '',
-    empresaProveedor: '',
-    emailProveedor: '',
-    whatsappProveedor: '',
-    ubicacionProveedor: '',
-    heroTituloMain: 'Propuesta de Cotización',
-    heroTituloSub: 'Cotización personalizada',
-  })
+  // 🟢 PHASE 5.1: cotizacionActual migrado a storeCurrent
+  const cotizacionActual = storeCurrent
+  const setCotizacionActual = (config: any) => updateQuotation(config)
   
   // ==================== FIN ESTADOS QUOTATIONS ====================
   
   // ==================== NUEVOS ESTADOS FASES 3-6 ====================
-  const [readOnly, setReadOnly] = useState(false)
-  const [alertaMostradaEnSesion, setAlertaMostradaEnSesion] = useState(false)
+  // 🟢 PHASE 5.1: readOnly y alertaMostradaEnSesion migrados a store
+  const readOnly = storeReadOnly
+  const setReadOnly = setStoreReadOnly
+  const alertaMostradaEnSesion = storeHasShownAlert
+  const setAlertaMostradaEnSesion = setStoreHasShownAlert
   // ==================== NUEVOS ESTADOS PARA MODAL 3 FILAS ====================
-  const [activeTabFila1, setActiveTabFila1] = useState<string>('cotizacion')
-  const [activeTabFila2, setActiveTabFila2] = useState<string>('')
-  const [activeTabFila3, setActiveTabFila3] = useState<string>('descripcion')
-  const [quotationEnModal, setQuotationEnModal] = useState<QuotationConfig | null>(null)
-  const [snapshotsModalActual, setSnapshotsModalActual] = useState<PackageSnapshot[]>([])
+  // 🟢 PHASE 5.2: activeTabFila1-3 migrated to uiStore
+  const activeTabFila1 = useUIStore((s) => s.activeTabFila1)
+  const setActiveTabFila1 = useUIStore((s) => s.setActiveTabFila1)
+  const activeTabFila2 = useUIStore((s) => s.activeTabFila2)
+  const setActiveTabFila2 = useUIStore((s) => s.setActiveTabFila2)
+  const activeTabFila3 = useUIStore((s) => s.activeTabFila3)
+  const setActiveTabFila3 = useUIStore((s) => s.setActiveTabFila3)
+  const quotationEnModal = useModalDataStore((s) => s.quotationEnModal)
+  const setQuotationEnModal = useModalDataStore((s) => s.setQuotationEnModal)
+  const snapshotsModalActual = useModalDataStore((s) => s.snapshotsModalActual)
+  const setSnapshotsModalActual = useModalDataStore((s) => s.setSnapshotsModalActual)
   // ==================== ESTADO PARA MODAL HISTORIAL DE PAQUETE ====================
-  const [showPackageHistoryModal, setShowPackageHistoryModal] = useState(false)
-  const [packageHistorySnapshot, setPackageHistorySnapshot] = useState<PackageSnapshot | null>(null)
+  const showPackageHistoryModal = useUIStore((s) => s.showPackageHistoryModal)
+  const packageHistorySnapshot = useUIStore((s) => s.packageHistorySnapshot)
+  const closePackageHistoryModal = useUIStore((s) => s.closePackageHistoryModal)
   // ==================== ESTADO PARA COMPARACIÓN INDIVIDUAL DE PAQUETES ====================
-  const [paqueteParaComparar, setPaqueteParaComparar] = useState<PackageSnapshot | null>(null)
-  const [showPackageCompareModal, setShowPackageCompareModal] = useState(false)
-  const [paquetesAComparar, setPaquetesAComparar] = useState<{ paquete1: PackageSnapshot; paquete2: PackageSnapshot } | null>(null)
+  const paqueteParaComparar = useUIStore((s) => s.paqueteParaComparar)
+  const setPaqueteParaComparar = useUIStore((s) => s.setPaqueteParaComparar)
+  const showPackageCompareModal = useUIStore((s) => s.showPackageCompareModal)
+  const paquetesAComparar = useUIStore((s) => s.paquetesAComparar)
+  const setPaquetesAComparar = useUIStore((s) => s.setPaquetesAComparar)
   // ==================== FIN NUEVOS ESTADOS ====================
 
   // ==================== NUEVOS ESTADOS PARA VALIDACIÓN POR TAB ====================
-  const [estadoValidacionTabs, setEstadoValidacionTabs] = useState<{
-    cotizacion: 'ok' | 'pendiente' | 'error'
-    oferta: 'ok' | 'pendiente' | 'error'
-    paquetes: 'ok' | 'pendiente' | 'error'
-  }>({
-    cotizacion: 'pendiente',
-    oferta: 'pendiente',
-    paquetes: 'pendiente',
-  })
+  const estadoValidacionTabs = useUIStore((s) => s.estadoValidacionTabs)
+  const setEstadoValidacionTabs = useUIStore((s) => s.setEstadoValidacionTabs)
   
   // Estado para modo edición de descripción del paquete en OfertaTab
   // Cuando está en false, permite navegación libre y guardar cotización
-  const [modoEdicionPaquete, setModoEdicionPaquete] = useState(false)
+  const modoEdicionPaquete = useUIStore((s) => s.modoEdicionPaquete)
+  const setModoEdicionPaquete = useUIStore((s) => s.setModoEdicionPaquete)
   
-  // Estado para templates de descripción de paquete reutilizables
-  const [descripcionesTemplate, setDescripcionesTemplate] = useState<DescripcionPaqueteTemplate[]>([])
+  // 🟢 PHASE 5.4: descripcionesTemplate migrado a store
+  const descripcionesTemplate = storeDescriptionTemplates
+  const setDescripcionesTemplate = setStoreDescriptionTemplates
   
-  // Estado para templates financieros (guardados en BD)
-  const [financialTemplates, setFinancialTemplates] = useState<FinancialTemplate[]>([])
+  // 🟢 PHASE 5.4: financialTemplates migrado a store
+  const financialTemplates = storeFinancialTemplates
+  const setFinancialTemplates = setStoreFinancialTemplates
   // ==================== FIN ESTADOS VALIDACIÓN ====================
 
   // ==================== ESTADOS DERIVADOS PARA CARACTERÍSTICAS Y MÉTODOS DE PAGO ====================
@@ -678,7 +747,7 @@ export default function Administrador() {
         ...cotizacionConfig.contenidoGeneral,
         presupuestoCronograma: newPresupuestoCronograma,
       },
-    })
+    } as any)
     
     // Auto-guardar con debounce (800ms)
     if (autoSaveCaracteristicasTimeoutRef.current) {
@@ -701,7 +770,7 @@ export default function Administrador() {
           const result = await response.json()
           if (result.success) {
             // Actualizar estado con datos de la BD (silenciosamente)
-            setQuotations(prev => prev.map(q => 
+            useDataStore.getState().updateQuotations((prev: any) => prev.map((q: any) => 
               q.id === cotizacionConfig.id ? result.data : q
             ))
             console.log('✓ Auto-guardado características y orden de paquetes')
@@ -751,7 +820,7 @@ export default function Administrador() {
         ...cotizacionConfig.contenidoGeneral,
         cuotas: newCuotas,
       },
-    })
+    } as any)
   }
   // ==================== FIN ESTADOS DERIVADOS ====================
 
@@ -766,7 +835,9 @@ export default function Administrador() {
   const [modalListaCotizacionesPostEliminacion, setModalListaCotizacionesPostEliminacion] = useState(false)
   const [modalTimelinePostEliminacion, setModalTimelinePostEliminacion] = useState(false)
   const [cotizacionSeleccionadaPostEliminacion, setCotizacionSeleccionadaPostEliminacion] = useState<QuotationConfig | null>(null)
-  const [quotationIdPendienteEliminar, setQuotationIdPendienteEliminar] = useState<string | null>(null)
+  // 🟢 PHASE 5.2: quotationIdPendienteEliminar migrated to uiStore
+  const quotationIdPendienteEliminar = useUIStore((s) => s.quotationIdPendienteEliminar)
+  const setQuotationIdPendienteEliminar = useUIStore((s) => s.setQuotationIdPendienteEliminar)
   // ==================== FIN ESTADOS ELIMINACIÓN ====================
 
   // ==================== ESTADO PARA GUARDADO DE COTIZACIÓN ====================
@@ -820,18 +891,14 @@ export default function Administrador() {
   // ==================== FIN ESTADO GUARDADO ====================
 
   // ==================== FASE 12: ESTADO PARA TRACKING DE CAMBIOS ====================
-  const [quotationEstadoAntes, setQuotationEstadoAntes] = useState<{
-    wasGlobal: boolean
-    wasActive: boolean
-    wasId: string
-  } | null>(null)
+  // 🟢 PHASE 5.2: quotationEstadoAntes migrated to dataStore
+  const quotationEstadoAntes = useDataStore((s) => s.quotationEstadoAntes)
+  const setQuotationEstadoAntes = useDataStore((s) => s.setQuotationEstadoAntes)
   // ==================== FIN ESTADOS TRACKING ====================
   
-  // Estado para expandibles en descuentos por servicio
-  const [expandidosDescuentos, setExpandidosDescuentos] = useState<{ [key: string]: boolean }>({
-    serviciosBase: false,
-    otrosServicios: false,
-  })
+  // 🟢 PHASE 5.4: expandidosDescuentos migrado a store (ahora expandedGroups en discountsStore)
+  const expandidosDescuentos = storeExpandedGroups
+  const setExpandidosDescuentos = toggleExpandedDiscounts
 
   // NOTA: La carga de datos ahora se maneja por useInitialLoad hook
   // Se ha eliminado el useEffect manual que cargaba snapshots, quotations, preferences y config
@@ -858,13 +925,12 @@ export default function Administrador() {
       descripcionTextareaRef.current.style.height = 'auto';
       descripcionTextareaRef.current.style.height = descripcionTextareaRef.current.scrollHeight + 'px';
     }
-  }, [paqueteActual.descripcion])
+  }, [paqueteActual?.descripcion])
 
   // Ya no necesitamos guardar snapshots en localStorage, se guardan en la API
   // El segundo useEffect que guardaba en localStorage se elimina
 
-  // Validaciones
-  const paqueteEsValido = paqueteActual.nombre && paqueteActual.desarrollo > 0
+  const paqueteEsValido = paqueteActual && paqueteActual.nombre && paqueteActual.desarrollo > 0
   const serviciosBaseValidos = serviciosBase.length > 0 && serviciosBase.every(s => s.precio > 0 && s.nombre)
   // Servicios opcionales (opcionales, no bloquean creación): si existen, cada uno debe sumar 12 meses y tener precio/nombre
   const serviciosOpcionalesValidos = serviciosOpcionales.every(s => s.nombre && s.precio > 0 && (s.mesesGratis + s.mesesPago === 12))
@@ -916,7 +982,7 @@ export default function Administrador() {
   // Resetear configuración financiera a valores por defecto
   const handleNuevaOfertaFinanciera = () => {
     // Resetear costos de desarrollo
-    setPaqueteActual(prev => ({
+    setPaqueteActual((prev: any) => ({
       ...prev,
       desarrollo: 0,
       descuento: 0,
@@ -929,7 +995,7 @@ export default function Administrador() {
     setMetodoPagoPreferido('')
     setNotasPago('')
     // Resetear configuración de descuentos
-    setConfigDescuentosActual(getDefaultConfigDescuentos())
+    setConfigDescuentosActual(getDefaultConfigDescuentos() as any)
   }
 
   // ==================== FUNCIONES COTIZACIÓN ====================
@@ -992,7 +1058,7 @@ export default function Administrador() {
     if (cotizacionConfig?.whatsappProveedor && !validarWhatsApp(cotizacionConfig.whatsappProveedor)) {
       errores.push('WhatsApp proveedor inválido')
     }
-    if (cotizacionConfig && !validarFechas(cotizacionConfig.fechaEmision, cotizacionConfig.fechaVencimiento)) {
+    if (cotizacionConfig?.fechaEmision && cotizacionConfig?.fechaVencimiento && !validarFechas(cotizacionConfig.fechaEmision, cotizacionConfig.fechaVencimiento)) {
       errores.push('Fecha vencimiento debe ser mayor a emisión')
     }
 
@@ -1088,7 +1154,7 @@ export default function Administrador() {
     // FASE 15: Validar DEPENDENCIAS del TAB DESTINO
     // Antes de entrar a "Paquetes": validar que existe descripción
     if (nuevoTab === 'paquetes') {
-      if (!paqueteActual.descripcion || paqueteActual.descripcion.trim() === '') {
+      if (!paqueteActual || !paqueteActual.descripcion || paqueteActual.descripcion.trim() === '') {
         toast.error('❌ Completa la descripción en TAB Oferta antes de crear paquetes')
         return
       }
@@ -1157,13 +1223,13 @@ export default function Administrador() {
 
   // Funciones CRUD para Servicios Base
   const agregarServicioBase = () => {
-    if (nuevoServicioBase.nombre && nuevoServicioBase.precio > 0) {
+    if (nuevoServicioBase.nombre && nuevoServicioBase.precio! > 0) {
       const nuevoServ: ServicioBase = {
         id: Date.now().toString(),
         nombre: nuevoServicioBase.nombre,
-        precio: nuevoServicioBase.precio,
-        mesesGratis: nuevoServicioBase.mesesGratis,
-        mesesPago: nuevoServicioBase.mesesPago,
+        precio: nuevoServicioBase.precio!,
+        mesesGratis: nuevoServicioBase.mesesGratis!,
+        mesesPago: nuevoServicioBase.mesesPago!,
         frecuenciaPago: nuevoServicioBase.frecuenciaPago,
       }
       setServiciosBase([...serviciosBase, nuevoServ])
@@ -1227,21 +1293,22 @@ export default function Administrador() {
   }
 
   const agregarServicioOpcional = () => {
-    if (nuevoServicio.nombre.trim() && nuevoServicio.precio > 0) {
-      const { mesesGratis, mesesPago } = normalizarMeses(nuevoServicio.mesesGratis, nuevoServicio.mesesPago)
+    if (nuevoServicio.nombre?.trim() && nuevoServicio.precio! > 0) {
+      const { mesesGratis, mesesPago } = normalizarMeses(nuevoServicio.mesesGratis!, nuevoServicio.mesesPago!)
       const nuevoServ: Servicio = {
         id: Date.now().toString(),
-        nombre: nuevoServicio.nombre.trim(),
-        precio: nuevoServicio.precio,
+        nombre: nuevoServicio.nombre!.trim(),
+        precio: nuevoServicio.precio!,
         mesesGratis,
         mesesPago,
         frecuenciaPago: nuevoServicio.frecuenciaPago,
       }
-      setServiciosOpcionales(prev => {
+      setServiciosOpcionales((() => {
+        const prev = serviciosOpcionales
         const existente = prev.find(s => s.nombre.toLowerCase() === nuevoServ.nombre.toLowerCase())
         if (existente) return prev.map(s => s.id === existente.id ? { ...nuevoServ, id: existente.id } : s)
         return [...prev, nuevoServ]
-      })
+      })())
       setNuevoServicio({ nombre: '', precio: 0, mesesGratis: 0, mesesPago: 12, frecuenciaPago: 'mensual' })
     }
   }
@@ -1254,8 +1321,8 @@ export default function Administrador() {
   const guardarEditarServicioOpcional = () => {
     if (servicioEditando && servicioEditando.nombre.trim() && servicioEditando.precio > 0) {
       const nm = normalizarMeses(servicioEditando.mesesGratis, servicioEditando.mesesPago)
-      const actualizado: Servicio = { ...servicioEditando, ...nm, nombre: servicioEditando.nombre.trim() }
-      setServiciosOpcionales(prev => prev.map(s => s.id === actualizado.id ? actualizado : s))
+      const actualizado: Servicio = { ...servicioEditando, ...nm, nombre: servicioEditando.nombre.trim() } as any
+      setServiciosOpcionales(serviciosOpcionales.map(s => s.id === actualizado.id ? actualizado : s))
       setEditandoServicioId(null)
       setServicioEditando(null)
     }
@@ -1267,7 +1334,7 @@ export default function Administrador() {
   }
 
   const eliminarServicioOpcional = (id: string) => {
-    setServiciosOpcionales(prev => prev.filter(s => s.id !== id))
+    setServiciosOpcionales(serviciosOpcionales.filter(s => s.id !== id))
   }
 
   /**
@@ -1351,6 +1418,7 @@ export default function Administrador() {
     }
 
     // VALIDACIÓN DE DUPLICADOS: Verificar si ya existe un paquete idéntico
+    if (!paqueteActual) return
     const paqueteDuplicado = esPaqueteDuplicado(paqueteActual.nombre, paqueteActual.desarrollo)
     if (paqueteDuplicado) {
       mostrarDialogoGenerico({
@@ -1393,24 +1461,24 @@ export default function Administrador() {
 
       const nuevoSnapshot: PackageSnapshot = {
         id: Date.now().toString(),
-        nombre: paqueteActual.nombre,
+        nombre: paqueteActual!.nombre,
         quotationConfigId: cotizacionConfig?.id, // ✅ Vinculación automática a cotización activa
         serviciosBase: serviciosBase.map(s => ({ ...s })),
         paquete: {
-          desarrollo: paqueteActual.desarrollo,
-          descuento: paqueteActual.descuento,
-          tipo: paqueteActual.tipo || '',
-          descripcion: paqueteActual.descripcion || 'Paquete personalizado para empresas.',
+          desarrollo: paqueteActual!.desarrollo,
+          descuento: paqueteActual!.descuento,
+          tipo: paqueteActual!.tipo || '',
+          descripcion: paqueteActual!.descripcion || 'Paquete personalizado para empresas.',
           // ✅ Sistema de descuentos configurado por el usuario
-          configDescuentos: configDescuentosActual,
+          configDescuentos: configDescuentosActual as any,
           // ✅ Opciones de pago configuradas por el usuario
-          opcionesPago: opcionesPagoActual,
+          opcionesPago: opcionesPagoActual as any,
           // ✅ Título y subtítulo de sección de pago para página pública
           tituloSeccionPago: metodosPagoOfertaData.titulo || 'Opciones de Pago',
           subtituloSeccionPago: metodosPagoOfertaData.subtitulo || '',
           // ✅ Método de pago y notas (legacy)
-          metodoPagoPreferido: metodoPagoPreferido,
-          notasPago: notasPago,
+          metodoPagoPreferido: metodoPagoPreferido as any,
+          notasPago: (notasPago || '') as any,
           // ✅ Múltiples métodos de pago preferidos
           metodosPreferidos: metodosPreferidos,
         },
@@ -1442,7 +1510,7 @@ export default function Administrador() {
       await refreshSnapshots()
 
       // PROPUESTA 2: Toast mejorado con información de vinculación ✅
-      toast.success(`✅ Paquete creado y vinculado: "${paqueteActual.nombre}" a cotización ${cotizacionConfig?.numero || cotizacionConfig?.id}`)
+      toast.success(`✅ Paquete creado y vinculado: "${paqueteActual!.nombre}" a cotización ${cotizacionConfig?.numero || cotizacionConfig?.id}`)
     } catch (error) {
       console.error('Error al crear paquete:', error)
       mostrarDialogoGenerico({
@@ -1694,6 +1762,63 @@ export default function Administrador() {
     }
   }
 
+  /**
+   * Función para guardar los cambios en la cotización actual (QuotationConfig)
+   * Se usa cuando se editan campos en el TAB "Cotización" del modal
+   * CAMBIO 1: Garantizar que cotizacionActual nunca envíe undefined
+   */
+  const guardarCotizacionActual = async () => {
+    if (!cotizacionActual) return
+
+    try {
+      // CAMBIO 1: Normalizar cotizacionActual para evitar undefined
+      const datosParaGuardar = {
+        heroTituloMain: cotizacionActual.heroTituloMain ?? '',
+        heroTituloSub: cotizacionActual.heroTituloSub ?? '',
+        numero: cotizacionActual.numero ?? '',
+        fechaEmision: cotizacionActual.fechaEmision ?? '',
+        tiempoValidez: cotizacionActual.tiempoValidez ?? 30,
+        empresa: cotizacionActual.empresa ?? '',
+        sector: cotizacionActual.sector ?? '',
+        ubicacion: cotizacionActual.ubicacion ?? '',
+        emailCliente: cotizacionActual.emailCliente ?? '',
+        whatsappCliente: cotizacionActual.whatsappCliente ?? '',
+        profesional: cotizacionActual.profesional ?? '',
+        empresaProveedor: cotizacionActual.empresaProveedor ?? '',
+        emailProveedor: cotizacionActual.emailProveedor ?? '',
+        whatsappProveedor: cotizacionActual.whatsappProveedor ?? '',
+        ubicacionProveedor: cotizacionActual.ubicacionProveedor ?? '',
+      }
+
+      const response = await fetch(`/api/quotation-config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosParaGuardar),
+      })
+
+      if (!response.ok) {
+        let errorDetails = `Status: ${response.status}`
+        try {
+          const errorBody = await response.json()
+          errorDetails = errorBody.message || errorBody.error || JSON.stringify(errorBody)
+        } catch {
+          errorDetails = await response.text() || errorDetails
+        }
+        throw new Error(`Error guardando cotización: ${errorDetails}`)
+      }
+
+      const result = await response.json()
+      
+      // Actualizar el estado local con los datos guardados
+      setCotizacionConfig(result.data || result)
+      
+      return result.data || result
+    } catch (error) {
+      console.error('Error al guardar cotización:', error)
+      throw error
+    }
+  }
+
   const guardarEdicion = async () => {
     if (!snapshotEditando) return
 
@@ -1703,9 +1828,31 @@ export default function Administrador() {
       actualizado.costos.año1 = calcularCostoAño1Snapshot(actualizado)
       actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
 
-      // Actualizar en la API
-      const snapshotActualizado = await actualizarSnapshot(actualizado.id, actualizado)
+      // FASE 16: Guardar en paralelo tanto el snapshot como la cotización
+      // Esto asegura que los cambios en el TAB "Cotización" se persistan
+      const [snapshotActualizado] = await Promise.all([
+        actualizarSnapshot(actualizado.id, actualizado),
+        guardarCotizacionActual()
+      ])
+
       setSnapshots(snapshots.map(s => s.id === actualizado.id ? snapshotActualizado : s))
+      
+      // ✅ NUEVA: Recargar todas las cotizaciones para mantener sincronización global
+      // CRÍTICO: Esto es lo que faltaba - sin esto, los otros componentes no ven los cambios
+      await recargarQuotations()
+      
+      // ✅ NUEVA: Emitir evento de sincronización para notificar a todos los componentes
+      // que una cotización ha sido actualizada
+      if (quotationEnModal?.id) {
+        emitQuotationSync('quotation:updated', {
+          quotationId: quotationEnModal.id,
+          quotationNumber: quotationEnModal.numero,
+          data: {
+            snapshot: snapshotActualizado,
+            config: cotizacionConfig
+          }
+        })
+      }
       
       // Llamar refresh global para notificar a todos los componentes
       await refreshSnapshots()
@@ -1734,6 +1881,12 @@ export default function Administrador() {
                 await desactivarTodas(quotationEnModal.id)
                 await recargarQuotations()
                 
+                // ✅ NUEVA: Emitir evento de activación
+                emitQuotationSync('quotation:activated', {
+                  quotationId: quotationEnModal.id,
+                  quotationNumber: quotationEnModal.numero
+                })
+                
                 toast.success('✓ Cotización activada y cambios guardados')
               },
               style: 'success'
@@ -1745,22 +1898,39 @@ export default function Administrador() {
         toast.success('✓ Cotización actualizada')
       }
 
-      // Cerrar modal solo si la preferencia está activa
-      if (userPreferences?.cerrarModalAlGuardar) {
+      // CAMBIO 3: Implementar el autoguardado del toggle correctamente
+      // Solo cerrar modal si la preferencia está activa (cerrarModalAlGuardar === true)
+      // Si está desactiva (false), mantener el modal abierto después de guardar
+      const debeCerrarModal = useUserPreferencesStore.getState().cerrarModalAlGuardar
+      
+      if (debeCerrarModal) {
         setShowModalEditar(false)
         setSnapshotEditando(null)
         setQuotationEstadoAntes(null)
+      } else {
+        // Modal permanece abierto, pero mostramos confirmación de guardado
+        toast.success('✓ Cambios guardados (modal abierto para continuar editando)')
       }
+      
       setSnapshotOriginalJson(JSON.stringify(snapshotActualizado))
     } catch (error) {
       console.error('Error al guardar edición:', error)
-      toast.error('❌ Error al actualizar el paquete. Por favor intenta de nuevo.')
+      const errorMsg = error instanceof Error ? error.message : 'Error desconocido'
+      
+      // Si es un error de cotización, mostrar mensaje específico
+      if (errorMsg.includes('Error guardando cotización')) {
+        toast.error(`❌ ${errorMsg}`)
+      } else {
+        toast.error('❌ Error al actualizar el paquete. Por favor intenta de nuevo.')
+      }
     }
   }
 
   // Estado para autoguardado y control de cambios
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
-  const [lastSavedJson, setLastSavedJson] = useState<string | null>(null)
+  // 🟢 PHASE 5.2: lastSavedJson migrated to dataStore
+  const lastSavedJson = useDataStore((s) => s.lastSavedJson)
+  const setLastSavedJson = useDataStore((s) => s.setLastSavedJson)
   const autoSaveDelay = 800 // ms
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -1795,7 +1965,7 @@ export default function Administrador() {
         actualizado.costos.año1 = calcularCostoAño1Snapshot(actualizado)
         actualizado.costos.año2 = calcularCostoAño2Snapshot(actualizado)
         const snapshotActualizado = await actualizarSnapshot(actualizado.id, actualizado)
-        setSnapshots(prev => prev.map(s => s.id === actualizado.id ? snapshotActualizado : s))
+        setSnapshots((prev: any) => prev.map((s: any) => s.id === actualizado.id ? snapshotActualizado : s))
         
         // Llamar refresh global para notificar a otros componentes
         await refreshSnapshots()
@@ -2028,10 +2198,10 @@ export default function Administrador() {
               await eliminarSnapshot(id)
               
               // Actualizar estado local inmediatamente para reflejar el cambio en la UI
-              setSnapshots(prev => prev.filter(s => s.id !== id))
+              setSnapshots((prev: any) => prev.filter((s: any) => s.id !== id))
               
               // También actualizar snapshotsModalActual si el modal está abierto
-              setSnapshotsModalActual(prev => prev.filter(s => s.id !== id))
+              useModalDataStore.getState().updateSnapshotsModalActual((prev: any) => prev.filter((s: any) => s.id !== id))
               
               // Llamar refresh global para notificar a todos los componentes externos
               await refreshSnapshots()
@@ -2055,8 +2225,8 @@ export default function Administrador() {
    * Permite comparar la versión actual con versiones anteriores del mismo paquete
    */
   const handleCompararPaquete = (snapshot: PackageSnapshot) => {
-    setPackageHistorySnapshot(snapshot)
-    setShowPackageHistoryModal(true)
+    useUIStore.getState().setPackageHistorySnapshot(snapshot)
+    useUIStore.getState().setShowPackageHistoryModal(true)
   }
 
   /**
@@ -2066,18 +2236,18 @@ export default function Administrador() {
   const handleCompararPaqueteIndividual = (snapshot: PackageSnapshot) => {
     if (paqueteParaComparar && paqueteParaComparar.id !== snapshot.id) {
       // Segundo paquete seleccionado - abrir modal
-      setPaquetesAComparar({
+      useUIStore.getState().setPaquetesAComparar({
         paquete1: paqueteParaComparar,
         paquete2: snapshot,
       })
-      setShowPackageCompareModal(true)
-      setPaqueteParaComparar(null)
+      useUIStore.getState().setShowPackageCompareModal(true)
+      useUIStore.getState().setPaqueteParaComparar(null)
     } else if (paqueteParaComparar) {
       // Mismo paquete clickeado - deseleccionar
-      setPaqueteParaComparar(null)
+      useUIStore.getState().setPaqueteParaComparar(null)
     } else {
       // Primer paquete seleccionado
-      setPaqueteParaComparar(snapshot)
+      useUIStore.getState().setPaqueteParaComparar(snapshot)
     }
   }
 
@@ -2568,7 +2738,7 @@ export default function Administrador() {
       toast.info('⏳ Creando nueva cotización...')
 
       // ✅ Guardar templates actuales si la preferencia está desactivada
-      const deberiaLimpiar = userPreferences?.limpiarFormulariosAlCrear ?? true
+      const deberiaLimpiar = useUserPreferencesStore.getState().limpiarFormulariosAlCrear ?? true
       
       const response = await fetch('/api/quotation-config', {
         method: 'POST',
@@ -2629,7 +2799,7 @@ export default function Administrador() {
         ])
         setServiciosOpcionales([])
         setOpcionesPagoActual([])
-        setConfigDescuentosActual(getDefaultConfigDescuentos())
+        setConfigDescuentosActual(getDefaultConfigDescuentos() as any)
         setMetodoPagoPreferido('')
         setNotasPago('')
         setMetodosPreferidos([])
@@ -2991,7 +3161,7 @@ export default function Administrador() {
     if (cotizacionConfig?.whatsappProveedor && !validarWhatsApp(cotizacionConfig.whatsappProveedor)) {
       errores.whatsappProveedor = 'WhatsApp inválido (ej: +535 856 9291)'
     }
-    if (cotizacionConfig && !validarFechas(cotizacionConfig.fechaEmision, cotizacionConfig.fechaVencimiento)) {
+    if (cotizacionConfig && !validarFechas(cotizacionConfig.fechaEmision || '', cotizacionConfig.fechaVencimiento || '')) {
       errores.fechas = 'Fecha vencimiento debe ser > emisión'
     }
 
@@ -3003,7 +3173,7 @@ export default function Administrador() {
     }
 
     // PASO 5: Validar si está habilitada la validación completa
-    if (userPreferences?.validarDatosAntes) {
+    if (useUserPreferencesStore.getState().validarDatosAntes) {
       const { valido, errores: erroresCompletos } = validarQuotation(cotizacionConfig)
       if (!valido) {
         toast.error(`Errores de validación:\n${erroresCompletos.slice(0, 3).join('\n')}`)
@@ -3156,7 +3326,7 @@ export default function Administrador() {
         id: nuevaCotizacion.id,
         versionNumber: nuevaCotizacion.versionNumber,
         numero: nuevaCotizacion.numero,
-      })
+      } as any)
 
       // PASO 9: Desactivar todas excepto la nueva (ya marcada como isGlobal:true en API)
       const desactivOk = await desactivarTodas(nuevaCotizacion.id)
@@ -3186,12 +3356,12 @@ export default function Administrador() {
       if (signal.aborted) throw new DOMException('Operación cancelada', 'AbortError')
 
       // PASO 12: Mostrar confirmación adicional si preferencia está activa
-      if (userPreferences?.mostrarConfirmacionGuardado) {
+      if (useUserPreferencesStore.getState().mostrarConfirmacionGuardado) {
         toast.info('✓ Cambios guardados exitosamente')
       }
 
       // PASO 13: Cerrar modal si preferencia está activa
-      if (userPreferences?.cerrarModalAlGuardar && showModalEditar) {
+      if (useUserPreferencesStore.getState().cerrarModalAlGuardar && showModalEditar) {
         handleCerrarModalEditar()
       }
       
@@ -3966,8 +4136,8 @@ export default function Administrador() {
             {activePageTab === 'cotizacion' && (
               <Suspense fallback={<ComponentLoader />}>
                 <CotizacionTab
-                  cotizacionConfig={cotizacionConfig}
-                  setCotizacionConfig={setCotizacionConfig}
+                  cotizacionConfig={cotizacionConfig as any}
+                  setCotizacionConfig={setCotizacionConfig as any}
                   erroresValidacionCotizacion={erroresValidacionCotizacion}
                   setErroresValidacionCotizacion={setErroresValidacionCotizacion}
                   validarEmail={validarEmail}
@@ -3983,24 +4153,24 @@ export default function Administrador() {
             {activePageTab === 'oferta' && (
               <Suspense fallback={<ComponentLoader />}>
                 <OfertaTab
-                serviciosBase={serviciosBase}
-                setServiciosBase={setServiciosBase}
-                nuevoServicioBase={nuevoServicioBase}
-                setNuevoServicioBase={setNuevoServicioBase}
+                serviciosBase={serviciosBase as any}
+                setServiciosBase={setServiciosBase as any}
+                nuevoServicioBase={nuevoServicioBase as any}
+                setNuevoServicioBase={setNuevoServicioBase as any}
                 editandoServicioBaseId={editandoServicioBaseId}
                 setEditandoServicioBaseId={setEditandoServicioBaseId}
-                servicioBaseEditando={servicioBaseEditando}
-                setServicioBaseEditando={setServicioBaseEditando}
-                paqueteActual={paqueteActual}
-                setPaqueteActual={setPaqueteActual}
-                serviciosOpcionales={serviciosOpcionales}
-                setServiciosOpcionales={setServiciosOpcionales}
-                nuevoServicio={nuevoServicio}
-                setNuevoServicio={setNuevoServicio}
+                servicioBaseEditando={servicioBaseEditando as any}
+                setServicioBaseEditando={setServicioBaseEditando as any}
+                paqueteActual={paqueteActual as any}
+                setPaqueteActual={setPaqueteActual as any}
+                serviciosOpcionales={serviciosOpcionales as any}
+                setServiciosOpcionales={setServiciosOpcionales as any}
+                nuevoServicio={nuevoServicio as any}
+                setNuevoServicio={setNuevoServicio as any}
                 editandoServicioId={editandoServicioId}
                 setEditandoServicioId={setEditandoServicioId}
-                servicioEditando={servicioEditando}
-                setServicioEditando={setServicioEditando}
+                servicioEditando={servicioEditando as any}
+                setServicioEditando={setServicioEditando as any}
                 descripcionTextareaRef={descripcionTextareaRef}
                 agregarServicioBase={agregarServicioBase}
                 abrirEditarServicioBase={abrirEditarServicioBase}
@@ -4034,27 +4204,27 @@ export default function Administrador() {
                 refreshSnapshots={refreshSnapshots}
                 toast={{ success: (m) => toast.success(m), error: (m) => toast.error(m), info: (m) => toast.info(m), warning: (m) => toast.warning(m) }}
                 mostrarDialogoGenerico={mostrarDialogoGenerico}
-                cotizacionConfig={cotizacionConfig}
+                cotizacionConfig={cotizacionConfig as any}
                 onCompararPaquete={handleCompararPaquete}
                 onCompararPaqueteIndividual={handleCompararPaqueteIndividual}
                 paqueteParaComparar={paqueteParaComparar}
                 // Props para FinancieroContent
-                opcionesPago={opcionesPagoActual}
+                opcionesPago={opcionesPagoActual as any}
                 setOpcionesPago={setOpcionesPagoActual}
-                metodoPagoPreferido={metodoPagoPreferido}
+                metodoPagoPreferido={metodoPagoPreferido as any}
                 setMetodoPagoPreferido={setMetodoPagoPreferido}
-                notasPago={notasPago}
+                notasPago={notasPago as any}
                 setNotasPago={setNotasPago}
                 metodosPreferidos={metodosPreferidos}
                 setMetodosPreferidos={setMetodosPreferidos}
-                configDescuentos={configDescuentosActual}
-                setConfigDescuentos={setConfigDescuentosActual}
+                configDescuentos={configDescuentosActual as any}
+                setConfigDescuentos={(c: any) => setConfigDescuentosActual(c)}
                 // Props para modo edición del paquete (descripción)
                 modoEdicionPaquete={modoEdicionPaquete}
                 setModoEdicionPaquete={setModoEdicionPaquete}
                 // Props para templates de descripción de paquete
-                descripcionesTemplate={descripcionesTemplate}
-                setDescripcionesTemplate={setDescripcionesTemplate}
+                descripcionesTemplate={descripcionesTemplate as any}
+                setDescripcionesTemplate={(t: any) => setDescripcionesTemplate(t)}
                 // Props para Características de Paquetes
                 paquetesCaracteristicasData={paquetesCaracteristicasData}
                 onPaquetesCaracteristicasChange={handlePaquetesCaracteristicasChange}
@@ -4064,8 +4234,8 @@ export default function Administrador() {
                 metodosPagoData={metodosPagoOfertaData}
                 onMetodosPagoChange={handleMetodosPagoOfertaChange}
                 // Props para Financial Templates
-                financialTemplates={financialTemplates}
-                setFinancialTemplates={setFinancialTemplates}
+                financialTemplates={financialTemplates as any}
+                setFinancialTemplates={setFinancialTemplates as any}
                 onSaveFinancialTemplate={handleSaveFinancialTemplate}
                 onUpdateFinancialTemplate={handleUpdateFinancialTemplate}
                 onDeleteFinancialTemplate={handleDeleteFinancialTemplate}
@@ -4078,8 +4248,8 @@ export default function Administrador() {
             {activePageTab === 'contenido' && (
               <Suspense fallback={<ComponentLoader />}>
                 <ContenidoTab
-                cotizacionConfig={cotizacionConfig}
-                setCotizacionConfig={setCotizacionConfig}
+                cotizacionConfig={cotizacionConfig as any}
+                setCotizacionConfig={setCotizacionConfig as any}
                 onSave={async (config: QuotationConfig) => {
                   try {
                     const response = await fetch(`/api/quotation-config/${config.id}`, {
@@ -4091,7 +4261,7 @@ export default function Administrador() {
                     const result = await response.json()
                     if (result.success) {
                       // Actualizar quotations y cotizacionConfig con los datos devueltos
-                      setQuotations(prev => prev.map(q => 
+                      useDataStore.getState().updateQuotations((prev: any) => prev.map((q: any) => 
                         q.id === config.id ? result.data : q
                       ))
                       setCotizacionConfig(result.data)
@@ -4112,7 +4282,7 @@ export default function Administrador() {
                   const result = await response.json()
                   if (result.success) {
                     // Actualizar quotations y cotizacionConfig con los datos devueltos
-                    setQuotations(prev => prev.map(q => 
+                    useDataStore.getState().updateQuotations((prev: any) => prev.map((q: any) => 
                       q.id === id ? result.data : q
                     ))
                     setCotizacionConfig(result.data)
@@ -4121,7 +4291,7 @@ export default function Administrador() {
                 }}
                 toast={{ 
                   success: (m) => toast.success(m), 
-                  error: (m) => toast.error(m), 
+                  error: (m) => toast.error(m),
                   info: (m) => toast.info(m), 
                   warning: (m) => toast.warning(m) 
                 }}
@@ -4133,48 +4303,20 @@ export default function Administrador() {
             {activePageTab === 'preferencias' && (
               <Suspense fallback={<ComponentLoader />}>
                 <PreferenciasTab
-                userPreferences={userPreferences}
-                setUserPreferences={setUserPreferences}
                 quotations={quotations.map(q => ({ id: q.id, nombre: q.empresa, numero: q.numero }))}
                 guardarPreferencias={async () => {
-                  if (!userPreferences) return
                   try {
-                    const response = await fetch('/api/preferences', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        userId: 'default-user',
-                        // Preferencias generales
-                        cerrarModalAlGuardar: userPreferences.cerrarModalAlGuardar,
-                        mostrarConfirmacionGuardado: userPreferences.mostrarConfirmacionGuardado,
-                        validarDatosAntes: userPreferences.validarDatosAntes,
-                        limpiarFormulariosAlCrear: userPreferences.limpiarFormulariosAlCrear ?? true,
-                        mantenerDatosAlCrearCotizacion: userPreferences.mantenerDatosAlCrearCotizacion ?? false,
-                        // Preferencias de sincronización y cache
-                        destinoGuardado: userPreferences.destinoGuardado ?? 'ambos',
-                        intervaloVerificacionConexion: userPreferences.intervaloVerificacionConexion ?? 30,
-                        unidadIntervaloConexion: userPreferences.unidadIntervaloConexion ?? 'segundos',
-                        sincronizarAlRecuperarConexion: userPreferences.sincronizarAlRecuperarConexion ?? true,
-                        mostrarNotificacionCacheLocal: userPreferences.mostrarNotificacionCacheLocal ?? true,
-                      })
-                    })
-                    if (response.ok) {
-                      const result = await response.json()
-                      setUserPreferences(result.data)
-                      // También guardar en cache local
-                      cachePreferences(result.data)
-                      
-                      // APLICAR EL NUEVO INTERVALO DE POLLING AQUÍ (solo al guardar)
-                      const valor = result.data.intervaloVerificacionConexion || 30
-                      const unidad = result.data.unidadIntervaloConexion || 'segundos'
-                      const nuevoIntervalo = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
-                      connectionPolling.setInterval(nuevoIntervalo)
-                      console.log(`⏱️ Intervalo de polling actualizado al guardar: ${nuevoIntervalo}ms`)
-                      
-                      toast.success('✓ Preferencias guardadas correctamente')
-                    } else {
-                      toast.error('Error al guardar preferencias')
-                    }
+                    await useUserPreferencesStore.getState().persistPreferences()
+                    const prefs = useUserPreferencesStore.getState()
+                    cachePreferences(prefs as any)
+
+                    const valor = prefs.intervaloVerificacionConexion || 30
+                    const unidad = prefs.unidadIntervaloConexion || 'segundos'
+                    const nuevoIntervalo = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
+                    connectionPolling.setInterval(nuevoIntervalo)
+                    console.log(`⏱️ Intervalo de polling actualizado al guardar: ${nuevoIntervalo}ms`)
+
+                    toast.success('✓ Preferencias guardadas correctamente')
                   } catch (error) {
                     console.error('Error guardando preferencias:', error)
                     toast.error('Error al guardar preferencias')
@@ -4738,7 +4880,7 @@ export default function Administrador() {
                       </h4>
                       {(() => {
                         const opcionesPago = snapshotEditando.paquete.opcionesPago || []
-                        const totalPorcentaje = opcionesPago.reduce((sum, op) => sum + (op.porcentaje || 0), 0)
+                        const totalPorcentaje = opcionesPago.reduce((sum: number, op: any) => sum + (op.porcentaje || 0), 0)
                         const esValido = totalPorcentaje === 100
                         return (
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
@@ -4754,7 +4896,7 @@ export default function Administrador() {
 
                     {(snapshotEditando.paquete.opcionesPago || []).length > 0 ? (
                       <div className="space-y-1 mb-3">
-                        {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => (
+                        {(snapshotEditando.paquete.opcionesPago || []).map((opcion: any, idx: number) => (
                           <div
                             key={idx}
                             className="bg-[#161b22] border border-[#30363d] rounded-md p-3 grid md:grid-cols-[1.1fr,0.5fr,3fr,auto] gap-2 items-end"
@@ -4836,7 +4978,7 @@ export default function Administrador() {
                             <button
                               onClick={() => {
                                 const actualizado = (snapshotEditando.paquete.opcionesPago || []).filter(
-                                  (_, i) => i !== idx
+                                  (_: any, i: number) => i !== idx
                                 )
                                 setSnapshotEditando({
                                   ...snapshotEditando,
@@ -4888,7 +5030,7 @@ export default function Administrador() {
                     <div className="p-3 bg-[#0d1117] border border-[#30363d] rounded-md">
                       <h4 className="text-[10px] font-bold text-[#c9d1d9] mb-2">Vista Previa</h4>
                       <div className="space-y-1">
-                        {(snapshotEditando.paquete.opcionesPago || []).map((opcion, idx) => {
+                        {(snapshotEditando.paquete.opcionesPago || []).map((opcion: any, idx: number) => {
                           const monto = (snapshotEditando.paquete.desarrollo * (opcion.porcentaje || 0)) / 100
                           return (
                             <div key={idx} className="flex justify-between text-xs">
@@ -4920,7 +5062,7 @@ export default function Administrador() {
 
                   {/* Lista de métodos preferidos */}
                   <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-                    {(snapshotEditando.paquete.metodosPreferidos || []).map((metodo, index) => (
+                    {(snapshotEditando.paquete.metodosPreferidos || []).map((metodo: any, index: number) => (
                       <div 
                         key={metodo.id} 
                         className="p-3 bg-[#0d1117] border border-[#30363d] rounded-md space-y-2"
@@ -4936,7 +5078,7 @@ export default function Administrador() {
                                   ...snapshotEditando,
                                   paquete: {
                                     ...snapshotEditando.paquete,
-                                    metodosPreferidos: (snapshotEditando.paquete.metodosPreferidos || []).filter(m => m.id !== metodo.id),
+                                    metodosPreferidos: (snapshotEditando.paquete.metodosPreferidos || []).filter((m: any) => m.id !== metodo.id),
                                   },
                                 })
                               }}
@@ -4960,7 +5102,7 @@ export default function Administrador() {
                                   ...snapshotEditando,
                                   paquete: {
                                     ...snapshotEditando.paquete,
-                                    metodosPreferidos: (snapshotEditando.paquete.metodosPreferidos || []).map(m => 
+                                    metodosPreferidos: (snapshotEditando.paquete.metodosPreferidos || []).map((m: any) => 
                                       m.id === metodo.id ? { ...m, metodo: val } : m
                                     ),
                                   },
@@ -4992,7 +5134,7 @@ export default function Administrador() {
                                   ...snapshotEditando,
                                   paquete: {
                                     ...snapshotEditando.paquete,
-                                    metodosPreferidos: (snapshotEditando.paquete.metodosPreferidos || []).map(m => 
+                                    metodosPreferidos: (snapshotEditando.paquete.metodosPreferidos || []).map((m: any) => 
                                       m.id === metodo.id ? { ...m, nota: e.target.value } : m
                                     ),
                                   },
@@ -5777,7 +5919,7 @@ export default function Administrador() {
                                 <input
                                   type="text"
                                   value={cotizacionActual.ubicacionProveedor || ''}
-                                  onChange={(e) => setCotizacionActual({...cotizacionActual, ubicacionProveedor: e.target.value})}
+                                  onChange={(e) => setCotizacionActual({...cotizacionActual, ubicacionProveedor: e.target.value} as any)}
                                   disabled={readOnly}
                                   className={`w-full px-2 py-1.5 rounded-md ${readOnly ? 'bg-[#21262d] text-[#8b949e] cursor-not-allowed' : 'bg-[#0d1117]'} border border-[#30363d] ${!readOnly && 'focus:border-[#58a6ff] focus:outline-none'} text-xs text-[#c9d1d9]`}
                                   placeholder="Ciudad/País"
@@ -6395,8 +6537,8 @@ export default function Administrador() {
         <DialogoGenericoDinamico
           isOpen={showPackageHistoryModal}
           onClose={() => {
-            setShowPackageHistoryModal(false)
-            setPackageHistorySnapshot(null)
+            useUIStore.getState().setShowPackageHistoryModal(false)
+            useUIStore.getState().setPackageHistorySnapshot(null)
           }}
           title={`Historial de la oferta: ${packageHistorySnapshot.nombre}`}
           description="Compara versiones históricas de esta oferta"
@@ -6418,8 +6560,8 @@ export default function Administrador() {
         <DialogoGenericoDinamico
           isOpen={showPackageCompareModal}
           onClose={() => {
-            setShowPackageCompareModal(false)
-            setPaquetesAComparar(null)
+            useUIStore.getState().setShowPackageCompareModal(false)
+            useUIStore.getState().setPaquetesAComparar(null)
           }}
           title="Comparación de Paquetes"
           description={`Comparando "${paquetesAComparar.paquete1.nombre}" con "${paquetesAComparar.paquete2.nombre}"`}

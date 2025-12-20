@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { UserPlus, Edit2, Trash2, Loader2, Key, Copy, Check, ShieldCheck, User, Users } from 'lucide-react'
 import DialogoGenericoDinamico, { DialogFormConfig, DialogFormField } from './DialogoGenericoDinamico'
 import { useSession } from 'next-auth/react'
+import { useQuotationListener } from '@/hooks/useQuotationSync'
 
 // ==================== TIPOS ====================
 
@@ -154,6 +155,18 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
 
   // Agrupar cotizaciones por número base
   const groupedQuotations = useMemo(() => groupQuotationsByBase(quotations), [quotations])
+
+  // ✅ NUEVA: Escuchar eventos de sincronización de cotizaciones
+  // Cuando se crea o actualiza una cotización, este componente
+  // recibe notificación automáticamente y groupedQuotations se recalcula
+  useQuotationListener(
+    ['quotation:updated', 'quotation:created'],
+    useCallback((event) => {
+      console.log(`🔄 UserManagementPanel: Evento recibido:`, event.type, event.quotationId)
+      // El cambio en el prop 'quotations' dispara useMemo nuevamente
+      // groupedQuotations se recalcula automáticamente con las nuevas versiones
+    }, [])
+  )
 
   // Obtener roles disponibles según el rol del usuario actual
   const availableRoles = useMemo(() => {

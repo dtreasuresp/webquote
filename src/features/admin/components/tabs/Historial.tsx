@@ -8,6 +8,7 @@ import type { QuotationConfig, PackageSnapshot } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 import { extractBaseQuotationNumber } from '@/lib/utils/quotationNumber'
 import { useEventTracking } from '@/features/admin/hooks'
+import { useQuotationListener } from '@/hooks/useQuotationSync'
 import DialogoGenerico from '../DialogoGenerico'
 import DialogoGenericoDinamico from '../DialogoGenericoDinamico'
 import CotizacionTimeline from '../CotizacionTimeline'
@@ -120,6 +121,18 @@ export default function Historial({
   useEffect(() => {
     trackHistorialViewed(cotizacionesAgrupadas.length)
   }, [cotizacionesAgrupadas.length, trackHistorialViewed])
+
+  // ✅ NUEVA: Escuchar eventos de sincronización de cotizaciones
+  // Cuando se actualiza, crea o activa una cotización, el componente
+  // recibe notificación automáticamente y sus datos se recalculan
+  useQuotationListener(
+    ['quotation:updated', 'quotation:created', 'quotation:activated'],
+    useCallback((event) => {
+      console.log(`🔄 HistorialTAB: Evento recibido:`, event.type, event.quotationId)
+      // El cambio en el prop 'quotations' dispara useMemo nuevamente
+      // cotizacionesAgrupadas se recalcula automáticamente
+    }, [])
+  )
 
   const toggleExpanded = useCallback((id: string, numero?: string) => {
     const newSet = new Set(expandedIds)
@@ -235,11 +248,12 @@ export default function Historial({
     <div className="p-6 space-y-4">
       <div className="space-y-0 border border-gh-border/30 rounded-lg overflow-hidden bg-gh-bg">
         {/* Encabezado de la tabla - Estilo GitHub */}
-        <div className="text-center bg-gh-bg-secondary border-b border-gh-border px-4 py-3 grid grid-cols-[1fr_0.5fr_1fr_1.4fr_1fr_1fr_1fr] gap-2 text-xs font-semibold text-gh-text">
+        <div className="text-center bg-gh-bg-secondary border-b border-gh-border px-4 py-3 grid grid-cols-[1fr_0.5fr_1fr_1.4fr_1fr_1fr_1fr_1fr] gap-2 text-xs font-semibold text-gh-text">
           <div>Número</div>
           <div>Versiones</div>
           <div>Empresa</div>
           <div>Profesional</div>
+          <div>Cliente Asignado</div>
           <div>Creada</div>
           <div>Última Actualización</div>
           <div>Acción</div>
@@ -268,7 +282,7 @@ export default function Historial({
             <div key={grupo.numeroBase} className="border-b border-gh-border last:border-b-0">
               {/* Fila principal - Tabla de resumen */}
               <div className="bg-gh-bg hover:bg-gh-bg-secondary transition-colors px-4 py-3">
-                <div className="text-center grid grid-cols-[1fr_0.5fr_1fr_1.4fr_1fr_1fr_1fr] gap-2 items-center text-sm">
+                <div className="text-center grid grid-cols-[1fr_0.5fr_1fr_1.4fr_1fr_1fr_1fr_1fr] gap-2 items-center text-sm">
                   {/* Número base (sin versión) */}
                   <div className="text-gh-text font-semibold">#{grupo.numeroBase}</div>
 
@@ -290,6 +304,13 @@ export default function Historial({
                   {/* Profesional */}
                   <div className="text-gh-text-muted truncate" title={quotation.profesional}>
                     {quotation.profesional || '—'}
+                  </div>
+
+                  {/* Cliente Asignado */}
+                  <div className="text-gh-text-muted truncate" title={(quotation as any).User?.nombre || (quotation as any).User?.username || 'Global'}>
+                    {(quotation as any).User?.nombre || (quotation as any).User?.username || (
+                      <span className="text-gh-accent/70 font-medium">Global</span>
+                    )}
                   </div>
 
                   {/* Fecha de Creación (Primera Versión) */}

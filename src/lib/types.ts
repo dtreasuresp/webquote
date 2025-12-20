@@ -1,5 +1,51 @@
 // Tipos compartidos para el administrador y otras páginas
 
+// ==================== TIPOS DE ESTRUCTURA ORGANIZACIONAL ====================
+export enum OrganizationLevel {
+  RAIZ = 'RAIZ',
+  EMPRESA = 'EMPRESA',
+  DEPARTAMENTO = 'DEPARTAMENTO',
+  EQUIPO = 'EQUIPO',
+  PROYECTO = 'PROYECTO'
+}
+
+export interface Organization {
+  id: string
+  nombre: string
+  sector: string
+  descripcion?: string
+  
+  // Jerarquía
+  parentId?: string | null
+  level?: OrganizationLevel
+  
+  // Contacto
+  email?: string
+  telefono?: string
+  direccion?: string
+  ciudad?: string
+  pais?: string
+  
+  // Auditoría
+  createdAt: Date | string
+  updatedAt: Date | string
+  createdBy: string
+  updatedBy: string
+}
+
+export interface OrganizationNode extends Organization {
+  children?: OrganizationNode[]
+}
+
+export interface OrgPermissionGrant {
+  userId: string
+  organizationId: string
+  resourceCode: string  // "org.read", "quotation.create", etc
+  accessLevel: 'NONE' | 'READ' | 'WRITE' | 'FULL'
+  grantedAt: Date
+  grantedBy: string
+}
+
 // ==================== TIPOS DE COLORES CORPORATIVOS ====================
 /** Item de color corporativo con jerarquía */
 export interface ColorCorporativo {
@@ -318,6 +364,8 @@ export interface UserPreferences {
   // Mantener datos (templates) al crear nueva cotización
   // Si true: mantiene servicios, financiero, contenido. Si false: limpia todo.
   mantenerDatosAlCrearCotizacion?: boolean
+  // Guardar cambios automáticamente en Configuración General
+  guardarAutomaticamente?: boolean
   
   // ==================== NUEVAS PREFERENCIAS DE SINCRONIZACIÓN ====================
   /** Destino de guardado: 'local' = solo localStorage, 'cloud' = solo BD, 'ambos' = ambos */
@@ -330,6 +378,40 @@ export interface UserPreferences {
   sincronizarAlRecuperarConexion?: boolean
   /** Mostrar notificación cuando se usa cache local */
   mostrarNotificacionCacheLocal?: boolean
+  
+  // ==================== PREFERENCIAS DE AUDITORÍA ====================
+  /** Número de días para retener logs de auditoría (30-730) */
+  auditRetentionDays?: number
+  /** Habilitar purga automática de logs antiguos */
+  auditAutoPurgeEnabled?: boolean
+  /** Frecuencia de purga automática: daily, weekly, monthly */
+  auditAutoPurgeFrequency?: 'daily' | 'weekly' | 'monthly'
+  /** Habilitar generación automática de reportes */
+  auditAutoReportEnabled?: boolean
+  /** Periodo de reportes automáticos: daily, weekly, monthly */
+  auditAutoReportPeriod?: 'daily' | 'weekly' | 'monthly'
+  /** Hora para ejecutar reporte automático (0-23) */
+  auditAutoReportHour?: number
+  /** Minuto para ejecutar reporte automático (0-59) */
+  auditAutoReportMinute?: number
+  /** Días para retener reportes de auditoría generados (1-730) */
+  auditReportRetentionDays?: number
+  /** Enviar notificación al crear un reporte manualmente */
+  notifyOnManualReport?: boolean
+  /** Enviar notificación cuando se genera automáticamente un reporte */
+  notifyOnAutoReport?: boolean
+  
+  // ==================== PREFERENCIAS DE BACKUP AUTOMÁTICO ====================
+  /** Habilitar backups automáticos */
+  autoBackupEnabled?: boolean
+  /** Periodo de backups automáticos: daily, weekly, monthly */
+  autoBackupPeriod?: 'daily' | 'weekly' | 'monthly'
+  /** Hora para ejecutar backup automático (0-23) */
+  autoBackupHour?: number
+  /** Minuto para ejecutar backup automático (0-59) */
+  autoBackupMinute?: number
+  /** Días para retener backups automáticos (mínimo 1) */
+  autoBackupRetentionDays?: number
   
   createdAt: string
   updatedAt: string

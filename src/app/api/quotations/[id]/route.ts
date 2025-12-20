@@ -2,6 +2,53 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 /**
+ * GET /api/quotations/[id]
+ * Obtiene una cotización por ID
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const quotation = await prisma.quotationConfig.findUnique({
+      where: { id },
+      include: {
+        snapshots: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    })
+
+    if (!quotation) {
+      return NextResponse.json(
+        { success: false, error: 'Quotation not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: quotation,
+    })
+  } catch (error) {
+    console.error('Error fetching quotation:', error)
+    return NextResponse.json(
+      { success: false, error: 'Error fetching quotation' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
  * PATCH /api/quotations/[id]/status
  * Cambia el estado activo/inactivo de una quotation
  */

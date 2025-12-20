@@ -36,5 +36,19 @@ export type {
   PermissionInfo
 } from './usePermission'
 
+// Permissions cache hooks (Fase 12)
+export {
+  usePermissionsCache,
+  usePermissionsCacheManager
+} from './usePermissionsCache'
+export type { UsePermissionsCacheResult } from './usePermissionsCache'
+
+// Permissions cache invalidation hooks (Fase 12)
+export {
+  useInvalidatePermissionsCacheOnLogout,
+  useInvalidatePermissionsCacheOnUserChange,
+  useInvalidatePermissions
+} from './useInvalidatePermissionsCache'
+
 // Export por defecto (hook mejorado)
 export { default } from './usePermission'

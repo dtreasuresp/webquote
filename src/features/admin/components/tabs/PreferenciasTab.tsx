@@ -1,14 +1,17 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { Save } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { UserPreferences } from '@/lib/types'
 import UserManagementPanel from '../UserManagementPanel'
 import PreferenciasSidebar, { SidebarSection, SecuritySubSection } from '../content/preferencias/PreferenciasSidebar'
 import ConfiguracionGeneralContent from '../content/preferencias/ConfiguracionGeneralContent'
 import SincronizacionContent from '../content/preferencias/SincronizacionContent'
 import SeguridadContent from '../content/preferencias/SeguridadContent'
+import ReportesAuditoriaContent from '../content/preferencias/ReportesAuditoriaContent'
+import LogsAuditoriaContent from '../content/preferencias/seguridad/LogsAuditoriaContent'
+import BackupContent from '../content/preferencias/seguridad/BackupContent'
+import OrganizacionContent from '../content/preferencias/organizacion/OrganizacionContent'
+import { useUserPreferencesStore } from '@/stores'
 
 interface QuotationOption {
   id: string
@@ -17,18 +20,24 @@ interface QuotationOption {
 }
 
 interface PreferenciasTabProps {
-  userPreferences: UserPreferences | null
-  setUserPreferences: (prefs: UserPreferences) => void
-  guardarPreferencias: () => Promise<void>
+  guardarPreferencias?: () => Promise<void>
   quotations?: QuotationOption[]
 }
 
 export default function PreferenciasTab({
-  userPreferences,
-  setUserPreferences,
   guardarPreferencias,
   quotations = [],
 }: Readonly<PreferenciasTabProps>) {
+  const persistPreferences = useUserPreferencesStore((s) => s.persistPreferences)
+  const loadPreferences = useUserPreferencesStore((s) => s.loadPreferences)
+  const isDirty = useUserPreferencesStore((s) => s.isDirty)
+  
+  const saveHandler = async () => {
+    const handler = guardarPreferencias ?? persistPreferences
+    await handler()
+    // Reload preferences from server to ensure everything is in sync
+    await loadPreferences()
+  }
   
   const [activeSection, setActiveSection] = useState<SidebarSection>('general')
   const [activeSecuritySubSection, setActiveSecuritySubSection] = useState<SecuritySubSection>('roles')
@@ -54,10 +63,7 @@ export default function PreferenciasTab({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <ConfiguracionGeneralContent
-                userPreferences={userPreferences}
-                setUserPreferences={setUserPreferences}
-              />
+              <ConfiguracionGeneralContent isDirty={isDirty} onSave={saveHandler} />
             </motion.div>
           )}
 
@@ -69,10 +75,7 @@ export default function PreferenciasTab({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <SincronizacionContent
-                userPreferences={userPreferences}
-                setUserPreferences={setUserPreferences}
-              />
+              <SincronizacionContent />
             </motion.div>
           )}
 
@@ -88,6 +91,18 @@ export default function PreferenciasTab({
             </motion.div>
           )}
 
+          {/* Sección Organizaciones */}
+          {activeSection === 'organizaciones' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <OrganizacionContent />
+            </motion.div>
+          )}
+
           {/* Sección Seguridad y Acceso */}
           {activeSection === 'seguridad' && (
             <motion.div
@@ -100,25 +115,42 @@ export default function PreferenciasTab({
             </motion.div>
           )}
 
-          {/* Botón Guardar (visible en secciones de configuración) */}
-          {(activeSection === 'general' || activeSection === 'sincronizacion') && (
+          {/* Sección Reportes de Auditoría */}
+          {activeSection === 'reportes' && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="flex justify-end mt-8"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
             >
-              <button
-                onClick={guardarPreferencias}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
-              >
-                <Save className="w-2.5 h-2.5" /> Guardar Cambios
-              </button>
+              <ReportesAuditoriaContent isDirty={isDirty} onSave={saveHandler} />
+            </motion.div>
+          )}
+
+          {/* Sección Logs de Auditoría */}
+          {activeSection === 'logs' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <LogsAuditoriaContent />
+            </motion.div>
+          )}
+
+          {/* Sección Backups */}
+          {activeSection === 'backups' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <BackupContent />
             </motion.div>
           )}
       </div>
     </div>
   )
 }
-
-

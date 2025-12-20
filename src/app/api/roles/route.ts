@@ -43,21 +43,13 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     // ✅ Verificar permiso de escritura
-    const { error } = await requireWritePermission('security.roles.manage')
+    const { session, error } = await requireWritePermission('security.roles.manage')
     if (error) return error
 
     const body = await request.json()
     const { name, displayName, description, hierarchy, color, isSystem } = body
 
-    // Validaciones
-    if (!name || !displayName) {
-      return NextResponse.json(
-        { error: 'Nombre y displayName son requeridos' },
-        { status: 403 }
-      )
-    }
-
-    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+    const isSuperAdmin = session.user.role === 'SUPER_ADMIN'
 
     // Solo SUPER_ADMIN puede crear roles del sistema
     if (isSystem && !isSuperAdmin) {

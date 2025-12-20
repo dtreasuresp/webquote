@@ -7,6 +7,7 @@ import { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { logLoginSuccess, logLoginFailed, createAuditLog } from "@/lib/audit/auditHelper";
 
 // Tipos de roles disponibles
 type UserRoleType = "SUPER_ADMIN" | "ADMIN" | "CLIENT";
@@ -50,6 +51,7 @@ declare module "next-auth/jwt" {
     quotationAssignedId?: string | null;
     avatarUrl?: string | null;
     permissions?: Array<string | { code: string; granted: boolean }>;
+    permissionsCacheValidAt?: number; // ✨ FASE 12: Timestamp de validación de caché
   }
 }
 
@@ -69,6 +71,7 @@ export const authOptions: NextAuthOptions = {
         
         if (!credentials?.username || !credentials?.password) {
           console.log('[AUTH] ERROR: Credenciales faltantes')
+          await logLoginFailed(credentials?.username || 'unknown', 'bad-credentials')
           throw new Error("Credenciales requeridas");
         }
 
@@ -92,6 +95,7 @@ export const authOptions: NextAuthOptions = {
 
         if (!user) {
           console.log('[AUTH] ERROR: Usuario no encontrado')
+          await logLoginFailed(credentials.username, 'user-not-found')
           throw new Error("Usuario no encontrado");
         }
 
@@ -99,6 +103,7 @@ export const authOptions: NextAuthOptions = {
 
         if (!user.activo) {
           console.log('[AUTH] ERROR: Usuario desactivado')
+          await logLoginFailed(credentials.username, 'user-inactive')
           throw new Error("Usuario desactivado. Contacte al administrador.");
         }
 
@@ -113,6 +118,7 @@ export const authOptions: NextAuthOptions = {
 
         if (!isValidPassword) {
           console.log('[AUTH] ERROR: Contraseña incorrecta')
+          await logLoginFailed(credentials.username, 'bad-credentials')
           throw new Error("Contraseña incorrecta");
         }
 
@@ -123,21 +129,8 @@ export const authOptions: NextAuthOptions = {
           data: { lastLogin: new Date() },
         });
 
-        // Crear log de auditoría para login
-        await prisma.auditLog.create({
-          data: {
-            action: 'login',
-            entityType: 'auth',
-            entityId: user.id,
-            userId: user.id,
-            userName: user.username,
-            details: {
-              email: user.email,
-              role: user.role,
-              timestamp: new Date().toISOString(),
-            },
-          },
-        });
+        // Loggear login exitoso usando helper de auditoría
+        await logLoginSuccess(user.id, user.username, user.email ?? undefined)
 
         console.log('[AUTH] ✅ Autenticación exitosa para:', user.username)
         return {
@@ -212,6 +205,9 @@ export const authOptions: NextAuthOptions = {
         });
 
         token.permissions = permissionCodes;
+        
+        // ✨ FASE 12: Agregar timestamp para validación de caché
+        token.permissionsCacheValidAt = Date.now();
       }
       return token;
     },
@@ -232,6 +228,22 @@ export const authOptions: NextAuthOptions = {
         };
       }
       return session;
+    },
+  },
+
+  events: {
+    async signOut({ token }) {
+      try {
+        await createAuditLog({
+          action: 'LOGOUT',
+          entityType: 'AUTH',
+          entityId: token?.id,
+          actorId: token?.id,
+          actorName: String(token?.username ?? 'unknown'),
+        })
+      } catch (error) {
+        console.error('[AUTH_EVENTS] Error en signOut:', error)
+      }
     },
   },
   

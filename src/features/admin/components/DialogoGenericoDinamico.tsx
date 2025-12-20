@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, Check, AlertTriangle, type LucideIcon } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
+import ToggleSwitch from './ToggleSwitch'
 
 // ==================== TIPOS ====================
 
@@ -194,10 +195,21 @@ export default function DialogoGenericoDinamico({
     // Validar campos
     const errors: Record<string, string> = {}
     formConfig.fields.forEach(field => {
-      if (field.required && !formData[field.id]) {
-        errors[field.id] = `${field.label} es requerido`
-      } else if (field.validation) {
-        const result = field.validation(formData[field.id])
+      const value = formData[field.id]
+      const isEmpty = value === undefined || value === null || value === ''
+
+      if (field.required) {
+        if (field.type === 'checkbox') {
+          if (!value) {
+            errors[field.id] = `${field.label} es requerido`
+          }
+        } else if (isEmpty) {
+          errors[field.id] = `${field.label} es requerido`
+        }
+      }
+
+      if (!errors[field.id] && field.validation) {
+        const result = field.validation(value)
         if (result !== true) {
           errors[field.id] = typeof result === 'string' ? result : 'Campo inválido'
         }
@@ -229,29 +241,33 @@ export default function DialogoGenericoDinamico({
           <form onSubmit={handleFormSubmit} className="space-y-4">
             {formConfig.fields.map(field => (
               <div key={field.id}>
-                <label className="block text-sm font-medium text-[#c9d1d9] mb-1">
-                  {field.label}
-                  {field.required && <span className="text-[#da3633]">*</span>}
-                </label>
+                {field.type !== 'checkbox' && (
+                  <label className="block text-sm font-medium text-[#c9d1d9] mb-1">
+                    {field.label}
+                    {field.required && <span className="text-[#da3633]">*</span>}
+                  </label>
+                )}
 
                 {field.type === 'textarea' ? (
                   <textarea
-                    value={formData[field.id] || ''}
+                    value={formData[field.id] ?? ''}
                     onChange={e => handleFieldChange(field.id, e.target.value)}
                     placeholder={field.placeholder}
                     className="w-full px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#c9d1d9] placeholder-[#6e7681] focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff]/50 outline-none transition"
                     rows={4}
                   />
                 ) : field.type === 'checkbox' ? (
-                  <input
-                    type="checkbox"
-                    checked={formData[field.id] || false}
-                    onChange={e => handleFieldChange(field.id, e.target.checked)}
-                    className="w-4 h-4 accent-[#58a6ff]"
-                  />
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-[#c9d1d9]">{field.label}</span>
+                    <ToggleSwitch
+                      enabled={formData[field.id] || false}
+                      onChange={(val) => handleFieldChange(field.id, val)}
+                      size="md"
+                    />
+                  </div>
                 ) : field.type === 'select' ? (
                   <DropdownSelect
-                    value={formData[field.id] || ''}
+                    value={formData[field.id] ?? ''}
                     onChange={val => handleFieldChange(field.id, val)}
                     options={field.options || []}
                     placeholder="Seleccionar..."
@@ -259,8 +275,22 @@ export default function DialogoGenericoDinamico({
                 ) : (
                   <input
                     type={field.type}
-                    value={formData[field.id] || ''}
-                    onChange={e => handleFieldChange(field.id, e.target.value)}
+                    value={formData[field.id] ?? ''}
+                    onChange={e => {
+                      if (field.type === 'number') {
+                        const raw = e.target.value
+                        if (raw === '') {
+                          handleFieldChange(field.id, '')
+                          return
+                        }
+
+                        const parsed = Number.parseInt(raw, 10)
+                        handleFieldChange(field.id, Number.isNaN(parsed) ? '' : parsed)
+                        return
+                      }
+
+                      handleFieldChange(field.id, e.target.value)
+                    }}
                     placeholder={field.placeholder}
                     className="w-full px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-sm text-[#c9d1d9] placeholder-[#6e7681] focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff]/50 outline-none transition"
                   />

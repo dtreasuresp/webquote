@@ -122,6 +122,11 @@ export function useInitialLoad(options: UseInitialLoadOptions = {}): UseInitialL
       }
       return false
     } catch (error) {
+      // Ignorar AbortError (es esperado cuando hay timeout)
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('🔍 [checkConnection] Timeout alcanzado (5s)')
+        return false
+      }
       console.error('🔍 [checkConnection] Error en fetch:', error)
       return false
     }

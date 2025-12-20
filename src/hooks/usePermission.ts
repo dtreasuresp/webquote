@@ -22,7 +22,8 @@
  */
 
 import { useSession } from 'next-auth/react'
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
+import { getCachedPermissions, setCachedPermissions } from '@/lib/permissionsCache'
 
 // ==================== TIPOS ====================
 
@@ -135,18 +136,45 @@ function determineAccessLevel(
 /**
  * Hook para obtener información detallada de permisos sobre un recurso
  * 
+ * FASE 12: Ahora con soporte de caché de permisos
+ * - Intenta leer del caché primero (localStorage)
+ * - Si no está disponible o expiró, usa permisos de la sesión
+ * - Almacena nuevos permisos en caché automáticamente
+ * 
  * @param resource - Código del recurso (ej: 'users', 'quotations', 'packages')
  * @returns Objeto con información completa de permisos y operaciones permitidas
  */
 export function usePermission(resource: string): PermissionInfo {
   const { data: session, status } = useSession()
 
+  // ✨ FASE 12: Intentar leer del caché
+  useEffect(() => {
+    if (session?.user?.id && session?.user?.permissions) {
+      const cached = getCachedPermissions(resource, session.user.id)
+      if (!cached) {
+        // No está en caché, guardarlo
+        setCachedPermissions(resource, session.user.id, session.user.permissions)
+        console.log(`[usePermission] 💾 Caché creado para ${resource}`)
+      }
+    }
+  }, [session?.user?.id, session?.user?.permissions, resource])
+
   return useMemo(() => {
     const isLoading = status === 'loading'
     const isAuthenticated = status === 'authenticated' && !!session?.user
     const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
     const userRole = session?.user?.role
-    const userPermissions = session?.user?.permissions || []
+    
+    // ✨ FASE 12: Intentar leer desde caché, fallback a sesión
+    let userPermissions = session?.user?.permissions || []
+    
+    if (session?.user?.id && isAuthenticated) {
+      const cachedPerms = getCachedPermissions(resource, session.user.id)
+      if (cachedPerms) {
+        console.log(`[usePermission] ✅ Usando permisos del caché para ${resource}`)
+        userPermissions = cachedPerms
+      }
+    }
 
     // Si no está autenticado, retornar sin permisos
     if (!isAuthenticated) {

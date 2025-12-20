@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireReadPermission, requireWritePermission, requireFullPermission } from '@/lib/apiProtection'
+import { createAuditLog, generateDiff } from '@/lib/audit/auditHelper'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -93,22 +94,20 @@ export async function POST(request: NextRequest) {
         },
       })
 
-    // Audit log
-    await prisma.auditLog.create({
-      data: {
-        action: 'snapshot.created',
-        entityType: 'PackageSnapshot',
-        entityId: snapshot.id,
-        userId: session?.user?.id,
-        userName: session?.user?.username || 'Sistema',
-        details: {
-          nombre: snapshot.nombre,
-          tipo: snapshot.tipo,
-          quotationConfigId: snapshot.quotationConfigId,
-        },
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-        userAgent: request.headers.get('user-agent') || undefined,
+    // Auditar creación usando helper centralizado
+    await createAuditLog({
+      action: 'SNAPSHOT_CREATED',
+      entityType: 'PACKAGE_SNAPSHOT',
+      entityId: snapshot.id,
+      actorId: session?.user?.id,
+      actorName: session?.user?.username || 'Sistema',
+      details: {
+        nombre: snapshot.nombre,
+        tipo: snapshot.tipo,
+        quotationConfigId: snapshot.quotationConfigId,
       },
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
     })
 
     return NextResponse.json(snapshot, { status: 201 })
@@ -131,6 +130,20 @@ export async function PUT(request: NextRequest) {
     }
 
     const data = await request.json()
+
+    // Obtener estado anterior para generar diff
+    const snapshotAnterior = await prisma.packageSnapshot.findUnique({
+      where: { id },
+      select: {
+        nombre: true,
+        tipo: true,
+        descripcion: true,
+        costoInicial: true,
+        costoAño1: true,
+        costoAño2: true,
+        activo: true,
+      },
+    })
 
     const snapshot = await prisma.packageSnapshot.update({
       where: { id },
@@ -166,22 +179,32 @@ export async function PUT(request: NextRequest) {
       },
     })
 
-    // Audit log
-    await prisma.auditLog.create({
-      data: {
-        action: 'snapshot.updated',
-        entityType: 'PackageSnapshot',
-        entityId: snapshot.id,
-        userId: session?.user?.id,
-        userName: session?.user?.username || 'Sistema',
-        details: {
-          nombre: snapshot.nombre,
-          tipo: snapshot.tipo,
-          cambios: Object.keys(data),
-        },
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-        userAgent: request.headers.get('user-agent') || undefined,
+    // Generar diff de cambios principales
+    const allowedFields = ['nombre', 'tipo', 'descripcion', 'costoInicial', 'costoAño1', 'costoAño2', 'activo']
+    const diff = generateDiff(
+      snapshotAnterior || { nombre: '', tipo: '', descripcion: '', costoInicial: 0, costoAño1: 0, costoAño2: 0, activo: true },
+      {
+        nombre: snapshot.nombre,
+        tipo: snapshot.tipo,
+        descripcion: snapshot.descripcion,
+        costoInicial: snapshot.costoInicial,
+        costoAño1: snapshot.costoAño1,
+        costoAño2: snapshot.costoAño2,
+        activo: snapshot.activo,
       },
+      allowedFields
+    )
+
+    // Auditar actualización usando helper centralizado
+    await createAuditLog({
+      action: 'SNAPSHOT_UPDATED',
+      entityType: 'PACKAGE_SNAPSHOT',
+      entityId: snapshot.id,
+      actorId: session?.user?.id,
+      actorName: session?.user?.username || 'Sistema',
+      details: diff,
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
     })
 
     return NextResponse.json(snapshot)
@@ -208,21 +231,19 @@ export async function DELETE(request: NextRequest) {
       where: { id },
     })
 
-    // Audit log
-    await prisma.auditLog.create({
-      data: {
-        action: 'snapshot.deleted',
-        entityType: 'PackageSnapshot',
-        entityId: snapshot.id,
-        userId: session?.user?.id,
-        userName: session?.user?.username || 'Sistema',
-        details: {
-          nombre: snapshot.nombre,
-          tipo: snapshot.tipo,
-        },
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-        userAgent: request.headers.get('user-agent') || undefined,
+    // Auditar eliminación usando helper centralizado
+    await createAuditLog({
+      action: 'SNAPSHOT_DELETED',
+      entityType: 'PACKAGE_SNAPSHOT',
+      entityId: snapshot.id,
+      actorId: session?.user?.id,
+      actorName: session?.user?.username || 'Sistema',
+      details: {
+        nombre: snapshot.nombre,
+        tipo: snapshot.tipo,
       },
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
     })
 
     return NextResponse.json({ success: true, deleted: snapshot })

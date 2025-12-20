@@ -68,7 +68,7 @@ export default function NoCotizacionPage() {
                 Actualmente no tienes ninguna cotización asignada a tu cuenta.
               </p>
               <p className="text-[#8b949e] text-sm">
-                Por favor, contacta al administrador para que te asigne una cotización.
+                Por favor, contacta con tu proveedor para que te asigne una cotización.
               </p>
             </div>
 
@@ -97,9 +97,15 @@ export default function NoCotizacionPage() {
         </div>
 
         {/* Marca de agua */}
-        <p className="text-center mt-6 text-xs text-[#484f58]">
-          Sistema de Cotizaciones • {new Date().getFullYear()}
-        </p>
+        <div className="text-center mt-6 text-xs text-[#484f58]">
+          <p>  
+          Sistema de Cotizaciones Online WebQuote
+          <br />
+          Empresa de Soluciones de Negocios 
+          <br />
+          DG TECNOVA © {new Date().getFullYear()}
+          </p>
+        </div>
       </motion.div>
     </div>
   )

@@ -195,7 +195,7 @@ function LoginContent() {
         {/* Marca de agua */}
         <div className="text-center mt-6 text-xs text-[#484f58]">
           <p>  
-          Sistema de Cotizaciones Online
+          Sistema de Cotizaciones Online WebQuote
           <br />
           Empresa de Soluciones de Negocios 
           <br />

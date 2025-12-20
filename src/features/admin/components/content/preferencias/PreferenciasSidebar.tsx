@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Settings, RefreshCw, Users, ShieldCheck, Shield, Key, LayoutGrid, FileText, ChevronRight, Menu, X } from 'lucide-react'
+import { Settings, RefreshCw, Users, ShieldCheck, Shield, Key, LayoutGrid, FileText, ChevronRight, Menu, X, BarChart3, Building2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export type SidebarSection = 'general' | 'sincronizacion' | 'usuarios' | 'seguridad'
-export type SecuritySubSection = 'roles' | 'permisos' | 'matriz' | 'usuarios-permisos' | 'logs'
+export type SidebarSection = 'general' | 'sincronizacion' | 'usuarios' | 'organizaciones' | 'seguridad' | 'logs' | 'backups' | 'reportes'
+export type SecuritySubSection = 'roles' | 'permisos' | 'matriz' | 'usuarios-permisos'
 
 interface PreferenciasSidebarProps {
   activeSection: SidebarSection
@@ -34,15 +34,39 @@ const sections = [
     description: 'Administración de usuarios del sistema',
   },
   {
+    id: 'organizaciones' as SidebarSection,
+    label: 'Estructura Organizacional',
+    icon: Building2,
+    description: 'Gestión de la jerarquía organizacional',
+  },
+  {
     id: 'seguridad' as SidebarSection,
     label: 'Seguridad y Acceso',
     icon: ShieldCheck,
-    description: 'Roles, permisos y auditoría',
+    description: 'Roles, permisos y matriz de acceso',
     isParent: true,
+  },
+  {
+    id: 'logs' as SidebarSection,
+    label: 'Logs de Auditoría',
+    icon: FileText,
+    description: 'Registro detallado de eventos del sistema',
+  },
+  {
+    id: 'backups' as SidebarSection,
+    label: 'Backups',
+    icon: Shield,
+    description: 'Gestión de copias de seguridad',
+  },
+  {
+    id: 'reportes' as SidebarSection,
+    label: 'Reportes de Auditoría',
+    icon: BarChart3,
+    description: 'Reportes automáticos de auditoría',
   },
 ]
 
-// Sub-secciones de seguridad
+// Sub-secciones de seguridad - ahora SOLO contiene Roles, Permisos, Matriz y Usuarios-Permisos
 const securitySubSections = [
   {
     id: 'roles' as SecuritySubSection,
@@ -63,11 +87,6 @@ const securitySubSections = [
     id: 'usuarios-permisos' as SecuritySubSection,
     label: 'Permisos por Usuario',
     icon: Users,
-  },
-  {
-    id: 'logs' as SecuritySubSection,
-    label: 'Logs de Auditoría',
-    icon: FileText,
   },
 ]
 

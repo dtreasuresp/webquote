@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import { quotationCache } from '@/lib/cache'
+import { useUserPreferencesStore } from '@/stores/userPreferencesStore'
 import type { QuotationConfig } from '@/lib/types'
 
 export interface UseAutoSaveOptions {
@@ -11,6 +12,8 @@ export interface UseAutoSaveOptions {
   interval?: number
   /** Si el auto-guardado está habilitado (default: true) */
   enabled?: boolean
+  /** Si se debe respetar la preferencia guardarAutomaticamente del usuario (default: true) */
+  respectUserPreference?: boolean
   /** Callback cuando se guarda */
   onSave?: (success: boolean) => void
   /** Callback cuando hay error */
@@ -28,6 +31,8 @@ export interface UseAutoSaveReturn {
   resume: () => void
   /** Indica si el auto-guardado está activo */
   isActive: boolean
+  /** Indica si está pausado por preferencia del usuario */
+  isPausedByUserPreference: boolean
 }
 
 export function useAutoSave(
@@ -37,13 +42,20 @@ export function useAutoSave(
   const {
     interval = 5000, // 5 segundos por defecto
     enabled = true,
+    respectUserPreference = true,
     onSave,
     onError
   } = options
 
+  // Leer la preferencia del usuario
+  const guardarAutomaticamente = useUserPreferencesStore((s) => s.guardarAutomaticamente ?? true)
+
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const isPausedRef = useRef(false)
   const lastSavedRef = useRef<string | null>(null)
+
+  // Determinar si debería estar activo según preferencia del usuario
+  const shouldAutoSaveBeActive = enabled && (!respectUserPreference || (respectUserPreference && guardarAutomaticamente))
 
   // Función para guardar en caché local
   const saveToCache = useCallback((): boolean => {
@@ -86,14 +98,14 @@ export function useAutoSave(
       clearInterval(timerRef.current)
     }
     
-    if (enabled && !isPausedRef.current) {
+    if (shouldAutoSaveBeActive && !isPausedRef.current) {
       timerRef.current = setInterval(() => {
-        if (!isPausedRef.current) {
+        if (!isPausedRef.current && shouldAutoSaveBeActive) {
           saveToCache()
         }
       }, interval)
     }
-  }, [enabled, interval, saveToCache])
+  }, [shouldAutoSaveBeActive, interval, saveToCache])
 
   // Pausar auto-guardado
   const pause = useCallback(() => {
@@ -110,10 +122,14 @@ export function useAutoSave(
     resetTimer()
   }, [resetTimer])
 
-  // Efecto para iniciar/detener el timer
+  // Efecto para iniciar/detener el timer cuando cambia shouldAutoSaveBeActive
   useEffect(() => {
-    if (enabled && quotation?.id && !isPausedRef.current) {
+    if (shouldAutoSaveBeActive && quotation?.id && !isPausedRef.current) {
       resetTimer()
+    } else if (!shouldAutoSaveBeActive && timerRef.current) {
+      // Detener el timer si el auto-guardado ya no debe estar activo
+      clearInterval(timerRef.current)
+      timerRef.current = null
     }
 
     return () => {
@@ -122,7 +138,7 @@ export function useAutoSave(
         timerRef.current = null
       }
     }
-  }, [enabled, quotation?.id, resetTimer])
+  }, [shouldAutoSaveBeActive, quotation?.id, resetTimer])
 
   // Guardar antes de cerrar la página
   useEffect(() => {
@@ -159,7 +175,8 @@ export function useAutoSave(
     resetTimer,
     pause,
     resume,
-    isActive: enabled && !isPausedRef.current && !!timerRef.current
+    isActive: shouldAutoSaveBeActive && !isPausedRef.current && !!timerRef.current,
+    isPausedByUserPreference: !guardarAutomaticamente && respectUserPreference
   }
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
-import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState, Suspense, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import Navigation from '@/components/layout/Navigation'
@@ -21,6 +21,7 @@ import Garantias from '@/components/sections/Garantias'
 import Faq from '@/components/sections/FAQ'
 import Contacto from '@/components/sections/Contacto'
 import Terminos from '@/components/sections/Terminos'
+import { useQuotationListener } from '@/hooks/useQuotationSync'
 import type { 
   ContactoInfo, 
   ResumenEjecutivoTextos, 
@@ -45,22 +46,59 @@ import { useEventTracking } from '@/features/admin/hooks'
 
 function HomeContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const { data: session } = useSession()
   const [cotizacion, setCotizacion] = useState<QuotationConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { trackProposalViewed, trackOfertaSectionViewed } = useEventTracking()
   
+  // ✅ NUEVA: Escuchar eventos de activación de cotizaciones
+  // Cuando una cotización es activada desde el admin, la página pública
+  // recibe notificación y recarga automáticamente los datos
+  useQuotationListener(
+    'quotation:activated',
+    useCallback((event) => {
+      console.log(`🔄 Página Pública: Cotización activada`, event.quotationId)
+      // Recargar cotización actual para obtener la versión activada
+      const fetchCotizacion = async () => {
+        try {
+          const res = await fetch('/api/quotation-config')
+          if (res.ok) {
+            const data = await res.json()
+            setCotizacion(data)
+            setError(null)
+          }
+        } catch (error) {
+          console.error('Error reloading quotation:', error)
+        }
+      }
+      fetchCotizacion()
+    }, [])
+  )
+  
   // ✅ Cargar cotización del usuario (middleware ya verificó autenticación)
   useEffect(() => {
     const fetchCotizacion = async () => {
+      let didRedirect = false
       try {
         const res = await fetch('/api/quotation-config')
 
         if (res.status === 403) {
           const data = await res.json()
-          setError(data.error || 'No tiene cotización asignada')
-          setLoading(false)
+
+          // Caso específico: usuario autenticado pero sin cotización asignada
+          if (
+            data?.code === 'NO_QUOTATION_ASSIGNED' ||
+            (typeof data?.error === 'string' &&
+              data.error.toLowerCase().includes('no tiene cotización asignada'))
+          ) {
+            didRedirect = true
+            router.replace('/sin-cotizacion')
+            return
+          }
+
+          setError(data?.error || 'No tiene permisos para ver esta cotización')
           return
         }
 
@@ -76,7 +114,7 @@ function HomeContent() {
         console.error('Error loading quotation:', error)
         setError('Error de conexión con el servidor')
       } finally {
-        setLoading(false)
+        if (!didRedirect) setLoading(false)
       }
     }
     fetchCotizacion()

@@ -7,8 +7,9 @@ import PermisosContent from './seguridad/PermisosContent'
 import MatrizAccesoContent from './seguridad/MatrizAccesoContent'
 import PermisosUsuarioContent from './seguridad/PermisosUsuarioContent'
 import LogsAuditoriaContent from './seguridad/LogsAuditoriaContent'
+import BackupContent from './seguridad/BackupContent'
 
-export type SecuritySubSection = 'roles' | 'permisos' | 'matriz' | 'usuarios-permisos' | 'logs'
+export type SecuritySubSection = 'roles' | 'permisos' | 'matriz' | 'usuarios-permisos' | 'logs' | 'backups'
 
 interface SeguridadContentProps {
   activeSubSection: SecuritySubSection
@@ -76,6 +77,18 @@ export default function SeguridadContent({ activeSubSection }: Readonly<Segurida
             transition={{ duration: 0.15 }}
           >
             <LogsAuditoriaContent />
+          </motion.div>
+        )}
+
+        {activeSubSection === 'backups' && (
+          <motion.div
+            key="backups"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.15 }}
+          >
+            <BackupContent />
           </motion.div>
         )}
       </AnimatePresence>

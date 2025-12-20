@@ -210,6 +210,10 @@ export async function PUT(request: Request) {
  */
 export async function POST(request: Request) {
   try {
+    // ✅ Verificar permiso completo
+    const { session, error } = await requireFullPermission('security.matrix.manage')
+    if (error) return error
+
     const body = await request.json()
     const { roleId, permissionId, accessLevel } = body
 
@@ -220,9 +224,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verificar sesión y rol
-    const session = await getServerSession(authOptions)
-    const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+    // Verificar rol
+    const isSuperAdmin = session.user.role === 'SUPER_ADMIN'
 
     // Verificar que el rol no sea del sistema (excepto SUPER_ADMIN)
     const role = await prisma.role.findUnique({ where: { id: roleId } })

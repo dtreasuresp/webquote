@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateNextQuotationNumber, updateQuotationVersion } from '@/lib/utils/quotationNumber'
 import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
+import { createAuditLog, generateDiff } from '@/lib/audit/auditHelper'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -50,7 +51,11 @@ export async function GET(request: NextRequest) {
     if (!session.user.quotationAssignedId) {
       console.log('[AUTH] Usuario sin cotización asignada:', session.user.username)
       return NextResponse.json(
-        { error: 'Lo sentimos. Su usuario no tiene cotización asignada. Contacte al administrador.' },
+        {
+          success: false,
+          code: 'NO_QUOTATION_ASSIGNED',
+          error: 'Lo sentimos. Su usuario no tiene cotización asignada. Contacte al administrador.',
+        },
         { status: 403 }
       )
     }
@@ -156,22 +161,20 @@ export async function POST(request: NextRequest) {
     
     console.log('[AUDIT] Cotización creada:', cotizacion.id, cotizacion.numero)
 
-    // Audit log
-    await prisma.auditLog.create({
-      data: {
-        action: 'quotation.created',
-        entityType: 'QuotationConfig',
-        entityId: cotizacion.id,
-        userId: session.user.id,
-        userName: session.user.username || session.user.name || 'Sistema',
-        details: {
-          numero: cotizacion.numero,
-          empresa: cotizacion.empresa,
-          versionNumber: cotizacion.versionNumber,
-        },
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-        userAgent: request.headers.get('user-agent') || undefined,
+    // Auditar creación usando helper centralizado
+    await createAuditLog({
+      action: 'QUOTATION_CREATED',
+      entityType: 'QUOTATION_CONFIG',
+      entityId: cotizacion.id,
+      actorId: session.user.id,
+      actorName: session.user.nombre || session.user.username || 'Sistema',
+      details: {
+        numero: cotizacion.numero,
+        empresa: cotizacion.empresa,
+        versionNumber: cotizacion.versionNumber,
       },
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
     })
 
     // FIX: Devolver estructura {success, data} consistente con otros endpoints
@@ -199,6 +202,7 @@ export async function POST(request: NextRequest) {
 
 // PUT: Actualizar cotización existente (mantiene número, incrementa versión)
 // Requiere: quotations.edit (write)
+// CAMBIO 2: Simple UPDATE sin crear nuevas versiones
 export async function PUT(request: NextRequest) {
   // Protección: Requiere permiso de escritura para editar cotizaciones
   const { session, error } = await requireWritePermission('quotations.edit')
@@ -220,8 +224,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const data = await request.json()
-    
-    // Obtener cotización actual para mantener número e incrementar versión
     const id = cotizacion?.id
 
     if (!id) {
@@ -230,65 +232,87 @@ export async function PUT(request: NextRequest) {
 
     const cotizacionActual = await prisma.quotationConfig.findUnique({
       where: { id },
-      select: { numero: true, versionNumber: true }
     })
     
     if (!cotizacionActual) {
       return NextResponse.json({ error: 'Cotización no encontrada' }, { status: 404 })
     }
     
-    // Usar la versión que viene del frontend (ya incrementada) o mantener la actual
-    const nuevaVersion = data.versionNumber || cotizacionActual.versionNumber || 1
-    
-    // Actualizar versión en el número de cotización usando utilidad
-    const numeroActualizado = updateQuotationVersion(cotizacionActual.numero, nuevaVersion)
-    
-    const fechaEmision = new Date(data.fechaEmision || new Date())
-    const fechaVencimiento = calcularFechaVencimiento(fechaEmision, data.tiempoValidez || 30)
+    const fechaEmision = new Date(data.fechaEmision || cotizacionActual.fechaEmision)
+    const fechaVencimiento = calcularFechaVencimiento(fechaEmision, data.tiempoValidez || cotizacionActual.tiempoValidez || 30)
 
+    // CAMBIO 2: Simple UPDATE - solo actualizar la cotización actual sin crear versiones
     const cotizacionActualizada = await prisma.quotationConfig.update({
       where: { id },
       data: {
-        numero: numeroActualizado,
-        versionNumber: nuevaVersion,
         fechaEmision,
-        tiempoValidez: data.tiempoValidez || 30,
+        tiempoValidez: data.tiempoValidez ?? cotizacionActual.tiempoValidez ?? 30,
         fechaVencimiento,
-        presupuesto: data.presupuesto ?? cotizacion?.presupuesto ?? '',
-        moneda: data.moneda ?? cotizacion?.moneda ?? 'USD',
-        empresa: data.empresa ?? cotizacion?.empresa ?? '',
-        sector: data.sector ?? cotizacion?.sector ?? '',
-        ubicacion: data.ubicacion ?? cotizacion?.ubicacion ?? '',
-        profesional: data.profesional ?? cotizacion?.profesional ?? '',
-        empresaProveedor: data.empresaProveedor ?? cotizacion?.empresaProveedor ?? '',
-        emailProveedor: data.emailProveedor ?? cotizacion?.emailProveedor ?? '',
-        whatsappProveedor: data.whatsappProveedor ?? cotizacion?.whatsappProveedor ?? '',
-        ubicacionProveedor: data.ubicacionProveedor ?? cotizacion?.ubicacionProveedor ?? '',
-        tiempoVigenciaValor: data.tiempoVigenciaValor ?? cotizacion?.tiempoVigenciaValor ?? 12,
-        tiempoVigenciaUnidad: data.tiempoVigenciaUnidad ?? cotizacion?.tiempoVigenciaUnidad ?? 'meses',
-        heroTituloMain: data.heroTituloMain ?? cotizacion?.heroTituloMain ?? 'PROPUESTA DE COTIZACIÓN',
-        heroTituloSub: data.heroTituloSub ?? cotizacion?.heroTituloSub ?? 'PÁGINA CATÁLOGO DINÁMICA',
+        presupuesto: data.presupuesto ?? cotizacionActual.presupuesto ?? '',
+        moneda: data.moneda ?? cotizacionActual.moneda ?? 'USD',
+        empresa: data.empresa ?? cotizacionActual.empresa ?? '',
+        sector: data.sector ?? cotizacionActual.sector ?? '',
+        ubicacion: data.ubicacion ?? cotizacionActual.ubicacion ?? '',
+        emailCliente: data.emailCliente ?? cotizacionActual.emailCliente ?? '',
+        whatsappCliente: data.whatsappCliente ?? cotizacionActual.whatsappCliente ?? '',
+        profesional: data.profesional ?? cotizacionActual.profesional ?? '',
+        empresaProveedor: data.empresaProveedor ?? cotizacionActual.empresaProveedor ?? '',
+        emailProveedor: data.emailProveedor ?? cotizacionActual.emailProveedor ?? '',
+        whatsappProveedor: data.whatsappProveedor ?? cotizacionActual.whatsappProveedor ?? '',
+        ubicacionProveedor: data.ubicacionProveedor ?? cotizacionActual.ubicacionProveedor ?? '',
+        tiempoVigenciaValor: data.tiempoVigenciaValor ?? cotizacionActual.tiempoVigenciaValor ?? 12,
+        tiempoVigenciaUnidad: data.tiempoVigenciaUnidad ?? cotizacionActual.tiempoVigenciaUnidad ?? 'meses',
+        // CAMBIO 1: Garantizar que heroTituloMain y heroTituloSub siempre se actualizan
+        heroTituloMain: data.heroTituloMain ?? cotizacionActual.heroTituloMain ?? 'PROPUESTA DE COTIZACIÓN',
+        heroTituloSub: data.heroTituloSub ?? cotizacionActual.heroTituloSub ?? 'PÁGINA CATÁLOGO DINÁMICA',
+        // Mantener templates existentes si no vienen nuevos
+        serviciosBaseTemplate: data.serviciosBaseTemplate ?? cotizacionActual.serviciosBaseTemplate ?? null,
+        serviciosOpcionalesTemplate: data.serviciosOpcionalesTemplate ?? cotizacionActual.serviciosOpcionalesTemplate ?? null,
+        opcionesPagoTemplate: data.opcionesPagoTemplate ?? cotizacionActual.opcionesPagoTemplate ?? null,
+        configDescuentosTemplate: data.configDescuentosTemplate ?? cotizacionActual.configDescuentosTemplate ?? null,
+        descripcionesPaqueteTemplates: data.descripcionesPaqueteTemplates ?? cotizacionActual.descripcionesPaqueteTemplates ?? null,
+        metodoPagoPreferido: data.metodoPagoPreferido ?? cotizacionActual.metodoPagoPreferido ?? '',
+        notasPago: data.notasPago ?? cotizacionActual.notasPago ?? '',
+        metodosPreferidos: data.metodosPreferidos ?? cotizacionActual.metodosPreferidos ?? null,
+        estilosConfig: data.estilosConfig ?? cotizacionActual.estilosConfig ?? null,
+        contenidoGeneral: data.contenidoGeneral ?? cotizacionActual.contenidoGeneral ?? null,
+        // Mantener isGlobal: true para que siga siendo la cotización activa
+        isGlobal: true,
       },
     })
 
-    // Audit log
-    await prisma.auditLog.create({
-      data: {
-        action: 'quotation.updated',
-        entityType: 'QuotationConfig',
-        entityId: cotizacionActualizada.id,
-        userId: session.user.id,
-        userName: session.user.username || session.user.name || 'Sistema',
-        details: {
-          numero: cotizacionActualizada.numero,
-          empresa: cotizacionActualizada.empresa,
-          versionAnterior: cotizacionActual.versionNumber,
-          versionNueva: nuevaVersion,
-          cambios: Object.keys(data),
-        },
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-        userAgent: request.headers.get('user-agent') || undefined,
+    // Generar diff de cambios principales
+    const allowedFields = ['empresa', 'sector', 'profesional', 'emailCliente', 'heroTituloMain', 'heroTituloSub']
+    const diff = generateDiff(
+      {
+        empresa: cotizacionActual.empresa || '',
+        sector: cotizacionActual.sector || '',
+        profesional: cotizacionActual.profesional || '',
+        emailCliente: cotizacionActual.emailCliente || '',
+        heroTituloMain: cotizacionActual.heroTituloMain || 'PROPUESTA DE COTIZACIÓN',
+        heroTituloSub: cotizacionActual.heroTituloSub || 'PÁGINA CATÁLOGO DINÁMICA',
       },
+      {
+        empresa: cotizacionActualizada.empresa,
+        sector: cotizacionActualizada.sector,
+        profesional: cotizacionActualizada.profesional,
+        emailCliente: cotizacionActualizada.emailCliente,
+        heroTituloMain: cotizacionActualizada.heroTituloMain,
+        heroTituloSub: cotizacionActualizada.heroTituloSub,
+      },
+      allowedFields
+    )
+
+    // Auditar actualización usando helper centralizado
+    await createAuditLog({
+      action: 'QUOTATION_UPDATED',
+      entityType: 'QUOTATION_CONFIG',
+      entityId: cotizacionActualizada.id,
+      actorId: session.user.id,
+      actorName: session.user.nombre || session.user.username || 'Sistema',
+      details: diff,
+      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
     })
 
     return NextResponse.json({

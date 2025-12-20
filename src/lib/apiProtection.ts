@@ -24,15 +24,15 @@ import { authOptions } from '@/lib/auth'
 import { hasPermission, getAccessLevel, type AccessLevel } from '@/lib/permissions'
 
 // ==================== TIPOS ====================
+// NOTE: Usamos una unión discriminada por `error` para que TypeScript
+// pueda inferir que `session` NO es null cuando `error` es null.
+export type ProtectedRouteResult =
+  | { session: Session; error: null }
+  | { session: Session | null; error: NextResponse }
 
-export interface ProtectedRouteResult {
-  session: Session | null
-  error: NextResponse | null
-}
-
-export interface PermissionCheckResult extends ProtectedRouteResult {
-  accessLevel?: AccessLevel
-}
+export type PermissionCheckResult =
+  | { session: Session; accessLevel?: AccessLevel; error: null }
+  | { session: Session | null; accessLevel?: AccessLevel; error: NextResponse }
 
 export interface ProtectedRouteOptions {
   /** Mensaje de error personalizado para 401 */

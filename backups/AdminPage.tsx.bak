@@ -1,0 +1,275 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback } from 'react'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import Navigation from '@/components/layout/Navigation'
+import { obtenerSnapshotsCompleto } from '@/lib/snapshotApi'
+import { useSnapshotsRefresh } from '@/features/admin/hooks/useSnapshots'
+
+// Sistema de caché
+import { useQuotationCache } from '@/hooks'
+import { SyncStatusIndicator } from '@/features/admin/components/SyncStatusIndicator'
+import type { ConflictInfo, ConflictResolution } from '@/lib/cache/types'
+import { AlertTriangle, Cloud, Monitor, GitBranch } from 'lucide-react'
+
+// ✅ NUEVOS STORES ZUSTAND
+import { 
+  useQuotationStore,
+  useServicesStore,
+  useSnapshotStore,
+  useModalStore,
+  useValidationStore,
+  useDiscountsStore,
+  usePaymentStore,
+} from '@/stores'
+
+// Hooks del admin
+import { useAdminState, useAdvancedValidation, useEventTracking } from './hooks'
+
+// Componentes del admin
+import { AdminHeader, DialogoGenerico, ValidationStatusBar, AnalyticsDashboard } from './components'
+import ServiciosBaseAdapter from './components/ServiciosBaseAdapter'
+
+// Context
+import { AnalyticsProvider } from './contexts'
+import PaqueteSection from './components/PaqueteSection'
+import ServiciosOpcionalesSection from './components/ServiciosOpcionalesSection'
+import DescuentosSection from './components/DescuentosSection'
+import SnapshotsTableSection from './components/SnapshotsTableSection'
+
+// Utilities
+import { generateSnapshotPDF } from '@/features/pdf-export/utils/generator'
+
+export default function AdminPage() {
+  return (
+    <AnalyticsProvider>
+      <AdminPageContent />
+    </AnalyticsProvider>
+  )
+}
+
+function AdminPageContent() {
+  
+  // ✅ NUEVOS STORES ZUSTAND (reemplazan useAdminState)
+  const {
+    cotizacionConfig,
+    updateQuotation,
+    loadQuotation,
+    saveQuotation,
+    quotationErrors,
+    isLoading: quotationIsLoading,
+  } = useQuotationStore((state) => ({
+    cotizacionConfig: state.cotizacionConfig,
+    updateQuotation: state.updateQuotation,
+    loadQuotation: state.loadQuotation,
+    saveQuotation: state.saveQuotation,
+    quotationErrors: state.erroresValidacionCotizacion,
+    isLoading: state.cargandoCotizacion,
+  }))
+
+  const {
+    serviciosBase,
+    serviciosOpcionales,
+    addBaseService,
+    updateBaseService,
+    addOptionalService,
+    updateOptionalService,
+  } = useServicesStore((state) => ({
+    serviciosBase: state.serviciosBase,
+    serviciosOpcionales: state.serviciosOpcionales,
+    addBaseService: state.addBaseService,
+    updateBaseService: state.updateBaseService,
+    addOptionalService: state.addOptionalService,
+    updateOptionalService: state.updateOptionalService,
+  }))
+
+  const {
+    snapshots,
+    loadSnapshots,
+    createSnapshot,
+    selectSnapshot,
+    isLoading: snapshotsIsLoading,
+  } = useSnapshotStore((state) => ({
+    snapshots: state.snapshots,
+    loadSnapshots: state.loadSnapshots,
+    createSnapshot: state.createSnapshot,
+    selectSnapshot: state.selectSnapshot,
+    isLoading: state.isLoading,
+  }))
+
+  const {
+    openModal,
+    closeModal,
+    closeAllModals,
+    openErrorModal,
+    openSuccessModal,
+    openConfirmSave,
+  } = useModalStore((state) => ({
+    openModal: state.openModal,
+    closeModal: state.closeModal,
+    closeAllModals: state.closeAllModals,
+    openErrorModal: state.openErrorModal,
+    openSuccessModal: state.openSuccessModal,
+    openConfirmSave: state.openConfirmSave,
+  }))
+
+  const {
+    validateTab,
+    clearAllValidations,
+  } = useValidationStore((state) => ({
+    validateTab: state.validateTab,
+    clearAllValidations: state.clearAllValidations,
+  }))
+
+  // Mantener paqueteActual como estado local por ahora
+  const [paqueteActual, setPaqueteActual] = useState<any>(null)
+
+  // Refresh global
+  const refreshSnapshots = useSnapshotsRefresh()
+
+  // ==================== HOOKS DE VALIDACIÓN ====================
+  const { 
+    validationResult, 
+    validarTodo,
+    getValidationContext 
+  } = useAdvancedValidation()
+
+  // ==================== HOOKS DE TRACKING ====================
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { 
+    trackCotizacionCreated, 
+    trackPaqueteCreated,
+    trackSnapshotCreated,
+    startTracking,
+    endTracking 
+  } = useEventTracking()
+
+  // ==================== SISTEMA DE CACHÉ ====================
+  
+  // Callback para manejar conflictos
+  const handleConflict = useCallback((conflict: ConflictInfo) => {
+    openModal({
+      id: 'conflict-modal',
+      title: 'Conflicto de Sincronización',
+      type: 'warning',
+      actions: [
+        {
+          label: 'Usar Local',
+          onClick: async () => {
+            resolveConflict('local')
+            closeModal('conflict-modal')
+          },
+        },
+        {
+          label: 'Usar Remoto',
+          onClick: async () => {
+            resolveConflict('remote')
+            closeModal('conflict-modal')
+          },
+        },
+      ],
+    })
+  }, [openModal, closeModal])
+
+  // Callback cuando otra pestaña actualiza
+  const handleRemoteUpdate = useCallback(() => {
+    openSuccessModal({
+      title: 'Actualización Remota',
+      message: 'Los datos han sido actualizados desde otra pestaña.',
+    })
+  }, [openSuccessModal])
+
+  // Hook principal de caché
+  const {
+    quotation: cachedQuotation,
+    snapshots: cachedSnapshots,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading: isCacheLoading,
+    isDirty: isCacheDirty,
+    syncStatus,
+    isOnline,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    error: cacheError,
+    pendingConflict,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    updateQuotation: updateCachedQuotation,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    saveToServer,
+    // eslint-disable-next-line @typescript-eslint/no-unused_vars
+    refreshFromServer,
+    resolveConflict,
+  } = useQuotationCache({
+    quotationId: cotizacionConfig?.id || null,
+    enabled: !!cotizacionConfig?.id,
+    autoSaveInterval: 5000, // 5 segundos
+    onConflict: handleConflict,
+    onRemoteUpdate: handleRemoteUpdate,
+  })
+
+  // ==================== ESTADO LOCAL ====================
+  
+  // ✅ REDUCIDO: Solo estado local que no tiene store equivalente
+  const [isSaving, setIsSaving] = useState(false)
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false)
+
+  // ==================== EFECTOS ====================
+
+  // ✅ SIMPLIFICADO: Cargar datos al montar - stores manejan persistencia
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        const snapshotsDelServidor = await obtenerSnapshotsCompleto()
+        loadSnapshots(snapshotsDelServidor)
+      } catch (error) {
+        console.error('Error cargando snapshots:', error)
+        openErrorModal({
+          title: 'Error',
+          message: 'Error al cargar los paquetes',
+        })
+      }
+    }
+
+    cargarDatos()
+  }, [loadSnapshots, openErrorModal])
+
+  // ✅ SIMPLIFICADO: Sincronizar snapshots desde caché
+  useEffect(() => {
+    if (cachedSnapshots && cachedSnapshots.length > 0) {
+      loadSnapshots(cachedSnapshots)
+    }
+  }, [cachedSnapshots, loadSnapshots])
+
+  // ✅ SIMPLIFICADO: Mostrar modal de conflicto cuando hay uno pendiente
+  useEffect(() => {
+    if (pendingConflict) {
+      openModal({
+        id: 'conflict-modal',
+        title: 'Conflicto de Sincronización',
+        type: 'warning',
+      })
+    }
+  }, [pendingConflict, openModal])
+
+  // ✅ SIMPLIFICADO: Handler para resolver conflictos
+  const handleResolveConflict = async (resolution: ConflictResolution) => {
+    closeModal('conflict-modal')
+    await resolveConflict(resolution)
+    
+    if (resolution !== 'cancel') {
+      openSuccessModal({
+        title: 'Conflicto Resuelto',
+        message: resolution === 'keep-local' 
+          ? 'Se mantuvieron tus cambios locales.' 
+          : resolution === 'keep-server'
+          ? 'Se cargaron los datos del servidor.'
+          : 'Los cambios fueron fusionados.',
+      })
+    }
+  }
+
+  // ==================== HANDLERS ====================
+
+
+  ... (truncated for brevity)

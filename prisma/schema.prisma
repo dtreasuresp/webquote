@@ -48,6 +48,9 @@ model QuotationConfig {
   metodosPreferidos             Json?
   packagesSnapshot              Json?
   packagesSnapshotAt            DateTime?
+  // NUEVO: Relación con Organization
+  organizationId                String?
+  organization                  Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   snapshots                     PackageSnapshot[]
   User                          User?
   UserQuotationAccess           UserQuotationAccess[]
@@ -55,6 +58,7 @@ model QuotationConfig {
   @@index([createdAt])
   @@index([isGlobal])
   @@index([activo])
+  @@index([organizationId])
 }
 
 model PackageSnapshot {
@@ -107,6 +111,26 @@ model UserPreferences {
   mostrarNotificacionCacheLocal  Boolean  @default(true)
   sincronizarAlRecuperarConexion Boolean  @default(true)
   unidadIntervaloConexion        String   @default("segundos")
+  guardarAutomaticamente         Boolean  @default(true)
+  
+  // Preferencias de auditoría - Reportes automáticos
+  auditRetentionDays             Int      @default(90)
+  auditAutoPurgeEnabled          Boolean  @default(false)
+  auditAutoPurgeFrequency        String   @default("weekly")
+  auditAutoReportEnabled         Boolean  @default(false)
+  auditAutoReportPeriod          String   @default("weekly")
+  auditAutoReportHour            Int      @default(1)  // 0-23, default 1 AM
+  auditAutoReportMinute          Int      @default(0)  // 0-59
+  auditReportRetentionDays       Int      @default(90)  // Días para retener reportes generados
+  notifyOnManualReport           Boolean  @default(true)  // Notificar al crear reporte manual
+  notifyOnAutoReport             Boolean  @default(true)  // Notificar al crear reporte automático
+  
+  // Preferencias de backup automático
+  autoBackupEnabled              Boolean  @default(false)
+  autoBackupPeriod               String   @default("weekly")
+  autoBackupHour                 Int      @default(2)  // 0-23, default 2 AM
+  autoBackupMinute               Int      @default(0)  // 0-59
+  autoBackupRetentionDays        Int      @default(30)
 
   @@index([userId])
 }
@@ -128,6 +152,39 @@ model FinancialTemplate {
   updatedAt            DateTime
 
   @@index([userId])
+}
+
+// ==================== MODELO: Organización (Jerarquía) ====================
+model Organization {
+  id            String   @id @default(cuid())
+  nombre        String
+  sector        String
+  descripcion   String?
+  
+  // Jerarquía
+  parentId      String?
+  parent        Organization? @relation("OrganizationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children      Organization[] @relation("OrganizationHierarchy")
+  
+  // Contacto
+  email         String?
+  telefono      String?
+  direccion     String?
+  ciudad        String?
+  pais          String?
+  
+  // Relaciones
+  users         User[]
+  quotations    QuotationConfig[]
+  
+  // Auditoría
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String
+  updatedBy     String
+  
+  @@index([parentId])
+  @@index([createdBy])
 }
 
 model Permission {
@@ -206,6 +263,9 @@ model User {
   empresa             String                @default("")
   telefono            String                @default("")
   quotationAssignedId String?               @unique
+  // NUEVO: Relación con Organization
+  organizationId      String?
+  organization        Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   activo              Boolean               @default(true)
   lastLogin           DateTime?
   createdAt           DateTime              @default(now())
@@ -221,10 +281,14 @@ model User {
   // Relaciones de backup
   UserBackup          UserBackup[]
   BackupConfig        BackupConfig?
+  
+  // Relaciones de reportes
+  AuditReports        AuditReport[]
 
   @@index([activo])
   @@index([email])
   @@index([quotationAssignedId])
+  @@index([organizationId])
   @@index([role])
   @@index([roleId])
   @@index([username])
@@ -331,4 +395,39 @@ model BackupConfig {
   nextAutoBackup      DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+}
+
+// ==================== REPORTES DE AUDITORÍA ====================
+model AuditReport {
+  id                   String    @id @default(cuid())
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  period               String    @default("weekly") // weekly, monthly, daily
+  dateRangeFrom        DateTime
+  dateRangeTo          DateTime
+  
+  // Resumen
+  totalLogs            Int
+  uniqueUsers          Int
+  uniqueActions        Int
+  uniqueEntities       Int
+  
+  // Datos completos del reporte (JSON para flexibilidad)
+  reportData           Json      // Contiene topActions, entityDistribution, topUsers, dailyActivity
+  
+  // Auditoría del reporte
+  generatedAt          DateTime  @default(now())
+  generatedBy          String    @default("system") // "system" o userId
+  filePath             String?   // Ruta si se guardó como archivo
+  status               String    @default("completed") // completed, pending, failed
+  errorMessage         String?
+  
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([period])
+  @@index([generatedAt])
+  @@index([createdAt])
 }

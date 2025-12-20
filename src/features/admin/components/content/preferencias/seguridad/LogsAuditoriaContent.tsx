@@ -14,12 +14,15 @@ import {
   User,
   RefreshCw,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 import DatePicker from '@/components/ui/DatePicker'
+import DialogoGenericoDinamico, { DialogFormField } from '@/features/admin/components/DialogoGenericoDinamico'
 import { usePermission } from '@/hooks/usePermission'
+import { useAuditConfigStore } from '@/stores'
 
 // ==================== TIPOS ====================
 
@@ -45,6 +48,33 @@ interface PaginationInfo {
 
 // Acciones con labels
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {
+  // Auth
+  'LOGIN_SUCCESS': { label: 'Inicio de sesión exitoso', color: 'text-gh-success' },
+  'LOGIN_FAILED': { label: 'Intento de inicio fallido', color: 'text-gh-danger' },
+  'LOGOUT': { label: 'Cierre de sesión', color: 'text-gh-text-muted' },
+  
+  // Users
+  'USER_CREATED': { label: 'Usuario creado', color: 'text-gh-success' },
+  'USER_UPDATED': { label: 'Usuario actualizado', color: 'text-gh-accent' },
+  'USER_DELETED': { label: 'Usuario eliminado', color: 'text-gh-danger' },
+  'PASSWORD_CHANGED': { label: 'Contraseña cambiada', color: 'text-gh-warning' },
+  
+  // Quotations
+  'QUOTATION_CREATED': { label: 'Cotización creada', color: 'text-gh-success' },
+  'QUOTATION_UPDATED': { label: 'Cotización actualizada', color: 'text-gh-accent' },
+  'QUOTATION_DELETED': { label: 'Cotización eliminada', color: 'text-gh-danger' },
+  
+  // Snapshots
+  'SNAPSHOT_CREATED': { label: 'Snapshot creado', color: 'text-gh-success' },
+  'SNAPSHOT_UPDATED': { label: 'Snapshot actualizado', color: 'text-gh-accent' },
+  'SNAPSHOT_DELETED': { label: 'Snapshot eliminado', color: 'text-gh-danger' },
+  
+  // Backups
+  'BACKUP_CREATED': { label: 'Backup creado', color: 'text-gh-success' },
+  'BACKUP_RESTORED': { label: 'Backup restaurado', color: 'text-gh-accent' },
+  'BACKUP_DELETED': { label: 'Backup eliminado', color: 'text-gh-danger' },
+  
+  // Legacy actions (para compatibilidad)
   'role.created': { label: 'Rol creado', color: 'text-gh-success' },
   'role.updated': { label: 'Rol actualizado', color: 'text-gh-accent' },
   'role.deleted': { label: 'Rol eliminado', color: 'text-gh-danger' },
@@ -67,6 +97,9 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 export default function LogsAuditoriaContent() {
   // Permisos granulares
   const logsPerms = usePermission('logs')
+
+  // Zustand store para configuración de auditoría
+  const { retentionDays, loadConfig } = useAuditConfigStore()
   
   // Estado
   const [logs, setLogs] = useState<AuditLog[]>([])
@@ -83,6 +116,14 @@ export default function LogsAuditoriaContent() {
   const [entityFilter, setEntityFilter] = useState<string>('all')
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
+
+  // Diálogos
+  const [reportDialogOpen, setReportDialogOpen] = useState(false)
+  const [purgeDialogOpen, setPurgeDialogOpen] = useState(false)
+  const [reportLoading, setReportLoading] = useState(false)
+  const [purgeLoading, setPurgeLoading] = useState(false)
+  const [reportFormData, setReportFormData] = useState({ period: 'monthly', customStart: '', customEnd: '' })
+  const [purgeConfirmed, setPurgeConfirmed] = useState(false)
 
   // Cargar logs (carga completa en cliente, paginación local)
   const fetchLogs = useCallback(async () => {
@@ -115,8 +156,11 @@ export default function LogsAuditoriaContent() {
 
   // Cargar logs al montar el componente
   useEffect(() => {
+    // Cargar configuración de auditoría del store
+    loadConfig()
+    // Cargar logs
     fetchLogs()
-  }, [fetchLogs])
+  }, [fetchLogs, loadConfig])
 
   // Reset a página 1 al cambiar filtros o itemsPerPage
   useEffect(() => {
@@ -145,7 +189,7 @@ export default function LogsAuditoriaContent() {
       params.set('format', 'csv')
 
       const res = await fetch(`/api/audit-logs?${params.toString()}`)
-      if (!res.ok) throw new Error('Error al exportar')
+      if (!res.ok) throw new Error('No tiene permisos para exportar. Contacte con el administrador')
 
       const blob = await res.blob()
       const url = globalThis.URL.createObjectURL(blob)
@@ -158,6 +202,81 @@ export default function LogsAuditoriaContent() {
       a.remove()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al exportar')
+    }
+  }
+
+  // Generar reporte
+  const handleGenerateReport = async (formData: Record<string, any>) => {
+    try {
+      setReportLoading(true)
+      setError(null)
+
+      const payload: Record<string, any> = {
+        period: formData.period || 'monthly',
+      }
+
+      // Si elige custom range
+      if (formData.period === 'custom' && formData.customStart && formData.customEnd) {
+        payload.dateFrom = formData.customStart
+        payload.dateTo = formData.customEnd
+      }
+
+      const res = await fetch('/api/audit-config/generate-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) throw new Error('Error al generar reporte')
+
+      const blob = await res.blob()
+      const url = globalThis.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `audit-report-${new Date().toISOString().split('T')[0]}.html`
+      document.body.appendChild(a)
+      a.click()
+      globalThis.URL.revokeObjectURL(url)
+      a.remove()
+
+      setReportDialogOpen(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al generar reporte')
+    } finally {
+      setReportLoading(false)
+    }
+  }
+
+  // Purgar logs
+  const handlePurgeSubmit = async () => {
+    if (!purgeConfirmed) {
+      setError('Debe confirmar la acción de purga')
+      return
+    }
+
+    try {
+      setPurgeLoading(true)
+      setError(null)
+
+      const res = await fetch('/api/cron/audit-purge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+
+      if (!res.ok) throw new Error('Error al purgar logs')
+
+      const data = await res.json()
+      setError(`Purga completada: ${data.deleted || 0} logs eliminados`)
+      setPurgeDialogOpen(false)
+      setPurgeConfirmed(false)
+      
+      // Recargar logs
+      await fetchLogs()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al purgar')
+    } finally {
+      setPurgeLoading(false)
     }
   }
 
@@ -216,6 +335,28 @@ export default function LogsAuditoriaContent() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
+
+          {/* Generar Reporte */}
+          {logsPerms.canManage && (
+            <button
+              onClick={() => setReportDialogOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Generar Reporte
+            </button>
+          )}
+
+          {/* Purgar Logs */}
+          {logsPerms.canManage && (
+            <button
+              onClick={() => setPurgeDialogOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-danger/10 text-gh-danger border border-gh-danger/30 rounded-md hover:bg-gh-danger/20 transition-colors text-xs font-medium"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Purgar Logs
+            </button>
+          )}
 
           {/* Exportar (solo si tiene accessLevel full) */}
           {logsPerms.canExport && (
@@ -447,6 +588,121 @@ export default function LogsAuditoriaContent() {
             </motion.div>
           )}
         </>
+      )}
+
+      {/* Diálogo: Generar Reporte */}
+      <DialogoGenericoDinamico
+        isOpen={reportDialogOpen}
+        onClose={() => {
+          setReportDialogOpen(false)
+          setReportFormData({ period: 'monthly', customStart: '', customEnd: '' })
+        }}
+        title="Generar Reporte de Auditoría"
+        description="Selecciona el rango de tiempo para el reporte"
+        contentType="form"
+        type="info"
+        size="md"
+        formConfig={{
+          fields: [
+            {
+              id: 'period',
+              type: 'select',
+              label: 'Periodo',
+              value: reportFormData.period,
+              options: [
+                { label: 'Diario', value: 'daily' },
+                { label: 'Semanal', value: 'weekly' },
+                { label: 'Mensual', value: 'monthly' },
+                { label: 'Rango personalizado', value: 'custom' },
+              ],
+            } as DialogFormField,
+          ],
+          onSubmit: handleGenerateReport,
+        }}
+        actions={[
+          {
+            id: 'cancel',
+            label: 'Cancelar',
+            variant: 'secondary',
+            onClick: () => {
+              setReportDialogOpen(false)
+              setReportFormData({ period: 'monthly', customStart: '', customEnd: '' })
+            },
+          },
+          {
+            id: 'generate',
+            label: reportLoading ? 'Generando...' : 'Generar',
+            variant: 'primary',
+            loading: reportLoading,
+            onClick: () => handleGenerateReport(reportFormData),
+          },
+        ]}
+      />
+
+      {/* Diálogo: Purgar Logs */}
+      <DialogoGenericoDinamico
+        isOpen={purgeDialogOpen}
+        onClose={() => {
+          setPurgeDialogOpen(false)
+          setPurgeConfirmed(false)
+        }}
+        title="Purgar Logs de Auditoría"
+        description={`Esta acción es irreversible.`}
+        contentType="custom"
+        type="warning"
+        size="md"
+        content={
+          <div className="space-y-3">
+            <p className="text-sm text-gh-text-muted">
+              Se procederá a eliminar todos los registros de auditoría que superen el período de retención configurado ({retentionDays} días).
+            </p>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={purgeConfirmed}
+                onChange={(e) => setPurgeConfirmed(e.target.checked)}
+                className="w-4 h-4 rounded border border-gh-border/30 bg-gh-bg-secondary"
+              />
+              <span className="text-xs text-gh-text">
+                Confirmo que deseo eliminar estos logs permanentemente
+              </span>
+            </label>
+          </div>
+        }
+        actions={[
+          {
+            id: 'cancel',
+            label: 'Cancelar',
+            variant: 'secondary',
+            onClick: () => {
+              setPurgeDialogOpen(false)
+              setPurgeConfirmed(false)
+            },
+          },
+          {
+            id: 'purge',
+            label: purgeLoading ? 'Purgando...' : 'Purgar',
+            variant: 'danger',
+            loading: purgeLoading,
+            onClick: handlePurgeSubmit,
+          },
+        ]}
+      />
+
+      {/* Mensaje de error/éxito */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className={`p-3 rounded-md text-xs ${
+            error.toLowerCase().includes('completada')
+              ? 'bg-gh-success/10 text-gh-success border border-gh-success/30'
+              : 'bg-gh-danger/10 text-gh-danger border border-gh-danger/30'
+          }`}
+        >
+          {error}
+        </motion.div>
       )}
     </div>
   )

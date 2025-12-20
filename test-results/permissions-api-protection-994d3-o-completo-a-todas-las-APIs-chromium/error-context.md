@@ -1,0 +1,45 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - img [ref=e11]
+        - heading "Bienvenido a WebQuote" [level=1] [ref=e13]
+        - paragraph [ref=e14]: Inicia sesión para ver tu cotización
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - img [ref=e17]
+          - paragraph [ref=e19]: Usuario o contraseña incorrectos
+        - generic [ref=e20]:
+          - generic [ref=e21]: Usuario
+          - generic [ref=e22]:
+            - img [ref=e23]
+            - textbox "Usuario" [ref=e25]:
+              - /placeholder: Tu nombre de usuario
+              - text: admin@webquote.com
+        - generic [ref=e26]:
+          - generic [ref=e27]: Contraseña
+          - generic [ref=e28]:
+            - img [ref=e29]
+            - textbox "Contraseña" [ref=e31]:
+              - /placeholder: Tu contraseña
+              - text: Admin123!
+            - button [ref=e32] [cursor=pointer]:
+              - img [ref=e33]
+        - button "Iniciar Sesión" [ref=e35] [cursor=pointer]
+      - paragraph [ref=e37]: ¿Problemas para acceder? Contacta al administrador.
+    - paragraph [ref=e39]:
+      - text: Sistema de Cotizaciones Online WebQuote
+      - text: Empresa de Soluciones de Negocios
+      - text: DG TECNOVA © 2025
+  - button "Open Next.js Dev Tools" [ref=e45] [cursor=pointer]:
+    - generic [ref=e48]:
+      - text: Compiling
+      - generic [ref=e49]:
+        - generic [ref=e50]: .
+        - generic [ref=e51]: .
+        - generic [ref=e52]: .
+  - alert [ref=e53]
+```

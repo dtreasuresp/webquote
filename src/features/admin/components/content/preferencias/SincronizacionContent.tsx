@@ -2,25 +2,23 @@
 
 import React from 'react'
 import { RefreshCw, Database, Cloud, Wifi, AlertTriangle, Info, CheckCircle } from 'lucide-react'
-import { UserPreferences } from '@/lib/types'
+import { useUserPreferencesStore } from '@/stores'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import ToggleItem, { ToggleGroup } from '@/features/admin/components/ToggleItem'
 
-interface SincronizacionContentProps {
-  userPreferences: UserPreferences | null
-  setUserPreferences: (prefs: UserPreferences) => void
-}
+export default function SincronizacionContent() {
+  const destinoGuardado = useUserPreferencesStore((s) => s.destinoGuardado)
+  const intervaloVerificacionConexion = useUserPreferencesStore((s) => s.intervaloVerificacionConexion)
+  const unidadIntervaloConexion = useUserPreferencesStore((s) => s.unidadIntervaloConexion)
+  const sincronizarAlRecuperarConexion = useUserPreferencesStore((s) => s.sincronizarAlRecuperarConexion)
+  const mostrarNotificacionCacheLocal = useUserPreferencesStore((s) => s.mostrarNotificacionCacheLocal)
+  const updatePreferences = useUserPreferencesStore((s) => s.updatePreferences)
 
-export default function SincronizacionContent({
-  userPreferences,
-  setUserPreferences
-}: Readonly<SincronizacionContentProps>) {
-  
-  const destinoGuardado = userPreferences?.destinoGuardado || 'ambos'
-  const intervaloConexion = userPreferences?.intervaloVerificacionConexion || 30
-  const unidadIntervalo = userPreferences?.unidadIntervaloConexion || 'segundos'
-  const sincronizarAlRecuperar = userPreferences?.sincronizarAlRecuperarConexion ?? true
-  const mostrarNotificacionCache = userPreferences?.mostrarNotificacionCacheLocal ?? true
+  const destino = destinoGuardado || 'ambos'
+  const intervaloConexion = intervaloVerificacionConexion || 30
+  const unidadIntervalo = unidadIntervaloConexion || 'segundos'
+  const sincronizarAlRecuperar = sincronizarAlRecuperarConexion ?? true
+  const mostrarNotificacionCache = mostrarNotificacionCacheLocal ?? true
 
   return (
     <div className="space-y-4">
@@ -54,14 +52,7 @@ export default function SincronizacionContent({
         <div className="p-4">
           <div className="grid grid-cols-3 gap-3">
             <button
-              onClick={() => {
-                if (userPreferences) {
-                  setUserPreferences({
-                    ...userPreferences,
-                    destinoGuardado: 'local'
-                  })
-                }
-              }}
+              onClick={() => updatePreferences({ destinoGuardado: 'local' }) }
               className={`p-3 rounded-md border text-xs font-medium transition-all flex flex-col items-center gap-2 ${
                 destinoGuardado === 'local'
                   ? 'border-gh-accent bg-gh-accent/10 text-gh-accent'
@@ -74,14 +65,7 @@ export default function SincronizacionContent({
             </button>
 
             <button
-              onClick={() => {
-                if (userPreferences) {
-                  setUserPreferences({
-                    ...userPreferences,
-                    destinoGuardado: 'cloud'
-                  })
-                }
-              }}
+              onClick={() => updatePreferences({ destinoGuardado: 'cloud' }) }
               className={`p-3 rounded-md border text-xs font-medium transition-all flex flex-col items-center gap-2 ${
                 destinoGuardado === 'cloud'
                   ? 'border-gh-accent bg-gh-accent/10 text-gh-accent'
@@ -94,14 +78,7 @@ export default function SincronizacionContent({
             </button>
 
             <button
-              onClick={() => {
-                if (userPreferences) {
-                  setUserPreferences({
-                    ...userPreferences,
-                    destinoGuardado: 'ambos'
-                  })
-                }
-              }}
+              onClick={() => updatePreferences({ destinoGuardado: 'ambos' }) }
               className={`p-3 rounded-md border text-xs font-medium transition-all flex flex-col items-center gap-2 ${
                 destinoGuardado === 'ambos'
                   ? 'border-gh-accent bg-gh-accent/10 text-gh-accent'
@@ -166,15 +143,10 @@ export default function SincronizacionContent({
               max={unidadIntervalo === 'segundos' ? 300 : 30}
               value={intervaloConexion}
               onChange={(e) => {
-                if (userPreferences) {
-                  const valor = Number.parseInt(e.target.value) || 30
-                  const min = unidadIntervalo === 'segundos' ? 5 : 1
-                  const max = unidadIntervalo === 'segundos' ? 300 : 30
-                  setUserPreferences({
-                    ...userPreferences,
-                    intervaloVerificacionConexion: Math.min(max, Math.max(min, valor))
-                  })
-                }
+                const valor = Number.parseInt(e.target.value) || 30
+                const min = unidadIntervalo === 'segundos' ? 5 : 1
+                const max = unidadIntervalo === 'segundos' ? 300 : 30
+                updatePreferences({ intervaloVerificacionConexion: Math.min(max, Math.max(min, valor)) })
               }}
               className="w-20 px-3 py-1.5 bg-gh-bg-tertiary border border-gh-border/30 rounded-md text-gh-text text-xs focus:outline-none focus:ring-1 focus:ring-gh-accent"
             />
@@ -182,20 +154,14 @@ export default function SincronizacionContent({
             <DropdownSelect
               value={unidadIntervalo}
               onChange={(val) => {
-                if (userPreferences) {
-                  const nuevaUnidad = val as 'segundos' | 'minutos'
-                  let nuevoValor = intervaloConexion
-                  if (nuevaUnidad === 'minutos' && intervaloConexion > 30) {
-                    nuevoValor = 5
-                  } else if (nuevaUnidad === 'segundos' && intervaloConexion < 5) {
-                    nuevoValor = 30
-                  }
-                  setUserPreferences({
-                    ...userPreferences,
-                    unidadIntervaloConexion: nuevaUnidad,
-                    intervaloVerificacionConexion: nuevoValor
-                  })
+                const nuevaUnidad = val as 'segundos' | 'minutos'
+                let nuevoValor = intervaloConexion
+                if (nuevaUnidad === 'minutos' && intervaloConexion > 30) {
+                  nuevoValor = 5
+                } else if (nuevaUnidad === 'segundos' && intervaloConexion < 5) {
+                  nuevoValor = 30
                 }
+                updatePreferences({ unidadIntervaloConexion: nuevaUnidad, intervaloVerificacionConexion: nuevoValor })
               }}
               options={[
                 { value: 'segundos', label: 'Segundos' },
@@ -225,14 +191,14 @@ export default function SincronizacionContent({
           <ToggleGroup title="Opciones Avanzadas">
             <ToggleItem
               enabled={sincronizarAlRecuperar}
-              onChange={(v) => userPreferences && setUserPreferences({ ...userPreferences, sincronizarAlRecuperarConexion: v })}
+              onChange={(v) => updatePreferences({ sincronizarAlRecuperarConexion: v })}
               title="Sincronizar al recuperar conexión"
               description="Sincroniza automáticamente los datos locales con la nube al recuperar conexión"
             />
 
             <ToggleItem
-              enabled={mostrarNotificacionCache}
-              onChange={(v) => userPreferences && setUserPreferences({ ...userPreferences, mostrarNotificacionCacheLocal: v })}
+              enabled={sincronizarAlRecuperar}
+              onChange={(v) => updatePreferences({ mostrarNotificacionCacheLocal: v })}
               title="Notificar uso de caché local"
               description="Muestra una notificación cuando se cargan datos desde el caché local (modo offline)"
             />

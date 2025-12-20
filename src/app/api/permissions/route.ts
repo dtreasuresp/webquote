@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         entityType: 'Permission',
         entityId: permission.id,
         userId: session.user.id,
-        userName: session.user.name || session.user.email || 'SYSTEM',
+        userName: session.user.nombre || session.user.username || session.user.email || 'SYSTEM',
         details: { code: permission.code, name: permission.name, category: permission.category },
       },
     })

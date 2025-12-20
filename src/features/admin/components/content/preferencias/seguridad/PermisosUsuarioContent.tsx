@@ -410,7 +410,7 @@ export default function PermisosUsuarioContent() {
                         <X className="w-2.5 h-2.5" />
                       )}
                       <span>{up.Permission.name}</span>
-                      {userPermsConfig.canRevoke && (
+                      {userPermsConfig.canEdit && (
                         <button
                           onClick={() => handleRemovePermission(up.id)}
                           className="ml-1 hover:opacity-70 transition-opacity"

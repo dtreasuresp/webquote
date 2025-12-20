@@ -54,7 +54,7 @@ export default function ServiciosOpcionalesContent({
   // Handlers con tracking
   const handleAgregar = useCallback(() => {
     agregarServicioOpcional()
-    if (nuevoServicio.nombre.trim() && nuevoServicio.precio > 0) {
+    if (nuevoServicio.nombre?.trim() && nuevoServicio.precio > 0) {
       trackServicioOpcionalCreated(nuevoServicio.nombre.trim(), nuevoServicio.precio)
     }
   }, [agregarServicioOpcional, nuevoServicio.nombre, nuevoServicio.precio, trackServicioOpcionalCreated])
@@ -331,9 +331,9 @@ export default function ServiciosOpcionalesContent({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleAgregar}
-              disabled={!(nuevoServicio.nombre.trim() && nuevoServicio.precio > 0)}
+              disabled={!(nuevoServicio.nombre?.trim() && nuevoServicio.precio > 0)}
               className={`px-6 py-2.5 rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
-                nuevoServicio.nombre.trim() && nuevoServicio.precio > 0
+                nuevoServicio.nombre?.trim() && nuevoServicio.precio > 0
                   ? 'bg-gh-success/10 text-gh-success border border-gh-success/30 hover:bg-gh-success/20'
                   : 'bg-gh-bg-tertiary text-gh-text-muted border border-gh-border/30 cursor-not-allowed'
               }`}

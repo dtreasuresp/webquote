@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         lastLogin: true,
         createdAt: true,
         updatedAt: true,
-        QuotationConfig: {
+        quotationAssigned: {
           select: {
             id: true,
             empresa: true,
@@ -108,7 +108,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Preparar datos de actualización
-    const updateData: Record<string, unknown> = {};
+    const updateData: Record<string, string | boolean | null> = {};
     
     if (nombre !== undefined) updateData.nombre = nombre;
     if (email !== undefined) updateData.email = email || null;
@@ -141,14 +141,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     });
 
     // Log de auditoría
-    const session = await getServerSession(authOptions)
     await prisma.auditLog.create({
       data: {
         action: resetPassword ? 'user.password_reset' : 'user.updated',
         entityType: 'User',
         entityId: id,
         userId: session?.user?.id || null,
-        userName: session?.user?.username || 'SYSTEM',
+        userName: session?.user?.nombre || session?.user?.username || session?.user?.email || 'SYSTEM',
         details: {
           username: existingUser.username,
           changes: updateData,
