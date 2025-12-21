@@ -5,6 +5,8 @@ import { UserPlus, Edit2, Trash2, Loader2, Key, Copy, Check, ShieldCheck, User, 
 import DialogoGenericoDinamico, { DialogFormConfig, DialogFormField } from './DialogoGenericoDinamico'
 import { useSession } from 'next-auth/react'
 import { useQuotationListener } from '@/hooks/useQuotationSync'
+import { useUserModal } from '@/contexts/UserModalContext'
+import { useToast } from '@/components/providers/ToastProvider'
 
 // ==================== TIPOS ====================
 
@@ -31,6 +33,7 @@ interface User {
   telefono: string | null
   role: 'SUPER_ADMIN' | 'ADMIN' | 'CLIENT'
   quotationAssignedId: string | null
+  organizationId: string | null
   quotationAssigned?: {
     id: string
     empresa: string
@@ -135,10 +138,11 @@ function groupQuotationsByBase(quotations: QuotationOption[]): GroupedQuotation[
 
 export default function UserManagementPanel({ quotations }: UserManagementPanelProps) {
   const { data: session } = useSession()
+  const toast = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+  const [organizations, setOrganizations] = useState<Array<{ id: string; nombre: string }>>([])
   // Modal states
   const [showUserDialog, setShowUserDialog] = useState(false)
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
@@ -167,6 +171,21 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
       // groupedQuotations se recalcula automáticamente con las nuevas versiones
     }, [])
   )
+
+  // Cargar organizaciones
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const response = await fetch('/api/organizations')
+        if (!response.ok) throw new Error('Error cargando organizaciones')
+        const data = await response.json()
+        setOrganizations(data || [])
+      } catch (err) {
+        console.error('Error loading organizations:', err)
+      }
+    }
+    fetchOrganizations()
+  }, [])
 
   // Obtener roles disponibles según el rol del usuario actual
   const availableRoles = useMemo(() => {
@@ -227,6 +246,7 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
   const handleCloseUserDialog = () => {
     setShowUserDialog(false)
     setEditingUser(null)
+    userModal.closeModal()
   }
 
   const handleClosePasswordDialog = () => {
@@ -248,6 +268,7 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
   const handleCloseDeleteDialog = () => {
     setShowDeleteDialog(false)
     setUserToDelete(null)
+    userModal.closeModal()
   }
 
   const copyPassword = async () => {
@@ -274,6 +295,7 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
         telefono: formData.telefono || null,
         role: formData.role,
         quotationId: formData.quotationAssignedId || null, // Backend espera 'quotationId'
+        organizationId: formData.organizationId || null,
       }
 
       // Solo para creación, incluir empresa para generar username
@@ -353,6 +375,41 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
   const handleDeleteUser = async () => {
     if (!userToDelete) return
 
+    // Validar si el usuario tiene cotización asignada
+    if (userToDelete.quotationAssignedId) {
+      toast.error('No se puede eliminar usuarios con cotizaciones asignadas. Desasigna la cotización primero.')
+      return
+    }
+
+    // Validar si el usuario tiene organización asignada
+    if (userToDelete.organizationId) {
+      // Inactivar en lugar de eliminar
+      setSaving(true)
+      try {
+        const response = await fetch(`/api/users/${userToDelete.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ activo: false }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Error al inactivar usuario')
+        }
+
+        toast.success('Usuario inactivado correctamente (tiene organización asignada)')
+        await fetchUsers()
+        handleCloseDeleteDialog()
+      } catch (err) {
+        console.error('Error:', err)
+        toast.error(err instanceof Error ? err.message : 'Error al inactivar usuario')
+      } finally {
+        setSaving(false)
+      }
+      return
+    }
+
+    // Si no tiene cotización ni organización, se puede eliminar
     setSaving(true)
     try {
       const response = await fetch(`/api/users/${userToDelete.id}`, {
@@ -364,10 +421,12 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
         throw new Error(errorData.error || 'Error al eliminar usuario')
       }
 
+      toast.success('Usuario eliminado correctamente')
       await fetchUsers()
       handleCloseDeleteDialog()
     } catch (err) {
       console.error('Error:', err)
+      toast.error(err instanceof Error ? err.message : 'Error al eliminar usuario')
     } finally {
       setSaving(false)
     }
@@ -434,6 +493,20 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
             value: group.latestVersion.id,
           })),
         ],
+      },
+      {
+        id: 'organizationId',
+        type: 'select',
+        label: 'Organización',
+        value: editingUser?.organizationId || '',
+        required: false,
+        options: [
+          { label: '-- Sin organización --', value: '' },
+          ...organizations.map(org => ({
+            label: org.nombre,
+            value: org.id
+          }))
+        ]
       }
     )
 
@@ -444,7 +517,33 @@ export default function UserManagementPanel({ quotations }: UserManagementPanelP
   const formConfig: DialogFormConfig = useMemo(() => ({
     fields: getFormFields(),
     onSubmit: handleSaveUser,
-  }), [editingUser, availableRoles, groupedQuotations, handleSaveUser]) // Solo recrear cuando cambien estas dependencias
+  }), [editingUser, availableRoles, groupedQuotations, organizations, handleSaveUser]) // Solo recrear cuando cambien estas dependencias
+
+  // Hook para context modal
+  const userModal = useUserModal()
+
+  // ==================== SYNC WITH CONTEXT ====================
+
+  // Sincronizar el modal de usuario con el context
+  useEffect(() => {
+    if (userModal.mode === 'create' || userModal.mode === 'edit') {
+      setShowUserDialog(true)
+      if (userModal.editingUser) {
+        setEditingUser(userModal.editingUser)
+      } else {
+        setEditingUser(null)
+      }
+    } else if (userModal.mode === 'delete') {
+      setShowDeleteDialog(true)
+      setUserToDelete(userModal.userToDelete)
+    } else {
+      // Cerrar todos los diálogos
+      setShowUserDialog(false)
+      setShowDeleteDialog(false)
+      setEditingUser(null)
+      setUserToDelete(null)
+    }
+  }, [userModal.mode, userModal.editingUser, userModal.userToDelete])
 
   // ==================== RENDER ====================
 

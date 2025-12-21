@@ -32,6 +32,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         nombre: true,
         empresa: true,
         telefono: true,
+        organizationId: true,
         quotationAssignedId: true,
         activo: true,
         lastLogin: true,
@@ -72,7 +73,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const { nombre, email, telefono, quotationId, activo, resetPassword } = body;
+    const { nombre, email, telefono, quotationId, activo, resetPassword, organizationId } = body;
 
     // Verificar que el usuario existe
     const existingUser = await prisma.user.findUnique({ where: { id } });
@@ -114,6 +115,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (email !== undefined) updateData.email = email || null;
     if (telefono !== undefined) updateData.telefono = telefono;
     if (quotationId !== undefined) updateData.quotationAssignedId = quotationId || null;
+    if (organizationId !== undefined) updateData.organizationId = organizationId || null;
     if (activo !== undefined) updateData.activo = activo;
 
     // Reset de contraseña si se solicita
@@ -134,6 +136,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         nombre: true,
         empresa: true,
         telefono: true,
+        organizationId: true,
         quotationAssignedId: true,
         activo: true,
         updatedAt: true,

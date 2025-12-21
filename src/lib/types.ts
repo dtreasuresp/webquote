@@ -27,6 +27,12 @@ export interface Organization {
   ciudad?: string
   pais?: string
   
+  // Conteos (NUEVO)
+  _count?: {
+    users?: number
+    quotations?: number
+  }
+  
   // Auditoría
   createdAt: Date | string
   updatedAt: Date | string

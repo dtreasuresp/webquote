@@ -23,6 +23,7 @@ declare module "next-auth" {
       empresa: string;
       nombre: string;
       quotationAssignedId?: string | null;
+      organizationId?: string | null;
       avatarUrl?: string | null;
       permissions?: Array<string | { code: string; granted: boolean }>;
     };
@@ -36,6 +37,7 @@ declare module "next-auth" {
     empresa: string;
     nombre: string;
     quotationAssignedId?: string | null;
+    organizationId?: string | null;
     avatarUrl?: string | null;
     permissions?: Array<string | { code: string; granted: boolean }>;
   }
@@ -49,6 +51,7 @@ declare module "next-auth/jwt" {
     empresa: string;
     nombre: string;
     quotationAssignedId?: string | null;
+    organizationId?: string | null;
     avatarUrl?: string | null;
     permissions?: Array<string | { code: string; granted: boolean }>;
     permissionsCacheValidAt?: number; // ✨ FASE 12: Timestamp de validación de caché
@@ -157,6 +160,7 @@ export const authOptions: NextAuthOptions = {
         token.empresa = user.empresa;
         token.nombre = user.nombre;
         token.quotationAssignedId = user.quotationAssignedId;
+        token.organizationId = user.organizationId;
         token.avatarUrl = user.avatarUrl;
         
         // Cargar permisos del usuario
@@ -223,6 +227,7 @@ export const authOptions: NextAuthOptions = {
           empresa: token.empresa,
           nombre: token.nombre,
           quotationAssignedId: token.quotationAssignedId,
+          organizationId: token.organizationId,
           avatarUrl: token.avatarUrl,
           permissions: token.permissions as string[] | undefined,
         };

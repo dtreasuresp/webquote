@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         nombre: true,
         empresa: true,
         telefono: true,
+        organizationId: true,
         quotationAssignedId: true,
         activo: true,
         lastLogin: true,
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
     if (error) return error
 
     const body = await request.json();
-    const { empresa, nombre, email, telefono, quotationId, role = "CLIENT" } = body;
+    const { empresa, nombre, email, telefono, quotationId, role = "CLIENT", organizationId } = body;
 
     if (!empresa) {
       return NextResponse.json(
@@ -162,6 +163,7 @@ export async function POST(request: NextRequest) {
         nombre: nombre || "",
         empresa,
         telefono: telefono || "",
+        organizationId: organizationId || null,
         quotationAssignedId: quotationId || null,
         activo: true,
       },
@@ -173,6 +175,7 @@ export async function POST(request: NextRequest) {
         nombre: true,
         empresa: true,
         telefono: true,
+        organizationId: true,
         quotationAssignedId: true,
         activo: true,
         createdAt: true,

@@ -17,13 +17,34 @@ export async function GET(request: NextRequest) {
     const includeHierarchy = searchParams.get('includeHierarchy') === 'true'
 
     if (includeHierarchy) {
-      // Obtener solo raíces
+      // Obtener solo raíces con conteos
       const roots = await prisma.organization.findMany({
         where: { parentId: null },
         include: {
           children: {
             include: {
-              children: true
+              children: {
+                include: {
+                  _count: {
+                    select: {
+                      users: true,
+                      quotations: true
+                    }
+                  }
+                }
+              },
+              _count: {
+                select: {
+                  users: true,
+                  quotations: true
+                }
+              }
+            }
+          },
+          _count: {
+            select: {
+              users: true,
+              quotations: true
             }
           }
         },
@@ -32,8 +53,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(roots)
     }
 
-    // Lista plana
+    // Lista plana con conteos
     const orgs = await prisma.organization.findMany({
+      include: {
+        _count: {
+          select: {
+            users: true,
+            quotations: true
+          }
+        }
+      },
       orderBy: { nombre: 'asc' }
     })
     return NextResponse.json(orgs)

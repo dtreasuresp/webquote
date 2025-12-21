@@ -38,6 +38,13 @@ export interface DialogProgressConfig {
   totalProgress?: number // 0-100
 }
 
+export interface DialogTab {
+  id: string
+  label: string
+  icon?: LucideIcon
+  content: React.ReactNode
+}
+
 export interface DialogoGenericoDinamicoProps {
   isOpen: boolean
   onClose: () => void
@@ -51,6 +58,11 @@ export interface DialogoGenericoDinamicoProps {
   // Configuración específica por tipo
   formConfig?: DialogFormConfig
   progressConfig?: DialogProgressConfig
+  
+  // Tabs (NUEVO)
+  tabs?: DialogTab[]
+  activeTabId?: string
+  onTabChange?: (tabId: string) => void
   
   // Estilo
   variant?: 'default' | 'premium'
@@ -123,6 +135,9 @@ export default function DialogoGenericoDinamico({
   content,
   formConfig,
   progressConfig,
+  tabs,
+  activeTabId,
+  onTabChange,
   variant = 'premium',
   type = 'info',
   size = 'md',
@@ -137,6 +152,7 @@ export default function DialogoGenericoDinamico({
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [localActiveTab, setLocalActiveTab] = useState<string>(tabs?.[0]?.id || activeTabId || '')
 
   // Inicializar formData con valores default SOLO cuando el modal se abre
   useEffect(() => {
@@ -466,9 +482,42 @@ export default function DialogoGenericoDinamico({
                 )}
               </div>
 
+              {/* Tabs (si existen) */}
+              {tabs && tabs.length > 0 && (
+                <div className="border-b border-[#30363d] bg-[#0d1117]">
+                  <div className="flex gap-0 px-4">
+                    {tabs.map((tab) => {
+                      const isActive = localActiveTab === tab.id
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            setLocalActiveTab(tab.id)
+                            onTabChange?.(tab.id)
+                          }}
+                          className={`
+                            px-3 py-3 text-sm font-medium border-b-2 transition-all
+                            flex items-center gap-2 whitespace-nowrap
+                            ${isActive
+                              ? 'border-b-[#58a6ff] text-[#58a6ff]'
+                              : 'border-b-transparent text-[#8b949e] hover:text-[#c9d1d9]'
+                            }
+                          `}
+                        >
+                          {tab.icon && <tab.icon className="w-4 h-4" />}
+                          {tab.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Body */}
               <div className={`px-4 py-4 ${maxHeight} overflow-y-auto`}>
-                {renderContent()}
+                {tabs && tabs.length > 0 && localActiveTab
+                  ? tabs.find(t => t.id === localActiveTab)?.content
+                  : renderContent()}
               </div>
 
               {/* Footer - Actions */}

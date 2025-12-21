@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import AuthProvider from '@/components/providers/AuthProvider'
+import { UserModalProvider } from '@/contexts/UserModalContext'
 import '../styles/globals.css'
 import '../styles/modal-scroll.css'
 
@@ -35,7 +36,9 @@ export default function RootLayout({
     <html lang="es" className={`scroll-smooth ${inter.variable}`}>
       <body className={`${inter.className} antialiased`}>
         <AuthProvider>
-          {children}
+          <UserModalProvider>
+            {children}
+          </UserModalProvider>
         </AuthProvider>
         <Analytics />
         <SpeedInsights />
