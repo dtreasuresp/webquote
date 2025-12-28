@@ -19,9 +19,9 @@ export default function FloatingAdminFooter() {
   const { activeSection } = useSidebarStore()
   
   const socialLinks = [
-    { icon: <Mail className="w-3 h-3" />, href: "mailto:info@dgtecnova.com", label: "Email", color: "hover:text-blue-400" },
+    { icon: <Mail className="w-3 h-3" />, href: "mailto:dgtecnova@gmail.com", label: "Email", color: "hover:text-blue-400" },
     { icon: <MessageCircle className="w-3 h-3" />, href: "https://wa.me/+5358569291", label: "WhatsApp", color: "hover:text-green-400" },
-    { icon: <Facebook className="w-3 h-3" />, href: "#", label: "Facebook", color: "hover:text-blue-600" },
+    { icon: <Facebook className="w-3 h-3" />, href: "https://www.facebook.com/profile.php?id=61584354894582", label: "Facebook", color: "hover:text-blue-600" },
     { icon: <Instagram className="w-3 h-3" />, href: "#", label: "Instagram", color: "hover:text-pink-500" },
     { icon: <Linkedin className="w-3 h-3" />, href: "#", label: "LinkedIn", color: "hover:text-blue-500" },
     { icon: <Youtube className="w-3 h-3" />, href: "#", label: "YouTube", color: "hover:text-red-500" },
