@@ -483,7 +483,7 @@ export default function PermisosUsuarioContent() {
         title="Agregar Permiso Individual"
         description={`Usuario: ${selectedUser?.nombre || selectedUser?.username}`}
         type="info"
-        size="md"
+        size="xl"
         contentType="custom"
         content={
           <div className="space-y-4">

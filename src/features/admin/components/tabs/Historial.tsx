@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Edit, Trash2, Eye, History, Check } from 'lucide-react'
+import { ChevronDown, Edit, Trash2, Eye, History, Check, Download, File } from 'lucide-react'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import type { QuotationConfig, PackageSnapshot } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 import { extractBaseQuotationNumber } from '@/lib/utils/quotationNumber'
+import { getStateColor, getStateIconComponent, getStateLabel } from '@/lib/utils/quotationStateHelper'
 import { useEventTracking } from '@/features/admin/hooks'
+import { useChangeQuotationState } from '@/features/admin/hooks/useChangeQuotationState'
 import { useQuotationListener } from '@/hooks/useQuotationSync'
 import DialogoGenerico from '../DialogoGenerico'
 import DialogoGenericoDinamico from '../DialogoGenericoDinamico'
@@ -65,8 +67,17 @@ export default function Historial({
   // Estados para comparación de paquetes
   const [showComparacionPaquetes, setShowComparacionPaquetes] = useState(false)
   const [versionesParaCompararPaquetes, setVersionesParaCompararPaquetes] = useState<[QuotationConfig, QuotationConfig] | null>(null)
+
+  // Estados para diálogo de conflicto de cotización
+  const [showConflictDialog, setShowConflictDialog] = useState(false)
+  const [conflictData, setConflictData] = useState<{
+    quotationId: string
+    newState: string
+    numero?: string
+    existingQuotation?: any
+  } | null>(null)
   
-  // Hook de tracking
+  // Hooks
   const { 
     trackHistorialViewed, 
     trackCotizacionExpanded, 
@@ -76,11 +87,66 @@ export default function Historial({
     trackCotizacionDeactivated,
     trackCotizacionDeleted
   } = useEventTracking()
+  const { changeState, changeStateWithForce } = useChangeQuotationState()
+  
+  // Handler para cambiar estado con validación de conflicto
+  const handleChangeState = useCallback(async (quotationId: string, newState: string, numero?: string, emailCliente?: string) => {
+    try {
+      console.log(`📝 Cambiando estado de ${numero} a ${newState}...`)
+      
+      // Intentar cambio de estado
+      const result = await changeState(quotationId, newState, emailCliente)
+      
+      if (result.success) {
+        console.log(`✅ Estado cambiado exitosamente a ${newState}`)
+        
+        // Forzar actualización de datos emitiendo evento
+        globalThis.dispatchEvent(new CustomEvent('quotation:updated', {
+          detail: { quotationId, newState }
+        }))
+      } else if (result.existingQuotation) {
+        // Hay conflicto - mostrar diálogo
+        console.log(`⚠️ Conflicto: Cliente ya tiene cotización activa`, result.existingQuotation)
+        setConflictData({
+          quotationId,
+          newState,
+          numero,
+          existingQuotation: result.existingQuotation,
+        })
+        setShowConflictDialog(true)
+      }
+    } catch (error) {
+      console.error(`❌ Error al cambiar estado:`, error)
+    }
+  }, [changeState])
 
-  /**
-   * Agrupar cotizaciones por número base
-   * Solo mostrar una fila por número de cotización único
-   */
+  // Handler para confirmar reemplazo de cotización
+  const handleConfirmReplace = useCallback(async () => {
+    if (!conflictData) return
+
+    try {
+      console.log(`🔄 Reemplazando cotización anterior...`)
+      await changeStateWithForce(conflictData.quotationId, conflictData.newState)
+      console.log(`✅ Cotización reemplazada exitosamente`)
+
+      // Cerrar diálogo
+      setShowConflictDialog(false)
+      setConflictData(null)
+
+      // Forzar actualización
+      globalThis.dispatchEvent(new CustomEvent('quotation:updated', {
+        detail: { quotationId: conflictData.quotationId, newState: conflictData.newState }
+      }))
+    } catch (error) {
+      console.error(`❌ Error al reemplazar cotización:`, error)
+    }
+  }, [conflictData, changeStateWithForce])
+
+  // Handler para cancelar cambio
+  const handleCancelChange = useCallback(() => {
+    setShowConflictDialog(false)
+    setConflictData(null)
+  }, [])
   const cotizacionesAgrupadas = useMemo((): CotizacionAgrupada[] => {
     // Agrupar por número base (sin la versión)
     const grupos = new Map<string, QuotationConfig[]>()
@@ -256,7 +322,7 @@ export default function Historial({
           <div>Cliente Asignado</div>
           <div>Creada</div>
           <div>Última Actualización</div>
-          <div>Acción</div>
+          <div>Estado</div>
         </div>
 
         {/* Filas de cotizaciones - Agrupadas por número */}
@@ -337,12 +403,14 @@ export default function Historial({
 
                   {/* Estado y Expandir */}
                   <div className="flex items-center justify-end gap-2">
-                    <div className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                      quotation.isGlobal
-                        ? 'bg-gh-success/15 text-gh-success border border-gh-success/30'
-                        : 'bg-gh-border/50 text-gh-text-muted border border-gh-border'
+                    <div className={`flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full ${
+                      getStateColor(quotation.estado as any)
                     }`}>
-                      {quotation.isGlobal ? 'Activa' : 'Inactiva'}
+                      {(() => {
+                        const StateIcon = getStateIconComponent(quotation.estado as any)
+                        return <StateIcon className="w-3.5 h-3.5" />
+                      })()}
+                      <span>{getStateLabel(quotation.estado as any)}</span>
                     </div>
                     <motion.button
                       onClick={() => toggleExpanded(quotation.id, quotation.numero)}
@@ -369,7 +437,7 @@ export default function Historial({
                       {/* SECCIÓN A: Información de Versión de la Cotización - AHORA CON TODAS LAS VERSIONES */}
                       <div>
                         <h4 className="text-xs font-semibold text-gh-text mb-3 flex items-center gap-2">
-                          📌 VERSIÓN DE LA COTIZACIÓN
+                          VERSIONES DE ESTA COTIZACIÓN
                           {grupo.totalVersiones > 1 && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400">
                               {grupo.totalVersiones} versiones
@@ -453,7 +521,7 @@ export default function Historial({
                       {/* SECCIÓN B: Paquetes Configurados - Grid 3 columnas simplificado */}
                       <div>
                         <h4 className="text-xs font-semibold text-gh-text mb-3 flex items-center gap-2">
-                          📦 PAQUETES CONFIGURADOS ({paquetesConfigurados.length})
+                          PAQUETES CONFIGURADOS ({paquetesConfigurados.length})
                         </h4>
                         {paquetesConfigurados.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -551,78 +619,125 @@ export default function Historial({
                           </div>
                         )}
                       </div>
+                      {/* SECCIÓN C: Acciones - 3 Grids con botones en fila */}
+                      <div className="border-t border-gh-border/20 pt-4 mt-2">
+                        <div className="grid grid-cols-3 gap-3">
+                          {/* Grid 1: EDITAR */}
+                          <div className="space-y-1.5">
+                            <h5 className="text-[10px] font-semibold text-gh-text-muted uppercase tracking-widest">Editar</h5>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => onEdit?.(quotation)}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-gh-bg-secondary hover:bg-gh-border text-gh-text text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                title="Editar cotización"
+                              >
+                                <Edit className="w-3 h-3" />
+                                <span>Editar</span>
+                              </button>
+                              <button
+                                onClick={() => handleViewProposal(quotation)}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-purple-500/10 hover:bg-purple-500/15 text-purple-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                title="Visualizar propuesta"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>Ver</span>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(quotation.id)}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/15 text-red-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                title="Eliminar cotización"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>Eliminar</span>
+                              </button>
+                            </div>
+                          </div>
 
-                      {/* SECCIÓN C: Acciones */}
-                      <div className="border-t border-gh-border pt-3">
-                        <h4 className="text-xs font-semibold text-gh-text mb-3">ACCIONES</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {/* Botón Activar - Solo visible en modo selección post-eliminación */}
-                          {showActivateButton && !quotation.isGlobal && (
-                            <button
-                              onClick={() => onActivarCotizacion?.(quotation.id)}
-                              className="flex items-center gap-1.5 px-4 py-2 bg-gh-success hover:bg-gh-success-hover text-white text-xs font-bold rounded-md transition-colors shadow-lg"
-                              title="Activar esta cotización"
-                            >
-                              <Check className="w-3 h-3" /> Activar Esta
-                            </button>
-                          )}
+                          {/* Grid 2: ESTADO */}
+                          <div className="space-y-1.5">
+                            <h5 className="text-[10px] font-semibold text-gh-text-muted uppercase tracking-widest">Estado</h5>
+                            <div className="flex gap-1">
+                              {quotation.estado === 'CARGADA' && (
+                                <button
+                                  onClick={() => handleChangeState(quotation.id, 'ACTIVA', quotation.numero, quotation.emailCliente)}
+                                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-green-500/10 hover:bg-green-500/15 text-green-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                  title="Publicar cotización"
+                                >
+                                  <Check className="w-3 h-3" />
+                                  <span>Publicar</span>
+                                </button>
+                              )}
+                              {quotation.estado === 'ACTIVA' && (
+                                <>
+                                  <button
+                                    onClick={() => handleChangeState(quotation.id, 'CARGADA', quotation.numero)}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-amber-500/10 hover:bg-amber-500/15 text-amber-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                    title="Cargar en edición"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                    <span>Cargar</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleChangeState(quotation.id, 'INACTIVA', quotation.numero)}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-red-500/10 hover:bg-red-500/15 text-red-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                    title="Inactivar cotización"
+                                  >
+                                    <Check className="w-3 h-3" />
+                                    <span>Inactivar</span>
+                                  </button>
+                                </>
+                              )}
+                              {quotation.estado === 'INACTIVA' && (
+                                <button
+                                  onClick={() => handleChangeState(quotation.id, 'ACTIVA', quotation.numero, quotation.emailCliente)}
+                                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-green-500/10 hover:bg-green-500/15 text-green-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                  title="Reactivar cotización"
+                                >
+                                  <Check className="w-3 h-3" />
+                                  <span>Reactivar</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleShowTimeline(quotation)}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-blue-500/10 hover:bg-blue-500/15 text-blue-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                title="Ver historial de versiones"
+                              >
+                                <History className="w-3 h-3" />
+                                <span>Historial</span>
+                              </button>
+                            </div>
+                          </div>
 
-                          <button
-                            onClick={() => onEdit?.(quotation)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-bg hover:bg-gh-border text-gh-text text-xs font-semibold rounded-md border border-gh-border transition-colors"
-                            title="Editar cotización"
-                          >
-                            <Edit className="w-3 h-3" /> Editar
-                          </button>
-
-                          <button
-                            onClick={() => handleViewProposal(quotation)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-semibold rounded-md border border-purple-500/30 transition-colors"
-                            title="Ver propuesta"
-                          >
-                            <Eye className="w-3 h-3" /> Ver
-                          </button>
-
-                          <button
-                            onClick={() => handleShowTimeline(quotation)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-md border border-blue-500/30 transition-colors"
-                            title="Ver historial de versiones"
-                          >
-                            <History className="w-3 h-3" /> Historial
-                          </button>
-
-                          <button
-                            onClick={() => handleDelete(quotation.id)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold rounded-md border border-red-500/30 transition-colors"
-                            title="Eliminar cotización"
-                          >
-                            <Trash2 className="w-3 h-3" /> Eliminar
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              handleToggleActive(quotation.id, {
-                                activo: !quotation.activo,
-                                isGlobal: !quotation.isGlobal
-                              }, quotation.numero)
-                            }
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors ${
-                              quotation.isGlobal
-                                ? 'bg-gh-success/10 hover:bg-gh-success/20 text-gh-success border-gh-success/30'
-                                : 'bg-gh-bg hover:bg-gh-border text-gh-text-muted border-gh-border'
-                            }`}
-                            title={quotation.isGlobal ? 'Desactivar' : 'Activar'}
-                          >
-                            <div className="min-w-[100px]">
-                        <ToggleItem
-                          enabled={quotation.isGlobal}
-                          onChange={(v) => handleToggleActive(quotation.id, { activo: v, isGlobal: v }, quotation.numero)}
-                          title={quotation.isGlobal ? 'Global' : 'Local'}
-                          description={quotation.isGlobal ? 'Desactivar visibilidad global' : 'Activar visibilidad global'}
-                          showBadge={false}
-                        />
-                      </div>
-                          </button>
+                          {/* Grid 3: EXPORTAR */}
+                          <div className="space-y-1.5">
+                            <h5 className="text-[10px] font-semibold text-gh-text-muted uppercase tracking-widest">Exportar</h5>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => {}}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-orange-500/10 hover:bg-orange-500/15 text-orange-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                title="Descargar PDF"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>PDF</span>
+                              </button>
+                              <button
+                                onClick={() => {}}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-blue-500/10 hover:bg-blue-500/15 text-blue-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                title="Descargar Word"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>Word</span>
+                              </button>
+                              <button
+                                onClick={() => {}}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-green-500/10 hover:bg-green-500/15 text-green-300 text-[11px] font-medium rounded-sm transition-colors duration-150"
+                                title="Descargar Excel"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>Excel</span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -693,6 +808,50 @@ export default function Historial({
           type="info"
           variant="premium"
           maxHeight="85vh"
+        />
+      )}
+
+      {/* Diálogo de Conflicto: Cliente ya tiene cotización activa */}
+      {showConflictDialog && conflictData && (
+        <DialogoGenericoDinamico
+          isOpen={showConflictDialog}
+          onClose={handleCancelChange}
+          title="Conflicto de asignación de cotización"
+          description={`Cotización No. ${conflictData.existingQuotation?.numero || 'desconocida'} ya asignada`}
+          type="warning"
+          size="md"
+          variant="premium"
+          contentType="text"
+          content={
+            <div className="space-y-3">
+              <p className="text-gh-text-secondary">
+                <strong>Cliente:</strong> {conflictData.existingQuotation?.User?.username || 'Desconocido'}
+              </p>
+              <p className="text-gh-text-secondary">
+                <strong>Email:</strong> {conflictData.existingQuotation?.emailCliente}
+              </p>
+              <p className="text-gh-text-secondary">
+                <strong>Cotización Actual:</strong> {conflictData.existingQuotation?.numero}
+              </p>
+              <p className="text-gh-text-secondary mt-4">
+                ¿Deseas reemplazar esta cotización con la nueva?
+              </p>
+            </div>
+          }
+          actions={[
+            {
+              id: 'cancel',
+              label: 'Cancelar',
+              variant: 'secondary',
+              onClick: handleCancelChange,
+            },
+            {
+              id: 'confirm',
+              label: 'Sí, Reemplazar',
+              variant: 'primary',
+              onClick: handleConfirmReplace,
+            },
+          ]}
         />
       )}
     </div>

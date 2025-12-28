@@ -108,6 +108,15 @@ export default function OrganizacionContent() {
     loadOrganizations()
   }, [loadOrganizations])
 
+  // Inicializar parentIdValue cuando se abre el modal para editar
+  useEffect(() => {
+    if (editingOrg?.parentId) {
+      setParentIdValue(editingOrg.parentId)
+    } else {
+      setParentIdValue('raiz')
+    }
+  }, [editingOrg])
+
   // Crear/Actualizar
   const handleSave = async (formData: Record<string, any>) => {
     if (!canWrite && !canEdit) {
@@ -163,6 +172,7 @@ export default function OrganizacionContent() {
       setShowDialogo(false)
       setEditingOrg(null)
       setSelectedParentId(undefined)
+      setParentIdValue('raiz')
       await loadOrganizations()
     } catch (error) {
       console.error('Error:', error)
@@ -560,9 +570,12 @@ export default function OrganizacionContent() {
 
         <DialogoGenericoDinamico
           isOpen={showDialogo}
+          size="xl"
           onClose={() => {
             setShowDialogo(false)
             setEditingOrg(null)
+            setSelectedParentId(undefined)
+            setParentIdValue('raiz')
             setActiveOrgTab('datos')
           }}
           title={editingOrg ? 'Editar Organización' : selectedParentId ? `Nueva Organización bajo ${allOrganizations.find(o => o.id === selectedParentId)?.nombre}` : 'Nueva Organización (Raíz)'}

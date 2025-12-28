@@ -601,7 +601,7 @@ export default function LogsAuditoriaContent() {
         description="Selecciona el rango de tiempo para el reporte"
         contentType="form"
         type="info"
-        size="md"
+        size="xl"
         formConfig={{
           fields: [
             {

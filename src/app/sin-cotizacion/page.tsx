@@ -47,12 +47,13 @@ export default function NoCotizacionPage() {
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#d29922] to-[#f0883e] p-0.5 mb-4"
             >
+              {/* Ícono de estado */}
               <div className="w-full h-full rounded-full bg-[#0d1117] flex items-center justify-center">
                 <FaExclamationCircle className="text-[#d29922] text-3xl" />
               </div>
             </motion.div>
             <h1 className="text-2xl font-bold text-[#f0f6fc]">
-              Sin Cotización Asignada
+              Problemas con la Cotización
             </h1>
           </div>
 
@@ -64,11 +65,11 @@ export default function NoCotizacionPage() {
                   Hola, <span className="text-[#c9d1d9] font-medium">{session.user.nombre || session.user.username}</span>
                 </p>
               )}
-              <p className="text-[#c9d1d9]">
-                Actualmente no tienes ninguna cotización asignada a tu cuenta.
+              <p className="text-[#8b949e] text-sm">
+                Actualmente la cotización que intentas acceder no está disponible o no tienes ninguna cotización asignada a tu cuenta.
               </p>
               <p className="text-[#8b949e] text-sm">
-                Por favor, contacta con tu proveedor para que te asigne una cotización.
+                Por favor, contacta con tu proveedor para verificar si existe algún problema o para te asigne una cotización.
               </p>
             </div>
 
@@ -96,6 +97,7 @@ export default function NoCotizacionPage() {
           </div>
         </div>
 
+        {/* Footer */}
         {/* Marca de agua */}
         <div className="text-center mt-6 text-xs text-[#484f58]">
           <p>  

@@ -244,6 +244,8 @@ export interface DescripcionPaqueteTemplate {
   updatedAt: string
 }
 
+export type QuotationState = 'CARGADA' | 'ACTIVA' | 'INACTIVA' | 'ACEPTADA' | 'RECHAZADA' | 'NUEVA_PROPUESTA' | 'EXPIRADA'
+
 export interface QuotationConfig {
   id: string
   // Cotización
@@ -274,6 +276,9 @@ export interface QuotationConfig {
   heroTituloSub: string
   // Estados de control
   activo: boolean
+  estado: QuotationState
+  activadoEn?: string
+  inactivadoEn?: string
   isGlobal: boolean
   
   // ==================== TEMPLATES REUTILIZABLES ====================

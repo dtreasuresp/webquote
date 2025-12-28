@@ -132,7 +132,7 @@ export function getValidChildLevels(parentLevel: OrganizationLevelType): Organiz
  */
 export function formatLevel(level: OrganizationLevelType): string {
   const levelNames: Record<OrganizationLevelType, string> = {
-    [ORGANIZATION_LEVELS.RAIZ]: 'Organización Superior',
+    [ORGANIZATION_LEVELS.RAIZ]: 'Organización Principal',
     [ORGANIZATION_LEVELS.EMPRESA]: 'Empresa',
     [ORGANIZATION_LEVELS.DEPARTAMENTO]: 'Departamento',
     [ORGANIZATION_LEVELS.EQUIPO]: 'Equipo',
@@ -147,8 +147,8 @@ export function formatLevel(level: OrganizationLevelType): string {
 export function getLevelIcon(level: OrganizationLevelType): string {
   const icons: Record<OrganizationLevelType, string> = {
     [ORGANIZATION_LEVELS.RAIZ]: '🏢',
-    [ORGANIZATION_LEVELS.EMPRESA]: '🏭',
-    [ORGANIZATION_LEVELS.DEPARTAMENTO]: '📂',
+    [ORGANIZATION_LEVELS.EMPRESA]: '🏣',
+    [ORGANIZATION_LEVELS.DEPARTAMENTO]: '🏬',
     [ORGANIZATION_LEVELS.EQUIPO]: '👥',
     [ORGANIZATION_LEVELS.PROYECTO]: '🎯'
   }

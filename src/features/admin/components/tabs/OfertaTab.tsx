@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Box, Boxes, Puzzle, Layers, DollarSign, Star } from 'lucide-react'
 import { ServicioBase, Servicio, Package, PackageSnapshot, QuotationConfig, DialogConfig, OpcionPago, ConfigDescuentos, DescripcionPaqueteTemplate, MetodoPreferido, FinancialTemplate } from '@/lib/types'
@@ -107,6 +107,8 @@ interface OfertaTabProps {
   onUpdateFinancialTemplate?: (id: string, data: Partial<FinancialTemplate>) => Promise<FinancialTemplate>
   onDeleteFinancialTemplate?: (id: string) => Promise<void>
   onNuevaOfertaFinanciera?: () => void
+  // Sidebar unificada - sección activa global
+  activeSectionId?: string
 }
 
 export default function OfertaTab({
@@ -191,8 +193,36 @@ export default function OfertaTab({
   onUpdateFinancialTemplate,
   onDeleteFinancialTemplate,
   onNuevaOfertaFinanciera,
+  // Sidebar unificada
+  activeSectionId,
 }: Readonly<OfertaTabProps>) {
   const [activeItem, setActiveItem] = useState<'paquete' | 'servicios-base' | 'servicios-opcionales' | 'financiero' | 'paquetes' | 'caracteristicas'>('paquete')
+  
+  // Mapeo de IDs de sección unificada a IDs de OfertaTab
+  const sectionIdToActiveItem = (sectionId?: string): typeof activeItem => {
+    const mapping: Record<string, typeof activeItem> = {
+      'oferta-desc': 'paquete',
+      'oferta-base': 'servicios-base',
+      'oferta-opt': 'servicios-opcionales',
+      'oferta-fin': 'financiero',
+      'oferta-paq': 'paquetes',
+      'oferta-caract': 'caracteristicas',
+    }
+    return (sectionId && mapping[sectionId]) || activeItem
+  }
+
+  // Si hay una sección activa desde la sidebar unificada, usarla
+  const effectiveActiveItem = activeSectionId ? sectionIdToActiveItem(activeSectionId) : activeItem
+
+  // Sincronizar estado local con prop del padre
+  useEffect(() => {
+    if (activeSectionId) {
+      const newItem = sectionIdToActiveItem(activeSectionId)
+      if (newItem !== activeItem) {
+        setActiveItem(newItem)
+      }
+    }
+  }, [activeSectionId, activeItem])
   
   // Tracking de navegación
   const { trackOfertaSectionViewed } = useEventTracking()
@@ -222,7 +252,7 @@ export default function OfertaTab({
       />
 
       <div className="flex-1">
-        {activeItem === 'paquete' && (
+        {effectiveActiveItem === 'paquete' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -244,7 +274,7 @@ export default function OfertaTab({
           </motion.div>
         )}
 
-        {activeItem === 'servicios-base' && (
+        {effectiveActiveItem === 'servicios-base' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -270,7 +300,7 @@ export default function OfertaTab({
           </motion.div>
         )}
 
-        {activeItem === 'servicios-opcionales' && (
+        {effectiveActiveItem === 'servicios-opcionales' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -299,7 +329,7 @@ export default function OfertaTab({
           </motion.div>
         )}
 
-        {activeItem === 'paquetes' && (
+        {effectiveActiveItem === 'paquetes' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -329,7 +359,7 @@ export default function OfertaTab({
           </motion.div>
         )}
 
-        {activeItem === 'financiero' && (
+        {effectiveActiveItem === 'financiero' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -368,7 +398,7 @@ export default function OfertaTab({
           </motion.div>
         )}
 
-        {activeItem === 'caracteristicas' && (
+        {effectiveActiveItem === 'caracteristicas' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

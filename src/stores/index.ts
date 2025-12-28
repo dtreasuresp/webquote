@@ -58,3 +58,9 @@ export * from './permissionsCacheStore'
 
 // Modal Data Store (Phase 5 - Modal-specific state)
 export * from './modalDataStore'
+
+// User Modal Store (Zustand replacement for UserModalContext)
+export * from './userModalStore'
+
+// User Data Store (Quotations and Organizations management)
+export * from './userDataStore'

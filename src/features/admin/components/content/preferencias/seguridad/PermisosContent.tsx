@@ -527,7 +527,7 @@ export default function PermisosContent() {
           : `Modificando: ${selectedPermission?.name}`
         }
         type="info"
-        size="md"
+        size="xl"
         contentType="custom"
         content={
           <div className="space-y-4">

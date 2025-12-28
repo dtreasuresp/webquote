@@ -25,6 +25,9 @@ export async function GET(request: NextRequest) {
         versionNumber: true,
         isGlobal: true,
         activo: true,
+        respondidoEn: true,
+        expiradoEn: true,
+        diasParaAceptar: true,
         // Datos del cliente
         empresa: true,
         sector: true,
@@ -53,6 +56,10 @@ export async function GET(request: NextRequest) {
         tiempoVigenciaUnidad: true,
         presupuesto: true,
         moneda: true,
+        // Estado de la cotización
+        estado: true,
+        activadoEn: true,
+        inactivadoEn: true,
         // Hero
         heroTituloMain: true,
         heroTituloSub: true,

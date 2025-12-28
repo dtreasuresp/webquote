@@ -1,10 +1,9 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
 import { Loader2, Plus, Edit2, Trash2 } from 'lucide-react'
 import { useToast } from '@/components/providers/ToastProvider'
-import { useUserModal } from '@/contexts/UserModalContext'
+import { useUserModalStore } from '@/stores/userModalStore'
 
 // ==================== TIPOS ====================
 
@@ -38,16 +37,15 @@ export default function UsersTableInOrganization({
   organizationId,
   onRefresh,
   loading: externalLoading = false
-}: UsersTableInOrganizationProps) {
-  const { data: session } = useSession()
+}: Readonly<UsersTableInOrganizationProps>) {
   const toast = useToast()
 
   // Estado
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Hook para context modal
-  const userModal = useUserModal()
+  // Hook para modal usando Zustand store
+  const userModal = useUserModalStore()
 
   // Cargar usuarios
   const loadUsers = useCallback(async () => {

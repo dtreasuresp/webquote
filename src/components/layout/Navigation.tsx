@@ -137,21 +137,19 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
         ref={navRef}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-github ${
           isAdminPage
-            ? isScrolled
-              ? 'bg-[#0d1117]/80 backdrop-blur-md border-b border-[#30363d]/50 shadow-lg py-2'
-              : 'bg-[#0d1117]/70 backdrop-blur-sm border-b border-[#30363d]/40 py-3'
+            ? `bg-[#0d1117] border-b border-[#30363d]/50 shadow-lg h-[60px] flex items-center`
             : isScrolled 
               ? 'bg-light-bg/95 backdrop-blur-sm border-b border-light-border shadow-sm py-2'
               : 'bg-light-bg border-b border-light-border py-3'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className={`w-full ${isAdminPage ? 'px-0' : 'max-w-7xl mx-auto px-4 md:px-6 lg:px-8'}`}>
           <div className="flex justify-between items-center">
-            {/* Logo */}
+            {/* Logo Container - Centrado con el ancho de la sidebar en Admin */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center"
+              className={`flex items-center ${isAdminPage ? 'w-56 justify-center border-r border-gh-border' : ''}`}
             >
               <Link href="/" className="flex items-center">
                 <Image
@@ -167,43 +165,82 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
             </motion.div>
 
             {/* Desktop Navigation */}
-            <div className="hidden xl:flex items-center gap-1">
-              {navItems.map((item, index) => (
-                <motion.button
-                  key={item.id}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  onClick={() => scrollToSection(item.id)}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors duration-200 font-medium ${
-                    isAdminPage
-                      ? 'text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]'
-                      : 'text-light-text-secondary hover:text-light-text hover:bg-light-bg-tertiary'
-                  }`}
-                >
-                  {item.label}
-                </motion.button>
-              ))}
-              
-              {/* Admin Button / User Profile - GitHub style */}
-              {session ? (
-                <div className="ml-3">
-                  <UserProfileMenu 
-                    variant={isAdminPage ? 'dark' : 'light'} 
-                    onChangePassword={() => setIsChangePasswordOpen(true)}
-                  />
-                </div>
+            <div className={`hidden xl:flex items-center ${isAdminPage ? 'flex-1 h-full' : 'gap-1'}`}>
+              {isAdminPage ? (
+                <>
+                  {/* Centered Nav Items */}
+                  <div className="flex-1 flex justify-center gap-1">
+                    {navItems.map((item, index) => (
+                      <motion.button
+                        key={item.id}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        onClick={() => scrollToSection(item.id)}
+                        className="px-3 py-1.5 text-sm rounded-md transition-colors duration-200 font-medium text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]"
+                      >
+                        {item.label}
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  {/* Right-aligned User Profile */}
+                  <div className="flex-shrink-0 px-4 border-l border-gh-border h-8 flex items-center ml-4">
+                    {session ? (
+                      <UserProfileMenu 
+                        variant="dark" 
+                        onChangePassword={() => setIsChangePasswordOpen(true)}
+                      />
+                    ) : (
+                      <Link href="/login">
+                        <motion.button
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="px-4 py-1.5 text-sm font-semibold bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200"
+                        >
+                          Iniciar Sesión
+                        </motion.button>
+                      </Link>
+                    )}
+                  </div>
+                </>
               ) : (
-                <Link href="/login" className="ml-3">
-                  <motion.button
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="px-4 py-1.5 text-sm font-semibold bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200"
-                  >
-                    Iniciar Sesión
-                  </motion.button>
-                </Link>
+                <>
+                  {navItems.map((item, index) => (
+                    <motion.button
+                      key={item.id}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      onClick={() => scrollToSection(item.id)}
+                      className="px-3 py-1.5 text-sm rounded-md transition-colors duration-200 font-medium text-light-text-secondary hover:text-light-text hover:bg-light-bg-tertiary"
+                    >
+                      {item.label}
+                    </motion.button>
+                  ))}
+                  
+                  {/* Admin Button / User Profile - Default style */}
+                  {session ? (
+                    <div className="ml-3">
+                      <UserProfileMenu 
+                        variant="light" 
+                        onChangePassword={() => setIsChangePasswordOpen(true)}
+                      />
+                    </div>
+                  ) : (
+                    <Link href="/login" className="ml-3">
+                      <motion.button
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="px-4 py-1.5 text-sm font-semibold bg-light-success text-white rounded-md hover:bg-green-700 transition-colors duration-200"
+                      >
+                        Iniciar Sesión
+                      </motion.button>
+                    </Link>
+                  )}
+                </>
               )}
             </div>
 

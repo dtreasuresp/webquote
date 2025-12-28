@@ -353,29 +353,28 @@ function SortablePaqueteCard({
             </span>
           )}
         </div>
-      </div>
 
-      {/* Métricas en grid estilo captura */}
-      <div className="grid grid-cols-3 divide-x divide-gh-border">
-        {/* Pago Inicial */}
-        <div className="py-3 px-4 text-center">
-          <p className="text-xs text-gh-text-muted mb-1">Pago Inicial</p>
-          <p className="text-lg font-bold text-gh-text">${paq.costoInicial.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-        </div>
-
-        {/* Primer Año */}
-        <div className="py-3 px-4 text-center">
-          <p className="text-xs text-gh-text-muted mb-1">Primer Año</p>
-          <p className="text-lg font-bold text-gh-info">${paq.costoAnio1.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-          <p className="text-[10px] text-gh-text-muted">incluye desarrollo</p>
-        </div>
-
-        {/* Desarrollo (como referencia adicional) */}
-        <div className="py-3 px-4 text-center">
-          <p className="text-xs text-gh-text-muted mb-1">Desarrollo</p>
-          <p className="text-lg font-bold text-gh-accent">${paq.desarrollo.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+        {/* Línea comprimida: Nombre / Entrega | Inicial | Año 1 */}
+        <div className="flex-1 flex items-center justify-between gap-4 text-xs">
+          <div className="text-gh-text-muted">
+            <span className="font-semibold text-gh-text">{paq.nombre}</span>
+            {paq.tiempoEntrega && <span className="text-gh-text-muted"> / Entrega: {paq.tiempoEntrega}</span>}
+          </div>
+          <div className="flex items-center gap-4 text-gh-text">
+            <span>
+              Inicial: <span className="font-bold text-gh-success">${paq.costoInicial.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            </span>
+            <span>
+              Año 1: <span className="font-bold text-gh-info">${paq.costoAnio1.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* Métricas REMOVIDAS - Ya no necesarias en la versión comprimida */}
+      {/* <div className="grid grid-cols-3 divide-x divide-gh-border">
+        ...
+      </div> */}
 
       {/* Características Incluidas (EDITABLE con drag & drop) */}
       <div className="border-t border-gh-border/20 bg-gh-bg-tertiary/30">

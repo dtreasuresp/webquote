@@ -8,6 +8,20 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum QuotationState {
+  CARGADA
+  ACTIVA
+  INACTIVA
+  ACEPTADA
+  RECHAZADA
+  NUEVA_PROPUESTA
+  EXPIRADA
+}
+
 model QuotationConfig {
   id                            String                @id @default(cuid())
   numero                        String                @unique @default("")
@@ -25,12 +39,15 @@ model QuotationConfig {
   createdAt                     DateTime              @default(now())
   updatedAt                     DateTime              @updatedAt
   heroTituloMain                String                @default("PROPUESTA DE COTIZACIÓN")
-  heroTituloSub                 String                @default("PÁGINA CATÁLOGO DINÁMICA")
+  heroTituloSub                 String                @default("SERVICIO A PRESTAR")
   tiempoVigenciaUnidad          String                @default("meses")
   tiempoVigenciaValor           Int                   @default(12)
   emailCliente                  String                @default("")
   whatsappCliente               String                @default("")
   activo                        Boolean               @default(true)
+  estado                        QuotationState        @default(CARGADA)
+  activadoEn                    DateTime?
+  inactivadoEn                  DateTime?
   emailProveedor                String                @default("")
   isGlobal                      Boolean               @default(false)
   versionNumber                 Int                   @default(1)
@@ -48,16 +65,23 @@ model QuotationConfig {
   metodosPreferidos             Json?
   packagesSnapshot              Json?
   packagesSnapshotAt            DateTime?
+  respondidoEn                  DateTime?
+  diasParaAceptar               Int?
+  expiradoEn                    DateTime?
   // NUEVO: Relación con Organization
   organizationId                String?
   organization                  Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   snapshots                     PackageSnapshot[]
+  clientResponses               ClientResponse[]
   User                          User?
   UserQuotationAccess           UserQuotationAccess[]
 
   @@index([createdAt])
   @@index([isGlobal])
   @@index([activo])
+  @@index([estado])
+  @@index([respondidoEn])
+  @@index([expiradoEn])
   @@index([organizationId])
 }
 
@@ -278,6 +302,7 @@ model User {
   UserPermission      UserPermission[]
   UserQuotationAccess UserQuotationAccess[]
   AuditLog            AuditLog[]
+  Notification        Notification[]
   
   // Relaciones de backup
   UserBackup          UserBackup[]
@@ -430,5 +455,73 @@ model AuditReport {
   @@index([userId])
   @@index([period])
   @@index([generatedAt])
+  @@index([createdAt])
+}
+
+// ==================== MODELO: Respuestas de Clientes ====================
+model ClientResponse {
+  id                    String   @id @default(cuid())
+  
+  // Referencia a cotización
+  quotationConfigId     String
+  quotationConfig       QuotationConfig @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
+  
+  // Información del cliente (desde sesión)
+  clientUserId          String?          // ID del usuario cliente (si disponible)
+  clientName            String           // Nombre del cliente
+  clientEmail           String           // Email del cliente
+  
+  // Tipo de respuesta
+  responseType          String  // "ACEPTADA" | "RECHAZADA" | "NUEVA_PROPUESTA"
+  
+  // Mensaje del cliente (textarea)
+  mensaje               String?  // Razones del rechazo o sugerencias de cambios
+  
+  // Auditoría
+  respondidoEn          DateTime @default(now())
+  diasRestantes         Int?     // Días que quedaban cuando respondió
+  
+  // Metadata
+  ipAddress             String?
+  userAgent             String?
+  
+  // Relación con notificaciones
+  notificaciones        Notification[]
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([quotationConfigId])
+  @@index([clientUserId])
+  @@index([responseType])
+  @@index([respondidoEn])
+}
+
+// ==================== MODELO: Notificaciones ====================
+model Notification {
+  id                    String   @id @default(cuid())
+  
+  // Para quién es la notificación
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // De dónde viene
+  clientResponseId      String?
+  clientResponse        ClientResponse? @relation(fields: [clientResponseId], references: [id], onDelete: SetNull)
+  
+  // Información de la notificación
+  titulo                String   // "Cliente XXX ha aceptado/rechazado/propuesto cambios"
+  descripcion           String?  // Vista previa del mensaje
+  tipoNotificacion      String   // "CLIENTE_ACEPTACION" | "CLIENTE_RECHAZO" | "CLIENTE_PROPUESTA"
+  
+  // Estado
+  leida                 Boolean  @default(false)
+  leidoEn               DateTime?
+  
+  // Auditoría
+  createdAt             DateTime @default(now())
+  
+  @@index([userId])
+  @@index([leida])
   @@index([createdAt])
 }

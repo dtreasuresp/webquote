@@ -74,3 +74,8 @@ export {
 
 // TABs
 export * from './tabs'
+// Estado y Respuestas del Cliente (Phase 3)
+export { BotonesEstado } from './BotonesEstado'
+export { DialogoVerRespuestaCliente } from './dialogs/DialogoVerRespuestaCliente'
+export { DialogoCambiarEstado } from './dialogs/DialogoCambiarEstado'
+export { DialogoSolicitarExtension } from './dialogs/DialogoSolicitarExtension'

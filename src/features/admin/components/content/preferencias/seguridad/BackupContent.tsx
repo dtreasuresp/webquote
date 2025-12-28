@@ -567,7 +567,7 @@ export default function BackupContent() {
         onClose={() => setShowCreateModal(false)}
         title="Crear Nuevo Backup"
         description="Puedes restaurarlos en cualquier momento."
-        size="md"
+        size="xl"
         type="info"
         contentType="form"
         formConfig={{
@@ -610,7 +610,7 @@ export default function BackupContent() {
           onClose={() => setShowConfigModal(false)}
           title="Configuración de Backups"
           description="Configura backups automáticos, retención y notificaciones"
-          size="md"
+          size="xl"
           type="info"
           contentType="custom"
           content={

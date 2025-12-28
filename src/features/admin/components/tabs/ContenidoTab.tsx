@@ -288,6 +288,7 @@ type SeccionActiva =
   | 'conclusion'
 
 interface ContenidoTabProps {
+  readonly activeSectionId?: string
   readonly cotizacionConfig: QuotationConfig | null
   readonly setCotizacionConfig: React.Dispatch<React.SetStateAction<QuotationConfig | null>>
   readonly onSave: (config: QuotationConfig) => Promise<void>
@@ -302,6 +303,7 @@ interface ContenidoTabProps {
 
 // ==================== COMPONENTE PRINCIPAL ====================
 export default function ContenidoTab({ 
+  activeSectionId,
   cotizacionConfig, 
   setCotizacionConfig,
   onSave,
@@ -309,6 +311,39 @@ export default function ContenidoTab({
   toast 
 }: ContenidoTabProps) {
   const [activeItem, setActiveItem] = useState<SeccionActiva>('resumen')
+
+  const sectionIdToActiveItem = (sectionId?: string): SeccionActiva => {
+    const mapping: Record<string, SeccionActiva> = {
+      'cont-resumen': 'resumen',
+      'cont-analisis': 'analisis',
+      'cont-fortale': 'fortalezas',
+      'cont-compar': 'dinamico',
+      'cont-crono': 'presupuesto',
+      'cont-cuotas': 'cuotas',
+      'cont-paq': 'tabla',
+      'cont-notas': 'observaciones',
+      'cont-concl': 'conclusion',
+      'cont-faq': 'faq',
+      'cont-garant': 'garantias',
+      'cont-contact': 'contacto',
+      'cont-terminos': 'terminos',
+    }
+    return (sectionId && mapping[sectionId]) || activeItem
+  }
+
+  const effectiveActiveItem = activeSectionId
+    ? sectionIdToActiveItem(activeSectionId)
+    : activeItem
+  
+  // Sincronizar estado local con prop del padre
+  useEffect(() => {
+    if (activeSectionId) {
+      const newItem = sectionIdToActiveItem(activeSectionId)
+      if (newItem !== activeItem) {
+        setActiveItem(newItem)
+      }
+    }
+  }, [activeSectionId, activeItem])
   
   // Ref para almacenar el contenido original al cargar (para comparación)
   // IMPORTANTE: Inicializar de forma SÍNCRONA para evitar flash de "Cambios sin guardar" en primer render
@@ -980,7 +1015,7 @@ export default function ContenidoTab({
 
       <div className="flex-1">
         {/* RESUMEN EJECUTIVO */}
-        {activeItem === 'resumen' && (
+        {effectiveActiveItem === 'resumen' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1006,7 +1041,7 @@ export default function ContenidoTab({
         )}
 
         {/* FAQ */}
-        {activeItem === 'faq' && (
+        {effectiveActiveItem === 'faq' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1030,7 +1065,7 @@ export default function ContenidoTab({
         )}
 
         {/* GARANTÍAS */}
-        {activeItem === 'garantias' && (
+        {effectiveActiveItem === 'garantias' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1059,7 +1094,7 @@ export default function ContenidoTab({
         )}
 
         {/* CONTACTO */}
-        {activeItem === 'contacto' && (
+        {effectiveActiveItem === 'contacto' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1081,7 +1116,7 @@ export default function ContenidoTab({
         )}
 
         {/* TÉRMINOS */}
-        {activeItem === 'terminos' && (
+        {effectiveActiveItem === 'terminos' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1107,7 +1142,7 @@ export default function ContenidoTab({
         {/* ═══════════════════════════════════════════════════════════════ */}
 
         {/* ANÁLISIS DE REQUISITOS */}
-        {activeItem === 'analisis' && (
+        {effectiveActiveItem === 'analisis' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1129,7 +1164,7 @@ export default function ContenidoTab({
         )}
 
         {/* FORTALEZAS */}
-        {activeItem === 'fortalezas' && (
+        {effectiveActiveItem === 'fortalezas' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1153,7 +1188,7 @@ export default function ContenidoTab({
         )}
 
         {/* DINÁMICO VS ESTÁTICO */}
-        {activeItem === 'dinamico' && (
+        {effectiveActiveItem === 'dinamico' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1177,7 +1212,7 @@ export default function ContenidoTab({
         )}
 
         {/* PRESUPUESTO Y CRONOGRAMA */}
-        {activeItem === 'presupuesto' && (
+        {effectiveActiveItem === 'presupuesto' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1201,7 +1236,7 @@ export default function ContenidoTab({
         )}
 
         {/* CUOTAS Y PAGOS */}
-        {activeItem === 'cuotas' && (
+        {effectiveActiveItem === 'cuotas' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1225,7 +1260,7 @@ export default function ContenidoTab({
         )}
 
         {/* TABLA COMPARATIVA */}
-        {activeItem === 'tabla' && (
+        {effectiveActiveItem === 'tabla' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1249,7 +1284,7 @@ export default function ContenidoTab({
         )}
 
         {/* OBSERVACIONES */}
-        {activeItem === 'observaciones' && (
+        {effectiveActiveItem === 'observaciones' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1273,7 +1308,7 @@ export default function ContenidoTab({
         )}
 
         {/* CONCLUSIÓN */}
-        {activeItem === 'conclusion' && (
+        {effectiveActiveItem === 'conclusion' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

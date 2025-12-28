@@ -21,6 +21,17 @@ export async function GET(request: NextRequest) {
       
       const snapshots = await prisma.packageSnapshot.findMany({
         where: { activo: true },
+        include: {
+          quotationConfig: {
+            select: {
+              id: true,
+              numero: true,
+              estado: true,
+              expiradoEn: true,
+              respondidoEn: true,
+            }
+          }
+        },
         orderBy: { createdAt: 'desc' },
       })
       
@@ -39,6 +50,17 @@ export async function GET(request: NextRequest) {
       where: { 
         activo: true,
         quotationConfigId: session.user.quotationAssignedId 
+      },
+      include: {
+        quotationConfig: {
+          select: {
+            id: true,
+            numero: true,
+            estado: true,
+            expiradoEn: true,
+            respondidoEn: true,
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
     })

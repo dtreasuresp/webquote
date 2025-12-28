@@ -468,7 +468,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
         title="Configurar Reportes Automáticos"
         description="Establece la hora y frecuencia"
         type="info"
-        size="md"
+        size="xl"
         variant="premium"
         contentType="custom"
         content={
@@ -486,7 +486,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                   onChange={(e) => setConfigEnabled(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-gh-border/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gh-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gh-accent/50"></div>
+                <div className="w-9 h-5 bg-gh-border/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gh-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gh-success/50"></div>
               </label>
             </div>
 
@@ -512,7 +512,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                 {/* Selector de hora */}
                 <div>
                   <label className="block text-xs font-medium text-gh-text mb-2">
-                    Hora de Ejecución: <span className="text-gh-accent font-bold">{String(configHour).padStart(2, '0')}:{String(configMinute).padStart(2, '0')}</span>
+                    Hora de Ejecución: <span className="text-gh-success">{String(configHour).padStart(2, '0')}:{String(configMinute).padStart(2, '0')}</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -548,7 +548,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                 {/* Retención de reportes */}
                 <div>
                   <label htmlFor="retention-input" className="block text-xs font-medium text-gh-text mb-2">
-                    Retención de Reportes: <span className="text-gh-accent">{configRetentionDays} días</span>
+                    Retención de Reportes: <span className="text-gh-success">{configRetentionDays} días</span>
                   </label>
                   <input
                     id="retention-input"
@@ -557,7 +557,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                     max="730"
                     value={configRetentionDays}
                     onChange={(e) => setConfigRetentionDays(parseInt(e.target.value))}
-                    className="w-full h-2 bg-gh-border/30 rounded-lg appearance-none cursor-pointer accent-gh-accent"
+                    className="w-full h-2 bg-gh-border/30 rounded-lg appearance-none cursor-pointer accent-gh-success"
                   />
                   <p className="text-[10px] text-gh-text-muted mt-1">
                     Los reportes se eliminarán automáticamente después de {configRetentionDays} días
@@ -624,7 +624,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
         title="Generar Reporte Personalizado"
         description="Crea un nuevo reporte con configuración personalizada"
         type="info"
-        size="md"
+        size="xl"
         variant="premium"
         contentType="custom"
         content={

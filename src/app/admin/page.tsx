@@ -32,6 +32,9 @@ const OfertaTab = lazy(() => import('@/features/admin/components/tabs/OfertaTab'
 const ContenidoTab = lazy(() => import('@/features/admin/components/tabs/ContenidoTab'))
 const PreferenciasTab = lazy(() => import('@/features/admin/components/tabs/PreferenciasTab'))
 const PaqueteContenidoTab = lazy(() => import('@/features/admin/components/tabs/PaqueteContenidoTab'))
+const UnifiedAdminSidebar = lazy(() => import('@/features/admin/components/UnifiedAdminSidebar'))
+const FloatingAdminFooter = lazy(() => import('@/features/admin/components/FloatingAdminFooter'))
+const AdminBreadcrumbs = lazy(() => import('@/features/admin/components/AdminBreadcrumbs'))
 const KPICards = lazy(() => import('@/features/admin/components/KPICards'))
 const DialogoGenerico = lazy(() => import('@/features/admin/components/DialogoGenerico'))
 const DialogoGenericoDinamico = lazy(() => import('@/features/admin/components/DialogoGenericoDinamico'))
@@ -65,6 +68,7 @@ import { useUIStore } from '@/stores/uiStore'
 import { useDataStore } from '@/stores/dataStore'
 import { useModalDataStore } from '@/stores/modalDataStore'
 import { useQuotationSyncStore } from '@/stores/quotationSyncStore'
+import { useSidebarStore, type SidebarSection } from '@/stores/sidebarStore'
 import { useQuotationSync } from '@/hooks/useQuotationSync'
 const PackageHistoryContent = lazy(() => import('@/features/admin/components/comparisons').then(mod => ({ default: mod.PackageHistoryContent })))
 const PackageCompareContent = lazy(() => import('@/features/admin/components/comparisons').then(mod => ({ default: mod.PackageCompareContent })))
@@ -176,6 +180,10 @@ export default function Administrador() {
   const storeSelectedDescriptionTemplate = useTemplateStore((s) => s.selectedDescriptionTemplate)
   const storeSelectedFinancialTemplate = useTemplateStore((s) => s.selectedFinancialTemplate)
   const storeTemplateLoading = useTemplateStore((s) => s.isLoading)
+  
+  // 🟢 SIDEBAR STORE: Estado de la sidebar unificada
+  const activeSidebarSection = useSidebarStore((s) => s.activeSection)
+  const setActiveSidebarSection = useSidebarStore((s) => s.setActiveSection)
   const storeTemplateErrors = useTemplateStore((s) => s.errors)
   const { loadDescriptionTemplates, createDescriptionTemplate, updateDescriptionTemplate, deleteDescriptionTemplate, loadFinancialTemplates, createFinancialTemplate, updateFinancialTemplate, deleteFinancialTemplate, selectDescriptionTemplate, selectFinancialTemplate, setDescriptionTemplates: setStoreDescriptionTemplates, setFinancialTemplates: setStoreFinancialTemplates } = useTemplateStore()
   
@@ -1166,6 +1174,129 @@ export default function Administrador() {
     // Actualizar validación del nuevo TAB
     actualizarEstadoValidacionTabs()
   }
+
+  /**
+   * 🟢 SIDEBAR UNIFICADA: Mapeo de SidebarSection a activePageTab
+   * Traduce clicks de la sidebar a cambios de tabs
+   */
+  const handleSidebarSectionChange = (section: SidebarSection) => {
+    // Mapeo completo de secciones a tabs
+    const sectionToTabMap: Record<SidebarSection, string> = {
+      // Cotización (3 secciones → 1 tab)
+      'cot-info': 'cotizacion',
+      'cot-cliente': 'cotizacion',
+      'cot-proveedor': 'cotizacion',
+      // Oferta (6 secciones → 1 tab)
+      'oferta-desc': 'oferta',
+      'oferta-base': 'oferta',
+      'oferta-opt': 'oferta',
+      'oferta-fin': 'oferta',
+      'oferta-paq': 'oferta',
+      'oferta-caract': 'oferta',
+      // Contenido (13 secciones → 1 tab)
+      'cont-resumen': 'contenido',
+      'cont-analisis': 'contenido',
+      'cont-fortale': 'contenido',
+      'cont-compar': 'contenido',
+      'cont-crono': 'contenido',
+      'cont-cuotas': 'contenido',
+      'cont-paq': 'contenido',
+      'cont-notas': 'contenido',
+      'cont-concl': 'contenido',
+      'cont-faq': 'contenido',
+      'cont-garant': 'contenido',
+      'cont-contact': 'contenido',
+      'cont-terminos': 'contenido',
+      // Historial (1 sección → 1 tab, pero no existe actualmente)
+      'hist-versiones': 'historial',
+      // CRM (11 secciones → 1 tab futuro)
+      'crm-clientes': 'crm',
+      'crm-contactos': 'crm',
+      'crm-productos': 'crm',
+      'crm-oportunidades': 'crm',
+      'crm-interacciones': 'crm',
+      'crm-historial': 'crm',
+      'crm-pricing': 'crm',
+      'crm-suscripciones': 'crm',
+      'crm-compliance': 'crm',
+      'crm-reglas': 'crm',
+      'crm-plantillas': 'crm',
+      // Preferencias (11 secciones → 1 tab)
+      'pref-config': 'preferencias',
+      'pref-sync': 'preferencias',
+      'pref-usuarios': 'preferencias',
+      'pref-org': 'preferencias',
+      'pref-roles': 'preferencias',
+      'pref-permisos': 'preferencias',
+      'pref-matriz': 'preferencias',
+      'pref-permuser': 'preferencias',
+      'pref-logs': 'preferencias',
+      'pref-backups': 'preferencias',
+      'pref-reportes': 'preferencias',
+    }
+
+    const targetTab = sectionToTabMap[section]
+    
+    // Cambiar sección en el store
+    setActiveSidebarSection(section)
+    
+    // Actualizar URL sin recargar la página
+    const url = new URL(window.location.href)
+    url.searchParams.set('section', section)
+    window.history.replaceState({}, '', url.toString())
+    
+    // Cambiar tab si es diferente al actual
+    if (targetTab && targetTab !== activePageTab) {
+      handleCambioTab(targetTab)
+    }
+  }
+
+  // Sincronizar cambios de tab hacia la sidebar (cuando se clickea TabsModal)
+  useEffect(() => {
+    // Mapeo de secciones a tabs para validación
+    const sectionToTabMap: Record<string, string> = {
+      'cot-info': 'cotizacion', 'cot-cliente': 'cotizacion', 'cot-proveedor': 'cotizacion',
+      'oferta-desc': 'oferta', 'oferta-base': 'oferta', 'oferta-opt': 'oferta', 'oferta-fin': 'oferta', 'oferta-paq': 'oferta', 'oferta-caract': 'oferta',
+      'cont-resumen': 'contenido', 'cont-analisis': 'contenido', 'cont-fortale': 'contenido', 'cont-compar': 'contenido', 'cont-crono': 'contenido', 'cont-cuotas': 'contenido', 'cont-paq': 'contenido', 'cont-notas': 'contenido', 'cont-concl': 'contenido', 'cont-faq': 'contenido', 'cont-garant': 'contenido', 'cont-contact': 'contenido', 'cont-terminos': 'contenido',
+      'pref-config': 'preferencias', 'pref-sync': 'preferencias', 'pref-usuarios': 'preferencias', 'pref-org': 'preferencias', 'pref-roles': 'preferencias', 'pref-permisos': 'preferencias', 'pref-matriz': 'preferencias', 'pref-permuser': 'preferencias', 'pref-logs': 'preferencias', 'pref-backups': 'preferencias', 'pref-reportes': 'preferencias',
+      'hist-versiones': 'historial',
+      'crm-clientes': 'crm', 'crm-contactos': 'crm', 'crm-productos': 'crm', 'crm-oportunidades': 'crm', 'crm-interacciones': 'crm', 'crm-historial': 'crm', 'crm-pricing': 'crm', 'crm-suscripciones': 'crm', 'crm-compliance': 'crm', 'crm-reglas': 'crm', 'crm-plantillas': 'crm'
+    }
+
+    // Mapeo de tabs a sección por defecto
+    const tabToSectionMap: Record<string, SidebarSection> = {
+      'cotizacion': 'cot-info',
+      'oferta': 'oferta-desc',
+      'contenido': 'cont-resumen',
+      'historial': 'hist-versiones',
+      'preferencias': 'pref-config',
+      'crm': 'crm-clientes',
+    }
+    
+    // Solo sincronizar si la sección actual NO pertenece al tab actual
+    // Esto evita que al cambiar de sección dentro del mismo tab, se resetee a la primera
+    const currentSectionTab = sectionToTabMap[activeSidebarSection]
+    
+    if (currentSectionTab !== activePageTab) {
+      const newSection = tabToSectionMap[activePageTab] as SidebarSection | undefined
+      if (newSection) {
+        setActiveSidebarSection(newSection)
+      }
+    }
+  }, [activePageTab, setActiveSidebarSection]) // Eliminamos activeSidebarSection de dependencias para evitar loops y resets indeseados
+
+  // ✅ Sincronizar sección desde la URL al cargar
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const sectionParam = params.get('section') as SidebarSection | null
+    
+    if (sectionParam) {
+      // Pequeño delay para asegurar que el store esté listo
+      setTimeout(() => {
+        handleSidebarSectionChange(sectionParam)
+      }, 100)
+    }
+  }, [])
 
   // Cotización se carga automáticamente desde useQuotationCache hook
   // No necesitamos useEffect adicional aquí - el cache system maneja offline y online
@@ -3808,7 +3939,7 @@ export default function Administrador() {
   return (
     <AnalyticsProvider>
       <div 
-        className="relative min-h-screen text-gh-text pb-5"
+        className="relative min-h-screen text-gh-text"
         style={{
           background: 'linear-gradient(135deg, #0d1117ff 0%, #161b22 25%, #0d1117 50%, #161b22 75%, #0d1117ff 100%)'
         }}
@@ -4047,14 +4178,31 @@ export default function Administrador() {
         )}
       </DialogoGenerico>
       
-      <div className="max-w-7xl mx-auto py-8 px-4 pt-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          {/* Header con botones de acción */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-gh-border pb-6">
+      {/* 🟢 LAYOUT PRINCIPAL CON SIDEBAR UNIFICADA */}
+      <div className="flex relative z-10 pt-[60px]">
+        {/* SIDEBAR UNIFICADA - Nueva (anchura fija: 224px) */}
+        <aside className="w-56 flex-shrink-0 sticky top-[60px] h-[calc(100vh-60px-28px)] overflow-hidden">
+          <Suspense fallback={<ComponentLoader />}>
+            <UnifiedAdminSidebar 
+              onSectionChange={handleSidebarSectionChange}
+            />
+          </Suspense>
+        </aside>
+        
+        {/* CONTENIDO PRINCIPAL - Modificado para flex-1 */}
+        <main className="flex-1 min-w-0 pb-12">
+          <div className="max-w-7xl mx-auto w-full py-8 px-4">
+            <Suspense fallback={null}>
+              <AdminBreadcrumbs />
+            </Suspense>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              {/* Header con botones de acción */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-gh-border pb-6">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-gh-text mb-2">
                 Panel Administrativo
@@ -4136,6 +4284,7 @@ export default function Administrador() {
             {activePageTab === 'cotizacion' && (
               <Suspense fallback={<ComponentLoader />}>
                 <CotizacionTab
+                  activeSectionId={activeSidebarSection}
                   cotizacionConfig={cotizacionConfig as any}
                   setCotizacionConfig={setCotizacionConfig as any}
                   erroresValidacionCotizacion={erroresValidacionCotizacion}
@@ -4153,6 +4302,7 @@ export default function Administrador() {
             {activePageTab === 'oferta' && (
               <Suspense fallback={<ComponentLoader />}>
                 <OfertaTab
+                activeSectionId={activeSidebarSection}
                 serviciosBase={serviciosBase as any}
                 setServiciosBase={setServiciosBase as any}
                 nuevoServicioBase={nuevoServicioBase as any}
@@ -4248,6 +4398,7 @@ export default function Administrador() {
             {activePageTab === 'contenido' && (
               <Suspense fallback={<ComponentLoader />}>
                 <ContenidoTab
+                activeSectionId={activeSidebarSection}
                 cotizacionConfig={cotizacionConfig as any}
                 setCotizacionConfig={setCotizacionConfig as any}
                 onSave={async (config: QuotationConfig) => {
@@ -4303,6 +4454,7 @@ export default function Administrador() {
             {activePageTab === 'preferencias' && (
               <Suspense fallback={<ComponentLoader />}>
                 <PreferenciasTab
+                activeSectionId={activeSidebarSection}
                 quotations={quotations.map(q => ({ id: q.id, nombre: q.empresa, numero: q.numero }))}
                 guardarPreferencias={async () => {
                   try {
@@ -4328,8 +4480,10 @@ export default function Administrador() {
           </div>
         </motion.div>
       </div>
+    </main>
+  </div>
 
-      {/* Modal Editar Snapshot - DISEÑO GITHUB MODERNO */}
+  {/* Modal Editar Snapshot - DISEÑO GITHUB MODERNO */}
       <AnimatePresence>
         {showModalEditar && quotationEnModal && snapshotEditando && (
           <motion.div
@@ -6582,6 +6736,10 @@ export default function Administrador() {
       )}
       
       </div>
+      {/* Footer Flotante */}
+      <Suspense fallback={null}>
+        <FloatingAdminFooter />
+      </Suspense>
     </AnalyticsProvider>
   )
 }

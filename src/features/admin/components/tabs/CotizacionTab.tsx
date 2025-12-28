@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FileText, MapPin, Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { QuotationConfig } from '@/lib/types'
@@ -10,6 +10,7 @@ import ClienteContent from '@/features/admin/components/content/cotizacion/Clien
 import ProveedorContent from '@/features/admin/components/content/cotizacion/ProveedorContent'
 
 interface CotizacionTabProps {
+  activeSectionId?: string
   cotizacionConfig: QuotationConfig | null
   setCotizacionConfig: (config: QuotationConfig | null) => void
   erroresValidacionCotizacion: {
@@ -32,6 +33,7 @@ interface CotizacionTabProps {
 }
 
 export default function CotizacionTab({
+  activeSectionId,
   cotizacionConfig,
   setCotizacionConfig,
   erroresValidacionCotizacion,
@@ -39,6 +41,29 @@ export default function CotizacionTab({
   calcularFechaVencimiento,
 }: Readonly<CotizacionTabProps>) {
   const [activeItem, setActiveItem] = useState<'cotizacion' | 'cliente' | 'proveedor'>('cotizacion')
+
+  const sectionIdToActiveItem = (sectionId?: string): typeof activeItem => {
+    const mapping: Record<string, typeof activeItem> = {
+      'cot-info': 'cotizacion',
+      'cot-cliente': 'cliente',
+      'cot-proveedor': 'proveedor',
+    }
+    return (sectionId && mapping[sectionId]) || activeItem
+  }
+
+  const effectiveActiveItem = activeSectionId
+    ? sectionIdToActiveItem(activeSectionId)
+    : activeItem
+
+  // Sincronizar estado local con prop del padre
+  useEffect(() => {
+    if (activeSectionId) {
+      const newItem = sectionIdToActiveItem(activeSectionId)
+      if (newItem !== activeItem) {
+        setActiveItem(newItem)
+      }
+    }
+  }, [activeSectionId, activeItem])
 
   const items = [
     { id: 'cotizacion', label: 'Información', icon: FileText },
@@ -58,7 +83,7 @@ export default function CotizacionTab({
         />
 
         <div className="flex-1">
-          {activeItem === 'cotizacion' && (
+          {effectiveActiveItem === 'cotizacion' && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -75,7 +100,7 @@ export default function CotizacionTab({
             </motion.div>
           )}
 
-          {activeItem === 'cliente' && (
+          {effectiveActiveItem === 'cliente' && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -90,7 +115,7 @@ export default function CotizacionTab({
             </motion.div>
           )}
 
-          {activeItem === 'proveedor' && (
+          {effectiveActiveItem === 'proveedor' && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

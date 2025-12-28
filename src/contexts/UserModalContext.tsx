@@ -1,8 +1,27 @@
 'use client'
 
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react'
 
-type ModalMode = 'create' | 'edit' | 'delete'
+type ModalMode = 'create' | 'edit' | 'delete' | 'resetPassword'
+
+interface User {
+  id: string
+  username: string
+  nombre: string
+  email: string | null
+  telefono: string | null
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'CLIENT'
+  organizationId: string | null
+  quotationAssignedId: string | null
+  quotationAssigned?: {
+    id: string
+    empresa: string
+    numero: string
+  } | null
+  activo: boolean
+  createdAt?: string
+  updatedAt?: string
+}
 
 interface UserModalContextType {
   // Control de visibilidad y modo
@@ -11,24 +30,25 @@ interface UserModalContextType {
   
   // Métodos para abrir modales
   openNewUserModal: (organizationId?: string) => void
-  openEditUserModal: (user: any) => void
-  openDeleteUserModal: (user: any) => void
+  openEditUserModal: (user: User) => void
+  openDeleteUserModal: (user: User) => void
+  openResetPasswordModal: (user: User) => void
   closeModal: () => void
   
   // Datos
   organizationId: string | null
-  editingUser: any | null
-  userToDelete: any | null
+  editingUser: User | null
+  userToDelete: User | null
 }
 
 export const UserModalContext = createContext<UserModalContextType | null>(null)
 
-export const UserModalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const UserModalProvider: React.FC<{ readonly children: React.ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [mode, setMode] = useState<ModalMode | null>(null)
   const [organizationId, setOrganizationId] = useState<string | null>(null)
-  const [editingUser, setEditingUser] = useState<any | null>(null)
-  const [userToDelete, setUserToDelete] = useState<any | null>(null)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
 
   const openNewUserModal = useCallback((orgId?: string) => {
     setMode('create')
@@ -38,7 +58,7 @@ export const UserModalProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsOpen(true)
   }, [])
 
-  const openEditUserModal = useCallback((user: any) => {
+  const openEditUserModal = useCallback((user: User) => {
     setMode('edit')
     setEditingUser(user)
     setOrganizationId(user.organizationId)
@@ -46,8 +66,16 @@ export const UserModalProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsOpen(true)
   }, [])
 
-  const openDeleteUserModal = useCallback((user: any) => {
+  const openDeleteUserModal = useCallback((user: User) => {
     setMode('delete')
+    setUserToDelete(user)
+    setEditingUser(null)
+    setOrganizationId(null)
+    setIsOpen(true)
+  }, [])
+
+  const openResetPasswordModal = useCallback((user: User) => {
+    setMode('resetPassword')
     setUserToDelete(user)
     setEditingUser(null)
     setOrganizationId(null)
@@ -62,18 +90,24 @@ export const UserModalProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setUserToDelete(null)
   }, [])
 
-  return (
-    <UserModalContext.Provider value={{
+  const value = useMemo(
+    () => ({
       isOpen,
       mode,
       openNewUserModal,
       openEditUserModal,
       openDeleteUserModal,
+      openResetPasswordModal,
       closeModal,
       organizationId,
       editingUser,
       userToDelete,
-    }}>
+    }),
+    [isOpen, mode, organizationId, editingUser, userToDelete]
+  )
+
+  return (
+    <UserModalContext.Provider value={value}>
       {children}
     </UserModalContext.Provider>
   )

@@ -39,6 +39,14 @@ export interface SnapshotFromDB {
   costoAño1: number
   costoAño2: number
   quotationConfigId?: string | null
+  // ✅ Relación a QuotationConfig con info de estado
+  quotationConfig?: {
+    id: string
+    numero: string
+    estado: string
+    expiradoEn?: string | null
+    respondidoEn?: string | null
+  } | null
   activo: boolean
   createdAt: string
   updatedAt: string
@@ -271,10 +279,24 @@ export async function obtenerSnapshotsCompleto() {
       cache: 'no-store',
     })
 
-    if (!response.ok) throw new Error('Error al obtener snapshots completo')
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('Error response from /api/snapshots/all:', response.status, errorData)
+      throw new Error(`Error ${response.status}: ${errorData.error || 'Error al obtener snapshots completo'}`)
+    }
 
-    const snapshots: SnapshotFromDB[] = await response.json()
-    return snapshots.map(convertDBToSnapshot)
+    const snapshots: any[] = await response.json()
+    
+    // El endpoint retorna directamente un array de snapshots
+    // Convertir cada uno al formato esperado usando convertDBToSnapshot
+    return snapshots.map((snapshot: any) => {
+      try {
+        return convertDBToSnapshot(snapshot as SnapshotFromDB)
+      } catch (e) {
+        console.error('Error convirtiendo snapshot:', snapshot.id, e)
+        return null
+      }
+    }).filter((s): s is any => s !== null)
   } catch (error) {
     console.error('Error en obtenerSnapshotsCompleto:', error)
     return []

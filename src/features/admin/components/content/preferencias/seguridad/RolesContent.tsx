@@ -573,7 +573,7 @@ export default function RolesContent() {
           : `Modificando: ${selectedRole?.displayName}`
         }
         type="info"
-        size="md"
+        size="xl"
         contentType="custom"
         content={
           <div className="space-y-4">
