@@ -20,7 +20,7 @@ export default function FloatingAdminFooter() {
   
   const socialLinks = [
     { icon: <Mail className="w-3 h-3" />, href: "mailto:info@dgtecnova.com", label: "Email", color: "hover:text-blue-400" },
-    { icon: <MessageCircle className="w-3 h-3" />, href: "https://wa.me/yournumber", label: "WhatsApp", color: "hover:text-green-400" },
+    { icon: <MessageCircle className="w-3 h-3" />, href: "https://wa.me/+5358569291", label: "WhatsApp", color: "hover:text-green-400" },
     { icon: <Facebook className="w-3 h-3" />, href: "#", label: "Facebook", color: "hover:text-blue-600" },
     { icon: <Instagram className="w-3 h-3" />, href: "#", label: "Instagram", color: "hover:text-pink-500" },
     { icon: <Linkedin className="w-3 h-3" />, href: "#", label: "LinkedIn", color: "hover:text-blue-500" },
