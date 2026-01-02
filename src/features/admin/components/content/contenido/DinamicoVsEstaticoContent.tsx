@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeftRight, ChevronDown, ChevronUp } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
@@ -128,6 +130,9 @@ export default function DinamicoVsEstaticoContent({
   seccionesColapsadas,
   onSeccionColapsadaChange,
 }: DinamicoVsEstaticoContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
+
   // Estado de secciones colapsables viene de props (se persiste al guardar)
   const expandedSections = {
     estatico: seccionesColapsadas.dinamico_estatico ?? true,
@@ -181,15 +186,19 @@ export default function DinamicoVsEstaticoContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader
+      <SectionHeader
         title="Dinámico vs Estático"
-        subtitle="Comparativa técnica y recomendación de tipo de sitio web"
-        icon={ArrowLeftRight}
+        description="Comparativa técnica y recomendación de tipo de sitio web"
+        icon={<ArrowLeftRight className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-dynamic-vs-static', 'Guardada Comparativa Dinámico vs Estático')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

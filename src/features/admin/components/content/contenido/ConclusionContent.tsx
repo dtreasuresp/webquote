@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Flag } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 
@@ -72,6 +74,8 @@ export default function ConclusionContent({
   guardando,
   hasChanges,
 }: ConclusionContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
 
   return (
     <motion.div
@@ -80,15 +84,19 @@ export default function ConclusionContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader
+      <SectionHeader
         title="Conclusión"
-        subtitle="Cierre de la propuesta y siguiente paso hacia su presencia digital"
-        icon={Flag}
+        description="Cierre de la propuesta y siguiente paso hacia su presencia digital"
+        icon={<Flag className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-conclusion', 'Guardada Conclusión')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

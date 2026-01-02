@@ -54,7 +54,7 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1, duration: 0.4 }}
             whileHover={{ translateY: -2, scale: 1.02 }}
-            className="bg-gradient-to-br from-gh-bg-secondary to-gh-bg rounded-xl p-4 border border-gh-border cursor-pointer hover:border-gh-success transition-all"
+            className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10 cursor-pointer hover:border-gh-success/50 transition-all shadow-lg shadow-black/20"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -67,8 +67,8 @@ export default function KPICards({ snapshots, cargandoSnapshots }: KPICardsProps
                   )}
                 </p>
               </div>
-              <div className="p-2 rounded bg-gh-bg border border-gh-border">
-                <Icon className="text-gh-text text-sm" />
+              <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+                <Icon className="text-gh-success w-4 h-4" />
               </div>
             </div>
           </motion.div>

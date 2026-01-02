@@ -14,6 +14,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaKey, FaCog, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
 import { HiShieldCheck, HiUserCircle, HiBriefcase, HiCog8Tooth } from 'react-icons/hi2';
+import { getRoleColor, ROLE_COLORS } from '@/lib/constants/roles';
 
 interface UserProfileMenuProps {
   /** Logo de Identidad Visual (base64) */
@@ -45,20 +46,22 @@ const roleConfig = {
   SUPER_ADMIN: { 
     label: 'Super Admin', 
     icon: HiShieldCheck,
+    color: ROLE_COLORS.SUPER_ADMIN,
     dark: {
-      bg: 'bg-amber-500/15',
-      text: 'text-amber-400',
-      border: 'border-amber-500/40',
+      bg: 'bg-red-500/15',
+      text: 'text-red-400',
+      border: 'border-red-500/40',
     },
     light: {
-      bg: 'bg-amber-50',
-      text: 'text-amber-700',
-      border: 'border-amber-200',
+      bg: 'bg-red-50',
+      text: 'text-red-700',
+      border: 'border-red-200',
     },
   },
   ADMIN: { 
     label: 'Administrador', 
     icon: HiBriefcase,
+    color: ROLE_COLORS.ADMIN,
     dark: {
       bg: 'bg-blue-500/15',
       text: 'text-blue-400',
@@ -73,6 +76,7 @@ const roleConfig = {
   CLIENT: { 
     label: 'Cliente', 
     icon: HiUserCircle,
+    color: ROLE_COLORS.CLIENT,
     dark: {
       bg: 'bg-emerald-500/15',
       text: 'text-emerald-400',
@@ -176,7 +180,6 @@ export function UserProfileMenu({
         ring: 'focus-visible:ring-[#58a6ff]/50',
       },
       avatar: {
-        ring: 'ring-[#30363d]',
         bg: 'bg-gradient-to-br from-[#21262d] to-[#161b22]',
         text: 'text-[#8b949e]',
         onlineRing: 'ring-[#0d1117]',
@@ -196,7 +199,6 @@ export function UserProfileMenu({
         border: 'border-[#30363d]',
         name: 'text-[#f0f6fc]',
         username: 'text-[#8b949e]',
-        avatarRing: 'ring-[#30363d]',
         onlineRing: 'ring-[#161b22]',
       },
       menu: {
@@ -215,7 +217,6 @@ export function UserProfileMenu({
         ring: 'focus-visible:ring-[#0078d4]/40',
       },
       avatar: {
-        ring: 'ring-black/[0.08]',
         bg: 'bg-gradient-to-br from-[#0078d4] to-[#106ebe]',
         text: 'text-white',
         onlineRing: 'ring-white',
@@ -235,7 +236,6 @@ export function UserProfileMenu({
         border: 'border-gray-200/60',
         name: 'text-gray-900',
         username: 'text-gray-500',
-        avatarRing: 'ring-gray-200',
         onlineRing: 'ring-white',
       },
       menu: {
@@ -268,7 +268,10 @@ export function UserProfileMenu({
       >
         {/* Avatar con indicador online */}
         <div className="relative">
-          <div className={`w-8 h-8 rounded-full overflow-hidden ring-2 ${s.avatar.ring}`}>
+          <div 
+            className="w-8 h-8 rounded-full overflow-hidden ring-2"
+            style={{ boxShadow: `0 0 0 2px ${user.roleColor || getRoleColor(user.role)}` }}
+          >
             {logoUrl ? (
               <img
                 src={logoUrl}
@@ -282,7 +285,7 @@ export function UserProfileMenu({
             )}
           </div>
           {/* Indicador de estado online */}
-          <span className={`absolute -bottom-0.5 -right-0.5 block w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ${s.avatar.onlineRing}`} />
+          <span className={`absolute -bottom-0.5 -right-0.5 block w-1.5 h-1.5 bg-emerald-500 rounded-full ring-1 animate-pulse ${s.avatar.onlineRing}`} />
         </div>
 
         {/* Nombre del usuario */}
@@ -321,7 +324,10 @@ export function UserProfileMenu({
               <div className="flex items-start gap-3">
                 {/* Avatar grande */}
                 <div className="relative flex-shrink-0">
-                  <div className={`w-12 h-12 rounded-full overflow-hidden ring-2 ${s.header.avatarRing}`}>
+                  <div 
+                    className="w-12 h-12 rounded-full overflow-hidden ring-2 flex justify-center"
+                    style={{ boxShadow: `0 0 0 2px ${user.roleColor || getRoleColor(user.role)}` }}
+                  >
                     {logoUrl ? (
                       <img
                         src={logoUrl}
@@ -335,25 +341,31 @@ export function UserProfileMenu({
                     )}
                   </div>
                   {/* Indicador online */}
-                  <span className={`absolute -bottom-0.5 -right-0.5 block w-3.5 h-3.5 bg-emerald-500 rounded-full ring-[3px] ${s.header.onlineRing}`} />
+                  <span className={`absolute -bottom-0.5 -right-0.5 block w-3.5 h-3.5 bg-emerald-500 rounded-full ring-[3px] animate-pulse ${s.header.onlineRing}`} />
                 </div>
-
                 {/* Info del usuario */}
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <p className={`${s.header.name} font-semibold text-sm truncate leading-tight`}>
-                    {displayName}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className={`${s.header.name} font-semibold text-sm truncate leading-tight`}>
+                      {displayName}
+                    </p>
+                    <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 text-[6px] font-medium rounded-full border transition-colors`}
+                      style={user.roleColor ? {
+                        backgroundColor: `${user.roleColor}26`, // 15% opacidad
+                        color: user.roleColor,
+                        borderColor: `${user.roleColor}66`     // 40% opacidad
+                      } : {}}
+                    >
+                      <RoleIcon className="w-2.5 h-2.5" />
+                      <span>{roleInfo.label}</span>
+                    </div>
+                  </div>
+                  <p className={`${s.header.username} text-xs truncate mt-0.5`}>
+                    Usuario: @{user.username}
                   </p>
                   <p className={`${s.header.username} text-xs truncate mt-0.5`}>
-                    @{user.username}
+                    Email: {user.email}
                   </p>
-                  {/* Badge de rol */}
-                  <div className={`
-                    inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-md
-                    ${roleStyle.bg} ${roleStyle.text} border ${roleStyle.border}
-                  `}>
-                    <RoleIcon className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-semibold">{roleInfo.label}</span>
-                  </div>
                 </div>
               </div>
             </div>

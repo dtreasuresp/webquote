@@ -14,6 +14,10 @@ interface User {
   email: string | null
   telefono: string | null
   role: 'SUPER_ADMIN' | 'ADMIN' | 'CLIENT'
+  roleRef?: {
+    color: string | null
+    displayName?: string | null
+  }
   organizationId: string | null
   quotationAssignedId: string | null
   quotationAssigned?: {
@@ -118,14 +122,23 @@ export default function UsersTableInOrganization({
                     <span className="text-gh-text-muted">{user.email || '-'}</span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full font-medium ${
-                      user.role === 'SUPER_ADMIN'
-                        ? 'bg-amber-500/20 text-amber-400'
-                        : user.role === 'ADMIN'
-                        ? 'bg-purple-500/20 text-purple-400'
-                        : 'bg-gh-info/20 text-gh-info'
-                    }`}>
-                      {user.role === 'SUPER_ADMIN' ? 'Super Admin' : user.role === 'ADMIN' ? 'Admin' : 'Cliente'}
+                    <span 
+                      className={`px-2 py-0.5 rounded-full font-medium border transition-colors ${
+                        !user.roleRef?.color ? (
+                          user.role === 'SUPER_ADMIN'
+                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                            : user.role === 'ADMIN'
+                            ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                            : 'bg-gh-info/20 text-gh-info border-gh-info/30'
+                        ) : ''
+                      }`}
+                      style={user.roleRef?.color ? {
+                        backgroundColor: `${user.roleRef.color}26`,
+                        color: user.roleRef.color,
+                        borderColor: `${user.roleRef.color}66`
+                      } : {}}
+                    >
+                      {user.roleRef?.displayName || (user.role === 'SUPER_ADMIN' ? 'Super Admin' : user.role === 'ADMIN' ? 'Admin' : 'Cliente')}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">

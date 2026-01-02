@@ -72,19 +72,31 @@ interface PackageData {
   recomendado: boolean
 }
 
-export default function Paquetes() {
-  const { snapshots, loading } = useSnapshots()
+export default function Paquetes({ 
+  paquetes: externalPaquetes, 
+  loading: externalLoading,
+  visibilidad 
+}: { 
+  paquetes?: any[], 
+  loading?: boolean,
+  visibilidad?: any 
+} = {}) {
+  const { snapshots: internalSnapshots, loading: internalLoading } = useSnapshots()
 
-  const activos = snapshots.filter((s) => s.activo)
+  const snapshots = externalPaquetes || internalSnapshots
+  const loading = externalLoading !== undefined ? externalLoading : internalLoading
+
+  const activos = snapshots.filter((s: any) => s.activo)
 
   // Calcular inversión año 1 y datos por paquete
-  const paquetesData: PackageData[] = activos.map((snap) => {
-    const pagoInicial = snap.costos.inicial || 0
-    const inversionAnio1 = snap.costos.año1 || 0
+  const paquetesData: PackageData[] = activos.map((snap: any) => {
+    const pagoInicial = snap.costos?.inicial || snap.costoInicial || 0
+    const inversionAnio1 = snap.costos?.año1 || snap.costoAño1 || 0
 
     // Construcción de features
     const features: Array<{ category: string; items: string[] }> = []
-    for (const srv of snap.serviciosBase) {
+    const serviciosBase = snap.serviciosBase || []
+    for (const srv of serviciosBase) {
       if (srv.nombre.toLowerCase() !== 'gestión') {
         const mesesGratis = srv.mesesGratis || 3
         const mesesPago = srv.mesesPago || 9
@@ -98,9 +110,10 @@ export default function Paquetes() {
     }
 
     // Servicios opcionales
+    const otrosServicios = snap.otrosServicios || []
     const serviciosOpcionales =
-      snap.otrosServicios && snap.otrosServicios.length > 0
-        ? snap.otrosServicios.map((s: OtroServicioSnapshot) => ({
+      otrosServicios.length > 0
+        ? otrosServicios.map((s: any) => ({
             nombre: s.nombre,
             precio: s.precio || 0,
             mesesGratis: s.mesesGratis || 0,
@@ -110,15 +123,15 @@ export default function Paquetes() {
         : undefined
 
     // Páginas desde datos del paquete (opcional)
-    const pages = snap.paquete.cantidadPaginas || ''
+    const pages = snap.paquete?.cantidadPaginas || snap.cantidadPaginas || ''
 
     // Semanas desde tiempoEntrega (parsear si es posible)
-    const timelineWeeks = parseSemanasFromTiempoEntrega(snap.paquete.tiempoEntrega || '')
+    const timelineWeeks = parseSemanasFromTiempoEntrega(snap.paquete?.tiempoEntrega || snap.tiempoEntrega || '')
 
     // Nivel profesional basado en tipo o nombre
-    const nombreUpper = snap.nombre.toUpperCase()
-    let nivelProfesional = snap.paquete.tipo || 'ESTÁNDAR'
-    if (!snap.paquete.tipo) {
+    const nombreUpper = (snap.nombre || '').toUpperCase()
+    let nivelProfesional = snap.paquete?.tipo || snap.tipo || 'ESTÁNDAR'
+    if (!nivelProfesional || nivelProfesional === 'ESTÁNDAR') {
       if (nombreUpper.includes('CONSTRUCTOR')) {
         nivelProfesional = 'BÁSICO'
       } else if (nombreUpper.includes('OBRA')) {
@@ -131,15 +144,15 @@ export default function Paquetes() {
     return {
       id: snap.id,
       nombre: nombreUpper,
-      slug: slugify(snap.nombre),
-      href: `/paquete/${slugify(snap.nombre)}`,
+      slug: slugify(snap.nombre || ''),
+      href: `/paquete/${slugify(snap.nombre || '')}`,
       icon: '🎁',
       nivelProfesional,
-      tipo: snap.paquete.tipo || '',
+      tipo: snap.paquete?.tipo || snap.tipo || '',
       subtitulo: `VALOR DEL CONTRATO: $${inversionAnio1} USD`,
       pagoInicial,
       inversionAnio1,
-      description: snap.paquete.descripcion || `Paquete personalizado para empresas.`,
+      description: snap.paquete?.descripcion || snap.descripcion || `Paquete personalizado para empresas.`,
       features,
       serviciosOpcionales,
       pages,

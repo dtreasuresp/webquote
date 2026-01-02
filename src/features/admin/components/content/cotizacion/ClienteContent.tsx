@@ -3,6 +3,9 @@
 import React from 'react'
 import { Building2, Check, AlertTriangle, Mail, Phone, MapPin } from 'lucide-react'
 import { QuotationConfig } from '@/lib/types'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '@/features/admin/hooks/useAdminAudit'
+import { useAdminPermissions } from '@/features/admin/hooks/useAdminPermissions'
 
 interface ClienteContentProps {
   cotizacionConfig: QuotationConfig | null
@@ -19,33 +22,25 @@ export default function ClienteContent({
   setCotizacionConfig,
   erroresValidacionCotizacion,
 }: Readonly<ClienteContentProps>) {
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
   const estaConfigurado = cotizacionConfig?.empresa && cotizacionConfig.empresa.trim() !== ''
+
+  const handleUpdate = (field: keyof QuotationConfig, value: any) => {
+    if (!canEdit('QUOTES')) return
+    setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, [field]: value } : null)
+    // No logueamos cada tecla, pero podríamos loguear al perder el foco si fuera necesario
+  }
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-gh-accent" />
-            Información del Cliente
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Datos de la empresa y contacto del cliente
-          </p>
-        </div>
-        <span className={`text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5 border ${
-          estaConfigurado 
-            ? 'bg-gh-success/10 text-gh-success border-gh-success/30' 
-            : 'bg-gh-warning/10 text-gh-warning border-gh-warning/30'
-        }`}>
-          {estaConfigurado ? (
-            <><Check className="w-3 h-3" /> Configurado</>
-          ) : (
-            <><AlertTriangle className="w-3 h-3" /> Incompleto</>
-          )}
-        </span>
-      </div>
+      <SectionHeader
+        title="Información del Cliente"
+        description="Datos de la empresa y contacto del cliente"
+        icon={<Building2 className="w-4 h-4" />}
+        statusIndicator={estaConfigurado ? 'guardado' : 'sin-modificar'}
+        variant="accent"
+      />
 
       {/* Empresa y Sector */}
       <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
@@ -62,7 +57,7 @@ export default function ClienteContent({
               <input
                 type="text"
                 value={cotizacionConfig?.empresa || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, empresa: e.target.value } : null)}
+                onChange={(e) => handleUpdate('empresa', e.target.value)}
                 className={`w-full px-3 py-2 bg-gh-bg-tertiary/50 border rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:outline-none transition-colors ${
                   erroresValidacionCotizacion.empresa 
                     ? 'border-gh-danger/50 focus:border-gh-danger focus:ring-1 focus:ring-gh-danger/30' 
@@ -79,7 +74,7 @@ export default function ClienteContent({
               <input
                 type="text"
                 value={cotizacionConfig?.sector || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, sector: e.target.value } : null)}
+                onChange={(e) => handleUpdate('sector', e.target.value)}
                 className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
                 placeholder="Ej: Tecnología, Restaurantes..."
               />
@@ -101,7 +96,7 @@ export default function ClienteContent({
               <input
                 type="email"
                 value={cotizacionConfig?.emailCliente || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, emailCliente: e.target.value } : null)}
+                onChange={(e) => handleUpdate('emailCliente', e.target.value)}
                 className={`w-full px-3 py-2 bg-gh-bg-tertiary/50 border rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:outline-none transition-colors ${
                   erroresValidacionCotizacion.emailCliente 
                     ? 'border-gh-danger/50 focus:border-gh-danger focus:ring-1 focus:ring-gh-danger/30' 
@@ -118,7 +113,7 @@ export default function ClienteContent({
               <input
                 type="tel"
                 value={cotizacionConfig?.whatsappCliente || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, whatsappCliente: e.target.value } : null)}
+                onChange={(e) => handleUpdate('whatsappCliente', e.target.value)}
                 className={`w-full px-3 py-2 bg-gh-bg-tertiary/50 border rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:outline-none transition-colors ${
                   erroresValidacionCotizacion.whatsappCliente 
                     ? 'border-gh-danger/50 focus:border-gh-danger focus:ring-1 focus:ring-gh-danger/30' 
@@ -143,7 +138,7 @@ export default function ClienteContent({
         <div className="p-4">
           <textarea
             value={cotizacionConfig?.ubicacion || ''}
-            onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, ubicacion: e.target.value } : null)}
+            onChange={(e) => handleUpdate('ubicacion', e.target.value)}
             rows={3}
             className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors resize-none"
             placeholder="Dirección completa del cliente"

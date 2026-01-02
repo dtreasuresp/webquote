@@ -11,7 +11,7 @@ interface QuotationInteractionWidgetProps {
   quotationNumber: string
   onAceptar?: () => void
   onRechazar?: () => void
-  onNuevaProuesta?: () => void
+  onNuevaPropuesta?: () => void
   disabled?: boolean
 }
 
@@ -35,7 +35,7 @@ export function QuotationInteractionWidget({
   quotationNumber,
   onAceptar,
   onRechazar,
-  onNuevaProuesta,
+  onNuevaPropuesta,
   disabled = false,
 }: Readonly<QuotationInteractionWidgetProps>) {
   const [tiempo, setTiempo] = useState<TimeState>({ dias: 0, horas: 0, minutos: 0, segundos: 0 })
@@ -334,7 +334,7 @@ export function QuotationInteractionWidget({
               <motion.button
                 variants={itemVariants}
                 onClick={() => {
-                  onNuevaProuesta?.()
+                  onNuevaPropuesta?.()
                   setExpanded(false)
                 }}
                 disabled={disabled}

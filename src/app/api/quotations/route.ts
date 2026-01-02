@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireReadPermission, requireWritePermission } from '@/lib/apiProtection'
+import { AutomationService } from '@/features/admin/services/automationService'
 
 // Forzar que esta ruta sea dinámica (no cacheada)
 export const dynamic = 'force-dynamic'
@@ -174,6 +175,11 @@ export async function POST(request: NextRequest) {
         where: { id: packageSnapshotId },
         data: { quotationConfigId: result.id },
       })
+    }
+
+    // Evaluar reglas de automatización
+    if (result.id) {
+      await AutomationService.evaluateRules(result.id)
     }
 
     return NextResponse.json({

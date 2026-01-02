@@ -39,11 +39,11 @@ export default function FloatingAdminFooter() {
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-gh-success animate-pulse" />
-              <span className="text-[10px] font-bold text-gh-accent uppercase tracking-widest">WebQuote</span>
+              <span className="text-[10px] font-bold text-gh-accent uppercase tracking-widest">NovaSuite</span>
             </div>
             <span className="text-[9px] text-gh-text-muted font-mono bg-gh-bg-tertiary px-1.5 py-0.5 rounded border border-gh-border/50">v1.4.0</span>
           </div>
-          <p className="text-[10px] text-gh-text-muted leading-tight">Sistema de Gestión de Cotizaciones en la nube</p>
+          <p className="text-[10px] text-gh-text-muted leading-tight">Gestión integral de la plataforma NovaSuite</p>
         </div>
 
         {/* Company Info */}

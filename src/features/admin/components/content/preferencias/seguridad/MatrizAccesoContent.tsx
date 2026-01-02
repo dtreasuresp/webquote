@@ -20,7 +20,8 @@ import {
 } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
-import { usePermission } from '@/hooks'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 // ==================== TIPOS ====================
 
@@ -58,7 +59,10 @@ const CATEGORIES = [
 
 export default function MatrizAccesoContent() {
   // Permisos granulares
-  const matrixPerms = usePermission('security.matrix')
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn, canView: canViewFn, isSuperAdmin } = useAdminPermissions()
+  const canEdit = canEditFn('ROLES')
+  const canView = canViewFn('ROLES')
   const toast = useToast()
   
   // Estado
@@ -116,15 +120,7 @@ export default function MatrizAccesoContent() {
   }, [fetchData])
 
   // Control de acceso
-  if (matrixPerms.isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-      </div>
-    )
-  }
-
-  if (!matrixPerms.canView) {
+  if (!canView) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Lock className="w-16 h-16 text-red-500" />
@@ -223,7 +219,7 @@ export default function MatrizAccesoContent() {
       setSaving(true)
       
       // Solo filtrar roles del sistema si NO es SUPER_ADMIN
-      const systemRoleIds = matrixPerms.isSuperAdmin 
+      const systemRoleIds = isSuperAdmin 
         ? new Set<string>() // SUPER_ADMIN puede modificar todo
         : new Set(roles.filter(r => r.isSystem).map(r => r.id)) // Otros roles no pueden modificar roles del sistema
       
@@ -260,6 +256,7 @@ export default function MatrizAccesoContent() {
       // Sin necesidad de recargar desde el servidor
       setOriginalMatrix(JSON.parse(JSON.stringify(matrix)))
       setHasChanges(false)
+      logAction('UPDATE', 'ROLES', 'matrix-update', { updates: updates.length })
       toast.success('✅ Permisos actualizados correctamente')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al guardar')
@@ -345,64 +342,46 @@ export default function MatrizAccesoContent() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <LayoutGrid className="w-4 h-4 text-gh-accent" />
-            Matriz de Acceso
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Configura los permisos de cada rol
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Indicador de cambios */}
-          {hasChanges && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-[10px] text-gh-warning px-2 py-0.5 bg-gh-warning/10 rounded-full"
-            >
-              Cambios sin guardar
-            </motion.span>
-          )}
-
-          {/* Botón descartar */}
-          {hasChanges && (
-            <button
-              onClick={handleDiscard}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors text-xs"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Descartar
-            </button>
-          )}
-
-          {/* Botón guardar */}
-          {matrixPerms.canEdit && (
-            <button
-              onClick={handleSave}
-              disabled={!hasChanges || saving}
-              className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-                ${hasChanges 
-                  ? 'bg-gh-success/10 text-gh-success border border-gh-success/30 hover:bg-gh-success/20' 
-                  : 'bg-gh-bg-tertiary text-gh-text-muted border border-gh-border/30 cursor-not-allowed'
-                }
-              `}
-            >
-              {saving ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Save className="w-3.5 h-3.5" />
-              )}
-              Guardar
-            </button>
-          )}
-        </div>
-      </div>
+      <SectionHeader
+        title="Matriz de Acceso"
+        description="Configura los permisos de cada rol"
+        icon={<LayoutGrid className="w-4 h-4" />}
+        variant="accent"
+        statusIndicator={hasChanges ? 'sin-guardar' : 'guardado'}
+        actions={
+          <div className="flex items-center gap-2">
+            {hasChanges && (
+              <button
+                onClick={handleDiscard}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors text-xs"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Descartar
+              </button>
+            )}
+            {canEdit && (
+              <button
+                onClick={handleSave}
+                disabled={!hasChanges || saving}
+                className={`
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+                  ${hasChanges 
+                    ? 'bg-gh-success/10 text-gh-success border border-gh-success/30 hover:bg-gh-success/20' 
+                    : 'bg-gh-bg-tertiary text-gh-text-muted border border-gh-border/30 cursor-not-allowed'
+                  }
+                `}
+              >
+                {saving ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                Guardar
+              </button>
+            )}
+          </div>
+        }
+      />
 
       {/* Leyenda */}
       <div className="flex items-center gap-4 text-[10px] text-gh-text-muted">

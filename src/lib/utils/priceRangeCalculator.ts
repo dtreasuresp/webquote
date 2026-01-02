@@ -30,7 +30,7 @@ export function getDevelopmentRange(snapshots: PackageSnapshot[]): string {
   
   if (active.length === 0) return 'Por definir'
   
-  const prices = active.map(s => s.paquete.desarrollo).filter(p => p > 0)
+  const prices = active.map(s => s.paquete?.desarrollo || 0).filter(p => p > 0)
   
   if (prices.length === 0) return 'Por definir'
   
@@ -139,7 +139,7 @@ export function getInitialInvestmentRange(snapshots: PackageSnapshot[]): string 
   if (active.length === 0) return 'Por definir'
   
   const prices = active
-    .map(s => s.costos.inicial)
+    .map(s => s.costos?.inicial || 0)
     .filter(p => p > 0)
   
   if (prices.length === 0) return 'Por definir'
@@ -254,14 +254,14 @@ export function getPaquetesDesglose(snapshots: PackageSnapshot[]): PaqueteDesglo
     return {
       id: snap.id,
       nombre: snap.nombre,
-      emoji: snap.paquete.emoji || '📦',
-      tagline: snap.paquete.tagline || '',
-      tiempoEntrega: snap.paquete.tiempoEntrega || '',
-      desarrollo: snap.paquete.desarrollo,
+      emoji: snap.paquete?.emoji || '📦',
+      tagline: snap.paquete?.tagline || '',
+      tiempoEntrega: snap.paquete?.tiempoEntrega || '',
+      desarrollo: snap.paquete?.desarrollo || 0,
       serviciosBase,
       serviciosOpcionales,
-      costoInicial: snap.costos.inicial,
-      costoAnio1: snap.costos.año1,
+      costoInicial: snap.costos?.inicial || 0,
+      costoAnio1: snap.costos?.año1 || 0,
     }
   })
 }

@@ -242,7 +242,7 @@ export default function OfertaTab({
   ] as const
 
   return (
-    <div className="pl-2 pr-6 py-6 flex gap-6 items-stretch">
+    <div className="flex h-[calc(100vh-180px)] min-h-[600px] bg-transparent border border-white/10 rounded-xl overflow-hidden">
       <AdminSidebar
         items={items.map(i => ({ id: i.id, label: i.label, icon: i.icon, badge: 'badge' in i ? i.badge : undefined }))}
         activeItem={activeItem}
@@ -251,168 +251,170 @@ export default function OfertaTab({
         titleIcon={Box}
       />
 
-      <div className="flex-1">
-        {effectiveActiveItem === 'paquete' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <PaqueteContent
-              paqueteActual={paqueteActual}
-              setPaqueteActual={setPaqueteActual}
-              descripcionTextareaRef={descripcionTextareaRef}
-              modoEdicion={modoEdicionPaquete}
-              setModoEdicion={setModoEdicionPaquete}
-              descripcionesTemplate={descripcionesTemplate || []}
-              setDescripcionesTemplate={setDescripcionesTemplate}
-              mostrarDialogoGenerico={mostrarDialogoGenerico}
-              toast={toast}
-              updatedAt={cotizacionConfig?.updatedAt}
-            />
-          </motion.div>
-        )}
+      <div className="flex-1 flex flex-col min-w-0 bg-transparent overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-none">
+          {effectiveActiveItem === 'paquete' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <PaqueteContent
+                paqueteActual={paqueteActual}
+                setPaqueteActual={setPaqueteActual}
+                descripcionTextareaRef={descripcionTextareaRef}
+                modoEdicion={modoEdicionPaquete}
+                setModoEdicion={setModoEdicionPaquete}
+                descripcionesTemplate={descripcionesTemplate || []}
+                setDescripcionesTemplate={setDescripcionesTemplate}
+                mostrarDialogoGenerico={mostrarDialogoGenerico}
+                toast={toast}
+                updatedAt={cotizacionConfig?.updatedAt}
+              />
+            </motion.div>
+          )}
 
-        {effectiveActiveItem === 'servicios-base' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ServiciosBaseContent
-              serviciosBase={serviciosBase}
-              setServiciosBase={setServiciosBase}
-              nuevoServicioBase={nuevoServicioBase}
-              setNuevoServicioBase={setNuevoServicioBase}
-              editandoServicioBaseId={editandoServicioBaseId}
-              setEditandoServicioBaseId={setEditandoServicioBaseId}
-              servicioBaseEditando={servicioBaseEditando}
-              setServicioBaseEditando={setServicioBaseEditando}
-              agregarServicioBase={agregarServicioBase}
-              abrirEditarServicioBase={abrirEditarServicioBase}
-              guardarEditarServicioBase={guardarEditarServicioBase}
-              cancelarEditarServicioBase={cancelarEditarServicioBase}
-              eliminarServicioBase={eliminarServicioBase}
-              updatedAt={cotizacionConfig?.updatedAt}
-            />
-          </motion.div>
-        )}
+          {effectiveActiveItem === 'servicios-base' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ServiciosBaseContent
+                serviciosBase={serviciosBase}
+                setServiciosBase={setServiciosBase}
+                nuevoServicioBase={nuevoServicioBase}
+                setNuevoServicioBase={setNuevoServicioBase}
+                editandoServicioBaseId={editandoServicioBaseId}
+                setEditandoServicioBaseId={setEditandoServicioBaseId}
+                servicioBaseEditando={servicioBaseEditando}
+                setServicioBaseEditando={setServicioBaseEditando}
+                agregarServicioBase={agregarServicioBase}
+                abrirEditarServicioBase={abrirEditarServicioBase}
+                guardarEditarServicioBase={guardarEditarServicioBase}
+                cancelarEditarServicioBase={cancelarEditarServicioBase}
+                eliminarServicioBase={eliminarServicioBase}
+                updatedAt={cotizacionConfig?.updatedAt}
+              />
+            </motion.div>
+          )}
 
-        {effectiveActiveItem === 'servicios-opcionales' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ServiciosOpcionalesContent
-              serviciosOpcionales={serviciosOpcionales}
-              setServiciosOpcionales={setServiciosOpcionales}
-              nuevoServicio={nuevoServicio}
-              setNuevoServicio={setNuevoServicio}
-              editandoServicioId={editandoServicioId}
-              setEditandoServicioId={setEditandoServicioId}
-              servicioEditando={servicioEditando}
-              setServicioEditando={setServicioEditando}
-              agregarServicioOpcional={agregarServicioOpcional}
-              abrirEditarServicioOpcional={abrirEditarServicioOpcional}
-              guardarEditarServicioOpcional={guardarEditarServicioOpcional}
-              cancelarEditarServicioOpcional={cancelarEditarServicioOpcional}
-              eliminarServicioOpcional={eliminarServicioOpcional}
-              normalizarMeses={normalizarMeses}
-              serviciosOpcionalesValidos={serviciosOpcionalesValidos}
-              todoEsValido={todoEsValido}
-              updatedAt={cotizacionConfig?.updatedAt}
-            />
-          </motion.div>
-        )}
+          {effectiveActiveItem === 'servicios-opcionales' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ServiciosOpcionalesContent
+                serviciosOpcionales={serviciosOpcionales}
+                setServiciosOpcionales={setServiciosOpcionales}
+                nuevoServicio={nuevoServicio}
+                setNuevoServicio={setNuevoServicio}
+                editandoServicioId={editandoServicioId}
+                setEditandoServicioId={setEditandoServicioId}
+                servicioEditando={servicioEditando}
+                setServicioEditando={setServicioEditando}
+                agregarServicioOpcional={agregarServicioOpcional}
+                abrirEditarServicioOpcional={abrirEditarServicioOpcional}
+                guardarEditarServicioOpcional={guardarEditarServicioOpcional}
+                cancelarEditarServicioOpcional={cancelarEditarServicioOpcional}
+                eliminarServicioOpcional={eliminarServicioOpcional}
+                normalizarMeses={normalizarMeses}
+                serviciosOpcionalesValidos={serviciosOpcionalesValidos}
+                todoEsValido={todoEsValido}
+                updatedAt={cotizacionConfig?.updatedAt}
+              />
+            </motion.div>
+          )}
 
-        {effectiveActiveItem === 'paquetes' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <PaquetesContent
-              snapshots={snapshots}
-              setSnapshots={setSnapshots}
-              cargandoSnapshots={cargandoSnapshots}
-              errorSnapshots={errorSnapshots}
-              abrirModalEditar={abrirModalEditar}
-              handleEliminarSnapshot={handleEliminarSnapshot}
-              calcularCostoInicialSnapshot={calcularCostoInicialSnapshot}
-              calcularCostoAño1Snapshot={calcularCostoAño1Snapshot}
-              calcularCostoAño2Snapshot={calcularCostoAño2Snapshot}
-              actualizarSnapshot={actualizarSnapshot}
-              refreshSnapshots={refreshSnapshots}
-              toast={toast}
-              mostrarDialogoGenerico={mostrarDialogoGenerico}
-              cotizacionConfig={cotizacionConfig}
-              onCompararPaquete={onCompararPaquete}
-              onCompararPaqueteIndividual={onCompararPaqueteIndividual}
-              paqueteParaComparar={paqueteParaComparar}
-              updatedAt={cotizacionConfig?.updatedAt}
-            />
-          </motion.div>
-        )}
+          {effectiveActiveItem === 'paquetes' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <PaquetesContent
+                snapshots={snapshots}
+                setSnapshots={setSnapshots}
+                cargandoSnapshots={cargandoSnapshots}
+                errorSnapshots={errorSnapshots}
+                abrirModalEditar={abrirModalEditar}
+                handleEliminarSnapshot={handleEliminarSnapshot}
+                calcularCostoInicialSnapshot={calcularCostoInicialSnapshot}
+                calcularCostoAño1Snapshot={calcularCostoAño1Snapshot}
+                calcularCostoAño2Snapshot={calcularCostoAño2Snapshot}
+                actualizarSnapshot={actualizarSnapshot}
+                refreshSnapshots={refreshSnapshots}
+                toast={toast}
+                mostrarDialogoGenerico={mostrarDialogoGenerico}
+                cotizacionConfig={cotizacionConfig}
+                onCompararPaquete={onCompararPaquete}
+                onCompararPaqueteIndividual={onCompararPaqueteIndividual}
+                paqueteParaComparar={paqueteParaComparar}
+                updatedAt={cotizacionConfig?.updatedAt}
+              />
+            </motion.div>
+          )}
 
-        {effectiveActiveItem === 'financiero' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <FinancieroContent
-              desarrolloCosto={paqueteActual.desarrollo || 0}
-              setDesarrolloCosto={(v) => setPaqueteActual({ ...paqueteActual, desarrollo: v })}
-              descuentoBase={paqueteActual.descuento || 0}
-              setDescuentoBase={(v) => setPaqueteActual({ ...paqueteActual, descuento: v })}
-              opcionesPago={opcionesPago}
-              setOpcionesPago={setOpcionesPago}
-              metodoPagoPreferido={metodoPagoPreferido}
-              setMetodoPagoPreferido={setMetodoPagoPreferido}
-              notasPago={notasPago}
-              setNotasPago={setNotasPago}
-              metodosPreferidos={metodosPreferidos}
-              setMetodosPreferidos={setMetodosPreferidos}
-              configDescuentos={configDescuentos}
-              setConfigDescuentos={setConfigDescuentos}
-              serviciosBase={serviciosBase}
-              serviciosOpcionales={serviciosOpcionales}
-              metodosPagoData={metodosPagoData}
-              onMetodosPagoChange={onMetodosPagoChange}
-              financialTemplates={financialTemplates}
-              setFinancialTemplates={setFinancialTemplates}
-              onSaveFinancialTemplate={onSaveFinancialTemplate}
-              onUpdateFinancialTemplate={onUpdateFinancialTemplate}
-              onDeleteFinancialTemplate={onDeleteFinancialTemplate}
-              onNuevaOfertaFinanciera={onNuevaOfertaFinanciera}
-              toast={toast}
-              mostrarDialogoGenerico={mostrarDialogoGenerico}
-              updatedAt={cotizacionConfig?.updatedAt}
-            />
-          </motion.div>
-        )}
+          {effectiveActiveItem === 'financiero' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FinancieroContent
+                desarrolloCosto={paqueteActual.desarrollo || 0}
+                setDesarrolloCosto={(v) => setPaqueteActual({ ...paqueteActual, desarrollo: v })}
+                descuentoBase={paqueteActual.descuento || 0}
+                setDescuentoBase={(v) => setPaqueteActual({ ...paqueteActual, descuento: v })}
+                opcionesPago={opcionesPago}
+                setOpcionesPago={setOpcionesPago}
+                metodoPagoPreferido={metodoPagoPreferido}
+                setMetodoPagoPreferido={setMetodoPagoPreferido}
+                notasPago={notasPago}
+                setNotasPago={setNotasPago}
+                metodosPreferidos={metodosPreferidos}
+                setMetodosPreferidos={setMetodosPreferidos}
+                configDescuentos={configDescuentos}
+                setConfigDescuentos={setConfigDescuentos}
+                serviciosBase={serviciosBase}
+                serviciosOpcionales={serviciosOpcionales}
+                metodosPagoData={metodosPagoData}
+                onMetodosPagoChange={onMetodosPagoChange}
+                financialTemplates={financialTemplates}
+                setFinancialTemplates={setFinancialTemplates}
+                onSaveFinancialTemplate={onSaveFinancialTemplate}
+                onUpdateFinancialTemplate={onUpdateFinancialTemplate}
+                onDeleteFinancialTemplate={onDeleteFinancialTemplate}
+                onNuevaOfertaFinanciera={onNuevaOfertaFinanciera}
+                toast={toast}
+                mostrarDialogoGenerico={mostrarDialogoGenerico}
+                updatedAt={cotizacionConfig?.updatedAt}
+              />
+            </motion.div>
+          )}
 
-        {effectiveActiveItem === 'caracteristicas' && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <PaquetesCaracteristicasContent
-              data={paquetesCaracteristicasData || defaultPaquetesCaracteristicas}
-              onChange={onPaquetesCaracteristicasChange || (() => {})}
-              isConfigLoading={isConfigLoading}
-              updatedAt={cotizacionConfig?.updatedAt}
-            />
-          </motion.div>
-        )}
+          {effectiveActiveItem === 'caracteristicas' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <PaquetesCaracteristicasContent
+                data={paquetesCaracteristicasData || defaultPaquetesCaracteristicas}
+                onChange={onPaquetesCaracteristicasChange || (() => {})}
+                isConfigLoading={isConfigLoading}
+                updatedAt={cotizacionConfig?.updatedAt}
+              />
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   )

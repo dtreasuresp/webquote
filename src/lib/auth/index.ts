@@ -20,6 +20,7 @@ declare module "next-auth" {
       username: string;
       email?: string | null;
       role: UserRoleType;
+      roleColor?: string | null;
       empresa: string;
       nombre: string;
       quotationAssignedId?: string | null;
@@ -34,6 +35,7 @@ declare module "next-auth" {
     username: string;
     email?: string | null;
     role: UserRoleType;
+    roleColor?: string | null;
     empresa: string;
     nombre: string;
     quotationAssignedId?: string | null;
@@ -48,6 +50,7 @@ declare module "next-auth/jwt" {
     id: string;
     username: string;
     role: UserRoleType;
+    roleColor?: string | null;
     empresa: string;
     nombre: string;
     quotationAssignedId?: string | null;
@@ -93,6 +96,11 @@ export const authOptions: NextAuthOptions = {
             quotationAssignedId: true,
             avatarUrl: true,
             activo: true,
+            roleRef: {
+              select: {
+                color: true
+              }
+            }
           },
         });
 
@@ -141,6 +149,7 @@ export const authOptions: NextAuthOptions = {
           username: user.username,
           email: user.email,
           role: user.role,
+          roleColor: user.roleRef?.color,
           empresa: user.empresa,
           nombre: user.nombre,
           quotationAssignedId: user.quotationAssignedId,
@@ -151,12 +160,13 @@ export const authOptions: NextAuthOptions = {
   ],
   
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Añadir datos del usuario al token JWT
       if (user) {
         token.id = user.id;
         token.username = user.username;
         token.role = user.role;
+        token.roleColor = user.roleColor;
         token.empresa = user.empresa;
         token.nombre = user.nombre;
         token.quotationAssignedId = user.quotationAssignedId;
@@ -213,6 +223,12 @@ export const authOptions: NextAuthOptions = {
         // ✨ FASE 12: Agregar timestamp para validación de caché
         token.permissionsCacheValidAt = Date.now();
       }
+
+      // ✨ Soporte para actualización dinámica de sesión
+      if (trigger === "update" && session?.user) {
+        return { ...token, ...session.user };
+      }
+
       return token;
     },
     
@@ -224,6 +240,7 @@ export const authOptions: NextAuthOptions = {
           username: token.username,
           email: token.email as string | undefined,
           role: token.role,
+          roleColor: token.roleColor as string | undefined,
           empresa: token.empresa,
           nombre: token.nombre,
           quotationAssignedId: token.quotationAssignedId,

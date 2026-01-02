@@ -21,7 +21,8 @@ import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 import DatePicker from '@/components/ui/DatePicker'
 import DialogoGenericoDinamico, { DialogFormField } from '@/features/admin/components/DialogoGenericoDinamico'
-import { usePermission } from '@/hooks/usePermission'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 import { useAuditConfigStore } from '@/stores'
 
 // ==================== TIPOS ====================
@@ -95,8 +96,12 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 // ==================== COMPONENTE ====================
 
 export default function LogsAuditoriaContent() {
-  // Permisos granulares
-  const logsPerms = usePermission('logs')
+  const { logAction } = useAdminAudit()
+  const { canView: canViewFn, canExport: canExportFn, canEdit: canEditFn } = useAdminPermissions()
+  
+  const canView = canViewFn('AUDIT')
+  const canExport = canExportFn('AUDIT')
+  const canManage = canEditFn('AUDIT')
 
   // Zustand store para configuración de auditoría
   const { retentionDays, loadConfig } = useAuditConfigStore()
@@ -105,6 +110,7 @@ export default function LogsAuditoriaContent() {
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toISOString())
   
   // Paginación
   const [itemsPerPage, setItemsPerPage] = useState<number | 'all'>(10)
@@ -147,6 +153,7 @@ export default function LogsAuditoriaContent() {
       
       const data = await res.json()
       setLogs(data.logs || [])
+      setLastUpdated(new Date().toISOString())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
@@ -314,62 +321,57 @@ export default function LogsAuditoriaContent() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <FileText className="w-4 h-4 text-gh-accent" />
-            Logs de Auditoría
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Historial de cambios en el sistema
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Refrescar */}
-          <button
-            onClick={fetchLogs}
-            disabled={loading}
-            className="p-1.5 text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary rounded transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-
-          {/* Generar Reporte */}
-          {logsPerms.canManage && (
+      <SectionHeader
+        title="Logs de Auditoría"
+        description="Historial de cambios en el sistema"
+        icon={<FileText className="w-4 h-4" />}
+        updatedAt={lastUpdated}
+        actions={
+          <div className="flex items-center gap-2">
+            {/* Refrescar */}
             <button
-              onClick={() => setReportDialogOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
+              onClick={fetchLogs}
+              disabled={loading}
+              className="p-1.5 text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary rounded transition-colors"
             >
-              <FileText className="w-3.5 h-3.5" />
-              Generar Reporte
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-          )}
 
-          {/* Purgar Logs */}
-          {logsPerms.canManage && (
-            <button
-              onClick={() => setPurgeDialogOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-danger/10 text-gh-danger border border-gh-danger/30 rounded-md hover:bg-gh-danger/20 transition-colors text-xs font-medium"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Purgar Logs
-            </button>
-          )}
+            {/* Generar Reporte */}
+            {canManage && (
+              <button
+                onClick={() => setReportDialogOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Generar Reporte
+              </button>
+            )}
 
-          {/* Exportar (solo si tiene accessLevel full) */}
-          {logsPerms.canExport && (
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-accent/10 text-gh-accent border border-gh-accent/30 rounded-md hover:bg-gh-accent/20 transition-colors text-xs font-medium"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Exportar CSV
-            </button>
-          )}
-        </div>
-      </div>
+            {/* Purgar Logs */}
+            {canManage && (
+              <button
+                onClick={() => setPurgeDialogOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-danger/10 text-gh-danger border border-gh-danger/30 rounded-md hover:bg-gh-danger/20 transition-colors text-xs font-medium"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Purgar Logs
+              </button>
+            )}
+
+            {/* Exportar */}
+            {canExport && (
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-accent/10 text-gh-accent border border-gh-accent/30 rounded-md hover:bg-gh-accent/20 transition-colors text-xs font-medium"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Exportar CSV
+              </button>
+            )}
+          </div>
+        }
+      />
 
       {/* Filtros */}
       <div className="flex items-center gap-3 flex-wrap">

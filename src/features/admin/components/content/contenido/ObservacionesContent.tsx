@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
@@ -119,6 +121,10 @@ export default function ObservacionesContent({
   seccionesColapsadas,
   onSeccionColapsadaChange,
 }: ObservacionesContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('CONTENT')
+  
   // Estado de secciones colapsables viene de props (se persiste al guardar)
   const expandedSections = {
     puntosAtencion: seccionesColapsadas.observaciones_puntosAtencion ?? true,
@@ -221,15 +227,19 @@ export default function ObservacionesContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader
+      <SectionHeader 
         title="Observaciones y Recomendaciones"
-        subtitle="Notas importantes y sugerencias para el proyecto"
-        icon={AlertTriangle}
+        description="Consideraciones importantes para el éxito del proyecto"
+        icon={<AlertTriangle className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-observaciones', 'Guardadas Observaciones y Recomendaciones')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

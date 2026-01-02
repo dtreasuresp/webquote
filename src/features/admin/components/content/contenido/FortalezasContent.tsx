@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Star, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
@@ -101,6 +103,9 @@ export default function FortalezasContent({
   seccionesColapsadas,
   onSeccionColapsadaChange,
 }: FortalezasContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
+
   // Estado de secciones colapsables viene de props (se persiste al guardar)
   const expandedSections = {
     fortalezas: seccionesColapsadas.fortalezas_fortalezas ?? true,
@@ -146,15 +151,19 @@ export default function FortalezasContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader
+      <SectionHeader
         title="Fortalezas del Proyecto"
-        subtitle="Ventajas competitivas y factores de éxito del proyecto"
-        icon={Star}
+        description="Ventajas competitivas y factores de éxito del proyecto"
+        icon={<Star className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-strengths', 'Guardadas Fortalezas del Proyecto')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

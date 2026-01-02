@@ -94,7 +94,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
   return (
     <>
       {/* Tab Bar - Diseño GitHub Premium con soporte multi-fila */}
-      <div className="sticky top-0 z-40 bg-gradient-to-b from-[#161b22] to-[#0d1117] border-b border-[#30363d]">
+      <div className="sticky top-0 z-40 bg-transparent backdrop-blur-md border-b border-[#30363d]">
         {tabRows.map((row, rowIndex) => (
           <div 
             key={rowIndex} 
@@ -118,7 +118,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
                     tab.disabled ? 'opacity-50 cursor-not-allowed' : ''
                   } ${
                     activeTab === tab.id
-                      ? 'text-white bg-[#0d1117] border-t border-l border-r border-[#30363d] border-b-0 -mb-px z-10'
+                      ? 'text-white bg-transparent border-t border-l border-r border-[#30363d] border-b-0 -mb-px z-10'
                       : 'text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]/50'
                   }`}
                   aria-selected={activeTab === tab.id}
@@ -205,7 +205,7 @@ export default function TabsModal({ tabs, activeTab, onTabChange, scrollContaine
             className="w-full"
           >
             {activeTabItem && (
-              <div className="bg-[#0d1117] p-4">
+              <div className="bg-transparent p-4 backdrop-blur-[2px]">
                 {activeTabItem.content}
               </div>
             )}

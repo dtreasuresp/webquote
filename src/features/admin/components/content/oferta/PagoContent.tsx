@@ -4,6 +4,9 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { CreditCard, Percent, CheckCircle } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '@/features/admin/hooks/useAdminAudit'
+import { useAdminPermissions } from '@/features/admin/hooks/useAdminPermissions'
 
 export interface PagoContentProps {
   descuentoPaquete: number
@@ -12,6 +15,7 @@ export interface PagoContentProps {
   setMetodoPagoPreferido?: (m: string) => void
   notasPago?: string
   setNotasPago?: (t: string) => void
+  updatedAt?: string | null
 }
 
 export default function PagoContent({
@@ -21,14 +25,27 @@ export default function PagoContent({
   setMetodoPagoPreferido,
   notasPago,
   setNotasPago,
+  updatedAt,
 }: Readonly<PagoContentProps>) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('OFFERS')
   const tieneDescuento = descuentoPaquete > 0
   const tieneMetodoPago = metodoPagoPreferido && metodoPagoPreferido.trim() !== ''
 
-  const metodoLabels: Record<string, string> = {
-    transferencia: 'Transferencia Bancaria',
-    tarjeta: 'Tarjeta de Crédito/Débito',
-    cheque: 'Cheque',
+  const handleUpdateDescuento = (v: number) => {
+    if (!canEdit) return
+    setDescuentoPaquete(v)
+  }
+
+  const handleUpdateMetodo = (v: string) => {
+    if (!canEdit) return
+    setMetodoPagoPreferido?.(v)
+  }
+
+  const handleUpdateNotas = (v: string) => {
+    if (!canEdit) return
+    setNotasPago?.(v)
   }
 
   return (
@@ -38,21 +55,22 @@ export default function PagoContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gh-text flex items-center gap-2">
-          <CreditCard className="text-gh-success" /> Opciones de Pago
-        </h4>
-        {tieneDescuento ? (
-          <span className="text-xs px-2 py-1 rounded bg-gh-success/10 text-gh-success flex items-center gap-1.5">
-            <Percent className="w-3 h-3" /> {descuentoPaquete}% descuento
-          </span>
-        ) : (
-          <span className="text-xs px-2 py-1 rounded bg-gh-bg-secondary text-gh-text-muted">
-            Sin descuento
-          </span>
-        )}
-      </div>
+      <SectionHeader 
+        title="Opciones de Pago"
+        description="Configuración de descuentos y métodos de pago"
+        icon={<CreditCard className="w-4 h-4" />}
+        updatedAt={updatedAt}
+        variant="accent"
+        badges={[
+          { 
+            label: tieneDescuento ? `${descuentoPaquete}% descuento` : 'Sin descuento', 
+            value: tieneDescuento ? '%' : '0',
+            color: tieneDescuento 
+              ? 'bg-gh-success/10 text-gh-success border-gh-success/30' 
+              : 'bg-gh-bg-secondary text-gh-text-muted border-gh-border/30'
+          }
+        ]}
+      />
 
       {/* Formulario */}
       <div className="space-y-4 p-6 bg-gh-bg-secondary border border-gh-border/30 rounded-lg">
@@ -67,7 +85,7 @@ export default function PagoContent({
               min={0}
               max={100}
               value={descuentoPaquete}
-              onChange={(e) => setDescuentoPaquete(Math.min(100, Math.max(0, Number.parseFloat(e.target.value) || 0)))}
+              onChange={(e) => handleUpdateDescuento(Math.min(100, Math.max(0, Number.parseFloat(e.target.value) || 0)))}
               className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs font-medium text-gh-text outline-none transition"
             />
             <p className="text-gh-text-muted text-xs mt-2">Descuento aplicado al total de la cotización</p>
@@ -77,7 +95,7 @@ export default function PagoContent({
               id="metodoPago"
               label="Método de Pago Preferido"
               value={metodoPagoPreferido || ''}
-              onChange={(val) => setMetodoPagoPreferido?.(val)}
+              onChange={handleUpdateMetodo}
               options={[
                 { value: '', label: 'Selecciona un método' },
                 { value: 'transferencia', label: 'Transferencia Bancaria' },
@@ -97,7 +115,7 @@ export default function PagoContent({
             rows={4}
             placeholder="Ej: Pago inicial del 50%, resto a la entrega..."
             value={notasPago || ''}
-            onChange={(e) => setNotasPago?.(e.target.value)}
+            onChange={(e) => handleUpdateNotas(e.target.value)}
             className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 text-xs font-medium text-gh-text outline-none transition resize-none"
           />
           <p className="text-gh-text-muted text-xs mt-2">Condiciones o términos adicionales de pago</p>

@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { PackageSnapshot } from '@/lib/types'
 import { Trash2, Plus } from 'lucide-react'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
 
 interface PaqueteContenidoTabProps {
   snapshot: PackageSnapshot
@@ -40,16 +41,22 @@ export default function PaqueteContenidoTab({
     )
   }, [snapshot.id])
 
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
+
   const handleChange = (field: string, value: any) => {
+    if (readOnly || !canEdit('OFFERS')) return
     const updated = { ...contenido, [field]: value }
     setContenido(updated)
     onChange({
       ...snapshot,
       contenido: updated,
     })
+    logAction('UPDATE', 'OFFERS', snapshot.id, `Contenido actualizado: ${field}`)
   }
 
   const handleAddItem = (field: 'features' | 'beneficios' | 'incluidos' | 'exclusiones', value: string) => {
+    if (readOnly || !canEdit('OFFERS')) return
     if (value.trim()) {
       const updated = { ...contenido, [field]: [...contenido[field], value.trim()] }
       setContenido(updated)
@@ -57,10 +64,13 @@ export default function PaqueteContenidoTab({
         ...snapshot,
         contenido: updated,
       })
+      logAction('UPDATE', 'OFFERS', snapshot.id, `Item añadido a ${field}: ${value.trim()}`)
     }
   }
 
   const handleRemoveItem = (field: 'features' | 'beneficios' | 'incluidos' | 'exclusiones', index: number) => {
+    if (readOnly || !canEdit('OFFERS')) return
+    const itemToRemove = contenido[field][index]
     const updated = {
       ...contenido,
       [field]: contenido[field].filter((_, i) => i !== index),
@@ -70,6 +80,7 @@ export default function PaqueteContenidoTab({
       ...snapshot,
       contenido: updated,
     })
+    logAction('UPDATE', 'OFFERS', snapshot.id, `Item eliminado de ${field}: ${itemToRemove}`)
   }
 
   return (

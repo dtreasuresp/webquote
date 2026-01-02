@@ -18,7 +18,8 @@ import {
 import DialogoGenericoDinamico, { DialogTab } from '../../../DialogoGenericoDinamico'
 import UsersTableInOrganization from '../../../UsersTableInOrganization'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
-import { usePermission } from '@/hooks'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 import { useToast } from '@/components/providers/ToastProvider'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 import { Organization, OrganizationNode } from '@/lib/types'
@@ -42,10 +43,13 @@ interface OrganizationFormData {
 
 export default function OrganizacionContent() {
   const toast = useToast()
-  const canRead = usePermission('org.view')
-  const canWrite = usePermission('org.create')
-  const canEdit = usePermission('org.update')
-  const canDelete = usePermission('org.delete')
+  const { logAction } = useAdminAudit()
+  const { canView: canViewFn, canCreate: canCreateFn, canEdit: canEditFn, canDelete: canDeleteFn } = useAdminPermissions()
+  
+  const canRead = canViewFn('USERS') // Organizaciones están bajo el módulo de usuarios/seguridad
+  const canWrite = canCreateFn('USERS')
+  const canEdit = canEditFn('USERS')
+  const canDelete = canDeleteFn('USERS')
 
   // Estado
   const [organizations, setOrganizations] = useState<OrganizationNode[]>([])
@@ -63,6 +67,7 @@ export default function OrganizacionContent() {
   const [refreshing, setRefreshing] = useState(false)
   const [activeOrgTab, setActiveOrgTab] = useState<'datos' | 'usuarios'>('datos')
   const [orgUsersRefresh, setOrgUsersRefresh] = useState(0)
+  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toISOString())
 
   // Cargar organizaciones
   const loadOrganizations = useCallback(async () => {
@@ -88,6 +93,7 @@ export default function OrganizacionContent() {
       
       const data = await response.json()
       setOrganizations(data)
+      setLastUpdated(new Date().toISOString())
       
       // Cargar también lista plana para selector de padre
       const allResponse = await fetch('/api/organizations?includeHierarchy=false')
@@ -168,6 +174,16 @@ export default function OrganizacionContent() {
         throw new Error(errorData.error || `HTTP ${response.status}`)
       }
       
+      const savedOrg = await response.json()
+      
+      // Auditoría
+      logAction(
+        editingOrg ? 'UPDATE' : 'CREATE',
+        'USERS',
+        editingOrg?.id || savedOrg.id,
+        `${editingOrg ? 'Actualizada' : 'Creada'} organización: ${organizationData.nombre}`
+      )
+      
       toast.success(editingOrg ? 'Organización actualizada' : 'Organización creada')
       setShowDialogo(false)
       setEditingOrg(null)
@@ -192,6 +208,10 @@ export default function OrganizacionContent() {
     try {
       const response = await fetch(`/api/organizations/${org.id}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Error al eliminar')
+      
+      // Auditoría
+      logAction('DELETE', 'USERS', org.id, `Eliminada organización: ${org.nombre}`)
+      
       toast.success('Organización eliminada')
       await loadOrganizations()
     } catch (error) {
@@ -375,49 +395,35 @@ export default function OrganizacionContent() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-gh-accent" />
-            Estructura Organizacional
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Gestiona la jerarquía de organizaciones y sus relaciones
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {canWrite && (
-            <button
-              onClick={() => {
-                setEditingOrg(null)
-                setSelectedParentId(undefined)
-                setShowDialogo(true)
-              }}
-              className="px-3 py-1.5 text-xs font-medium rounded-md bg-gh-success/10 text-gh-success border border-gh-success/30 hover:bg-gh-success/20 transition-colors flex items-center gap-1.5"
-            >
-              <Plus className="w-3 h-3" />
-              Nueva (Raíz)
-            </button>
-          )}
-          <button
-            onClick={async () => {
-              setRefreshing(true)
-              await loadOrganizations()
-              setRefreshing(false)
-            }}
-            disabled={refreshing}
-            className="p-1.5 hover:bg-gh-bg-secondary rounded transition-colors disabled:opacity-50"
-            title="Recargar"
-          >
-            <RefreshCw className={`w-4 h-4 text-gh-text-muted ${refreshing ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
+      <SectionHeader
+        title="Estructura Organizacional"
+        description="Gestiona la jerarquía de organizaciones y sus relaciones"
+        icon={<Building2 className="w-4 h-4" />}
+        updatedAt={lastUpdated}
+        onRefresh={loadOrganizations}
+        isLoading={loading || refreshing}
+        actions={
+          <div className="flex items-center gap-2">
+            {canWrite && (
+              <button
+                onClick={() => {
+                  setEditingOrg(null)
+                  setSelectedParentId(undefined)
+                  setShowDialogo(true)
+                }}
+                className="px-3 py-1.5 text-xs font-medium rounded-md bg-gh-success/10 text-gh-success border border-gh-success/30 hover:bg-gh-success/20 transition-colors flex items-center gap-1.5"
+              >
+                <Plus className="w-3 h-3" />
+                Nueva (Raíz)
+              </button>
+            )}
+          </div>
+        }
+      />
 
       {/* Controles */}
-      <div className="flex items-center gap-2">
-        <div className="flex-1 relative">
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex-1 relative min-w-[200px]">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-gh-text-muted" />
           <input
             type="text"

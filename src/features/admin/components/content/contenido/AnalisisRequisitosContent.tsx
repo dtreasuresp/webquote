@@ -4,7 +4,9 @@ import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ClipboardList, ChevronDown, ChevronUp, Plus, Trash2, Image as ImageIcon, Upload, Link, Loader2, Check, Palette } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
@@ -212,6 +214,9 @@ export default function AnalisisRequisitosContent({
   guardando,
   hasChanges,
 }: AnalisisRequisitosContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
+
   const [expandedSections, setExpandedSections] = useState({
     informacion: true,
     propuesta: false,
@@ -674,15 +679,19 @@ export default function AnalisisRequisitosContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader
+      <SectionHeader
         title="Análisis de Requisitos"
-        subtitle="Entendiendo las necesidades de tu proyecto"
-        icon={ClipboardList}
+        description="Entendiendo las necesidades de tu proyecto"
+        icon={<ClipboardList className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-requirements-analysis', 'Guardado Análisis de Requisitos')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global */}

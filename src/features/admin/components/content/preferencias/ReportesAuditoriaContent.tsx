@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart3, Loader2, RefreshCw, Trash2, Calendar, Settings } from 'lucide-react'
+import { BarChart3, Loader2, Trash2, Calendar, ShieldAlert } from 'lucide-react'
 import DialogoGenericoDinamico from '@/features/admin/components/DialogoGenericoDinamico'
 import { useUserPreferencesStore } from '@/stores/userPreferencesStore'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 interface AuditReportData {
   id: string
@@ -27,13 +29,22 @@ interface ReportesAuditoriaContentProps {
 export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<ReportesAuditoriaContentProps>) {
   const [reports, setReports] = useState<AuditReportData[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly'>('weekly')
   const [generating, setGenerating] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
   const [selectedReport, setSelectedReport] = useState<AuditReportData | null>(null)
   const [showConfigDialog, setShowConfigDialog] = useState(false)
   const [page, setPage] = useState(0)
   const [limit] = useState(5)
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+
+  // Hooks de auditoría y permisos
+  const { logAction } = useAdminAudit()
+  const { canView, canCreate, canEdit, canDelete } = useAdminPermissions()
+
+  const hasViewPerm = canView('AUDIT')
+  const hasCreatePerm = canCreate('AUDIT')
+  const hasEditPerm = canEdit('AUDIT')
+  const hasDeletePerm = canDelete('AUDIT')
 
   // Store preferences
   const preferences = useUserPreferencesStore()
@@ -78,6 +89,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
 
       const data = await res.json()
       setReports(data.data || [])
+      setUpdatedAt(new Date())
     } catch (error) {
       console.error('Error cargando reportes:', error)
     } finally {
@@ -88,7 +100,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
   const handleGenerateReport = async (customData?: { name?: string; type?: string; description?: string }) => {
     try {
       setGenerating(true)
-      const period = customData?.type || selectedPeriod
+      const period = customData?.type || generateReportType
       const payload: any = { period }
       if (customData?.name) payload.name = customData.name
       if (customData?.description) payload.description = customData.description
@@ -127,6 +139,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
   }
 
   const handleDeleteReport = async (reportId: string) => {
+    if (!hasDeletePerm) return
     if (!confirm('¿Eliminar este reporte?')) return
 
     try {
@@ -136,6 +149,9 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
         throw new Error(errorData.message || `Error eliminando reporte: ${res.status}`)
       }
 
+      // Auditoría
+      logAction('DELETE', 'AUDIT', reportId, 'Eliminado reporte de auditoría')
+      
       setReports(reports.filter((r) => r.id !== reportId))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido al eliminar reporte'
@@ -144,6 +160,8 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
   }
 
   const handleSaveConfig = async () => {
+    if (!hasEditPerm) return
+
     try {
       setSavingConfig(true)
       preferences.updatePreferencesSync({
@@ -155,6 +173,11 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
         notifyOnManualReport: configNotifyManual,
         notifyOnAutoReport: configNotifyAuto,
       })
+
+      // Auditoría
+      logAction('UPDATE', 'AUDIT', 'config', 'Actualizada configuración de reportes automáticos')
+      setUpdatedAt(new Date())
+      
       setShowConfigDialog(false)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
@@ -229,51 +252,54 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ delay: idx * 0.05 }}
-            className="p-4 hover:bg-gh-bg-tertiary/20 transition-colors cursor-pointer"
+            className="p-4 hover:bg-gh-accent/5 transition-all duration-200 cursor-pointer group"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <h4 className="text-xs font-medium text-gh-text truncate">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-lg bg-gh-accent/10 text-gh-accent group-hover:scale-110 transition-transform duration-200">
+                    <BarChart3 className="w-3.5 h-3.5" />
+                  </div>
+                  <h4 className="text-xs font-semibold text-gh-text truncate">
                     Reporte {getPeriodLabel(report.period)}
                   </h4>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${getStatusBadge(report.status)}`}>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider border ${getStatusBadge(report.status)}`}>
                     {getStatusLabel(report.status)}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
-                  <div>
-                    <p className="text-[10px] text-gh-text-muted">Logs</p>
-                    <p className="text-xs font-semibold text-gh-text">{report.totalLogs.toLocaleString()}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] text-gh-text-muted uppercase font-bold tracking-tight">Logs</p>
+                    <p className="text-xs font-bold text-gh-text">{report.totalLogs.toLocaleString()}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-gh-text-muted">Usuarios</p>
-                    <p className="text-xs font-semibold text-gh-text">{report.uniqueUsers}</p>
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] text-gh-text-muted uppercase font-bold tracking-tight">Usuarios</p>
+                    <p className="text-xs font-bold text-gh-text">{report.uniqueUsers}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-gh-text-muted">Acciones</p>
-                    <p className="text-xs font-semibold text-gh-text">{report.uniqueActions}</p>
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] text-gh-text-muted uppercase font-bold tracking-tight">Acciones</p>
+                    <p className="text-xs font-bold text-gh-text">{report.uniqueActions}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-gh-text-muted">Entidades</p>
-                    <p className="text-xs font-semibold text-gh-text">{report.uniqueEntities}</p>
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] text-gh-text-muted uppercase font-bold tracking-tight">Entidades</p>
+                    <p className="text-xs font-bold text-gh-text">{report.uniqueEntities}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-[10px] text-gh-text-muted">
-                  <Calendar className="w-3 h-3" />
-                  <span>{formatDate(report.generatedAt)}</span>
+                  <Calendar className="w-3 h-3 text-gh-accent/70" />
+                  <span className="font-medium">{formatDate(report.generatedAt)}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <button
                   onClick={() => {
                     setSelectedReport(report)
                     setShowDetailDialog(true)
                   }}
-                  className="p-1.5 hover:bg-gh-bg-tertiary/40 rounded transition text-gh-text-muted hover:text-gh-accent"
+                  className="p-1.5 hover:bg-gh-accent/10 rounded-md transition-colors text-gh-text-muted hover:text-gh-accent"
                   title="Ver detalles"
                 >
                   <BarChart3 className="w-3.5 h-3.5" />
@@ -281,7 +307,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
 
                 <button
                   onClick={() => handleDeleteReport(report.id)}
-                  className="p-1.5 hover:bg-red-500/20 rounded transition text-gh-text-muted hover:text-red-400"
+                  className="p-1.5 hover:bg-gh-error/10 rounded-md transition-colors text-gh-text-muted hover:text-gh-error"
                   title="Eliminar"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -294,58 +320,34 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
     )
   }
 
+  if (!hasViewPerm) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <ShieldAlert className="w-12 h-12 mb-4 opacity-20" />
+        <p>No tienes permisos para ver los reportes de auditoría.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
-      {/* Header con descripción */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-gh-accent" />
-            Reportes de Auditoría
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Genera y gestiona reportes automáticos de auditoría con análisis detallados
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowGenerateDialog(true)}
-            disabled={generating}
-            className={`flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium ${
-              generating
-                ? 'bg-gh-bg text-gh-text-muted border border-gh-border/20 cursor-not-allowed'
-                : 'bg-gh-accent/10 text-gh-accent border border-gh-accent/30 hover:bg-gh-accent/20'
-            }`}
-            title="Generar nuevo reporte"
-          >
-            {generating ? (
-              <>
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Generando...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-3 h-3" />
-                <span className="hidden sm:inline">Generar</span>
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => setShowConfigDialog(true)}
-            className="px-2.5 py-1.5 rounded-md bg-gh-bg-secondary border border-gh-border/30 hover:border-gh-accent/50 transition text-gh-text-muted hover:text-gh-accent text-xs font-medium flex items-center gap-1.5"
-            title="Configurar reportes automáticos"
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Configurar</span>
-          </button>
-          <span className="text-xs text-gh-text-muted bg-gh-bg-secondary px-2.5 py-1 rounded-md border border-gh-border/30">
-            {reports.length} {reports.length === 1 ? 'reporte' : 'reportes'}
-          </span>
-        </div>
-      </div>
+      {/* Header with SectionHeader */}
+      <SectionHeader
+        title="Reportes de Auditoría"
+        description="Genera y gestiona reportes automáticos de auditoría con análisis detallados"
+        icon={<BarChart3 className="w-4 h-4" />}
+        onAdd={hasCreatePerm ? () => setShowGenerateDialog(true) : undefined}
+        onRefresh={loadReports}
+        onSettings={hasEditPerm ? () => setShowConfigDialog(true) : undefined}
+        isLoading={loading || generating}
+        updatedAt={updatedAt}
+        statusIndicator={updatedAt ? 'guardado' : 'sin-modificar'}
+        itemCount={reports.length}
+        variant="accent"
+      />
 
       {/* Sección: Estado de Reportes Automáticos */}
-      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+      <div className="bg-gh-bg-secondary/10 backdrop-blur-md border border-gh-border/50 rounded-xl overflow-hidden shadow-lg">
         <div className="px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
@@ -372,8 +374,8 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
       </div>
 
       {/* Sección: Lista de Reportes */}
-      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30 flex items-center gap-2">
+      <div className="bg-gh-bg-secondary/10 backdrop-blur-md border border-gh-border/50 rounded-xl overflow-hidden shadow-xl">
+        <div className="px-4 py-2.5 border-b border-gh-border/50 bg-gh-bg-secondary/40 flex items-center gap-2">
           <BarChart3 className="w-3.5 h-3.5 text-gh-accent" />
           <h5 className="text-xs font-medium text-gh-text">
             Reportes Generados
@@ -480,6 +482,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                 <p className="text-[10px] text-gh-text-muted mt-0.5">Generar reportes automáticamente según programación</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
+                <span className="sr-only">Habilitar reportes automáticos</span>
                 <input
                   type="checkbox"
                   checked={configEnabled}
@@ -523,7 +526,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                         min="0"
                         max="23"
                         value={configHour}
-                        onChange={(e) => setConfigHour(Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))}
+                        onChange={(e) => setConfigHour(Math.max(0, Math.min(23, Number.parseInt(e.target.value) || 0)))}
                         className="w-full px-3 py-2 bg-gh-bg text-gh-text border border-gh-border/30 rounded-md text-xs font-medium focus:border-gh-accent/50 focus:ring-1 focus:ring-gh-accent/20 outline-none transition"
                       />
                     </div>
@@ -535,13 +538,15 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                         min="0"
                         max="59"
                         value={configMinute}
-                        onChange={(e) => setConfigMinute(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                        onChange={(e) => setConfigMinute(Math.max(0, Math.min(59, Number.parseInt(e.target.value) || 0)))}
                         className="w-full px-3 py-2 bg-gh-bg text-gh-text border border-gh-border/30 rounded-md text-xs font-medium focus:border-gh-accent/50 focus:ring-1 focus:ring-gh-accent/20 outline-none transition"
                       />
                     </div>
                   </div>
                   <p className="text-[10px] text-gh-text-muted mt-2">
-                    El reporte se generará automáticamente cada {configPeriod === 'daily' ? 'día' : configPeriod === 'weekly' ? 'semana' : 'mes'} a las {String(configHour).padStart(2, '0')}:{String(configMinute).padStart(2, '0')} (± 5 minutos)
+                    El reporte se generará automáticamente cada {
+                      configPeriod === 'daily' ? 'día' : configPeriod === 'weekly' ? 'semana' : 'mes'
+                    } a las {String(configHour).padStart(2, '0')}:{String(configMinute).padStart(2, '0')} (± 5 minutos)
                   </p>
                 </div>
 
@@ -556,7 +561,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                     min="1"
                     max="730"
                     value={configRetentionDays}
-                    onChange={(e) => setConfigRetentionDays(parseInt(e.target.value))}
+                    onChange={(e) => setConfigRetentionDays(Number.parseInt(e.target.value))}
                     className="w-full h-2 bg-gh-border/30 rounded-lg appearance-none cursor-pointer accent-gh-success"
                   />
                   <p className="text-[10px] text-gh-text-muted mt-1">
@@ -571,6 +576,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                     <div className="flex items-center justify-between p-2 bg-gh-bg/50 rounded-md">
                       <label htmlFor="notify-manual" className="text-xs text-gh-text cursor-pointer">Reportes manuales</label>
                       <label className="relative inline-flex items-center cursor-pointer">
+                        <span className="sr-only">Notificar reportes manuales</span>
                         <input
                           id="notify-manual"
                           type="checkbox"
@@ -584,6 +590,7 @@ export default function ReportesAuditoriaContent({ isDirty, onSave }: Readonly<R
                     <div className="flex items-center justify-between p-2 bg-gh-bg/50 rounded-md">
                       <label htmlFor="notify-auto" className="text-xs text-gh-text cursor-pointer">Reportes automáticos</label>
                       <label className="relative inline-flex items-center cursor-pointer">
+                        <span className="sr-only">Notificar reportes automáticos</span>
                         <input
                           id="notify-auto"
                           type="checkbox"

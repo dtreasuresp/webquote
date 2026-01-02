@@ -3,11 +3,13 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Gavel } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { TerminosCondiciones } from '@/lib/types'
+import { useAdminAudit } from '@/features/admin/hooks/useAdminAudit'
+import { useAdminPermissions } from '@/features/admin/hooks/useAdminPermissions'
 
 interface TerminosContentProps {
   readonly data: TerminosCondiciones
@@ -22,10 +24,15 @@ interface TerminosContentProps {
 }
 
 export default function TerminosContent({ data, onChange, visible, onVisibleChange, updatedAt, onGuardar, onReset, guardando, hasChanges }: TerminosContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('CONTENT')
+
   // Visibilidad de subsecciones
   const visibilidad = data.visibilidad || { titulo: true, parrafos: true }
   
   const updateVisibilidad = (campo: keyof typeof visibilidad, valor: boolean) => {
+    if (!canEdit) return
     onChange({
       ...data,
       visibilidad: { ...visibilidad, [campo]: valor }
@@ -39,15 +46,19 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader 
+      <SectionHeader 
         title="Términos y Condiciones"
-        subtitle="Cláusulas legales y condiciones del servicio"
-        icon={Gavel}
+        description="Cláusulas legales y condiciones del servicio"
+        icon={<Gavel className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-terminos', 'Guardados Términos y Condiciones')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}
@@ -74,7 +85,10 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
               <input
                 type="text"
                 value={data.titulo}
-                onChange={(e) => onChange({ ...data, titulo: e.target.value })}
+                onChange={(e) => {
+                  if (!canEdit) return
+                  onChange({ ...data, titulo: e.target.value })
+                }}
                 className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 placeholder="Términos y Condiciones"
               />
@@ -84,7 +98,10 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
               <input
                 type="text"
                 value={data.subtitulo || ''}
-                onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
+                onChange={(e) => {
+                  if (!canEdit) return
+                  onChange({ ...data, subtitulo: e.target.value })
+                }}
                 className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-success focus:ring-1 focus:ring-gh-success/50 focus:outline-none"
                 placeholder="Condiciones generales del servicio"
               />
@@ -104,7 +121,10 @@ export default function TerminosContent({ data, onChange, visible, onVisibleChan
           <ArrayFieldGH
             label="Párrafos"
             items={data.parrafos}
-            onChange={(parrafos) => onChange({ ...data, parrafos })}
+            onChange={(parrafos) => {
+              if (!canEdit) return
+              onChange({ ...data, parrafos })
+            }}
             placeholder="Nuevo párrafo de términos..."
           />
         </div>

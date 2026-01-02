@@ -120,29 +120,27 @@ export default function PreferenciasSidebar({
   }
 
   const sidebarContent = (
-    <div className="h-full bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden flex flex-col">
+    <div className="h-full bg-white/5 backdrop-blur-md border-r border-white/10 flex flex-col w-64">
       {/* Header */}
-      <div className="px-3 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30">
-        <div className="flex items-center gap-2">
-          <Settings className="w-4 h-4 text-gh-accent" />
-          <span className="text-xs font-medium text-gh-text">Preferencias</span>
+      <div className="px-6 py-6 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-white/10 rounded-lg">
+            <Settings className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Preferencias</h3>
+            <p className="text-[10px] text-white/40 uppercase tracking-wider font-medium">Configuración</p>
+          </div>
         </div>
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 p-1.5 space-y-0.5">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-none">
         {sections.map((section, index) => {
           const Icon = section.icon
           const isActive = activeSection === section.id
           const isHovered = hoveredItem === section.id
           const isParent = 'isParent' in section && section.isParent
-
-          // Calcular clase del botón
-          const getButtonClass = () => {
-            if (isActive && !isParent) return 'bg-gh-accent/10 text-gh-accent'
-            if (isParent) return 'text-gh-text cursor-default mt-2 mb-0.5'
-            return 'text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary/40'
-          }
 
           return (
             <React.Fragment key={section.id}>
@@ -150,53 +148,43 @@ export default function PreferenciasSidebar({
                 onClick={() => !isParent && handleSectionClick(section.id)}
                 onMouseEnter={() => setHoveredItem(section.id)}
                 onMouseLeave={() => setHoveredItem(null)}
-                initial={{ opacity: 0, x: -8 }}
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.03, duration: 0.15 }}
+                transition={{ delay: index * 0.03 }}
                 className={`
-                  group relative w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
-                  transition-colors duration-150
-                  ${getButtonClass()}
+                  group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm
+                  transition-all duration-200
+                  ${isActive && !isParent 
+                    ? 'bg-white/10 text-white shadow-lg shadow-black/10' 
+                    : isParent
+                      ? 'text-white/40 cursor-default mt-6 mb-2 px-1'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }
                 `}
               >
-                {/* Indicador activo - solo para items no-padre */}
-                {isActive && !isParent && (
-                  <motion.div
-                    layoutId="sidebarIndicator"
-                    className="absolute left-0 top-0 bottom-0 w-0.5 bg-gh-accent rounded-r"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-
                 {/* Icon */}
-                {(() => {
-                  let iconClass = 'text-gh-text-muted'
-                  if (isActive && !isParent) {
-                    iconClass = 'text-gh-accent'
-                  } else if (isHovered && !isParent) {
-                    iconClass = 'text-gh-text'
-                  } else if (isParent) {
-                    iconClass = 'text-gh-accent'
-                  }
-                  return (
-                    <div className={`flex items-center justify-center w-5 h-5 rounded transition-colors duration-150 ${iconClass}`}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                  )
-                })()}
+                <div className={`
+                  flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200
+                  ${isActive && !isParent ? 'bg-white/10 text-white' : 'text-white/40 group-hover:text-white'}
+                `}>
+                  <Icon className="w-4 h-4" />
+                </div>
 
                 {/* Label */}
-                <span className="flex-1 text-left truncate">
+                <span className={`flex-1 text-left font-medium ${isParent ? 'text-[11px] uppercase tracking-widest' : ''}`}>
                   {section.label}
                 </span>
 
-                {/* Chevron para item activo */}
+                {/* Active Indicator */}
                 {isActive && !isParent && (
-                  <ChevronRight className="w-3 h-3 text-gh-accent/60" />
+                  <motion.div
+                    layoutId="activeIndicator"
+                    className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+                  />
                 )}
               </motion.button>
 
-              {/* Sub-secciones de Seguridad - siempre visibles */}
+              {/* Sub-secciones de Seguridad */}
               {isParent && (
                 <div className="ml-4 mt-0.5 space-y-0.5 border-l border-gh-border/30 pl-2">
                   {securitySubSections.map((subSection, subIndex) => {
@@ -210,44 +198,25 @@ export default function PreferenciasSidebar({
                         onClick={() => handleSecuritySubSectionClick(subSection.id)}
                         onMouseEnter={() => setHoveredItem(subSection.id)}
                         onMouseLeave={() => setHoveredItem(null)}
-                        initial={{ opacity: 0, x: -4 }}
+                        initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: (index + subIndex) * 0.03, duration: 0.15 }}
+                        transition={{ delay: (index + subIndex) * 0.03 }}
                         className={`
-                          group relative w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
-                          transition-colors duration-150
+                          group relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs
+                          transition-all duration-200
                           ${isSubActive 
-                            ? 'bg-gh-accent/10 text-gh-accent' 
-                            : 'text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary/40'
+                            ? 'bg-white/10 text-white' 
+                            : 'text-white/40 hover:text-white hover:bg-white/5'
                           }
                         `}
                       >
-                        {/* Indicador activo para sub-item */}
-                        {isSubActive && (
-                          <motion.div
-                            layoutId="subSidebarIndicator"
-                            className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-gh-accent rounded-full"
-                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                          />
-                        )}
-
                         {/* Sub Icon */}
-                        {(() => {
-                          let subIconClass = 'text-gh-text-muted'
-                          if (isSubActive) subIconClass = 'text-gh-accent'
-                          else if (isSubHovered) subIconClass = 'text-gh-text'
-                          return <SubIcon className={`w-3.5 h-3.5 ${subIconClass}`} />
-                        })()}
+                        <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? 'text-white' : 'text-white/40 group-hover:text-white'}`} />
 
                         {/* Sub Label */}
-                        <span className="flex-1 text-left truncate">
+                        <span className="flex-1 text-left font-medium">
                           {subSection.label}
                         </span>
-
-                        {/* Chevron para sub-item activo */}
-                        {isSubActive && (
-                          <ChevronRight className="w-3 h-3 text-gh-accent/60" />
-                        )}
                       </motion.button>
                     )
                   })}
@@ -267,13 +236,12 @@ export default function PreferenciasSidebar({
         onClick={() => setIsOpen(!isOpen)}
         whileTap={{ scale: 0.95 }}
         className="
-          md:hidden fixed bottom-5 left-5 z-50 
-          w-10 h-10 rounded-full
-          bg-gh-bg-tertiary/95 border border-gh-border/50
-          text-gh-text-muted hover:text-gh-text
-          flex items-center justify-center
-          shadow-md shadow-black/20
-          transition-colors
+          md:hidden fixed bottom-6 left-6 z-50 
+          w-12 h-12 rounded-2xl
+          bg-white/10 backdrop-blur-xl border border-white/20
+          text-white flex items-center justify-center
+          shadow-2xl shadow-black/40
+          transition-all duration-300
         "
         aria-label="Toggle menu"
       >
@@ -284,9 +252,8 @@ export default function PreferenciasSidebar({
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: 90, opacity: 0 }}
-              transition={{ duration: 0.12 }}
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-5 h-5" />
             </motion.div>
           ) : (
             <motion.div
@@ -294,9 +261,8 @@ export default function PreferenciasSidebar({
               initial={{ rotate: 90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: -90, opacity: 0 }}
-              transition={{ duration: 0.12 }}
             >
-              <Menu className="w-3.5 h-3.5" />
+              <Menu className="w-5 h-5" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -310,7 +276,7 @@ export default function PreferenciasSidebar({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40"
+            className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
           />
         )}
       </AnimatePresence>
@@ -319,25 +285,25 @@ export default function PreferenciasSidebar({
       <AnimatePresence>
         {isOpen && (
           <motion.aside
-            initial={{ x: -260 }}
+            initial={{ x: -280 }}
             animate={{ x: 0 }}
-            exit={{ x: -260 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            exit={{ x: -280 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="
-              md:hidden fixed top-0 left-0 bottom-0 w-56
-              bg-gh-bg-secondary/98 backdrop-blur-sm
-              border-r border-gh-border/30 z-50
+              md:hidden fixed top-0 left-0 bottom-0 w-64
+              bg-black/40 backdrop-blur-2xl
+              border-r border-white/10 z-50
             "
           >
-            <div className="pt-3 px-2 h-full">
+            <div className="h-full">
               {sidebarContent}
             </div>
           </motion.aside>
         )}
       </AnimatePresence>
 
-      {/* Desktop: Sidebar con estilo de card */}
-      <aside className="hidden md:block w-52 flex-shrink-0 self-stretch">
+      {/* Desktop: Sidebar */}
+      <aside className="hidden md:block w-64 flex-shrink-0 self-stretch">
         <div className="h-full">
           {sidebarContent}
         </div>

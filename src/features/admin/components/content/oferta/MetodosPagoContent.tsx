@@ -2,7 +2,10 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { CreditCard, Plus, Trash2 } from 'lucide-react'
+import { CreditCard, Trash2 } from 'lucide-react'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 
 // ═══════════════════════════════════════════════════════════════
 // TIPOS
@@ -54,11 +57,14 @@ export default function MetodosPagoContent({
   data,
   onChange,
 }: MetodosPagoContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit, canCreate, canDelete } = useAdminPermissions()
 
   // ═══════════════════════════════════════════════════════════════
   // Funciones para Métodos de Pago
   // ═══════════════════════════════════════════════════════════════
   const addMetodoPago = () => {
+    if (!canCreate('OFFERS')) return
     const newMetodo: MetodoPagoItem = {
       nombre: 'Nuevo método',
       descripcion: '',
@@ -67,22 +73,32 @@ export default function MetodosPagoContent({
       ...data,
       opciones: [...data.opciones, newMetodo],
     })
+    logAction('CREATE', 'OFFERS', 'add-payment-method', `Agregado método de pago: ${newMetodo.nombre}`)
   }
 
   const updateMetodoPago = (index: number, field: keyof MetodoPagoItem, value: string | number | undefined) => {
+    if (!canEdit('OFFERS')) return
+    const oldNombre = data.opciones[index].nombre
     const newOpciones = [...data.opciones]
     newOpciones[index] = { ...newOpciones[index], [field]: value }
     onChange({
       ...data,
       opciones: newOpciones,
     })
+    
+    if (field === 'nombre') {
+      logAction('UPDATE', 'OFFERS', 'update-payment-method', `Actualizado método de pago: ${oldNombre} -> ${value}`)
+    }
   }
 
   const removeMetodoPago = (index: number) => {
+    if (!canDelete('OFFERS')) return
+    const nombre = data.opciones[index].nombre
     onChange({
       ...data,
       opciones: data.opciones.filter((_, i) => i !== index),
     })
+    logAction('DELETE', 'OFFERS', 'remove-payment-method', `Eliminado método de pago: ${nombre}`)
   }
 
   // Calcular total de porcentajes (para métodos con porcentaje)
@@ -96,16 +112,13 @@ export default function MetodosPagoContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-lg bg-gh-info/20 flex items-center justify-center">
-          <CreditCard className="text-gh-info" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-gh-text">Métodos de Pago</h2>
-          <p className="text-xs text-gh-text-muted">Configura las opciones de pago aceptadas</p>
-        </div>
-      </div>
+      <SectionHeader
+        title={data.titulo}
+        description={data.subtitulo}
+        icon={<CreditCard className="w-4 h-4" />}
+        onAdd={addMetodoPago}
+        variant="accent"
+      />
 
       {/* Título y Subtítulo de la sección */}
       <div className="p-4 bg-gh-bg-secondary border border-gh-border/30 rounded-lg space-y-3">

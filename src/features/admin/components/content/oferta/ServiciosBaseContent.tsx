@@ -5,8 +5,10 @@ import { Check, X, Edit, Trash2, Plus, Boxes } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { ServicioBase } from '@/lib/types'
 import { useEventTracking } from '@/features/admin/hooks'
-import ContentHeader from '@/features/admin/components/content/contenido/ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 import { ToggleSwitchWithLabel } from '@/features/admin/components/ToggleSwitch'
+import { useAdminAudit } from '@/features/admin/hooks/useAdminAudit'
+import { useAdminPermissions } from '@/features/admin/hooks/useAdminPermissions'
 
 export interface ServiciosBaseContentProps {
   serviciosBase: ServicioBase[]
@@ -39,6 +41,9 @@ export default function ServiciosBaseContent({
   eliminarServicioBase,
   updatedAt,
 }: Readonly<ServiciosBaseContentProps>) {
+  const { logAction } = useAdminAudit()
+  const { canEdit, canCreate, canDelete } = useAdminPermissions()
+
   // Hook de tracking
   const { 
     trackServicioBaseCreated, 
@@ -48,23 +53,29 @@ export default function ServiciosBaseContent({
 
   // Handlers con tracking
   const handleAgregar = useCallback(() => {
+    if (!canCreate('OFFERS')) return
     agregarServicioBase()
     if (nuevoServicioBase.nombre && nuevoServicioBase.precio > 0) {
       trackServicioBaseCreated(nuevoServicioBase.nombre, nuevoServicioBase.precio)
+      logAction('CREATE', 'OFFERS', 'add-base-service', `Agregado servicio base: ${nuevoServicioBase.nombre}`)
     }
-  }, [agregarServicioBase, nuevoServicioBase.nombre, nuevoServicioBase.precio, trackServicioBaseCreated])
+  }, [agregarServicioBase, nuevoServicioBase.nombre, nuevoServicioBase.precio, trackServicioBaseCreated, canCreate, logAction])
 
   const handleGuardarEdicion = useCallback(() => {
+    if (!canEdit('OFFERS')) return
     guardarEditarServicioBase()
     if (servicioBaseEditando) {
       trackServicioBaseEdited(servicioBaseEditando.id, servicioBaseEditando.nombre)
+      logAction('UPDATE', 'OFFERS', 'update-base-service', `Actualizado servicio base: ${servicioBaseEditando.nombre}`)
     }
-  }, [guardarEditarServicioBase, servicioBaseEditando, trackServicioBaseEdited])
+  }, [guardarEditarServicioBase, servicioBaseEditando, trackServicioBaseEdited, canEdit, logAction])
 
   const handleEliminar = useCallback((id: string, nombre: string) => {
+    if (!canDelete('OFFERS')) return
     trackServicioBaseDeleted(id, nombre)
     eliminarServicioBase(id)
-  }, [eliminarServicioBase, trackServicioBaseDeleted])
+    logAction('DELETE', 'OFFERS', 'remove-base-service', `Eliminado servicio base: ${nombre}`)
+  }, [eliminarServicioBase, trackServicioBaseDeleted, canDelete, logAction])
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -72,14 +83,16 @@ export default function ServiciosBaseContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Header with ContentHeader */}
-      <ContentHeader
+      {/* Header with SectionHeader */}
+      <SectionHeader
         title="Servicios Base"
-        subtitle="Servicios incluidos en la oferta"
-        icon={Boxes}
+        description="Servicios incluidos en la oferta"
+        icon={<Boxes className="w-4 h-4" />}
         statusIndicator={updatedAt ? 'guardado' : 'sin-modificar'}
         updatedAt={updatedAt}
-        badge={`${serviciosBase.length} servicio${serviciosBase.length !== 1 ? 's' : ''}`}
+        itemCount={serviciosBase.length}
+        variant="accent"
+        onAdd={handleAgregar}
       />
 
       {/* Lista de Servicios Base Existentes */}

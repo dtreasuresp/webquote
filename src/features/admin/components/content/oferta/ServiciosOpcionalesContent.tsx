@@ -4,8 +4,8 @@ import React, { useCallback } from 'react'
 import { Check, X, Edit, Trash2, Plus, Puzzle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Servicio } from '@/lib/types'
-import { useEventTracking } from '@/features/admin/hooks'
-import ContentHeader from '@/features/admin/components/content/contenido/ContentHeader'
+import { useEventTracking, useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 export interface ServiciosOpcionalesContentProps {
   serviciosOpcionales: Servicio[]
@@ -44,6 +44,10 @@ export default function ServiciosOpcionalesContent({
   todoEsValido,
   updatedAt,
 }: Readonly<ServiciosOpcionalesContentProps>) {
+  // Hooks de auditoría y permisos
+  const { logAction } = useAdminAudit()
+  const { canEdit, canDelete, canCreate } = useAdminPermissions()
+
   // Hook de tracking
   const { 
     trackServicioOpcionalCreated, 
@@ -51,25 +55,35 @@ export default function ServiciosOpcionalesContent({
     trackServicioOpcionalDeleted 
   } = useEventTracking()
 
-  // Handlers con tracking
+  // Handlers con tracking y auditoría
   const handleAgregar = useCallback(() => {
+    if (!canCreate('OFFERS')) return
+    
     agregarServicioOpcional()
     if (nuevoServicio.nombre?.trim() && nuevoServicio.precio > 0) {
       trackServicioOpcionalCreated(nuevoServicio.nombre.trim(), nuevoServicio.precio)
+      logAction('CREATE', 'OFFERS', 'new-optional-service', `Servicio Opcional: ${nuevoServicio.nombre}`)
     }
-  }, [agregarServicioOpcional, nuevoServicio.nombre, nuevoServicio.precio, trackServicioOpcionalCreated])
+  }, [agregarServicioOpcional, nuevoServicio.nombre, nuevoServicio.precio, trackServicioOpcionalCreated, canCreate, logAction])
 
   const handleGuardarEdicion = useCallback(() => {
+    if (!canEdit('OFFERS')) return
+
     guardarEditarServicioOpcional()
     if (servicioEditando) {
       trackServicioOpcionalEdited(servicioEditando.id, servicioEditando.nombre)
+      logAction('UPDATE', 'OFFERS', servicioEditando.id, `Servicio Opcional: ${servicioEditando.nombre}`)
     }
-  }, [guardarEditarServicioOpcional, servicioEditando, trackServicioOpcionalEdited])
+  }, [guardarEditarServicioOpcional, servicioEditando, trackServicioOpcionalEdited, canEdit, logAction])
 
   const handleEliminar = useCallback((id: string, nombre: string) => {
+    if (!canDelete('OFFERS')) return
+
     trackServicioOpcionalDeleted(id, nombre)
     eliminarServicioOpcional(id)
-  }, [eliminarServicioOpcional, trackServicioOpcionalDeleted])
+    logAction('DELETE', 'OFFERS', id, `Servicio Opcional: ${nombre}`)
+  }, [eliminarServicioOpcional, trackServicioOpcionalDeleted, canDelete, logAction])
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -77,14 +91,16 @@ export default function ServiciosOpcionalesContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Header with ContentHeader */}
-      <ContentHeader
+      {/* Header with SectionHeader */}
+      <SectionHeader
         title="Servicios Opcionales"
-        subtitle="Servicios adicionales disponibles"
-        icon={Puzzle}
+        description="Servicios adicionales disponibles para la oferta"
+        icon={<Puzzle className="w-4 h-4" />}
         statusIndicator={updatedAt ? 'guardado' : 'sin-modificar'}
         updatedAt={updatedAt}
-        badge={`${serviciosOpcionales.length} servicio${serviciosOpcionales.length !== 1 ? 's' : ''}`}
+        itemCount={serviciosOpcionales.length}
+        variant="accent"
+        onAdd={handleAgregar}
       />
 
       {/* Lista de Servicios Opcionales */}

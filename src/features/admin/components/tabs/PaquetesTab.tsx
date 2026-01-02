@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Calculator, Edit, Trash2, Package, Archive } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PackageSnapshot, QuotationConfig, DialogConfig } from '@/lib/types'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 import CollapsibleSection from '@/features/admin/components/CollapsibleSection'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 
@@ -145,7 +146,18 @@ export default function PaquetesTab({
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-6">
+      <SectionHeader
+        title="Gestión de Paquetes"
+        description="Administra las ofertas y versiones de paquetes para esta cotización"
+        icon={<Package className="w-5 h-5" />}
+        variant="accent"
+        badges={[
+          { label: 'Activos', value: snapshots.filter(s => s.activo).length, color: 'bg-gh-success/10 text-gh-success border-gh-success/20' },
+          { label: 'Archivados', value: snapshots.filter(s => !s.activo).length, color: 'bg-gh-bg-tertiary text-gh-text-muted border-gh-border/30' },
+        ]}
+      />
+
       {/* Sección: Ofertas Creadas */}
       <CollapsibleSection
         id="ofertas-creadas"
@@ -203,7 +215,7 @@ export default function PaquetesTab({
                             <span className="text-[10px] text-gh-success font-medium">Activo</span>
                           </span>
                         </div>
-                        {snapshot.paquete.tipo && (
+                        {snapshot.paquete?.tipo && (
                           <span className="inline-block text-[10px] font-medium tracking-wide text-gh-text-muted uppercase bg-gh-border/50 px-2 py-0.5 rounded">
                             {snapshot.paquete.tipo}
                           </span>
@@ -260,7 +272,7 @@ export default function PaquetesTab({
                     </div>
 
                     {/* Descripción */}
-                    {snapshot.paquete.descripcion && (
+                    {snapshot.paquete?.descripcion && (
                       <p className="text-xs text-gh-text-muted mt-2 line-clamp-2">
                         {snapshot.paquete.descripcion}
                       </p>
@@ -552,12 +564,12 @@ export default function PaquetesTab({
                                         ${preview.subtotalOriginal.toLocaleString('es-CO')}
                                       </span>
                                       <span className="font-mono font-bold text-gh-success text-sm">
-                                        ${snapshot.costos.inicial.toLocaleString('es-CO')}
+                                        ${snapshot.costos?.inicial?.toLocaleString('es-CO') || '0'}
                                       </span>
                                     </div>
                                   ) : (
                                     <span className="font-mono font-bold text-gh-text text-sm">
-                                      ${snapshot.costos.inicial.toLocaleString('es-CO')}
+                                      ${snapshot.costos?.inicial?.toLocaleString('es-CO') || '0'}
                                     </span>
                                   )}
                                 </td>
@@ -575,12 +587,12 @@ export default function PaquetesTab({
                                         })()}
                                       </span>
                                       <span className="font-mono font-bold text-gh-success text-sm">
-                                        ${snapshot.costos.año1.toLocaleString('es-CO')}
+                                        ${snapshot.costos?.año1?.toLocaleString('es-CO') || '0'}
                                       </span>
                                     </div>
                                   ) : (
                                     <span className="font-mono font-bold text-gh-success text-sm">
-                                      ${snapshot.costos.año1.toLocaleString('es-CO')}
+                                      ${snapshot.costos?.año1?.toLocaleString('es-CO') || '0'}
                                     </span>
                                   )}
                                 </td>
@@ -598,12 +610,12 @@ export default function PaquetesTab({
                                         })()}
                                       </span>
                                       <span className="font-mono font-bold text-gh-text text-sm">
-                                        ${snapshot.costos.año2.toLocaleString('es-CO')}
+                                        ${snapshot.costos?.año2?.toLocaleString('es-CO') || '0'}
                                       </span>
                                     </div>
                                   ) : (
                                     <span className="font-mono font-bold text-gh-text text-sm">
-                                      ${snapshot.costos.año2.toLocaleString('es-CO')}
+                                      ${snapshot.costos?.año2?.toLocaleString('es-CO') || '0'}
                                     </span>
                                   )}
                                 </td>

@@ -1,0 +1,277 @@
+# 🧩 Arquitectura de NovaSuite con dependencias funcionales
+
+Cada módulo se presenta con sus submódulos y una sección de **dependencias clave**, que indica qué otros módulos alimentan o se conectan directamente con él.
+
+---
+
+## 🟦 1. **NovaSuite CRM**  
+*Gestión de relaciones, prospectos y oportunidades*
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Contactos | Sales (clientes), People (empleados comerciales) |
+| Oportunidades | Sales (cotizaciones), Projects (proyectos comerciales) |
+| Actividades | Core (usuarios), People (agenda de empleados) |
+| Campañas | Contactos (segmentación), Sales (resultados) |
+| Automatización | Core (reglas), Sales (eventos comerciales) |
+| Historial | Sales (interacciones), Projects (entregables) |
+| Integraciones | Core (API, email, WhatsApp) |
+
+---
+
+## 🟦 2. **NovaSuite Sales**  
+*Cotizaciones, órdenes y facturación*
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Cotizaciones | CRM (contactos, oportunidades), Inventory (productos) |
+| Órdenes de venta | Cotizaciones, Inventory (stock), Finance (facturación) |
+| Facturación | Finance (cuentas por cobrar), Core (parámetros fiscales) |
+| Descuentos y promociones | CRM (segmentos), Inventory (productos) |
+| Comisiones | People (empleados), Finance (pagos) |
+| Reportes de ventas | CRM (clientes), Finance (ingresos), Inventory (productos vendidos) |
+
+---
+
+## 🟦 3. **NovaSuite Inventory**  
+*Gestión de productos y almacenes*
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Productos | Sales (cotizaciones), POS (ventas), Finance (costos) |
+| Almacenes | Core (configuración), Projects (ubicaciones físicas) |
+| Movimientos | Sales (órdenes), POS (ventas), Finance (valoración) |
+| Alertas de stock | Sales (demanda), Projects (consumo), POS (rotación) |
+| Inventario físico | Core (usuarios), Finance (ajustes contables) |
+| Lotes y series | Sales (trazabilidad), Projects (control de calidad) |
+
+---
+
+## 🟦 4. **NovaSuite Finance**  
+*Contabilidad, tesorería y fiscalidad*
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Cuentas por cobrar | Sales (facturación), CRM (clientes) |
+| Cuentas por pagar | Inventory (proveedores), Projects (costos) |
+| Caja y bancos | POS (cobros), Core (configuración bancaria) |
+| Presupuestos | Projects (planificación), People (costos de nómina) |
+| Contabilidad | Sales, Inventory, People, Projects |
+| Impuestos | Sales (facturas), Core (reglas fiscales) |
+
+---
+
+## 🟦 5. **NovaSuite People (RRHH)**  
+*Gestión de talento y nómina*
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Empleados | Core (usuarios), Finance (costos), Projects (asignaciones) |
+| Nómina | Finance (pagos), Projects (horas trabajadas) |
+| Asistencia | Core (usuarios), Projects (tareas), POS (turnos) |
+| Evaluaciones | Projects (desempeño), CRM (interacciones) |
+| Capacitación | Projects (plan de formación), Core (roles) |
+| Reclutamiento | Core (perfiles), CRM (campañas de atracción) |
+
+---
+
+## 🟦 6. **NovaSuite Projects**  
+*Gestión de proyectos y tareas*
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Proyectos | CRM (oportunidades), Sales (órdenes), People (recursos) |
+| Tareas | People (empleados), Core (usuarios) |
+| Recursos | People (disponibilidad), Finance (costos) |
+| Presupuesto | Finance (presupuestos), Sales (cotizaciones) |
+| Documentación | Core (archivos), CRM (entregables) |
+| Reportes | Finance (costos), People (desempeño), CRM (avance comercial) |
+
+---
+
+## 🟦 7. **NovaSuite POS**  
+*Punto de venta físico o virtual*
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Caja rápida | Inventory (productos), Sales (precios), Finance (cobros) |
+| Inventario vinculado | Inventory (stock), Sales (movimientos) |
+| Usuarios POS | Core (roles), People (turnos) |
+| Reportes diarios | Finance (caja), Sales (ventas) |
+| Integración con Sales | Sales (órdenes), Finance (facturación) |
+
+---
+
+## 🟦 8. **NovaSuite Core & Settings**  
+*Configuración, seguridad y administración*
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Usuarios y roles | Todos los módulos (permisos) |
+| Parámetros del sistema | Finance (moneda, impuestos), Sales (condiciones) |
+| Integraciones externas | CRM, POS, Projects, Finance |
+| Backups y seguridad | Todos los módulos |
+| Personalización | CRM, Sales, Projects, People |
+
+---
+
+# 🟣 **9. NovaSuite eCommerce (Nuevo módulo)**  
+*Administración de tiendas virtuales, multi‑tienda, catálogos y ventas online*
+
+Este módulo permite que DG TECNOVA gestione **múltiples tiendas virtuales para distintos clientes**, cada una con su propio catálogo, configuración, branding y reglas comerciales.
+
+---
+
+## 🧩 **Submódulos de NovaSuite eCommerce**
+
+| Submódulo | Función principal |
+|-----------|-------------------|
+| **Gestor de Tiendas** | Crear, activar y administrar múltiples tiendas virtuales para distintos clientes |
+| **Catálogo Online** | Productos, variantes, categorías, precios, disponibilidad |
+| **Diseño y Branding** | Plantillas, colores, logos, estructura visual por tienda |
+| **Carrito y Checkout** | Flujo de compra, métodos de pago, validaciones |
+| **Órdenes Online** | Registro de pedidos, estados, integración con Sales |
+| **Clientes Web** | Registro, login, historial, direcciones |
+| **Pasarelas de Pago** | Configuración de pagos electrónicos por tienda |
+| **Envíos y Logística** | Tarifas, transportistas, zonas de entrega |
+| **Promociones Web** | Cupones, descuentos, combos, campañas |
+| **SEO y Marketing** | Metadatos, banners, campañas conectadas al CRM |
+| **Reportes eCommerce** | Ventas online, conversión, productos más vendidos |
+
+---
+
+# 🔗 **Dependencias del módulo NovaSuite eCommerce**
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Gestor de Tiendas | Core (usuarios, permisos), CRM (clientes dueños de tiendas) |
+| Catálogo Online | Inventory (productos, stock), Sales (precios) |
+| Diseño y Branding | Core (archivos, personalización) |
+| Carrito y Checkout | Sales (precios, impuestos), Finance (métodos de pago) |
+| Órdenes Online | Sales (órdenes), Inventory (stock), Finance (facturación) |
+| Clientes Web | CRM (contactos), Core (usuarios) |
+| Pasarelas de Pago | Finance (bancos), Core (integraciones) |
+| Envíos y Logística | Inventory (almacenes), Sales (reglas comerciales) |
+| Promociones Web | Sales (descuentos), CRM (segmentos) |
+| SEO y Marketing | CRM (campañas), Core (configuración web) |
+| Reportes eCommerce | Sales (ventas), Inventory (rotación), Finance (ingresos) |
+
+---
+
+# 🧩 **Cómo encaja eCommerce en la arquitectura general**
+
+Aquí tienes la visión integrada:
+
+- **CRM** alimenta clientes web, campañas y segmentación.  
+- **Sales** gestiona precios, órdenes y facturación.  
+- **Inventory** sincroniza stock en tiempo real con las tiendas.  
+- **Finance** procesa pagos, conciliaciones y facturas.  
+- **Core** administra usuarios, permisos, integraciones y plantillas.  
+- **POS** puede compartir inventario con eCommerce si el cliente tiene tienda física.  
+- **Projects** puede usarse para gestionar implementaciones de tiendas para clientes.  
+
+---
+
+# 🟧 **10. NovaSuite Licensing (Gestión de Licencias SaaS)**  
+*Control centralizado de suscripciones, planes, facturación recurrente y acceso al ERP.*
+
+Este módulo es crítico para la operación comercial de NovaSuite como producto SaaS. Permite administrar **quién puede usar el ERP, qué módulos tiene activos, cuánto paga y cuándo vence su licencia**.
+
+---
+
+# 🧩 **Submódulos de NovaSuite Licensing**
+
+| Submódulo | Función principal |
+|-----------|-------------------|
+| **Gestión de Clientes SaaS** | Registro de empresas clientes, datos fiscales, contactos administrativos |
+| **Planes y Suscripciones** | Creación de planes (básico, pro, enterprise), precios, límites, módulos incluidos |
+| **Licencias Activas** | Activación, renovación, suspensión y cancelación de licencias por cliente |
+| **Control de Módulos** | Habilitar o deshabilitar módulos del ERP según el plan contratado |
+| **Facturación Recurrente** | Ciclos de cobro (mensual, anual), generación automática de facturas |
+| **Pagos y Pasarelas** | Integración con métodos de pago, validación de cobros, reintentos |
+| **Uso y Límites** | Control de usuarios permitidos, almacenamiento, transacciones, tiendas eCommerce |
+| **Alertas y Notificaciones** | Recordatorios de vencimiento, fallos de pago, upgrades disponibles |
+| **Historial y Auditoría** | Registro de cambios, renovaciones, ampliaciones y movimientos administrativos |
+| **API de Licenciamiento** | Validación en tiempo real del acceso al ERP y módulos permitidos |
+
+---
+
+# 🔗 **Dependencias del módulo NovaSuite Licensing**
+
+| Submódulo | Depende de |
+|-----------|------------|
+| Gestión de Clientes SaaS | CRM (datos del cliente), Core (usuarios, roles) |
+| Planes y Suscripciones | Core (configuración), Finance (precios, impuestos) |
+| Licencias Activas | Core (permisos), CRM (cliente), Finance (estado de pago) |
+| Control de Módulos | Core (roles y accesos), Todos los módulos funcionales |
+| Facturación Recurrente | Finance (facturación, cuentas por cobrar), Sales (reglas comerciales) |
+| Pagos y Pasarelas | Finance (bancos, conciliación), Core (integraciones) |
+| Uso y Límites | Core (usuarios), eCommerce (tiendas), Projects (recursos), Inventory (transacciones) |
+| Alertas y Notificaciones | Core (notificaciones), CRM (contactos) |
+| Historial y Auditoría | Core (logs), Finance (movimientos) |
+| API de Licenciamiento | Core (autenticación), Todos los módulos (validación de acceso) |
+
+---
+
+# 🧠 **Cómo encaja NovaSuite Licensing en la arquitectura general**
+
+Este módulo se convierte en el **cerebro comercial y operativo** del SaaS:
+
+- **Controla quién entra al sistema** (autorización por licencia).  
+- **Define qué módulos puede usar cada cliente** (activación/desactivación).  
+- **Gestiona la monetización del ERP** (planes, pagos, renovaciones).  
+- **Sincroniza con Finance** para facturación y cobros.  
+- **Sincroniza con CRM** para gestión del cliente y comunicación.  
+- **Sincroniza con Core** para permisos y autenticación.  
+- **Sincroniza con eCommerce** si el cliente tiene tiendas activas.  
+
+Es un módulo transversal y crítico para la operación SaaS.
+
+---
+
+# 🚀 ¿Quieres que ahora lo incorpore a la tabla maestra de dependencias cruzadas o prefieres que diseñemos el flujo completo de licenciamiento (activación, renovación, suspensión, cancelación)?
+
+
+La tabla muestra:
+
+- **Módulo origen**  
+- **Depende de** (qué necesita para funcionar)  
+- **Alimenta a** (qué módulos reciben datos de él)
+
+---
+
+La tabla está completamente integrada y lista para documentación ejecutiva, técnica o comercial.
+
+---
+
+# 📘 **Tabla Maestra de Dependencias Cruzadas – NovaSuite (Actualizada con Licensing)**
+
+| **Módulo** | **Depende de** | **Alimenta a** |
+|-----------|----------------|----------------|
+| **CRM** | Core (usuarios), People (empleados), Sales (historial), Finance (estado del cliente) | Sales (clientes y oportunidades), Projects (proyectos derivados), eCommerce (clientes web), Licensing (datos del cliente SaaS) |
+| **Sales** | CRM (clientes), Inventory (productos/stock), Finance (impuestos), Core (parámetros) | Finance (facturación), Inventory (movimientos), Projects (proyectos), eCommerce (precios y órdenes), Licensing (validación de módulos contratados) |
+| **Inventory** | Sales (demanda), Core (almacenes), Finance (costos), Projects (consumo) | Sales (stock), POS (inventario en tiempo real), eCommerce (catálogo y disponibilidad), Finance (ajustes contables), Licensing (control de límites de uso por transacciones) |
+| **Finance** | Sales (facturas), Inventory (costos), People (nómina), POS (cobros), Licensing (facturación recurrente) | Core (reglas fiscales), Projects (presupuestos), Sales (validación de crédito), eCommerce (pagos electrónicos), Licensing (estado de pago del cliente) |
+| **People (RRHH)** | Core (usuarios), Finance (pagos), Projects (evaluaciones), POS (turnos) | Projects (recursos), Sales (comisiones), CRM (ejecutivos asignados), Finance (costos laborales), Licensing (control de usuarios permitidos por plan) |
+| **Projects** | Sales (órdenes), People (recursos), Inventory (materiales), Core (archivos) | Finance (costos), CRM (avance para clientes), Sales (oportunidades de upselling), eCommerce (implementación de tiendas), Licensing (consumo de recursos por cliente) |
+| **POS** | Inventory (stock), Sales (precios), People (turnos), Core (roles) | Finance (cobros), Inventory (movimientos), Sales (ventas consolidadas), CRM (historial de compras), Licensing (transacciones para control de límites) |
+| **Core & Settings** | — | Todos los módulos (usuarios, permisos, parámetros, integraciones, seguridad), Licensing (validación de acceso) |
+| **eCommerce** | Inventory (productos/stock), Sales (precios/impuestos), CRM (clientes web), Finance (pagos), Core (plantillas) | Sales (órdenes online), Finance (pagos electrónicos), Inventory (movimientos), CRM (historial web), Projects (implementación de tiendas), Licensing (control de tiendas activas por cliente) |
+| **Licensing (Nuevo)** | CRM (datos del cliente), Finance (pagos), Core (roles y autenticación), Sales (reglas comerciales) | Core (permisos y activación de módulos), Todos los módulos (validación de acceso), Finance (facturación recurrente), eCommerce (tiendas permitidas), People (usuarios permitidos), Inventory (límites de transacciones), Sales (módulos habilitados) |
+
+---
+
+# 🧠 **Resumen ejecutivo de la incorporación de Licensing**
+
+El módulo **NovaSuite Licensing** se convierte en un **módulo transversal**, con impacto directo en:
+
+- **Acceso al sistema** (Core)  
+- **Activación/desactivación de módulos** (Sales, Inventory, CRM, etc.)  
+- **Facturación recurrente** (Finance)  
+- **Control de límites de uso** (People, Inventory, POS, eCommerce)  
+- **Gestión de clientes SaaS** (CRM)  
+
+Es, en esencia, el **motor comercial y operativo del modelo SaaS**.
+
+
+---

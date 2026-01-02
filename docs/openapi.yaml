@@ -1,0 +1,109 @@
+openapi: 3.0.0
+info:
+  title: WebQuote CRM API
+  description: API para la gestión de cotizaciones y CRM de DG TECNOVA.
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Servidor local
+
+paths:
+  /quotations:
+    get:
+      summary: Listar cotizaciones
+      tags: [Quotations]
+      responses:
+        '200':
+          description: Lista de cotizaciones recuperada con éxito
+    post:
+      summary: Crear una nueva cotización
+      tags: [Quotations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotationCreate'
+      responses:
+        '201':
+          description: Cotización creada
+
+  /quotations/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Obtener detalles de una cotización
+      tags: [Quotations]
+      responses:
+        '200':
+          description: Detalles de la cotización
+    patch:
+      summary: Actualizar una cotización
+      tags: [Quotations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotationUpdate'
+      responses:
+        '200':
+          description: Cotización actualizada
+    delete:
+      summary: Eliminar una cotización
+      tags: [Quotations]
+      responses:
+        '204':
+          description: Cotización eliminada
+
+  /quotations/validate:
+    post:
+      summary: Validar datos de una cotización
+      tags: [Quotations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Resultado de la validación
+
+components:
+  schemas:
+    QuotationCreate:
+      type: object
+      required: [numero, empresa, fechaVencimiento]
+      properties:
+        numero:
+          type: string
+        empresa:
+          type: string
+        fechaVencimiento:
+          type: string
+          format: date-time
+        moneda:
+          type: string
+          default: USD
+        subtotal:
+          type: number
+        taxRate:
+          type: number
+        total:
+          type: number
+
+    QuotationUpdate:
+      type: object
+      properties:
+        empresa:
+          type: string
+        estado:
+          type: string
+          enum: [CARGADA, ACTIVA, INACTIVA, ACEPTADA, RECHAZADA]
+        total:
+          type: number

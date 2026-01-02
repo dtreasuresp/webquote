@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Calendar, ChevronDown, ChevronUp, Plus, Trash2, Clock } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
@@ -86,6 +88,10 @@ export default function PresupuestoCronogramaContent({
   seccionesColapsadas,
   onSeccionColapsadaChange,
 }: PresupuestoCronogramaContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('CONTENT')
+  
   // Estado de sección colapsable viene de props (se persiste al guardar)
   const expandedCronograma = seccionesColapsadas.presupuesto_cronograma ?? true
 
@@ -138,15 +144,19 @@ export default function PresupuestoCronogramaContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader
+      <SectionHeader 
         title="Presupuesto y Cronograma"
-        subtitle="Inversión requerida y fases de desarrollo del proyecto"
-        icon={Calendar}
+        description="Inversión y tiempos de desarrollo"
+        icon={<Calendar className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-presupuesto-cronograma', 'Guardado Presupuesto y Cronograma')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

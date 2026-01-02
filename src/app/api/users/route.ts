@@ -43,14 +43,14 @@ export async function GET(request: NextRequest) {
         createdAt: true,
         updatedAt: true,
         roleId: true,
-        roleRef: includePermissions ? {
+        roleRef: {
           select: {
             id: true,
             name: true,
             displayName: true,
             color: true,
           },
-        } : false,
+        },
         UserPermission: includePermissions ? {
           include: {
             Permission: true,

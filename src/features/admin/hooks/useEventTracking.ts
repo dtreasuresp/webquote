@@ -8,9 +8,13 @@ import { useAnalytics } from '../contexts/AnalyticsContext'
  * Proporciona métodos para tracking de interacciones comunes
  */
 
+const NO_OP_EVENT = (name: string, payload?: Record<string, unknown>) => {}
+const NO_OP_ACTION = (action: string, component: string, duration: number, success: boolean, error?: string) => {}
+
 export function useEventTracking() {
-  let trackEvent: (name: string, payload?: Record<string, unknown>) => void = () => {}
-  let trackAction: (action: string, component: string, duration: number, success: boolean, error?: string) => void = () => {}
+  let trackEvent = NO_OP_EVENT
+  let trackAction = NO_OP_ACTION
+  
   try {
     const analytics = useAnalytics()
     trackEvent = analytics.trackEvent
@@ -23,15 +27,15 @@ export function useEventTracking() {
   const lastViewTsRef = useRef<Map<string, number>>(new Map())
   const debounceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
-  const shouldThrottle = (key: string, ttlMs: number) => {
+  const shouldThrottle = useCallback((key: string, ttlMs: number) => {
     const now = Date.now()
     const last = lastViewTsRef.current.get(key) || 0
     if (now - last < ttlMs) return true
     lastViewTsRef.current.set(key, now)
     return false
-  }
+  }, [])
 
-  const debounce = (key: string, delayMs: number, fn: () => void) => {
+  const debounce = useCallback((key: string, delayMs: number, fn: () => void) => {
     const existing = debounceTimersRef.current.get(key)
     if (existing) clearTimeout(existing)
     const t = setTimeout(() => {
@@ -39,7 +43,7 @@ export function useEventTracking() {
       debounceTimersRef.current.delete(key)
     }, delayMs)
     debounceTimersRef.current.set(key, t)
-  }
+  }, [])
 
   const startTracking = useCallback(() => {
     startTimeRef.current = Date.now()

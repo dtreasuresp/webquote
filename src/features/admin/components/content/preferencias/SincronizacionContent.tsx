@@ -5,8 +5,14 @@ import { RefreshCw, Database, Cloud, Wifi, AlertTriangle, Info, CheckCircle } fr
 import { useUserPreferencesStore } from '@/stores'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import ToggleItem, { ToggleGroup } from '@/features/admin/components/ToggleItem'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 export default function SincronizacionContent() {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('PREFERENCES')
+
   const destinoGuardado = useUserPreferencesStore((s) => s.destinoGuardado)
   const intervaloVerificacionConexion = useUserPreferencesStore((s) => s.intervaloVerificacionConexion)
   const unidadIntervaloConexion = useUserPreferencesStore((s) => s.unidadIntervaloConexion)
@@ -20,23 +26,20 @@ export default function SincronizacionContent() {
   const sincronizarAlRecuperar = sincronizarAlRecuperarConexion ?? true
   const mostrarNotificacionCache = mostrarNotificacionCacheLocal ?? true
 
+  const handleUpdate = (patch: any) => {
+    if (!canEdit) return
+    updatePreferences(patch)
+    logAction('UPDATE', 'PREFERENCES', 'sync-preference', `Actualizada preferencia de sincronización: ${Object.keys(patch)[0]}`)
+  }
+
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <RefreshCw className="w-4 h-4 text-gh-accent" />
-            Sincronización y Caché
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Configura cómo se sincronizan y almacenan los datos
-          </p>
-        </div>
-        <span className="text-xs text-gh-text-muted bg-gh-bg-secondary px-2.5 py-1 rounded-md border border-gh-border/30 capitalize">
-          Modo: {destinoGuardado}
-        </span>
-      </div>
+      <SectionHeader
+        title="Sincronización y Caché"
+        description="Configura cómo se sincronizan y almacenan los datos"
+        icon={<RefreshCw className="w-4 h-4" />}
+        variant="accent"
+      />
 
       {/* Destino de Guardado */}
       <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
@@ -52,12 +55,13 @@ export default function SincronizacionContent() {
         <div className="p-4">
           <div className="grid grid-cols-3 gap-3">
             <button
-              onClick={() => updatePreferences({ destinoGuardado: 'local' }) }
+              onClick={() => handleUpdate({ destinoGuardado: 'local' }) }
+              disabled={!canEdit}
               className={`p-3 rounded-md border text-xs font-medium transition-all flex flex-col items-center gap-2 ${
                 destinoGuardado === 'local'
                   ? 'border-gh-accent bg-gh-accent/10 text-gh-accent'
                   : 'border-gh-border/30 text-gh-text-muted hover:border-gh-accent/50 hover:bg-gh-bg-tertiary/30'
-              }`}
+              } ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Database className="w-4 h-4" />
               <span>Solo Local</span>
@@ -65,12 +69,13 @@ export default function SincronizacionContent() {
             </button>
 
             <button
-              onClick={() => updatePreferences({ destinoGuardado: 'cloud' }) }
+              onClick={() => handleUpdate({ destinoGuardado: 'cloud' }) }
+              disabled={!canEdit}
               className={`p-3 rounded-md border text-xs font-medium transition-all flex flex-col items-center gap-2 ${
                 destinoGuardado === 'cloud'
                   ? 'border-gh-accent bg-gh-accent/10 text-gh-accent'
                   : 'border-gh-border/30 text-gh-text-muted hover:border-gh-accent/50 hover:bg-gh-bg-tertiary/30'
-              }`}
+              } ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Cloud className="w-4 h-4" />
               <span>Solo Nube</span>
@@ -78,12 +83,13 @@ export default function SincronizacionContent() {
             </button>
 
             <button
-              onClick={() => updatePreferences({ destinoGuardado: 'ambos' }) }
+              onClick={() => handleUpdate({ destinoGuardado: 'ambos' }) }
+              disabled={!canEdit}
               className={`p-3 rounded-md border text-xs font-medium transition-all flex flex-col items-center gap-2 ${
                 destinoGuardado === 'ambos'
                   ? 'border-gh-accent bg-gh-accent/10 text-gh-accent'
                   : 'border-gh-border/30 text-gh-text-muted hover:border-gh-accent/50 hover:bg-gh-bg-tertiary/30'
-              }`}
+              } ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className="flex gap-1 items-center">
                 <Database className="w-3.5 h-3.5" />
@@ -146,9 +152,10 @@ export default function SincronizacionContent() {
                 const valor = Number.parseInt(e.target.value) || 30
                 const min = unidadIntervalo === 'segundos' ? 5 : 1
                 const max = unidadIntervalo === 'segundos' ? 300 : 30
-                updatePreferences({ intervaloVerificacionConexion: Math.min(max, Math.max(min, valor)) })
+                handleUpdate({ intervaloVerificacionConexion: Math.min(max, Math.max(min, valor)) })
               }}
-              className="w-20 px-3 py-1.5 bg-gh-bg-tertiary border border-gh-border/30 rounded-md text-gh-text text-xs focus:outline-none focus:ring-1 focus:ring-gh-accent"
+              disabled={!canEdit}
+              className="w-20 px-3 py-1.5 bg-gh-bg-tertiary border border-gh-border/30 rounded-md text-gh-text text-xs focus:outline-none focus:ring-1 focus:ring-gh-accent disabled:opacity-50"
             />
             
             <DropdownSelect
@@ -161,8 +168,9 @@ export default function SincronizacionContent() {
                 } else if (nuevaUnidad === 'segundos' && intervaloConexion < 5) {
                   nuevoValor = 30
                 }
-                updatePreferences({ unidadIntervaloConexion: nuevaUnidad, intervaloVerificacionConexion: nuevoValor })
+                handleUpdate({ unidadIntervaloConexion: nuevaUnidad, intervaloVerificacionConexion: nuevoValor })
               }}
+              disabled={!canEdit}
               options={[
                 { value: 'segundos', label: 'Segundos' },
                 { value: 'minutos', label: 'Minutos' }
@@ -191,16 +199,18 @@ export default function SincronizacionContent() {
           <ToggleGroup title="Opciones Avanzadas">
             <ToggleItem
               enabled={sincronizarAlRecuperar}
-              onChange={(v) => updatePreferences({ sincronizarAlRecuperarConexion: v })}
+              onChange={(v) => handleUpdate({ sincronizarAlRecuperarConexion: v })}
               title="Sincronizar al recuperar conexión"
               description="Sincroniza automáticamente los datos locales con la nube al recuperar conexión"
+              disabled={!canEdit}
             />
 
             <ToggleItem
               enabled={sincronizarAlRecuperar}
-              onChange={(v) => updatePreferences({ mostrarNotificacionCacheLocal: v })}
+              onChange={(v) => handleUpdate({ mostrarNotificacionCacheLocal: v })}
               title="Notificar uso de caché local"
               description="Muestra una notificación cuando se cargan datos desde el caché local (modo offline)"
+              disabled={!canEdit}
             />
           </ToggleGroup>
         </div>

@@ -4,13 +4,21 @@ import React from 'react'
 import { Settings, Save } from 'lucide-react'
 import ToggleItem, { ToggleGroup } from '@/features/admin/components/ToggleItem'
 import { useUserPreferencesStore } from '@/stores'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '@/features/admin/hooks/useAdminAudit'
+import { useAdminPermissions } from '@/features/admin/hooks/useAdminPermissions'
 
 interface ConfiguracionGeneralContentProps {
   isDirty?: boolean
   onSave?: () => Promise<void>
+  updatedAt?: string | null
 }
 
-export default function ConfiguracionGeneralContent({ isDirty = false, onSave }: Readonly<ConfiguracionGeneralContentProps>) {
+export default function ConfiguracionGeneralContent({ isDirty = false, onSave, updatedAt }: Readonly<ConfiguracionGeneralContentProps>) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('PREFERENCES')
+
   // All preferences from userPreferencesStore - single source of truth
   const cerrarModalAlGuardar = useUserPreferencesStore((s) => s.cerrarModalAlGuardar)
   const mostrarConfirmacionGuardado = useUserPreferencesStore((s) => s.mostrarConfirmacionGuardado)
@@ -35,10 +43,12 @@ export default function ConfiguracionGeneralContent({ isDirty = false, onSave }:
 
   // Helper para actualizar preferencias respetando guardarAutomaticamente
   const handlePreferenceChange = (patch: Record<string, any>) => {
+    if (!canEdit) return
     // Si guardarAutomaticamente está activado, guardar inmediatamente
     // Si está desactivado, solo actualizar el estado local (sin hacer ningún request a la API)
     if (guardarAutomaticamente ?? true) {
       updatePreferencesSync(patch)
+      logAction('UPDATE', 'PREFERENCES', 'preference-change', `Actualizada preferencia: ${Object.keys(patch)[0]}`)
     } else {
       // Solo actualizar estado local sin sincronizar a la API
       // Marcar como dirty para que el usuario use "Guardar Cambios"
@@ -49,51 +59,35 @@ export default function ConfiguracionGeneralContent({ isDirty = false, onSave }:
 
   // Caso especial: cambios en "guardarAutomaticamente" SIEMPRE se guardan inmediatamente
   const handleAutoSaveToggle = (v: boolean) => {
+    if (!canEdit) return
     updatePreferencesSync({ guardarAutomaticamente: v })
+    logAction('UPDATE', 'PREFERENCES', 'autosave-toggle', `Autoguardado ${v ? 'activado' : 'desactivado'}`)
   }
 
   // Lógica del botón Guardar Cambios
   const isAutoSaveEnabled = guardarAutomaticamente ?? true
   const isSaveButtonEnabled = isDirty ?? false
-  const shouldShowSaveButtonActive = !isAutoSaveEnabled && isSaveButtonEnabled
-  const saveButtonStyles = shouldShowSaveButtonActive
-    ? 'bg-gh-success/10 text-gh-success border border-gh-success/30 hover:bg-gh-success/20'
-    : 'bg-gh-bg text-gh-text-muted border border-gh-border/20 cursor-not-allowed'
 
   const handleSaveClick = () => {
+    if (!canEdit) return
     if (!isAutoSaveEnabled && onSave) {
       onSave()
+      logAction('UPDATE', 'PREFERENCES', 'save-all', 'Guardados todos los cambios de preferencias')
     }
   }
 
   return (
     <div className="space-y-4">
-      {/* Header con Botón Guardar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <Settings className="w-4 h-4 text-gh-accent" />
-            Configuración General
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Preferencias generales de comportamiento de la aplicación
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gh-text-muted bg-gh-bg-secondary px-2.5 py-1 rounded-md border border-gh-border/30">
-            {activeCount} de {Object.keys(config).length - 1} activas
-          </span>
-          {/* Botón Guardar - Siempre visible, estado depende de guardarAutomaticamente */}
-          <button
-            onClick={handleSaveClick}
-            disabled={isAutoSaveEnabled || !isSaveButtonEnabled}
-            className={`flex items-center gap-1.5 px-3 py-1.5 ${saveButtonStyles} rounded-md transition-colors text-xs font-medium`}
-          >
-            <Save className="w-2.5 h-2.5" /> 
-            Guardar Cambios
-          </button>
-        </div>
-      </div>
+      <SectionHeader 
+        title="Configuración General"
+        description="Preferencias generales de comportamiento de la aplicación"
+        icon={<Settings className="w-4 h-4" />}
+        updatedAt={updatedAt}
+        onSave={handleSaveClick}
+        isSaving={false} // Podríamos pasar un estado de guardando si onSave lo tuviera
+        statusIndicator={isDirty ? 'modificado' : 'guardado'}
+        variant="accent"
+      />
 
       {/* Preferencias Generales */}
       <div className="px-0">

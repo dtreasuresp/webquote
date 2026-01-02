@@ -8,6 +8,8 @@ export { useCotizacionCRUD } from './useCotizacionCRUD'
 export { useAdvancedValidation } from './useAdvancedValidation'
 export { useEventTracking } from './useEventTracking'
 export { useAnalyticsMetrics } from './useAnalyticsMetrics'
+export { useAdminAudit } from './useAdminAudit'
+export { useAdminPermissions } from './useAdminPermissions'
 
 // Hooks movidos desde lib/hooks
 export { useToast } from './useToast'

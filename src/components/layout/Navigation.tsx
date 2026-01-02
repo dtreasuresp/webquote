@@ -10,6 +10,8 @@ import { useSession } from 'next-auth/react'
 import type { QuotationConfig, ContenidoGeneral, VisibilidadConfig } from '@/lib/types'
 import UserProfileMenu from '@/components/UserProfileMenu'
 import ChangePasswordDialog from '@/components/ChangePasswordDialog'
+import AdminBreadcrumbs from '@/features/admin/components/AdminBreadcrumbs'
+import { useSidebarStore } from '@/stores/sidebarStore'
 
 /** Configuración de cada item de navegación con su clave de datos */
 interface NavItemConfig {
@@ -38,9 +40,9 @@ const navItemsConfig: NavItemConfig[] = [
 ]
 
 // Logos: verde para admin, azul con fondo para el resto
-const LOGO_ADMIN = '/img/logo-webquote_green_txt_white.svg'
-const LOGO_DEFAULT = '/img/logo-webquote_blue_backgroud_txt_white.png'
-const LOGO_DARK = '/img/logo-webquote_blue_txt_black.png' // Logo para fondo claro
+const LOGO_ADMIN = '/img/logo-novasuite_blue_txt_white.png'
+const LOGO_DEFAULT = '/img/logo-novasuite_blue_backgroud_txt_white.png'
+const LOGO_DARK = '/img/logo-novasuite_blue_txt_black.png' // Logo para fondo claro
 
 interface NavigationProps {
   /** Cotización activa para determinar visibilidad de secciones */
@@ -51,6 +53,7 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+  const isCompact = useSidebarStore((s) => s.isCompact)
   const navRef = useRef<HTMLElement>(null)
   const router = useRouter()
   const pathname = usePathname()
@@ -137,7 +140,7 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
         ref={navRef}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 font-github ${
           isAdminPage
-            ? `bg-[#0d1117] border-b border-[#30363d]/50 shadow-lg h-[60px] flex items-center`
+            ? `bg-white/5 backdrop-blur-md border-b border-white/10 shadow-xl shadow-black/20 h-[60px] flex items-center`
             : isScrolled 
               ? 'bg-light-bg/95 backdrop-blur-sm border-b border-light-border shadow-sm py-2'
               : 'bg-light-bg border-b border-light-border py-3'
@@ -149,7 +152,7 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`flex items-center ${isAdminPage ? 'w-56 justify-center border-r border-gh-border' : ''}`}
+              className={`flex items-center transition-all duration-300 ${isAdminPage ? (isCompact ? 'w-16' : 'w-56') + ' justify-center border-r border-white/10' : ''}`}
             >
               <Link href="/" className="flex items-center">
                 <Image
@@ -157,10 +160,17 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
                   alt="WebQuote Logo"
                   width={160}
                   height={36}
-                  className="transition-all duration-300"
-                  style={{ width: 'auto', height: '36px', maxHeight: '36px' }}
+                  className={`transition-all duration-300 ${isAdminPage && isCompact ? 'scale-0 w-0' : 'scale-100'}`}
+                  style={{ height: '36px', maxHeight: '36px' }}
                   priority
                 />
+                {isAdminPage && isCompact && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gh-success rounded-lg flex items-center justify-center shadow-lg shadow-gh-success/20">
+                      <span className="text-white font-bold text-xl">W</span>
+                    </div>
+                  </div>
+                )}
               </Link>
             </motion.div>
 
@@ -168,24 +178,13 @@ export default function Navigation({ cotizacion }: Readonly<NavigationProps>) {
             <div className={`hidden xl:flex items-center ${isAdminPage ? 'flex-1 h-full' : 'gap-1'}`}>
               {isAdminPage ? (
                 <>
-                  {/* Centered Nav Items */}
-                  <div className="flex-1 flex justify-center gap-1">
-                    {navItems.map((item, index) => (
-                      <motion.button
-                        key={item.id}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03 }}
-                        onClick={() => scrollToSection(item.id)}
-                        className="px-3 py-1.5 text-sm rounded-md transition-colors duration-200 font-medium text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d]"
-                      >
-                        {item.label}
-                      </motion.button>
-                    ))}
+                  {/* Breadcrumbs in Navbar */}
+                  <div className="flex-1 flex items-center px-6">
+                    <AdminBreadcrumbs />
                   </div>
 
                   {/* Right-aligned User Profile */}
-                  <div className="flex-shrink-0 px-4 border-l border-gh-border h-8 flex items-center ml-4">
+                  <div className="flex-shrink-0 px-4 border-l border-white/10 h-8 flex items-center ml-4">
                     {session ? (
                       <UserProfileMenu 
                         variant="dark" 

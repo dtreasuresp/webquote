@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { FileText, UserCheck, UserX, ArrowLeftRight, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
@@ -27,6 +29,9 @@ interface ResumenContentProps {
 }
 
 export default function ResumenContent({ data, onChange, visibilidad, onVisibilidadChange, visible, onVisibleChange, updatedAt, onGuardar, onReset, guardando, hasChanges, seccionesColapsadas, onSeccionColapsadaChange }: ResumenContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('CONTENT')
   console.log('[DEBUG ResumenContent] seccionesColapsadas recibidas:', seccionesColapsadas)
   
   // Estado de secciones colapsables viene de props (se persiste al guardar)
@@ -46,6 +51,7 @@ export default function ResumenContent({ data, onChange, visibilidad, onVisibili
 
   // Helpers para flujo de comunicación
   const handleAddFlujoStep = () => {
+    if (!canEdit) return
     const currentFlujo = data.flujoComunicacion || []
     const newStep = {
       paso: currentFlujo.length + 1,
@@ -58,6 +64,7 @@ export default function ResumenContent({ data, onChange, visibilidad, onVisibili
   }
 
   const handleRemoveFlujoStep = (index: number) => {
+    if (!canEdit) return
     const currentFlujo = data.flujoComunicacion || []
     const newFlujo = currentFlujo
       .filter((_, i) => i !== index)
@@ -66,6 +73,7 @@ export default function ResumenContent({ data, onChange, visibilidad, onVisibili
   }
 
   const handleUpdateFlujoStep = (index: number, field: string, value: string) => {
+    if (!canEdit) return
     const currentFlujo = data.flujoComunicacion || []
     const newFlujo = [...currentFlujo]
     newFlujo[index] = { ...newFlujo[index], [field]: value }
@@ -79,15 +87,19 @@ export default function ResumenContent({ data, onChange, visibilidad, onVisibili
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader 
+      <SectionHeader 
         title="Resumen Ejecutivo"
-        subtitle="Visión general del proyecto y objetivos principales"
-        icon={FileText}
+        description="Visión general del proyecto y objetivos principales"
+        icon={<FileText className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-resumen', 'Guardado Resumen Ejecutivo')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

@@ -13,12 +13,12 @@ module.exports = {
         // Reference: https://primer.style/primitives/colors
         // ═══════════════════════════════════════════════════════════════
         // Canvas (background) tokens
-        'gh-bg-absolute': '#010409',  // Absolute darkest
+        'gh-bg-absolute': '#010409ff',  // Absolute darkest
         'gh-bg': '#0d1117',           // Primary canvas background
         'gh-bg-overlay': '#161b22ff',   // Overlay backgrounds (modals, dropdowns)
         'gh-bg-secondary': '#161b2265', // Secondary canvas (cards, containers - elevated)
         'gh-bg-tertiary': '#070a0f5c',  // Tertiary (headers, table rows)
-        'gh-bg-inset': '#010409',     // Inset backgrounds
+        'gh-bg-inset': '#010409ff',     // Inset backgrounds
         'gh-bg-subtle': '#22282fff',    // Subtle background variation
         
         // Button tokens
@@ -50,7 +50,7 @@ module.exports = {
         'gh-accent-subtle': 'rgba(56, 139, 253, 0.15)', // Subtle accent bg
         
         // Success tokens
-        'gh-success': '#3fb950',      // Success text/icons
+        'gh-success': '#3fb950ff',      // Success text/icons
         'gh-success-hover': '#56d364', // Success hover
         'gh-success-bg': '#238636',   // Success button background
         'gh-success-emphasis': '#238636', // Success emphasis

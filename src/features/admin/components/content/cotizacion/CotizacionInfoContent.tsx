@@ -5,6 +5,9 @@ import { FileText, Tag, Calendar, DollarSign, Calculator, Check, AlertTriangle }
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import DatePicker from '@/components/ui/DatePicker'
 import { QuotationConfig } from '@/lib/types'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '@/features/admin/hooks/useAdminAudit'
+import { useAdminPermissions } from '@/features/admin/hooks/useAdminPermissions'
 
 interface CotizacionInfoContentProps {
   cotizacionConfig: QuotationConfig | null
@@ -23,33 +26,33 @@ export default function CotizacionInfoContent({
   formatearFechaLarga,
   calcularFechaVencimiento,
 }: Readonly<CotizacionInfoContentProps>) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('QUOTES')
   const estaConfigurada = cotizacionConfig?.heroTituloSub && cotizacionConfig?.fechaEmision
+
+  const handleUpdate = (field: keyof QuotationConfig, value: any) => {
+    if (!canEdit) return
+    setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, [field]: value } : null)
+  }
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <FileText className="w-4 h-4 text-gh-accent" />
-            Información de Cotización
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Datos generales y fechas de la cotización
-          </p>
-        </div>
-        <span className={`text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5 border ${
-          estaConfigurada 
-            ? 'bg-gh-success/10 text-gh-success border-gh-success/30' 
-            : 'bg-gh-warning/10 text-gh-warning border-gh-warning/30'
-        }`}>
-          {estaConfigurada ? (
-            <><Check className="w-3 h-3" /> Configurada</>
-          ) : (
-            <><AlertTriangle className="w-3 h-3" /> Incompleta</>
-          )}
-        </span>
-      </div>
+      <SectionHeader
+        title="Información de Cotización"
+        description="Datos generales y fechas de la cotización"
+        icon={<FileText className="w-4 h-4" />}
+        variant="accent"
+        badges={[
+          { 
+            label: estaConfigurada ? 'Configurada' : 'Incompleta', 
+            value: estaConfigurada ? '✓' : '!',
+            color: estaConfigurada 
+              ? 'bg-gh-success/10 text-gh-success border-gh-success/30' 
+              : 'bg-gh-warning/10 text-gh-warning border-gh-warning/30'
+          }
+        ]}
+      />
 
       {/* Formulario Principal */}
       <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
@@ -61,7 +64,7 @@ export default function CotizacionInfoContent({
           <input
             type="text"
             value={cotizacionConfig?.heroTituloSub || ''}
-            onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, heroTituloSub: e.target.value } : null)}
+            onChange={(e) => handleUpdate('heroTituloSub', e.target.value)}
             className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
             placeholder="Ej: PÁGINA CATÁLOGO DINÁMICA"
           />
@@ -93,7 +96,7 @@ export default function CotizacionInfoContent({
               <input
                 type="text"
                 value={cotizacionConfig?.heroTituloMain || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, heroTituloMain: e.target.value } : null)}
+                onChange={(e) => handleUpdate('heroTituloMain', e.target.value)}
                 placeholder="Ej: Propuesta de Cotización"
                 className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
               />

@@ -34,9 +34,9 @@ import {
   FinancialTemplate,
   DialogConfig
 } from '@/lib/types'
-import { useEventTracking } from '@/features/admin/hooks'
+import { useEventTracking, useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
 import { MetodosPagoData, defaultMetodosPago } from './MetodosPagoContent'
-import ContentHeader from '@/features/admin/components/content/contenido/ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 export interface FinancieroContentProps {
   // Desarrollo
@@ -135,6 +135,10 @@ export default function FinancieroContent({
   mostrarDialogoGenerico,
   updatedAt,
 }: Readonly<FinancieroContentProps>) {
+  // Hooks de auditoría y permisos
+  const { logAction } = useAdminAudit()
+  const { canEdit, canCreate, canDelete } = useAdminPermissions()
+
   // Hook de tracking
   const { 
     trackDescuentoConfigured
@@ -349,6 +353,7 @@ export default function FinancieroContent({
   // Guardar configuración actual como nuevo template
   const handleGuardarTemplate = useCallback(async () => {
     if (!onSaveFinancialTemplate || !mostrarDialogoGenerico) return
+    if (templateEditandoId ? !canEdit('OFFERS') : !canCreate('OFFERS')) return
 
     mostrarDialogoGenerico({
       titulo: templateEditandoId ? 'Actualizar Configuración' : 'Guardar Nueva Configuración',
@@ -399,6 +404,7 @@ export default function FinancieroContent({
                     financialTemplates.map(t => t.id === templateEditandoId ? actualizado : t)
                   )
                 }
+                logAction('UPDATE', 'OFFERS', templateEditandoId, `Configuración Financiera Actualizada: ${nombre}`)
                 toast?.success('Configuración actualizada correctamente')
                 setTemplateEditandoId(null)
               } else {
@@ -410,6 +416,7 @@ export default function FinancieroContent({
                 if (setFinancialTemplates) {
                   setFinancialTemplates([...financialTemplates, nuevo])
                 }
+                logAction('CREATE', 'OFFERS', nuevo.id, `Configuración Financiera Guardada: ${nombre}`)
                 toast?.success('Configuración guardada correctamente')
               }
               return true
@@ -433,12 +440,13 @@ export default function FinancieroContent({
   }, [
     onSaveFinancialTemplate, onUpdateFinancialTemplate, mostrarDialogoGenerico, 
     templateEditandoId, financialTemplates, setFinancialTemplates, 
-    obtenerConfigActual, toast
+    obtenerConfigActual, toast, canEdit, canCreate, logAction
   ])
 
   // Editar un template existente
   const handleEditarTemplate = useCallback((template: FinancialTemplate) => {
     if (!mostrarDialogoGenerico) return
+    if (!canEdit('OFFERS')) return
 
     mostrarDialogoGenerico({
       titulo: 'Editar Nombre de Configuración',
@@ -473,6 +481,7 @@ export default function FinancieroContent({
                 setFinancialTemplates(
                   financialTemplates.map(t => t.id === template.id ? actualizado : t)
                 )
+                logAction('UPDATE', 'OFFERS', template.id, `Configuración Financiera Renombrada: ${nuevoNombre}`)
                 toast?.success('Nombre actualizado correctamente')
                 return true
               } catch (error) {
@@ -492,11 +501,12 @@ export default function FinancieroContent({
         }
       ]
     })
-  }, [mostrarDialogoGenerico, financialTemplates, setFinancialTemplates, onUpdateFinancialTemplate, toast])
+  }, [mostrarDialogoGenerico, financialTemplates, setFinancialTemplates, onUpdateFinancialTemplate, toast, canEdit, logAction])
 
   // Eliminar un template
   const handleEliminarTemplate = useCallback((template: FinancialTemplate) => {
     if (!mostrarDialogoGenerico || !onDeleteFinancialTemplate) return
+    if (!canDelete('OFFERS')) return
 
     mostrarDialogoGenerico({
       titulo: 'Eliminar Configuración',
@@ -514,6 +524,7 @@ export default function FinancieroContent({
               if (templateEditandoId === template.id) {
                 setTemplateEditandoId(null)
               }
+              logAction('DELETE', 'OFFERS', template.id, `Configuración Financiera Eliminada: ${template.nombre}`)
               toast?.success('Configuración eliminada correctamente')
               return true
             } catch (error) {
@@ -531,10 +542,11 @@ export default function FinancieroContent({
         }
       ]
     })
-  }, [mostrarDialogoGenerico, onDeleteFinancialTemplate, financialTemplates, setFinancialTemplates, templateEditandoId, toast])
+  }, [mostrarDialogoGenerico, onDeleteFinancialTemplate, financialTemplates, setFinancialTemplates, templateEditandoId, toast, canDelete, logAction])
 
   // Nueva Oferta Financiera (reiniciar valores)
   const handleNuevaOfertaFinancieraLocal = useCallback(() => {
+    if (!canCreate('OFFERS')) return
     const hayDatos = desarrolloCosto > 0 || descuentoBase > 0 || 
                      opcionesPago.length > 0 || metodosPreferidos.length > 0 ||
                      configDescuentos.tipoDescuento !== 'ninguno'
@@ -548,6 +560,7 @@ export default function FinancieroContent({
       setConfigDescuentos(defaultConfigDescuentos)
       setNotasPago('')
       setTemplateEditandoId(null)
+      logAction('CREATE', 'OFFERS', 'new-financial-config', 'Nueva Configuración Financiera (Limpia)')
       toast?.info('Formulario listo para nueva oferta')
       return
     }
@@ -582,6 +595,7 @@ export default function FinancieroContent({
             setConfigDescuentos(defaultConfigDescuentos)
             setNotasPago('')
             setTemplateEditandoId(null)
+            logAction('CREATE', 'OFFERS', 'new-financial-config', 'Nueva Configuración Financiera (Confirmada)')
             toast?.info('Formulario reiniciado')
             return true
           },
@@ -598,7 +612,7 @@ export default function FinancieroContent({
     desarrolloCosto, descuentoBase, opcionesPago, metodosPreferidos, configDescuentos,
     setDesarrolloCosto, setDescuentoBase, setOpcionesPago, setMetodosPreferidos, 
     setConfigDescuentos, setNotasPago, mostrarDialogoGenerico, onNuevaOfertaFinanciera,
-    handleGuardarTemplate, toast
+    handleGuardarTemplate, toast, canCreate, logAction
   ])
 
   // Ver detalles de un template
@@ -639,7 +653,7 @@ export default function FinancieroContent({
       `)
 
       // 2. Esquema de Pagos
-      const opciones = template.opcionesPago as OpcionPago[] | undefined
+      const opciones = template.opcionesPago
       if (opciones && opciones.length > 0) {
         const opcionesList = opciones.map(op => `• ${op.nombre} (${op.porcentaje}%)`).join('<br/>')
         sections.push(`
@@ -664,11 +678,12 @@ export default function FinancieroContent({
       }
 
       // 4. Preferencias de Pago (Métodos Preferidos)
-      const metodos = template.metodosPreferidos as MetodoPreferido[] | undefined
+      const metodos = template.metodosPreferidos
       if (metodos && metodos.length > 0) {
         const metodosList = metodos.map(m => {
           const nombre = metodoLabels[m.metodo] || m.metodo
-          return `• ${nombre}${m.nota ? ` <span class="text-gh-text-muted italic">(${m.nota})</span>` : ''}`
+          const notaText = m.nota ? ` <span class="text-gh-text-muted italic">(${m.nota})</span>` : ''
+          return `• ${nombre}${notaText}`
         }).join('<br/>')
         sections.push(`
           <div class="mb-4">
@@ -742,33 +757,32 @@ export default function FinancieroContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* HEADER with ContentHeader */}
-      <ContentHeader
+      {/* Header with SectionHeader */}
+      <SectionHeader
         title="Financiero"
-        subtitle="Costos, descuentos y opciones de pago"
-        icon={DollarSign}
+        description="Costos, descuentos y opciones de pago de la oferta"
+        icon={<DollarSign className="w-4 h-4" />}
         statusIndicator={updatedAt ? 'guardado' : 'sin-modificar'}
         updatedAt={updatedAt}
-        badge={badge.text}
-        actions={[
-          {
-            label: 'Nueva',
-            icon: Plus,
-            onClick: handleNuevaOfertaFinancieraLocal,
-            variant: 'primary',
-          },
-          ...(onSaveFinancialTemplate
-            ? [
-                {
-                  label: templateEditandoId ? 'Actualizar Configuración' : 'Guardar',
-                  icon: Save,
-                  onClick: handleGuardarTemplate,
-                  variant: 'secondary' as const,
-                  disabled: guardandoTemplate,
-                },
-              ]
-            : []),
-        ]}
+        variant="accent"
+        onAdd={canCreate('OFFERS') ? handleNuevaOfertaFinancieraLocal : undefined}
+        badges={[{ label: 'Estado', value: badge.text, color: badge.className.includes('success') ? 'success' : 'warning' }]}
+        actions={
+          <div className="flex items-center gap-2">
+            {onSaveFinancialTemplate && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleGuardarTemplate}
+                disabled={guardandoTemplate || !canEdit('OFFERS')}
+                className="flex items-center gap-2 px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 hover:border-gh-accent/50 rounded-lg transition-colors text-xs font-medium disabled:opacity-50"
+              >
+                <Save className="w-4 h-4 text-gh-accent" />
+                <span>{templateEditandoId ? 'Actualizar Configuración' : 'Guardar'}</span>
+              </motion.button>
+            )}
+          </div>
+        }
       />
 
       {/* SECCIÓN DE CONFIGURACIONES GUARDADAS */}
@@ -808,8 +822,8 @@ export default function FinancieroContent({
                     {template.metodosPreferidos && template.metodosPreferidos.length > 0 && (
                       <span>{template.metodosPreferidos.length} método(s) de pago</span>
                     )}
-                    {(template.opcionesPago as OpcionPago[] | undefined)?.length ? (
-                      <span>{(template.opcionesPago as OpcionPago[]).length} opción(es) de pago</span>
+                    {template.opcionesPago?.length ? (
+                      <span>{template.opcionesPago.length} opción(es) de pago</span>
                     ) : null}
                   </div>
                 </div>

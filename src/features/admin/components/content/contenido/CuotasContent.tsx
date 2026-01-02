@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { CreditCard, ChevronDown, ChevronUp, Plus, Trash2, DollarSign } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
@@ -113,6 +115,10 @@ export default function CuotasContent({
   seccionesColapsadas,
   onSeccionColapsadaChange,
 }: CuotasContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('CONTENT')
+  
   // Estado de secciones colapsables viene de props (se persiste al guardar)
   const expandedSections = {
     metodosPago: seccionesColapsadas.cuotas_metodosPago ?? true,
@@ -128,6 +134,7 @@ export default function CuotasContent({
   // Funciones para Métodos de Pago
   // ═══════════════════════════════════════════════════════════════
   const addMetodoPago = () => {
+    if (!canEdit) return
     const newMetodo: MetodoPagoCuotas = {
       nombre: 'Nuevo método',
       descripcion: '',
@@ -142,6 +149,7 @@ export default function CuotasContent({
   }
 
   const updateMetodoPago = (index: number, field: keyof MetodoPagoCuotas, value: string | number | undefined) => {
+    if (!canEdit) return
     const newOpciones = [...data.metodosPago.opciones]
     newOpciones[index] = { ...newOpciones[index], [field]: value }
     onChange({
@@ -151,6 +159,7 @@ export default function CuotasContent({
   }
 
   const removeMetodoPago = (index: number) => {
+    if (!canEdit) return
     onChange({
       ...data,
       metodosPago: {
@@ -164,6 +173,7 @@ export default function CuotasContent({
   // Funciones para Rangos de Presupuesto
   // ═══════════════════════════════════════════════════════════════
   const addRango = () => {
+    if (!canEdit) return
     const newRango: RangoPresupuestoCuotas = {
       paquete: 'Nuevo Paquete',
       rangoMin: 0,
@@ -181,6 +191,7 @@ export default function CuotasContent({
   }
 
   const updateRango = (index: number, field: keyof RangoPresupuestoCuotas, value: string | number | string[]) => {
+    if (!canEdit) return
     const newRangos = [...data.presupuesto.rangos]
     newRangos[index] = { ...newRangos[index], [field]: value }
     onChange({
@@ -190,6 +201,7 @@ export default function CuotasContent({
   }
 
   const removeRango = (index: number) => {
+    if (!canEdit) return
     onChange({
       ...data,
       presupuesto: {
@@ -206,15 +218,19 @@ export default function CuotasContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader
-        title="Cuotas y Pagos"
-        subtitle="Opciones de financiamiento y métodos de pago disponibles"
-        icon={CreditCard}
+      <SectionHeader 
+        title="Opciones de Pago"
+        description="Cuotas y financiamiento disponibles"
+        icon={<CreditCard className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-cuotas', 'Guardadas Opciones de Pago')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

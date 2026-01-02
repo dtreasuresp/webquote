@@ -9,6 +9,9 @@ export type { AdvancedValidationResult, ValidationContext } from './advancedVali
 export * from './validationRules'
 export type { ValidationRule } from './validationRules'
 
+// Quote HTML Generator
+export * from './quoteHtmlGenerator'
+
 // Snapshot Utilities (Phase 12)
 export * from './snapshotComparison'
 export type { SnapshotDifference, SnapshotComparison, SnapshotComparisonResult } from './snapshotComparison'
@@ -27,3 +30,6 @@ export * from './calculations'
 
 // Generators
 export * from './generators'
+
+// HTML Generator for PDF/Quotes
+export * from './quoteHtmlGenerator'

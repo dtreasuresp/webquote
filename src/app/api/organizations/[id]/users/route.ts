@@ -38,6 +38,12 @@ export async function GET(
         email: true,
         telefono: true,
         role: true,
+        roleRef: {
+          select: {
+            color: true,
+            displayName: true
+          }
+        },
         activo: true,
         lastLogin: true,
         quotationAssigned: {

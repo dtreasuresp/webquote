@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Table, ChevronDown, ChevronUp, Plus, Trash2, Check, X } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { SeccionesColapsadasConfig } from '@/lib/types'
@@ -146,6 +148,10 @@ export default function TablaComparativaContent({
   seccionesColapsadas,
   onSeccionColapsadaChange,
 }: TablaComparativaContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('CONTENT')
+  
   // Estado de secciones colapsables viene de props (se persiste al guardar)
   const expandedSections = {
     paquetes: seccionesColapsadas.tabla_paquetes ?? true,
@@ -289,11 +295,19 @@ export default function TablaComparativaContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader
+      <SectionHeader 
         title="Tabla Comparativa"
-        subtitle="Comparación detallada de paquetes y características"
-        icon={Table}
+        description="Comparación detallada de paquetes y características"
+        icon={<Table className="w-4 h-4" />}
         updatedAt={updatedAt}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-tabla-comparativa', 'Guardada Tabla Comparativa')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
         onGuardar={onGuardar}
         onReset={onReset}
         guardando={guardando}

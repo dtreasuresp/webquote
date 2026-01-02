@@ -64,3 +64,6 @@ export * from './userModalStore'
 
 // User Data Store (Quotations and Organizations management)
 export * from './userDataStore'
+// CRM Store (Phase 1 - CRM Management)
+export * from './crmStore'
+export * from './crmModalStore'

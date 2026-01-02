@@ -3,7 +3,9 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { HelpCircle, Plus, Trash2 } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { FAQItem } from '@/lib/types'
@@ -28,6 +30,9 @@ interface FAQContentProps {
 }
 
 export default function FAQContent({ data, onChange, visible, onVisibleChange, tituloSubtitulo, onTituloSubtituloChange, updatedAt, onGuardar, onReset, guardando, hasChanges }: FAQContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('CONTENT')
   const [newQuestion, setNewQuestion] = useState('')
   const [newAnswer, setNewAnswer] = useState('')
   
@@ -38,6 +43,7 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
   }
 
   const handleAdd = () => {
+    if (!canEdit) return
     if (newQuestion.trim() && newAnswer.trim()) {
       onChange([...data, { question: newQuestion.trim(), answer: newAnswer.trim() }])
       setNewQuestion('')
@@ -46,10 +52,12 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
   }
 
   const handleRemove = (index: number) => {
+    if (!canEdit) return
     onChange(data.filter((_, i) => i !== index))
   }
 
   const handleUpdate = (index: number, field: 'question' | 'answer', value: string) => {
+    if (!canEdit) return
     const updated = [...data]
     updated[index] = { ...updated[index], [field]: value }
     onChange(updated)
@@ -62,15 +70,19 @@ export default function FAQContent({ data, onChange, visible, onVisibleChange, t
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader 
+      <SectionHeader 
         title="Preguntas Frecuentes (FAQ)"
-        subtitle="Respuestas a las dudas más comunes sobre el proyecto"
-        icon={HelpCircle}
+        description="Respuestas a las dudas más comunes sobre el proyecto"
+        icon={<HelpCircle className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-faq', 'Guardadas Preguntas Frecuentes')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

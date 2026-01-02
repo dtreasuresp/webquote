@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Shield, 
-  Plus, 
   Pencil, 
   Trash2, 
   Lock, 
@@ -19,8 +18,11 @@ import {
   ChevronRight
 } from 'lucide-react'
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
-import { usePermission } from '@/hooks'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useSession } from 'next-auth/react'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
+import { ROLE_COLORS } from '@/lib/constants/roles'
 
 // ==================== TIPOS ====================
 
@@ -51,13 +53,21 @@ interface RoleFormData {
 // ==================== COMPONENTE ====================
 
 export default function RolesContent() {
-  // ✅ Permisos con Access Levels
-  const rolesPerms = usePermission('security.roles')
+  const { data: session, update: updateSession } = useSession()
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn, canCreate: canCreateFn, canDelete: canDeleteFn, canView: canViewFn } = useAdminPermissions()
+  
+  const canEdit = canEditFn('ROLES')
+  const canCreate = canCreateFn('ROLES')
+  const canDelete = canDeleteFn('ROLES')
+  const canView = canViewFn('ROLES')
+  const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
   
   // Estado
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toISOString())
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('')
@@ -80,7 +90,7 @@ export default function RolesContent() {
     displayName: '',
     description: '',
     hierarchy: 50,
-    color: '#6B7280',
+    color: ROLE_COLORS.USER,
     isSystem: false,
   })
 
@@ -96,24 +106,6 @@ export default function RolesContent() {
     '#DB2777', // pink
     '#6B7280', // gray
   ]
-  
-  // ✅ Control de acceso basado en Access Levels
-  if (rolesPerms.isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-gh-accent" />
-      </div>
-    )
-  }
-
-  if (!rolesPerms.canView) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <Lock className="w-16 h-16 text-gh-text-muted/40" />
-        <p className="text-gh-text-muted">No tienes permiso para ver roles</p>
-      </div>
-    )
-  }
 
   // Cargar roles
   const fetchRoles = useCallback(async () => {
@@ -135,6 +127,21 @@ export default function RolesContent() {
     fetchRoles()
   }, [fetchRoles])
 
+  // Reset a página 1 al filtrar
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, showActiveOnly, showSystemOnly, itemsPerPage])
+  
+  // ✅ Control de acceso
+  if (!canView) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <Lock className="w-16 h-16 text-gh-text-muted/40" />
+        <p className="text-gh-text-muted">No tienes permiso para ver roles</p>
+      </div>
+    )
+  }
+
   // Abrir modal crear
   const handleCreate = () => {
     setModalMode('create')
@@ -144,7 +151,7 @@ export default function RolesContent() {
       displayName: '',
       description: '',
       hierarchy: 50,
-      color: '#6B7280',
+      color: ROLE_COLORS.USER,
       isSystem: false,
     })
     setIsModalOpen(true)
@@ -153,7 +160,7 @@ export default function RolesContent() {
   // Abrir modal editar
   const handleEdit = (role: Role) => {
     // Solo SUPER_ADMIN puede editar roles del sistema
-    if (role.isSystem && !rolesPerms.isSuperAdmin) return
+    if (role.isSystem && !isSuperAdmin) return
     setModalMode('edit')
     setSelectedRole(role)
     setFormData({
@@ -169,6 +176,7 @@ export default function RolesContent() {
 
   // Guardar rol
   const handleSave = async () => {
+    if (!canEdit) return
     try {
       setSaving(true)
       
@@ -189,8 +197,31 @@ export default function RolesContent() {
         throw new Error(data.error || 'Error al guardar')
       }
       
+      // Audit log
+      logAction(
+        modalMode === 'create' ? 'CREATE' : 'UPDATE',
+        'ROLES',
+        selectedRole?.id || 'new',
+        formData.displayName,
+        modalMode === 'edit' ? {
+          before: selectedRole,
+          after: formData
+        } : undefined
+      )
+
       setIsModalOpen(false)
+      setLastUpdated(new Date().toISOString())
       fetchRoles()
+
+      // ✨ Actualizar sesión si el rol editado es el del usuario actual
+      if (selectedRole?.name === session?.user?.role) {
+        updateSession({
+          user: {
+            ...session.user,
+            roleColor: formData.color
+          }
+        })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al guardar')
     } finally {
@@ -200,13 +231,19 @@ export default function RolesContent() {
 
   // Eliminar rol
   const handleDelete = async (role: Role) => {
+    if (!canDelete) return
     // Solo SUPER_ADMIN puede eliminar roles del sistema
-    if (role.isSystem && !rolesPerms.isSuperAdmin) return
+    if (role.isSystem && !isSuperAdmin) return
     if (!confirm(`¿Eliminar el rol "${role.displayName}"?`)) return
     
     try {
       const res = await fetch(`/api/roles/${role.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Error al eliminar')
+      
+      // Audit log
+      logAction('DELETE', 'ROLES', role.id, role.displayName)
+      
+      setLastUpdated(new Date().toISOString())
       fetchRoles()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar')
@@ -215,8 +252,9 @@ export default function RolesContent() {
 
   // Toggle activo
   const handleToggleActive = async (role: Role) => {
+    if (!canEdit) return
     // Solo SUPER_ADMIN puede modificar estado de roles del sistema
-    if (role.isSystem && !rolesPerms.isSuperAdmin) return
+    if (role.isSystem && !isSuperAdmin) return
     
     try {
       const res = await fetch(`/api/roles/${role.id}`, {
@@ -225,6 +263,13 @@ export default function RolesContent() {
         body: JSON.stringify({ isActive: !role.isActive }),
       })
       if (!res.ok) throw new Error('Error al actualizar')
+      
+      // Audit log
+      logAction('UPDATE', 'ROLES', role.id, role.displayName, {
+        isActive: { before: role.isActive, after: !role.isActive }
+      })
+      
+      setLastUpdated(new Date().toISOString())
       fetchRoles()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al actualizar')
@@ -250,11 +295,6 @@ export default function RolesContent() {
     ? 1 
     : Math.ceil(filteredRoles.length / itemsPerPage)
 
-  // Reset a página 1 al filtrar
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, showActiveOnly, showSystemOnly, itemsPerPage])
-
   // Limpiar filtros
   const handleClearFilters = () => {
     setSearchTerm('')
@@ -276,27 +316,13 @@ export default function RolesContent() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <Shield className="w-4 h-4 text-gh-accent" />
-            Gestión de Roles
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Administra los roles y niveles de acceso del sistema
-          </p>
-        </div>
-        {rolesPerms.canCreate && (
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Nuevo Rol
-          </button>
-        )}
-      </div>
+      <SectionHeader
+        title="Gestión de Roles"
+        description="Administra los roles y niveles de acceso del sistema"
+        icon={<Shield className="w-4 h-4" />}
+        updatedAt={lastUpdated}
+        onAdd={canCreate ? handleCreate : undefined}
+      />
 
       {/* Filtros */}
       <div className="flex flex-col gap-3">
@@ -455,7 +481,7 @@ export default function RolesContent() {
                 <td className="px-4 py-3 text-center">
                   <button
                     onClick={() => handleToggleActive(role)}
-                    disabled={role.isSystem && !rolesPerms.isSuperAdmin}
+                    disabled={(role.isSystem && !isSuperAdmin) || !canEdit}
                     className={`
                       inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
                       transition-colors
@@ -463,7 +489,7 @@ export default function RolesContent() {
                         ? 'bg-gh-success/10 text-gh-success' 
                         : 'bg-gh-text-muted/10 text-gh-text-muted'
                       }
-                      ${(role.isSystem && !rolesPerms.isSuperAdmin) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:opacity-80'}
+                      ${((role.isSystem && !isSuperAdmin) || !canEdit) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:opacity-80'}
                     `}
                   >
                     {role.isActive ? (
@@ -483,39 +509,39 @@ export default function RolesContent() {
                 {/* Acciones */}
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    {rolesPerms.canEdit && (
+                    {canEdit && (
                       <>
                         <button
                           onClick={() => handleEdit(role)}
-                          disabled={role.isSystem && !rolesPerms.isSuperAdmin}
+                          disabled={role.isSystem && !isSuperAdmin}
                           className={`
                             p-1.5 rounded-md transition-colors
-                            ${(role.isSystem && !rolesPerms.isSuperAdmin)
+                            ${(role.isSystem && !isSuperAdmin)
                               ? 'text-gh-text-muted/40 cursor-not-allowed' 
                               : 'text-gh-text-muted hover:text-gh-accent hover:bg-gh-accent/10'
                             }
                           `}
-                          title={(role.isSystem && !rolesPerms.isSuperAdmin) ? 'Solo SUPER_ADMIN puede editar roles del sistema' : 'Editar'}
+                          title={(role.isSystem && !isSuperAdmin) ? 'Solo SUPER_ADMIN puede editar roles del sistema' : 'Editar'}
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(role)}
-                          disabled={role.isSystem && !rolesPerms.isSuperAdmin}
+                          disabled={role.isSystem && !isSuperAdmin}
                           className={`
                             p-1.5 rounded-md transition-colors
-                            ${(role.isSystem && !rolesPerms.isSuperAdmin)
+                            ${(role.isSystem && !isSuperAdmin)
                               ? 'text-gh-text-muted/40 cursor-not-allowed' 
                               : 'text-gh-text-muted hover:text-gh-danger hover:bg-gh-danger/10'
                             }
                           `}
-                          title={(role.isSystem && !rolesPerms.isSuperAdmin) ? 'Solo SUPER_ADMIN puede eliminar roles del sistema' : 'Eliminar'}
+                          title={(role.isSystem && !isSuperAdmin) ? 'Solo SUPER_ADMIN puede eliminar roles del sistema' : 'Eliminar'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </>
                     )}
-                    {!rolesPerms.canEdit && rolesPerms.canView && (
+                    {!canEdit && canView && (
                       <span className="text-[10px] text-gh-text-muted px-2">Solo lectura</span>
                     )}
                   </div>
@@ -638,7 +664,7 @@ export default function RolesContent() {
                   id="role-hierarchy"
                   type="range"
                   min="1"
-                  max="99"
+                  max={formData.name === 'SUPER_ADMIN' ? "100" : "99"}
                   value={formData.hierarchy}
                   onChange={(e) => setFormData(prev => ({ ...prev, hierarchy: Number.parseInt(e.target.value, 10) }))}
                   className="flex-1 accent-gh-accent"
@@ -677,13 +703,13 @@ export default function RolesContent() {
             </div>
 
             {/* Rol del Sistema - Solo SUPER_ADMIN */}
-            {rolesPerms.isSuperAdmin && (
+            {isSuperAdmin && (
               <div className="pt-3 border-t border-gh-border/30">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gh-text mb-1">
+                    <span className="block text-sm font-medium text-gh-text mb-1">
                       Rol del Sistema
-                    </label>
+                    </span>
                     <p className="text-xs text-gh-text-muted">
                       Los roles del sistema solo pueden ser modificados por SUPER_ADMIN y tienen protección especial
                     </p>

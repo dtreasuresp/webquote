@@ -5,7 +5,8 @@ import { motion } from 'framer-motion'
 import { Package as PackageIcon, Check, Plus, X, Edit, Trash2, Save, Bookmark } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import { Package, DescripcionPaqueteTemplate, DialogConfig } from '@/lib/types'
-import ContentHeader from '@/features/admin/components/content/contenido/ContentHeader'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 // Opciones predefinidas de tipo de paquete
 const TIPOS_PAQUETE = [
@@ -64,6 +65,10 @@ export default function PaqueteContent({
   toast,
   updatedAt,
 }: Readonly<PaqueteContentProps>) {
+  // Hooks de auditoría y permisos
+  const { logAction } = useAdminAudit()
+  const { canEdit, canCreate, canDelete } = useAdminPermissions()
+
   // Estado interno para modo edición (si no se proporciona externamente)
   const [modoEdicionInterno, setModoEdicionInterno] = useState(false)
   
@@ -88,68 +93,6 @@ export default function PaqueteContent({
   const [mostrarInputPersonalizado, setMostrarInputPersonalizado] = useState(
     !tipoActualEsPredefinido && paqueteActual.tipo !== '' && paqueteActual.tipo !== undefined
   )
-  
-  // Handlers para modo edición
-  const handleNuevoPaquete = useCallback(() => {
-    // Verificar si hay datos configurados
-    if (estaConfigurado && mostrarDialogoGenerico) {
-      // Mostrar diálogo genérico de confirmación
-      mostrarDialogoGenerico({
-        tipo: 'advertencia',
-        titulo: 'Datos existentes',
-        mensaje: 'Ya tienes datos en la descripción del paquete. ¿Qué deseas hacer con ellos antes de crear una nueva oferta?',
-        subtitulo: `Paquete actual: ${paqueteActual.nombre}`,
-        botones: [
-          {
-            label: 'Guardar como Plantilla',
-            action: () => handleGuardarComoPlantillaYNuevo(),
-            style: 'primary'
-          },
-          {
-            label: 'Descartar datos',
-            action: () => handleDescartarYNuevo(),
-            style: 'danger'
-          },
-          {
-            label: 'Cancelar',
-            action: () => {},
-            style: 'secondary'
-          }
-        ]
-      })
-    } else {
-      // No hay datos, proceder directamente
-      setPaqueteBackup({ ...paqueteActual })
-      setPaqueteActual({ ...PAQUETE_VACIO })
-      setModoEdicion(true)
-    }
-  }, [estaConfigurado, paqueteActual, setPaqueteActual, setModoEdicion, mostrarDialogoGenerico])
-  
-  // Handler para editar el paquete actual (sin limpiar datos)
-  const handleEditarPaquete = useCallback(() => {
-    setPaqueteBackup({ ...paqueteActual })
-    setModoEdicion(true)
-  }, [paqueteActual, setModoEdicion])
-  
-  const handleGuardar = useCallback(() => {
-    // Solo guardar si tiene nombre (mínimo requerido)
-    if (paqueteActual.nombre.trim()) {
-      setModoEdicion(false)
-      setPaqueteBackup(null)
-      setTemplateEditandoId(null)
-    }
-  }, [paqueteActual.nombre, setModoEdicion])
-  
-  const handleCancelar = useCallback(() => {
-    // Restaurar el paquete original
-    if (paqueteBackup) {
-      setPaqueteActual(paqueteBackup)
-    }
-    setModoEdicion(false)
-    setPaqueteBackup(null)
-    setMostrarInputPersonalizado(false)
-    setTemplateEditandoId(null)
-  }, [paqueteBackup, setPaqueteActual, setModoEdicion])
   
   // Handlers del diálogo de confirmación
   const handleGuardarComoPlantillaYNuevo = useCallback((): boolean => {
@@ -197,6 +140,81 @@ export default function PaqueteContent({
     setModoEdicion(true)
   }, [setPaqueteActual, setModoEdicion])
 
+  // Handlers para modo edición
+  const handleNuevoPaquete = useCallback(() => {
+    if (!canCreate('OFFERS')) return
+
+    // Verificar si hay datos configurados
+    if (estaConfigurado && mostrarDialogoGenerico) {
+      // Mostrar diálogo genérico de confirmación
+      mostrarDialogoGenerico({
+        tipo: 'advertencia',
+        titulo: 'Datos existentes',
+        mensaje: 'Ya tienes datos en la descripción del paquete. ¿Qué deseas hacer con ellos antes de crear una nueva oferta?',
+        subtitulo: `Paquete actual: ${paqueteActual.nombre}`,
+        botones: [
+          {
+            label: 'Guardar como Plantilla',
+            action: () => {
+              const success = handleGuardarComoPlantillaYNuevo()
+              if (success) logAction('CREATE', 'OFFERS', 'new-package-template', `Plantilla: ${paqueteActual.nombre}`)
+            },
+            style: 'primary'
+          },
+          {
+            label: 'Descartar datos',
+            action: () => {
+              handleDescartarYNuevo()
+              logAction('CREATE', 'OFFERS', 'new-package-discard', 'Nuevo Paquete (Descartado)')
+            },
+            style: 'danger'
+          },
+          {
+            label: 'Cancelar',
+            action: () => {},
+            style: 'secondary'
+          }
+        ]
+      })
+    } else {
+      // No hay datos, proceder directamente
+      setPaqueteBackup({ ...paqueteActual })
+      setPaqueteActual({ ...PAQUETE_VACIO })
+      setModoEdicion(true)
+      logAction('CREATE', 'OFFERS', 'new-package', 'Nuevo Paquete')
+    }
+  }, [estaConfigurado, paqueteActual, setPaqueteActual, setModoEdicion, mostrarDialogoGenerico, canCreate, logAction, handleGuardarComoPlantillaYNuevo, handleDescartarYNuevo])
+  
+  // Handler para editar el paquete actual (sin limpiar datos)
+  const handleEditarPaquete = useCallback(() => {
+    if (!canEdit('OFFERS')) return
+    setPaqueteBackup({ ...paqueteActual })
+    setModoEdicion(true)
+    logAction('VIEW', 'OFFERS', 'edit-package', `Editando Paquete: ${paqueteActual.nombre}`)
+  }, [paqueteActual, setModoEdicion, canEdit, logAction])
+  
+  const handleGuardar = useCallback(() => {
+    if (!canEdit('OFFERS')) return
+    // Solo guardar si tiene nombre (mínimo requerido)
+    if (paqueteActual.nombre.trim()) {
+      setModoEdicion(false)
+      setPaqueteBackup(null)
+      setTemplateEditandoId(null)
+      logAction('UPDATE', 'OFFERS', 'package-config', `Paquete Guardado: ${paqueteActual.nombre}`)
+    }
+  }, [paqueteActual.nombre, setModoEdicion, canEdit, logAction])
+  
+  const handleCancelar = useCallback(() => {
+    // Restaurar el paquete original
+    if (paqueteBackup) {
+      setPaqueteActual(paqueteBackup)
+    }
+    setModoEdicion(false)
+    setPaqueteBackup(null)
+    setMostrarInputPersonalizado(false)
+    setTemplateEditandoId(null)
+  }, [paqueteBackup, setPaqueteActual, setModoEdicion])
+  
   const handleTipoChange = (value: string) => {
     if (value === '__custom__') {
       setMostrarInputPersonalizado(true)
@@ -243,13 +261,18 @@ export default function PaqueteContent({
   // Eliminar una plantilla
   const handleEliminarTemplate = useCallback((templateId: string) => {
     if (!setDescripcionesTemplate) return
+    if (!canDelete('OFFERS')) return
+    const template = descripcionesTemplate.find(t => t.id === templateId)
     const nuevasPlantillas = descripcionesTemplate.filter(t => t.id !== templateId)
     setDescripcionesTemplate(nuevasPlantillas)
-  }, [descripcionesTemplate, setDescripcionesTemplate])
+    logAction('DELETE', 'OFFERS', templateId, `Plantilla Eliminada: ${template?.nombre || 'Desconocida'}`)
+    toast?.success('Plantilla eliminada correctamente')
+  }, [descripcionesTemplate, setDescripcionesTemplate, canDelete, logAction, toast])
 
   // Guardar el paquete actual como nueva plantilla o actualizar existente
   const handleGuardarComoTemplate = useCallback(() => {
     if (!setDescripcionesTemplate) return
+    if (templateEditandoId ? !canEdit('OFFERS') : !canCreate('OFFERS')) return
     if (!paqueteActual.nombre.trim()) {
       toast?.error('El nombre del paquete es requerido')
       return
@@ -273,6 +296,7 @@ export default function PaqueteContent({
           : t
       )
       setDescripcionesTemplate(nuevasPlantillas)
+      logAction('UPDATE', 'OFFERS', templateEditandoId, `Plantilla Actualizada: ${paqueteActual.nombre}`)
       toast?.success('Plantilla actualizada correctamente')
     } else {
       // Validar duplicado antes de crear nueva plantilla
@@ -297,11 +321,12 @@ export default function PaqueteContent({
         updatedAt: ahora,
       }
       setDescripcionesTemplate([...descripcionesTemplate, nuevaPlantilla])
+      logAction('CREATE', 'OFFERS', nuevaPlantilla.id, `Plantilla Guardada: ${paqueteActual.nombre}`)
       toast?.success('Plantilla guardada correctamente')
     }
     
     setTemplateEditandoId(null)
-  }, [paqueteActual, templateEditandoId, descripcionesTemplate, setDescripcionesTemplate, toast])
+  }, [paqueteActual, templateEditandoId, descripcionesTemplate, setDescripcionesTemplate, toast, canEdit, canCreate, logAction])
 
   return (
     <motion.div
@@ -310,48 +335,56 @@ export default function PaqueteContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Header with ContentHeader */}
-      <ContentHeader
+      {/* Header with SectionHeader */}
+      <SectionHeader
         title="Descripción de la Oferta"
-        subtitle="Información principal del paquete"
-        icon={PackageIcon}
+        description="Información principal del paquete"
+        icon={<PackageIcon className="w-4 h-4" />}
         statusIndicator={updatedAt ? 'guardado' : 'sin-modificar'}
         updatedAt={updatedAt}
+        variant="accent"
+        onAdd={!modoEdicion && !estaConfigurado ? handleNuevoPaquete : undefined}
         actions={
-          modoEdicion
-            ? [
-                {
-                  label: 'Guardar',
-                  icon: Check,
-                  onClick: handleGuardar,
-                  variant: 'primary',
-                  disabled: !paqueteActual.nombre.trim(),
-                },
-                {
-                  label: 'Cancelar',
-                  icon: X,
-                  onClick: handleCancelar,
-                  variant: 'danger',
-                },
-              ]
-            : [
-                {
-                  label: 'Nueva Oferta',
-                  icon: Plus,
-                  onClick: handleNuevoPaquete,
-                  variant: 'primary',
-                },
-                ...(estaConfigurado
-                  ? [
-                      {
-                        label: 'Editar',
-                        icon: Edit,
-                        onClick: handleEditarPaquete,
-                        variant: 'secondary' as const,
-                      },
-                    ]
-                  : []),
-              ]
+          <div className="flex items-center gap-2">
+            {modoEdicion ? (
+              <>
+                <button
+                  onClick={handleGuardar}
+                  disabled={!paqueteActual.nombre.trim()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  Guardar
+                </button>
+                <button
+                  onClick={handleCancelar}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-danger/10 text-gh-danger border border-gh-danger/30 rounded-md hover:bg-gh-danger/20 transition-colors text-xs font-medium"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleNuevoPaquete}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-accent/10 text-gh-accent border border-gh-accent/30 rounded-md hover:bg-gh-accent/20 transition-colors text-xs font-medium"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Nueva Oferta
+                </button>
+                {estaConfigurado && (
+                  <button
+                    onClick={handleEditarPaquete}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-border/30 text-gh-text border border-gh-border rounded-md hover:bg-gh-border/50 transition-colors text-xs font-medium"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    Editar
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         }
       />
 

@@ -105,9 +105,9 @@ export function convertSnapshotToDB(snapshot: any): Omit<SnapshotFromDB, 'id' | 
   } else if (snapshot.paquete?.descuentosGenerales || snapshot.paquete?.descuentosPorServicio) {
     // Formato legacy - migrar
     configDescuentos = migrarConfigDescuentosLegacy(
-      snapshot.paquete.descuentosGenerales,
-      snapshot.paquete.descuentosPorServicio,
-      snapshot.paquete.descuentoPagoUnico
+      snapshot.paquete?.descuentosGenerales,
+      snapshot.paquete?.descuentosPorServicio,
+      snapshot.paquete?.descuentoPagoUnico
     )
   } else {
     // Sin descuentos configurados - usar default

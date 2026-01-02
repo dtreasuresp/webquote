@@ -11,6 +11,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    console.log('🔍 [API] Fetching quotation:', id)
 
     if (!id) {
       return NextResponse.json(
@@ -25,22 +26,25 @@ export async function GET(
         snapshots: {
           orderBy: { createdAt: 'desc' },
         },
+        documentTemplate: true,
       },
     })
 
     if (!quotation) {
+      console.log('⚠️ [API] Quotation not found:', id)
       return NextResponse.json(
         { success: false, error: 'Quotation not found' },
         { status: 404 }
       )
     }
 
+    console.log('✅ [API] Quotation found:', quotation.numero)
     return NextResponse.json({
       success: true,
       data: quotation,
     })
   } catch (error) {
-    console.error('Error fetching quotation:', error)
+    console.error('❌ [API] Error fetching quotation:', error)
     return NextResponse.json(
       { success: false, error: 'Error fetching quotation' },
       { status: 500 }

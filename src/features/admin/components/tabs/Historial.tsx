@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Edit, Trash2, Eye, History, Check, Download, File } from 'lucide-react'
-import ToggleItem from '@/features/admin/components/ToggleItem'
+import { ChevronDown, Edit, Trash2, Eye, History, Check, Download } from 'lucide-react'
 import type { QuotationConfig, PackageSnapshot } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 import { extractBaseQuotationNumber } from '@/lib/utils/quotationNumber'
 import { getStateColor, getStateIconComponent, getStateLabel } from '@/lib/utils/quotationStateHelper'
-import { useEventTracking } from '@/features/admin/hooks'
+import { useEventTracking, useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
 import { useChangeQuotationState } from '@/features/admin/hooks/useChangeQuotationState'
 import { useQuotationListener } from '@/hooks/useQuotationSync'
 import DialogoGenerico from '../DialogoGenerico'
@@ -16,6 +15,7 @@ import DialogoGenericoDinamico from '../DialogoGenericoDinamico'
 import CotizacionTimeline from '../CotizacionTimeline'
 import CotizacionComparison from '../CotizacionComparison'
 import { PaquetesComparisonContent } from '../comparisons/PaquetesComparisonContent'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 interface HistorialProps {
   snapshots: PackageSnapshot[]
@@ -53,7 +53,7 @@ export default function Historial({
   onDuplicarVersion,
   showActivateButton = false,
   onActivarCotizacion,
-}: HistorialProps) {
+}: Readonly<HistorialProps>) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   
   // Estados para el timeline
@@ -88,6 +88,8 @@ export default function Historial({
     trackCotizacionDeleted
   } = useEventTracking()
   const { changeState, changeStateWithForce } = useChangeQuotationState()
+  const { logAction } = useAdminAudit()
+  const { canCreate, canEdit, canDelete } = useAdminPermissions()
   
   // Handler para cambiar estado con validación de conflicto
   const handleChangeState = useCallback(async (quotationId: string, newState: string, numero?: string, emailCliente?: string) => {
@@ -99,6 +101,7 @@ export default function Historial({
       
       if (result.success) {
         console.log(`✅ Estado cambiado exitosamente a ${newState}`)
+        logAction('UPDATE', 'QUOTATIONS', quotationId, `Estado cambiado a ${newState}`)
         
         // Forzar actualización de datos emitiendo evento
         globalThis.dispatchEvent(new CustomEvent('quotation:updated', {
@@ -128,6 +131,7 @@ export default function Historial({
       console.log(`🔄 Reemplazando cotización anterior...`)
       await changeStateWithForce(conflictData.quotationId, conflictData.newState)
       console.log(`✅ Cotización reemplazada exitosamente`)
+      logAction('UPDATE', 'QUOTATIONS', conflictData.quotationId, `Estado forzado a ${conflictData.newState} (Reemplazo)`)
 
       // Cerrar diálogo
       setShowConflictDialog(false)
@@ -218,19 +222,12 @@ export default function Historial({
     onViewProposal?.(quotation)
   }, [onViewProposal, trackProposalViewed])
   
-  const handleToggleActive = useCallback((quotationId: string, status: { activo: boolean; isGlobal: boolean }, numero?: string) => {
-    if (status.isGlobal) {
-      trackCotizacionActivated(quotationId, numero)
-    } else {
-      trackCotizacionDeactivated(quotationId, numero)
-    }
-    onToggleActive?.(quotationId, status)
-  }, [onToggleActive, trackCotizacionActivated, trackCotizacionDeactivated])
-  
   const handleDelete = useCallback((quotationId: string) => {
+    if (!canDelete('QUOTATIONS')) return
     trackCotizacionDeleted(quotationId)
+    logAction('DELETE', 'QUOTATIONS', quotationId, `Cotización Eliminada`)
     onDelete?.(quotationId)
-  }, [onDelete, trackCotizacionDeleted])
+  }, [onDelete, trackCotizacionDeleted, canDelete, logAction])
 
   // Handler para abrir timeline
   const handleShowTimeline = useCallback((quotation: QuotationConfig) => {
@@ -246,15 +243,19 @@ export default function Historial({
 
   // Handler para restaurar versión
   const handleRestaurarVersion = useCallback((version: QuotationConfig) => {
+    if (!canEdit('QUOTATIONS')) return
+    logAction('UPDATE', 'QUOTATIONS', version.id, `Versión Restaurada: ${version.numero}`)
     onRestaurarVersion?.(version)
     handleCloseTimeline()
-  }, [onRestaurarVersion, handleCloseTimeline])
+  }, [onRestaurarVersion, handleCloseTimeline, canEdit, logAction])
 
   // Handler para duplicar versión
   const handleDuplicarVersion = useCallback((version: QuotationConfig) => {
+    if (!canCreate('QUOTATIONS')) return
+    logAction('CREATE', 'QUOTATIONS', version.id, `Versión Duplicada: ${version.numero}`)
     onDuplicarVersion?.(version)
     handleCloseTimeline()
-  }, [onDuplicarVersion, handleCloseTimeline])
+  }, [onDuplicarVersion, handleCloseTimeline, canCreate, logAction])
 
   // Handler para comparar versiones
   const handleCompararVersiones = useCallback((v1: QuotationConfig, v2: QuotationConfig) => {
@@ -312,6 +313,13 @@ export default function Historial({
 
   return (
     <div className="p-6 space-y-4">
+      <SectionHeader
+        title="Historial de Cotizaciones"
+        description="Consulta y gestiona todas las versiones de tus propuestas comerciales"
+        icon={<History className="w-4 h-4" />}
+        itemCount={quotations.length}
+        variant="accent"
+      />
       <div className="space-y-0 border border-gh-border/30 rounded-lg overflow-hidden bg-gh-bg">
         {/* Encabezado de la tabla - Estilo GitHub */}
         <div className="text-center bg-gh-bg-secondary border-b border-gh-border px-4 py-3 grid grid-cols-[1fr_0.5fr_1fr_1.4fr_1fr_1fr_1fr_1fr] gap-2 text-xs font-semibold text-gh-text">
@@ -337,7 +345,7 @@ export default function Historial({
           const paquetesConfigurados = quotationSnapshots.filter(s => s.activo)
 
           // Calcular fecha de creación de la PRIMERA versión
-          const primeraVersion = grupo.todasLasVersiones[grupo.todasLasVersiones.length - 1]
+          const primeraVersion = grupo.todasLasVersiones.at(-1)
           const fechaCreacionOriginal = primeraVersion.createdAt
 
           // Calcular fecha de actualización de la ÚLTIMA versión (más reciente)

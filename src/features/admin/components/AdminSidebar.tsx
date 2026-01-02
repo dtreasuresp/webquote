@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { LucideIcon, Menu, X, ChevronRight } from 'lucide-react'
+import { LucideIcon, Menu, X, ChevronRight, ChevronLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSidebarStore } from '@/stores/sidebarStore'
 
 export interface SidebarItem {
   id: string
@@ -31,6 +32,7 @@ export default function AdminSidebar({
 }: Readonly<AdminSidebarProps>) {
   const [isOpen, setIsOpen] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const { isInternalSidebarCollapsed, toggleInternalSidebar } = useSidebarStore()
 
   const handleItemClick = (id: string) => {
     onItemClick(id)
@@ -38,29 +40,30 @@ export default function AdminSidebar({
   }
 
   const sidebarContent = (
-    <div className="h-full bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden flex flex-col">
+    <div className={`h-full backdrop-blur-md overflow-hidden flex flex-col flex-shrink-0 transition-all duration-300 ${isInternalSidebarCollapsed ? 'w-16' : 'w-56'}`}>
       {/* Header */}
-      {title && (
-        <div className="px-3 py-2.5 border-b border-gh-border/20 bg-gh-bg-tertiary/30">
-          <div className="flex items-center gap-2">
-            {TitleIcon && <TitleIcon className="w-4 h-4 text-gh-accent" />}
-            <span className="text-xs font-medium text-gh-text">{title}</span>
+      <div className="px-3 py-3 border-b border-white/10 bg-white/5 flex items-center justify-between">
+        {!isInternalSidebarCollapsed && title && (
+          <div className="flex items-center gap-2 overflow-hidden">
+            {TitleIcon && <TitleIcon className="w-4 h-4 text-gh-success shrink-0" />}
+            <span className="text-[11px] font-bold text-gh-text uppercase tracking-wider truncate">{title}</span>
           </div>
-        </div>
-      )}
+        )}
+        <button 
+          onClick={toggleInternalSidebar}
+          className={`p-1.5 rounded-lg hover:bg-white/10 text-gh-text-muted hover:text-gh-text transition-all ${isInternalSidebarCollapsed ? 'mx-auto' : ''}`}
+          title={isInternalSidebarCollapsed ? "Expandir" : "Colapsar"}
+        >
+          {isInternalSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+      </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 p-1.5 space-y-0.5">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto scrollbar-none">
         {items.map((item, index) => {
           const Icon = item.icon
           const isActive = activeItem === item.id
           const isHovered = hoveredItem === item.id
-
-          // Calcular clase del botón (igual que PreferenciasSidebar)
-          const getButtonClass = () => {
-            if (isActive) return 'bg-gh-accent/10 text-gh-accent'
-            return 'text-gh-text-muted hover:text-gh-text hover:bg-gh-bg-tertiary/40'
-          }
 
           return (
             <motion.button
@@ -72,56 +75,34 @@ export default function AdminSidebar({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.03, duration: 0.15 }}
               className={`
-                group relative w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs
-                transition-colors duration-150
-                ${getButtonClass()}
+                group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[11px]
+                transition-all duration-200
+                ${isActive 
+                  ? 'bg-gh-success/10 text-gh-success font-semibold border border-gh-success/20' 
+                  : 'text-gh-text-muted hover:text-gh-text hover:bg-white/5 border border-transparent'}
               `}
+              title={isInternalSidebarCollapsed ? item.label : undefined}
             >
-              {/* Indicador activo */}
-              {isActive && (
-                <motion.div
-                  layoutId="adminSidebarIndicator"
-                  className="absolute left-0 top-0 bottom-0 w-0.5 bg-gh-accent rounded-r"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-              )}
-
-              {/* Icon (sin fondo, solo color - igual que PreferenciasSidebar) */}
-              {(() => {
-                let iconClass = 'text-gh-text-muted'
-                if (isActive) {
-                  iconClass = 'text-gh-accent'
-                } else if (isHovered) {
-                  iconClass = 'text-gh-text'
-                }
-                return (
-                  <div className={`flex items-center justify-center w-5 h-5 rounded transition-colors duration-150 ${iconClass}`}>
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
-                )
-              })()}
+              {/* Icon */}
+              <div className={`flex-shrink-0 ${isActive ? 'text-gh-success' : 'group-hover:text-gh-success'} transition-colors`}>
+                <Icon className="w-4 h-4" />
+              </div>
 
               {/* Label */}
-              <span className="flex-1 text-left truncate">
-                {item.label}
-              </span>
+              {!isInternalSidebarCollapsed && (
+                <span className="truncate">{item.label}</span>
+              )}
 
               {/* Badge */}
-              {item.badge !== undefined && item.badge > 0 && (
-                <span className={`
-                  px-1.5 py-0.5 text-[10px] font-semibold rounded-full transition-colors
-                  ${isActive 
-                    ? 'bg-gh-accent/20 text-gh-accent' 
-                    : 'bg-gh-border/50 text-gh-text-muted group-hover:bg-gh-border/70'
-                  }
-                `}>
+              {!isInternalSidebarCollapsed && item.badge !== undefined && item.badge > 0 && (
+                <span className="ml-auto px-1.5 py-0.5 rounded-full bg-gh-success/20 text-gh-success text-[10px] font-bold">
                   {item.badge > 99 ? '99+' : item.badge}
                 </span>
               )}
 
-              {/* Chevron para item activo (igual que PreferenciasSidebar) */}
-              {isActive && (
-                <ChevronRight className="w-3 h-3 text-gh-accent/60" />
+              {/* Chevron para item activo */}
+              {!isInternalSidebarCollapsed && isActive && (
+                <ChevronRight className="w-3 h-3 text-gh-success/60 ml-auto" />
               )}
             </motion.button>
           )
@@ -209,10 +190,7 @@ export default function AdminSidebar({
 
       {/* Desktop: Sidebar */}
       <aside
-        className={`
-          hidden md:block w-52 flex-shrink-0 self-stretch
-          ${className}
-        `}
+        className={`hidden md:block flex-shrink-0 self-stretch transition-all duration-300 ${isInternalSidebarCollapsed ? 'w-16' : 'w-56'}${className}`}
       >
         <div className="h-full">
           {sidebarContent}

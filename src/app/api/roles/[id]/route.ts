@@ -94,9 +94,10 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     // Validar jerarquía
-    if (hierarchy >= 100) {
+    const maxHierarchy = existing.name === 'SUPER_ADMIN' ? 100 : 99
+    if (hierarchy > maxHierarchy) {
       return NextResponse.json(
-        { error: 'La jerarquía máxima es 99' },
+        { error: `La jerarquía máxima para este rol es ${maxHierarchy}` },
         { status: 400 }
       )
     }

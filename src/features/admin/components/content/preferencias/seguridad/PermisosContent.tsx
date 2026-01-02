@@ -21,7 +21,9 @@ import {
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
-import { usePermission } from '@/hooks'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useSession } from 'next-auth/react'
 
 // ==================== TIPOS ====================
 
@@ -61,13 +63,23 @@ const CATEGORIES = [
 // ==================== COMPONENTE ====================
 
 export default function PermisosContent() {
-  // Permisos granulares
-  const permsPerms = usePermission('security.permissions')
+  const { data: session } = useSession()
+  const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN'
+
+  // Hooks de auditoría y permisos
+  const { logAction } = useAdminAudit()
+  const { canView, canCreate, canEdit, canDelete } = useAdminPermissions()
+  
+  const hasViewPerm = canView('PERMISSIONS')
+  const hasCreatePerm = canCreate('PERMISSIONS')
+  const hasEditPerm = canEdit('PERMISSIONS')
+  const hasDeletePerm = canDelete('PERMISSIONS')
   
   // Estado
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('')
@@ -101,6 +113,7 @@ export default function PermisosContent() {
       if (!res.ok) throw new Error('Error al cargar permisos')
       const data = await res.json()
       setPermissions(data)
+      setUpdatedAt(new Date().toISOString())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
@@ -109,19 +122,13 @@ export default function PermisosContent() {
   }, [])
 
   useEffect(() => {
-    fetchPermissions()
-  }, [fetchPermissions])
+    if (hasViewPerm) {
+      fetchPermissions()
+    }
+  }, [fetchPermissions, hasViewPerm])
 
   // Control de acceso
-  if (permsPerms.isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-      </div>
-    )
-  }
-
-  if (!permsPerms.canView) {
+  if (!hasViewPerm) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Lock className="w-16 h-16 text-red-500" />
@@ -173,6 +180,7 @@ export default function PermisosContent() {
 
   // Abrir modal crear
   const handleCreate = () => {
+    if (!hasCreatePerm) return
     setModalMode('create')
     setSelectedPermission(null)
     setFormData({
@@ -186,8 +194,9 @@ export default function PermisosContent() {
 
   // Abrir modal editar
   const handleEdit = (permission: Permission) => {
+    if (!hasEditPerm) return
     // SUPER_ADMIN puede editar permisos del sistema
-    if (permission.isSystem && !permsPerms.isSuperAdmin) return
+    if (permission.isSystem && !isSuperAdmin) return
     setModalMode('edit')
     setSelectedPermission(permission)
     setFormData({
@@ -201,6 +210,9 @@ export default function PermisosContent() {
 
   // Guardar permiso
   const handleSave = async () => {
+    if (modalMode === 'create' && !hasCreatePerm) return
+    if (modalMode === 'edit' && !hasEditPerm) return
+
     try {
       setSaving(true)
       
@@ -221,6 +233,14 @@ export default function PermisosContent() {
         throw new Error(data.error || 'Error al guardar')
       }
       
+      // Auditoría
+      logAction(
+        modalMode === 'create' ? 'CREATE' : 'UPDATE',
+        'PERMISSIONS',
+        modalMode === 'create' ? 'new-permission' : selectedPermission?.id || 'unknown',
+        `${modalMode === 'create' ? 'Creado' : 'Actualizado'} permiso: ${formData.name} (${formData.code})`
+      )
+
       setIsModalOpen(false)
       fetchPermissions()
     } catch (err) {
@@ -232,13 +252,18 @@ export default function PermisosContent() {
 
   // Eliminar permiso
   const handleDelete = async (permission: Permission) => {
+    if (!hasDeletePerm) return
     // SUPER_ADMIN puede eliminar permisos del sistema
-    if (permission.isSystem && !permsPerms.isSuperAdmin) return
+    if (permission.isSystem && !isSuperAdmin) return
     if (!confirm(`¿Eliminar el permiso "${permission.name}"?`)) return
     
     try {
       const res = await fetch(`/api/permissions/${permission.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Error al eliminar')
+      
+      // Auditoría
+      logAction('DELETE', 'PERMISSIONS', permission.id, `Eliminado permiso: ${permission.name}`)
+      
       fetchPermissions()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar')
@@ -247,6 +272,7 @@ export default function PermisosContent() {
 
   // Toggle activo
   const handleToggleActive = async (permission: Permission) => {
+    if (!hasEditPerm) return
     try {
       const res = await fetch(`/api/permissions/${permission.id}`, {
         method: 'PATCH',
@@ -254,6 +280,10 @@ export default function PermisosContent() {
         body: JSON.stringify({ isActive: !permission.isActive }),
       })
       if (!res.ok) throw new Error('Error al actualizar')
+      
+      // Auditoría
+      logAction('UPDATE', 'PERMISSIONS', permission.id, `${permission.isActive ? 'Desactivado' : 'Activado'} permiso: ${permission.name}`)
+      
       fetchPermissions()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al actualizar')
@@ -262,7 +292,7 @@ export default function PermisosContent() {
 
   // ==================== RENDER ====================
 
-  if (loading) {
+  if (loading && permissions.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-6 h-6 text-gh-accent animate-spin" />
@@ -273,27 +303,19 @@ export default function PermisosContent() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <Key className="w-4 h-4 text-gh-accent" />
-            Catálogo de Permisos
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Define los permisos disponibles en el sistema
-          </p>
-        </div>
-        {permsPerms.canCreate && (
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Nuevo Permiso
-          </button>
-        )}
-      </div>
+      {/* Header with SectionHeader */}
+      <SectionHeader
+        title="Catálogo de Permisos"
+        description="Define los permisos disponibles en el sistema"
+        icon={<Key className="w-4 h-4" />}
+        onAdd={hasCreatePerm ? handleCreate : undefined}
+        onRefresh={fetchPermissions}
+        isLoading={loading}
+        itemCount={filteredPermissions.length}
+        updatedAt={updatedAt}
+        statusIndicator={updatedAt ? 'guardado' : 'sin-modificar'}
+        variant="accent"
+      />
 
       {/* Filtros */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -443,29 +465,29 @@ export default function PermisosContent() {
                       {/* Acciones */}
                       <button
                         onClick={() => handleEdit(perm)}
-                        disabled={(perm.isSystem && !permsPerms.isSuperAdmin) || !permsPerms.canEdit}
+                        disabled={(perm.isSystem && !isSuperAdmin) || !hasEditPerm}
                         className={`
                           p-1 rounded transition-colors
-                          ${((perm.isSystem && !permsPerms.isSuperAdmin) || !permsPerms.canEdit)
+                          ${((perm.isSystem && !isSuperAdmin) || !hasEditPerm)
                             ? 'text-gh-text-muted/40 cursor-not-allowed' 
                             : 'text-gh-text-muted hover:text-gh-accent hover:bg-gh-accent/10'
                           }
                         `}
-                        title={(perm.isSystem && !permsPerms.isSuperAdmin) ? 'Solo SUPER_ADMIN puede editar permisos del sistema' : !permsPerms.canEdit ? 'No tienes permiso para editar' : 'Editar permiso'}
+                        title={(perm.isSystem && !isSuperAdmin) ? 'Solo SUPER_ADMIN puede editar permisos del sistema' : !hasEditPerm ? 'No tienes permiso para editar' : 'Editar permiso'}
                       >
                         <Pencil className="w-3 h-3" />
                       </button>
                       <button
                         onClick={() => handleDelete(perm)}
-                        disabled={(perm.isSystem && !permsPerms.isSuperAdmin) || !permsPerms.canDelete}
+                        disabled={(perm.isSystem && !isSuperAdmin) || !hasDeletePerm}
                         className={`
                           p-1 rounded transition-colors
-                          ${((perm.isSystem && !permsPerms.isSuperAdmin) || !permsPerms.canDelete)
+                          ${((perm.isSystem && !isSuperAdmin) || !hasDeletePerm)
                             ? 'text-gh-text-muted/40 cursor-not-allowed' 
                             : 'text-gh-text-muted hover:text-gh-danger hover:bg-gh-danger/10'
                           }
                         `}
-                        title={(perm.isSystem && !permsPerms.isSuperAdmin) ? 'Solo SUPER_ADMIN puede eliminar permisos del sistema' : !permsPerms.canDelete ? 'No tienes permiso para eliminar' : 'Eliminar permiso'}
+                        title={(perm.isSystem && !isSuperAdmin) ? 'Solo SUPER_ADMIN puede eliminar permisos del sistema' : !hasDeletePerm ? 'No tienes permiso para eliminar' : 'Eliminar permiso'}
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>

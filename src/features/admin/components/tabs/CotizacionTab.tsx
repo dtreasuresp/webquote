@@ -72,17 +72,17 @@ export default function CotizacionTab({
   ] as const
 
   return (
-    <div className="pl-2 pr-6 py-6 flex gap-6 items-stretch">
-      <>
-        <AdminSidebar
-          items={items.map(i => ({ id: i.id, label: i.label, icon: i.icon }))}
-          activeItem={activeItem}
-          onItemClick={(id) => setActiveItem(id as typeof activeItem)}
-          title="Cotización"
-          titleIcon={FileText}
-        />
+    <div className="flex bg-transparent border border-white/10 rounded-xl overflow-hidden">
+      <AdminSidebar
+        items={items.map(i => ({ id: i.id, label: i.label, icon: i.icon }))}
+        activeItem={activeItem}
+        onItemClick={(id) => setActiveItem(id as typeof activeItem)}
+        title="Cotización"
+        titleIcon={FileText}
+      />
 
-        <div className="flex-1">
+      <div className="flex-1 flex flex-col min-w-0 bg-transparent overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-none">
           {effectiveActiveItem === 'cotizacion' && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -130,9 +130,7 @@ export default function CotizacionTab({
             </motion.div>
           )}
         </div>
-      </>
+      </div>
     </div>
   )
 }
-
-

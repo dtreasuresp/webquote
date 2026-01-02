@@ -930,3 +930,145 @@ export interface DialogConfig {
   input?: DialogInputConfig // Campo de input opcional
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full' // Tamaño del modal
 }
+
+// ==================== CRM TYPES ====================
+
+export type AccountType = 'EMPRESA' | 'INDIVIDUAL' | 'PROSPECT'
+export type AccountStatus = 'PROSPECT' | 'LEAD' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED'
+export type ContactRole = 'DECISION_MAKER' | 'INFLUENCER' | 'USER' | 'TECHNICAL'
+export type ContactPreference = 'EMAIL' | 'PHONE' | 'WHATSAPP' | 'SMS'
+export type ProductType = 'PRODUCT' | 'SERVICE' | 'LICENSE' | 'SUBSCRIPTION'
+export type BillingFrequency = 'MONTHLY' | 'QUARTERLY' | 'ANNUAL' | 'ONE_TIME'
+export type OpportunityStage = 'PROSPECT' | 'QUALIFIED' | 'PROPOSAL' | 'NEGOTIATION' | 'CLOSED_WON' | 'CLOSED_LOST'
+export type InteractionType = 'EMAIL' | 'CALL' | 'MEETING' | 'NOTE' | 'DOCUMENT'
+
+export interface Account {
+  id: string
+  legalName: string
+  commercialName?: string | null
+  taxId?: string | null
+  type: AccountType
+  status: AccountStatus
+  email?: string | null
+  phone?: string | null
+  website?: string | null
+  address?: string | null
+  city?: string | null
+  state?: string | null
+  zipCode?: string | null
+  country?: string | null
+  sector?: string | null
+  size?: string | null
+  creditLimit?: number | null
+  paymentTerms?: string | null
+  viesVerified: boolean
+  complianceNotes?: string | null
+  createdAt: string
+  updatedAt: string
+  createdBy?: string | null
+  contacts?: Contact[]
+  interactions?: Interaction[]
+  opportunities?: Opportunity[]
+  quotations?: QuotationConfig[]
+  subscriptions?: Subscription[]
+  compliance?: ComplianceRecord[]
+}
+
+export interface Contact {
+  id: string
+  accountId: string
+  fullName: string
+  title?: string | null
+  role: ContactRole
+  email?: string | null
+  phone?: string | null
+  mobile?: string | null
+  preferredContact: ContactPreference
+  language: string
+  timezone?: string | null
+  preferredContactHours?: string | null
+  createdAt: string
+  updatedAt: string
+  account?: Account
+  interactions?: Interaction[]
+  quotations?: QuotationConfig[]
+}
+
+export interface Product {
+  id: string
+  name: string
+  sku: string
+  type: ProductType
+  category: string
+  description?: string | null
+  listPrice: number
+  costPrice?: number | null
+  available: boolean
+  stock?: number | null
+  leadTimeDays?: number | null
+  taxCategory?: string | null
+  appliesTax: boolean
+  billingFrequency: BillingFrequency
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Opportunity {
+  id: string
+  accountId: string
+  name: string
+  stage: OpportunityStage
+  probability: number
+  estimatedValue?: number | null
+  expectedCloseDate?: string | null
+  createdAt: string
+  updatedAt: string
+  account?: Account
+  quotations?: QuotationConfig[]
+}
+
+export interface Interaction {
+  id: string
+  accountId: string
+  contactId?: string | null
+  type: InteractionType
+  subject?: string | null
+  description: string
+  messageId?: string | null
+  assignedTo?: string | null
+  createdAt: string
+  updatedAt: string
+  account?: Account
+  contact?: Contact | null
+}
+
+export interface Subscription {
+  id: string
+  accountId: string
+  productId?: string | null
+  name: string
+  status: string
+  billingFrequency: BillingFrequency
+  amount: number
+  startDate: string
+  endDate?: string | null
+  nextBillingDate?: string | null
+  createdAt: string
+  updatedAt: string
+  account?: Account
+}
+
+export interface ComplianceRecord {
+  id: string
+  accountId: string
+  type: string
+  status: string
+  documentUrl?: string | null
+  notes?: string | null
+  validUntil?: string | null
+  verifiedAt?: string | null
+  verifiedBy?: string | null
+  createdAt: string
+  updatedAt: string
+  account?: Account
+}

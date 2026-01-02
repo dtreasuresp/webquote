@@ -18,7 +18,8 @@ import {
   X,
   Check
 } from 'lucide-react'
-import { usePermission } from '@/hooks/usePermission'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
 
@@ -57,14 +58,21 @@ interface BackupConfig {
 // ==================== COMPONENTE PRINCIPAL ====================
 
 export default function BackupContent() {
-  // ✅ Permisos con Access Levels
-  const perms = usePermission('backups')
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn, canCreate: canCreateFn, canDelete: canDeleteFn, canView: canViewFn } = useAdminPermissions()
+  
+  const canEdit = canEditFn('BACKUPS')
+  const canCreate = canCreateFn('BACKUPS')
+  const canDelete = canDeleteFn('BACKUPS')
+  const canView = canViewFn('BACKUPS')
+  const canManage = canEditFn('BACKUPS')
   
   // Estado principal
   const [backups, setBackups] = useState<Backup[]>([])
   const [config, setConfig] = useState<BackupConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toISOString())
   
   // Filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('')
@@ -90,6 +98,7 @@ export default function BackupContent() {
       const data = await res.json()
       if (data.success) {
         setBackups(data.data || [])
+        setLastUpdated(new Date().toISOString())
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
@@ -99,7 +108,7 @@ export default function BackupContent() {
   }, [])
 
   const loadConfig = useCallback(async () => {
-    if (!perms.canManage) return
+    if (!canManage) return
     
     try {
       const res = await fetch('/api/backup-config')
@@ -111,7 +120,7 @@ export default function BackupContent() {
     } catch (error) {
       console.error('Error loading config:', error)
     }
-  }, [perms.canManage])
+  }, [canManage])
 
   useEffect(() => {
     loadBackups()
@@ -139,16 +148,8 @@ export default function BackupContent() {
     setCurrentPage(1)
   }, [searchTerm, filterTipo, filterEstado, itemsPerPage])
 
-  // ✅ Control de acceso basado en Access Levels
-  if (perms.isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-gh-accent" />
-      </div>
-    )
-  }
-
-  if (!perms.canView) {
+  // ✅ Control de acceso
+  if (!canView) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <Lock className="w-16 h-16 text-gh-text-muted/40" />
@@ -167,6 +168,7 @@ export default function BackupContent() {
 
   // Crear backup
   const handleCreateBackup = async (formData?: any) => {
+    if (!canCreate) return
     try {
       const res = await fetch('/api/backups', {
         method: 'POST',
@@ -180,6 +182,9 @@ export default function BackupContent() {
 
       const data = await res.json()
       if (data.success) {
+        // Audit log
+        logAction('CREATE', 'BACKUPS', data.data?.id || 'new', formData?.nombre || 'Backup Manual')
+        
         await loadBackups()
         setShowCreateModal(false)
       } else {
@@ -192,6 +197,7 @@ export default function BackupContent() {
 
   // Restaurar backup
   const handleRestoreBackup = async (backupId: string) => {
+    if (!canEdit) return
     if (!confirm('¿Estás seguro de que deseas restaurar este backup? Esta acción sobrescribirá tus datos actuales.')) {
       return
     }
@@ -206,6 +212,9 @@ export default function BackupContent() {
 
       const data = await res.json()
       if (data.success) {
+        // Audit log
+        logAction('EXECUTE', 'BACKUPS', backupId, 'Restore Backup')
+        
         alert('Backup restaurado exitosamente. Recarga la página para ver los cambios.')
         await loadBackups()
       } else {
@@ -220,6 +229,7 @@ export default function BackupContent() {
 
   // Eliminar backup
   const handleDeleteBackup = async (backupId: string) => {
+    if (!canDelete) return
     if (!confirm('¿Estás seguro de que deseas eliminar este backup?')) {
       return
     }
@@ -231,6 +241,9 @@ export default function BackupContent() {
 
       const data = await res.json()
       if (data.success) {
+        // Audit log
+        logAction('DELETE', 'BACKUPS', backupId, 'Delete Backup')
+        
         await loadBackups()
       } else {
         setError(data.error || 'Error al eliminar backup')
@@ -242,6 +255,7 @@ export default function BackupContent() {
 
   // Actualizar configuración
   const handleUpdateConfig = async (newConfig: Partial<BackupConfig>) => {
+    if (!canManage) return
     try {
       const res = await fetch('/api/backup-config', {
         method: 'PUT',
@@ -251,6 +265,12 @@ export default function BackupContent() {
 
       const data = await res.json()
       if (data.success) {
+        // Audit log
+        logAction('UPDATE', 'BACKUPS', 'config', 'Backup Configuration', {
+          before: config,
+          after: newConfig
+        })
+        
         setConfig(data.data)
         setShowConfigModal(false)
       } else {
@@ -289,38 +309,34 @@ export default function BackupContent() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <Database className="w-4 h-4 text-gh-accent" />
-            Backups y Restauración
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Gestiona copias de seguridad de tus datos
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {perms.canCreate && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Crear Backup
-            </button>
-          )}
-          {perms.canManage && (
-            <button
-              onClick={() => setShowConfigModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-bg-secondary text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors text-xs font-medium"
-            >
-              <Settings className="w-3.5 h-3.5" />
-              Configurar
-            </button>
-          )}
-        </div>
-      </div>
+      <SectionHeader
+        title="Backups y Restauración"
+        description="Gestiona copias de seguridad de tus datos"
+        icon={<Database className="w-4 h-4" />}
+        updatedAt={lastUpdated}
+        actions={
+          <div className="flex items-center gap-2">
+            {canManage && (
+              <button
+                onClick={() => setShowConfigModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-bg-secondary text-gh-text-muted border border-gh-border/30 rounded-md hover:bg-gh-bg-tertiary transition-colors text-xs font-medium"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                Configurar
+              </button>
+            )}
+            {canCreate && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success/10 text-gh-success border border-gh-success/30 rounded-md hover:bg-gh-success/20 transition-colors text-xs font-medium"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Crear Backup
+              </button>
+            )}
+          </div>
+        }
+      />
 
       {/* Error */}
       {error && (
@@ -441,7 +457,7 @@ export default function BackupContent() {
               : 'Crea tu primer backup para comenzar a proteger tus datos'
             }
           </p>
-          {perms.canCreate && !searchTerm && filterTipo === 'all' && filterEstado === 'all' && (
+          {canCreate && !searchTerm && filterTipo === 'all' && filterEstado === 'all' && (
             <button
               onClick={() => setShowCreateModal(true)}
               className="btn-primary text-xs"
@@ -507,7 +523,7 @@ export default function BackupContent() {
                     })()}
 
                     {/* Acciones */}
-                    {perms.canEdit && backup.estado === 'completado' && (
+                    {canEdit && backup.estado === 'completado' && (
                       <button
                         onClick={() => handleRestoreBackup(backup.id)}
                         disabled={isRestoring}
@@ -517,7 +533,7 @@ export default function BackupContent() {
                         <Upload className="w-3 h-3" />
                       </button>
                     )}
-                    {perms.canDelete && (
+                    {canDelete && (
                       <button
                         onClick={() => handleDeleteBackup(backup.id)}
                         className="p-1 rounded transition-colors text-gh-text-muted hover:text-gh-danger hover:bg-gh-danger/10"

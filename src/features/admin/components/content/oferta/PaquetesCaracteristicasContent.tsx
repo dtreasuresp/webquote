@@ -4,7 +4,9 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Package, ArrowUpDown, FileInput, GripVertical, Clock, ArrowRight, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
-import ContentHeader from '@/features/admin/components/content/contenido/ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import {
   DndContext,
   closestCenter,
@@ -520,6 +522,9 @@ export default function PaquetesCaracteristicasContent({
   isConfigLoading,
   updatedAt,
 }: PaquetesCaracteristicasContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
+
   // Cargar paquetes desde snapshots
   const { snapshots, loading: loadingSnapshots } = useSnapshots()
   const paquetesSnapshot = getPaquetesDesglose(snapshots)
@@ -770,6 +775,7 @@ export default function PaquetesCaracteristicasContent({
   }
 
   const handleRemoveCaracteristica = (id: string) => {
+    if (!canEdit('OFFERS')) return
     const paqueteNombre = id.split('::')[0]
     const items = data.caracteristicasPorPaquete?.[paqueteNombre] || []
     const itemTexto = allCaracteristicasItems.find(i => i.id === id)?.texto
@@ -777,11 +783,14 @@ export default function PaquetesCaracteristicasContent({
     
     const newItems = items.filter(t => t !== itemTexto)
     updateCaracteristicasPaquete(paqueteNombre, newItems)
+    logAction('DELETE', 'OFFERS', 'remove-feature', `Eliminada característica de ${paqueteNombre}: ${itemTexto}`)
   }
 
   const handleAddCaracteristica = (paqueteNombre: string, texto: string) => {
+    if (!canEdit('OFFERS')) return
     const items = data.caracteristicasPorPaquete?.[paqueteNombre] || []
     updateCaracteristicasPaquete(paqueteNombre, [...items, texto])
+    logAction('CREATE', 'OFFERS', 'add-feature', `Agregada característica a ${paqueteNombre}: ${texto}`)
   }
 
   // Combinar manejo de drag para paquetes
@@ -796,6 +805,8 @@ export default function PaquetesCaracteristicasContent({
       handleDragEndCaracteristica(event)
       return
     }
+
+    if (!canEdit('OFFERS')) return
     
     // Si no hay over, no hacer nada
     if (!over) return
@@ -865,6 +876,7 @@ export default function PaquetesCaracteristicasContent({
 
   // Función para ordenar características
   const sortCaracteristicas = (nombrePaquete: string, sortType: 'az' | 'za' | 'short' | 'long') => {
+    if (!canEdit('OFFERS')) return
     const caracteristicas = [...getCaracteristicasPaquete(nombrePaquete)]
     
     switch (sortType) {
@@ -883,6 +895,7 @@ export default function PaquetesCaracteristicasContent({
     }
     
     updateCaracteristicasPaquete(nombrePaquete, caracteristicas)
+    logAction('UPDATE', 'OFFERS', `sort-features-${nombrePaquete}`, { type: sortType })
     setMenuOrdenarAbierto(null) // Cerrar menú después de ordenar
   }
 
@@ -920,6 +933,7 @@ export default function PaquetesCaracteristicasContent({
 
   // Ejecutar la importación
   const ejecutarImportacion = (modo: 'reemplazar' | 'agregar') => {
+    if (!canEdit('OFFERS')) return
     if (!dialogoConfig) return
 
     const { paqueteDestino, paqueteOrigen } = dialogoConfig
@@ -937,6 +951,7 @@ export default function PaquetesCaracteristicasContent({
     }
 
     updateCaracteristicasPaquete(paqueteDestino, nuevasCaracteristicas)
+    logAction('UPDATE', 'OFFERS', `import-features-${paqueteDestino}`, { from: paqueteOrigen, mode: modo })
     
     // Limpiar estados
     setDialogoAbierto(false)
@@ -951,14 +966,13 @@ export default function PaquetesCaracteristicasContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Header Principal con ContentHeader */}
-      <ContentHeader
+      <SectionHeader
         title="Características por Paquete"
-        subtitle="Configura las características incluidas en cada paquete"
-        icon={Package}
+        description="Configura las características incluidas en cada paquete"
+        icon={<Package className="w-4 h-4" />}
         statusIndicator={updatedAt ? 'guardado' : 'sin-modificar'}
         updatedAt={updatedAt}
-        badge={`${paquetesSnapshot.length} paquete${paquetesSnapshot.length !== 1 ? 's' : ''}`}
+        variant="accent"
       />
 
       {/* Título, Subtítulo y Nota Importante */}
@@ -973,7 +987,8 @@ export default function PaquetesCaracteristicasContent({
               type="text"
               value={data.titulo}
               onChange={(e) => onChange({ ...data, titulo: e.target.value })}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-info focus:ring-1 focus:ring-gh-info/50 focus:outline-none transition-colors"
+              disabled={!canEdit('OFFERS')}
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-info focus:ring-1 focus:ring-gh-info/50 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Paquetes Disponibles"
             />
           </div>
@@ -983,7 +998,8 @@ export default function PaquetesCaracteristicasContent({
               type="text"
               value={data.subtitulo}
               onChange={(e) => onChange({ ...data, subtitulo: e.target.value })}
-              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-info focus:ring-1 focus:ring-gh-info/50 focus:outline-none transition-colors"
+              disabled={!canEdit('OFFERS')}
+              className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-info focus:ring-1 focus:ring-gh-info/50 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="Características incluidas en cada paquete"
             />
           </div>
@@ -994,7 +1010,8 @@ export default function PaquetesCaracteristicasContent({
           <textarea
             value={data.notaImportante}
             onChange={(e) => onChange({ ...data, notaImportante: e.target.value })}
-            className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-info focus:ring-1 focus:ring-gh-info/50 focus:outline-none transition-colors resize-y min-h-[60px]"
+            disabled={!canEdit('OFFERS')}
+            className="w-full px-3 py-2 bg-gh-bg-secondary border border-gh-border/30 rounded-md text-xs font-medium text-gh-text focus:border-gh-info focus:ring-1 focus:ring-gh-info/50 focus:outline-none transition-colors resize-y min-h-[60px] disabled:opacity-50 disabled:cursor-not-allowed"
             rows={2}
             placeholder="Puede escribir en este campo cualquier nota importante que quieras mostrar en la sección de características."
           />

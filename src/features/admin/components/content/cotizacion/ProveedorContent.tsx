@@ -3,6 +3,9 @@
 import React from 'react'
 import { Briefcase, Check, AlertTriangle, Mail, Phone, MapPin, User } from 'lucide-react'
 import { QuotationConfig } from '@/lib/types'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '@/features/admin/hooks/useAdminAudit'
+import { useAdminPermissions } from '@/features/admin/hooks/useAdminPermissions'
 
 interface ProveedorContentProps {
   cotizacionConfig: QuotationConfig | null
@@ -19,33 +22,24 @@ export default function ProveedorContent({
   setCotizacionConfig,
   erroresValidacionCotizacion,
 }: Readonly<ProveedorContentProps>) {
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
   const estaConfigurado = cotizacionConfig?.profesional && cotizacionConfig.profesional.trim() !== ''
+
+  const handleUpdate = (field: keyof QuotationConfig, value: any) => {
+    if (!canEdit('QUOTES')) return
+    setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, [field]: value } : null)
+  }
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-gh-accent" />
-            Información del Proveedor
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Datos de contacto del proveedor del servicio
-          </p>
-        </div>
-        <span className={`text-xs px-2.5 py-1 rounded-md flex items-center gap-1.5 border ${
-          estaConfigurado 
-            ? 'bg-gh-success/10 text-gh-success border-gh-success/30' 
-            : 'bg-gh-warning/10 text-gh-warning border-gh-warning/30'
-        }`}>
-          {estaConfigurado ? (
-            <><Check className="w-3 h-3" /> Configurado</>
-          ) : (
-            <><AlertTriangle className="w-3 h-3" /> Incompleto</>
-          )}
-        </span>
-      </div>
+      <SectionHeader
+        title="Información del Proveedor"
+        description="Datos de contacto del proveedor del servicio"
+        icon={<Briefcase className="w-4 h-4" />}
+        statusIndicator={estaConfigurado ? 'guardado' : 'sin-modificar'}
+        variant="accent"
+      />
 
       {/* Profesional y Empresa */}
       <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
@@ -62,7 +56,7 @@ export default function ProveedorContent({
               <input
                 type="text"
                 value={cotizacionConfig?.profesional || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, profesional: e.target.value } : null)}
+                onChange={(e) => handleUpdate('profesional', e.target.value)}
                 className={`w-full px-3 py-2 bg-gh-bg-tertiary/50 border rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:outline-none transition-colors ${
                   erroresValidacionCotizacion.profesional 
                     ? 'border-gh-danger/50 focus:border-gh-danger focus:ring-1 focus:ring-gh-danger/30' 
@@ -79,7 +73,7 @@ export default function ProveedorContent({
               <input
                 type="text"
                 value={cotizacionConfig?.empresaProveedor || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, empresaProveedor: e.target.value } : null)}
+                onChange={(e) => handleUpdate('empresaProveedor', e.target.value)}
                 className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors"
                 placeholder="Ej: DGTecnova"
               />
@@ -101,7 +95,7 @@ export default function ProveedorContent({
               <input
                 type="email"
                 value={cotizacionConfig?.emailProveedor || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, emailProveedor: e.target.value } : null)}
+                onChange={(e) => handleUpdate('emailProveedor', e.target.value)}
                 className={`w-full px-3 py-2 bg-gh-bg-tertiary/50 border rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:outline-none transition-colors ${
                   erroresValidacionCotizacion.emailProveedor 
                     ? 'border-gh-danger/50 focus:border-gh-danger focus:ring-1 focus:ring-gh-danger/30' 
@@ -118,7 +112,7 @@ export default function ProveedorContent({
               <input
                 type="tel"
                 value={cotizacionConfig?.whatsappProveedor || ''}
-                onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, whatsappProveedor: e.target.value } : null)}
+                onChange={(e) => handleUpdate('whatsappProveedor', e.target.value)}
                 className={`w-full px-3 py-2 bg-gh-bg-tertiary/50 border rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:outline-none transition-colors ${
                   erroresValidacionCotizacion.whatsappProveedor 
                     ? 'border-gh-danger/50 focus:border-gh-danger focus:ring-1 focus:ring-gh-danger/30' 
@@ -143,7 +137,7 @@ export default function ProveedorContent({
         <div className="p-4">
           <textarea
             value={cotizacionConfig?.ubicacionProveedor || ''}
-            onChange={(e) => setCotizacionConfig(cotizacionConfig ? { ...cotizacionConfig, ubicacionProveedor: e.target.value } : null)}
+            onChange={(e) => handleUpdate('ubicacionProveedor', e.target.value)}
             rows={3}
             className="w-full px-3 py-2 bg-gh-bg-tertiary/50 border border-gh-border/30 rounded-md text-xs font-medium text-gh-text placeholder-gh-text-muted focus:border-gh-accent focus:ring-1 focus:ring-gh-accent/30 focus:outline-none transition-colors resize-none"
             placeholder="Dirección completa del proveedor"

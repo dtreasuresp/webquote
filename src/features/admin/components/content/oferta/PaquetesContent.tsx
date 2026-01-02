@@ -6,8 +6,8 @@ import { motion } from 'framer-motion'
 import { PackageSnapshot, QuotationConfig, DialogConfig } from '@/lib/types'
 import { calcularPreviewDescuentos } from '@/lib/utils/discountCalculator'
 import { formatCurrency } from '@/lib/utils'
-import { useEventTracking } from '@/features/admin/hooks'
-import ContentHeader from '@/features/admin/components/content/contenido/ContentHeader'
+import { useEventTracking, useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 interface ToastHandler {
   success: (message: string) => void
@@ -62,6 +62,10 @@ export default function PaquetesContent({
 }: Readonly<PaquetesContentProps>) {
   const [procesandoId, setProcesandoId] = useState<string | null>(null)
   
+  // Hooks de auditoría y permisos
+  const { logAction } = useAdminAudit()
+  const { canEdit, canDelete } = useAdminPermissions()
+
   // Hook de tracking
   const { trackSnapshotActivated, trackSnapshotDeactivated, trackPaqueteDeleted, trackModalOpened } = useEventTracking()
 
@@ -73,6 +77,7 @@ export default function PaquetesContent({
   }
 
   const handleToggleActivo = async (snapshot: PackageSnapshot) => {
+    if (!canEdit('OFFERS')) return
     const nuevoEstado = !snapshot.activo
 
     if (!nuevoEstado) {
@@ -98,6 +103,7 @@ export default function PaquetesContent({
             label: 'Desactivar',
             action: async () => {
               await ejecutarToggle(snapshot, false)
+              logAction('UPDATE', 'OFFERS', snapshot.id, `Paquete Desactivado: ${snapshot.nombre}`)
             },
             style: 'danger'
           }
@@ -105,6 +111,7 @@ export default function PaquetesContent({
       })
     } else {
       await ejecutarToggle(snapshot, true)
+      logAction('UPDATE', 'OFFERS', snapshot.id, `Paquete Activado: ${snapshot.nombre}`)
     }
   }
 
@@ -136,6 +143,7 @@ export default function PaquetesContent({
   }
 
   const handleEliminarConValidacion = (snapshot: PackageSnapshot) => {
+    if (!canDelete('OFFERS')) return
     if (snapshot.activo && esUltimoPaqueteActivo(snapshot.id)) {
       mostrarDialogoGenerico({
         tipo: 'advertencia',
@@ -147,7 +155,24 @@ export default function PaquetesContent({
       return
     }
 
-    handleEliminarSnapshot(snapshot.id)
+    mostrarDialogoGenerico({
+      tipo: 'confirmacion',
+      titulo: '¿Eliminar paquete?',
+      icono: '🗑️',
+      mensaje: `Esta acción no se puede deshacer. El paquete "${snapshot.nombre}" será eliminado permanentemente.`,
+      botones: [
+        { label: 'Cancelar', action: () => {}, style: 'secondary' },
+        {
+          label: 'Eliminar',
+          action: () => {
+            handleEliminarSnapshot(snapshot.id)
+            trackPaqueteDeleted(snapshot.id, snapshot.nombre)
+            logAction('DELETE', 'OFFERS', snapshot.id, `Paquete Eliminado: ${snapshot.nombre}`)
+          },
+          style: 'danger'
+        }
+      ]
+    })
   }
 
   return (
@@ -157,14 +182,15 @@ export default function PaquetesContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Header with ContentHeader */}
-      <ContentHeader
+      {/* Header with SectionHeader */}
+      <SectionHeader
         title="Ofertas Creadas"
-        subtitle="Gestiona los paquetes disponibles en la cotización"
-        icon={Layers}
+        description="Gestiona los paquetes disponibles en la cotización"
+        icon={<Layers className="w-4 h-4" />}
         statusIndicator={updatedAt ? 'guardado' : 'sin-modificar'}
         updatedAt={updatedAt}
-        badge={`${snapshots.filter(s => s.activo).length} de ${snapshots.length} activos`}
+        itemCount={snapshots.length}
+        variant="accent"
       />
 
       {/* Contenido Principal */}

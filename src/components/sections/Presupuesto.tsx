@@ -128,14 +128,20 @@ function PaqueteCard({ paquete, caracteristicas }: PaqueteCardProps) {
   )
 }
 
-export default function Presupuesto({ data }: PresupuestoProps) {
+export default function Presupuesto({ 
+  data, 
+  snapshots: externalSnapshots,
+  loading: externalLoading
+}: PresupuestoProps & { snapshots?: any[], loading?: boolean }) {
   // Si no hay datos o la sección no está visible, no renderizar
   if (!data || data.presupuesto?.visible === false) return null
   
   const presupuestoData = data
-  const { snapshots, loading } = useSnapshots()
+  const { snapshots: internalSnapshots, loading: internalLoading } = useSnapshots()
   
   // Obtener datos dinámicos de los paquetes activos
+  const snapshots = externalSnapshots || internalSnapshots
+  const loading = externalLoading !== undefined ? externalLoading : internalLoading
   const paquetes = getPaquetesDesglose(snapshots)
 
   // Función para obtener características de un paquete

@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Shield, Plus, Trash2 } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ArrayFieldGH from './ArrayFieldGH'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
@@ -51,6 +53,10 @@ export default function GarantiasContent({
   guardando,
   hasChanges
 }: GarantiasContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn } = useAdminPermissions()
+  const canEdit = canEditFn('CONTENT')
+  
   // Valores por defecto para título y subtítulo
   const titSub = tituloSubtitulo || { titulo: 'Garantías y Responsabilidades', subtitulo: '' }
   const handleTitSubChange = (field: keyof TituloSubtituloGarantias, value: string) => {
@@ -64,15 +70,19 @@ export default function GarantiasContent({
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader 
+      <SectionHeader 
         title="Garantías y Responsabilidades"
-        subtitle="Compromisos del proveedor y responsabilidades del cliente"
-        icon={Shield}
+        description="Compromisos del proveedor y responsabilidades del cliente"
+        icon={<Shield className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-garantias', 'Guardadas Garantías y Responsabilidades')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

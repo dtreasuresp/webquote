@@ -3,7 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Phone, Building, MapPin, FileText } from 'lucide-react'
-import ContentHeader from './ContentHeader'
+import SectionHeader from '@/features/admin/components/SectionHeader'
+import { useAdminAudit } from '../../../hooks/useAdminAudit'
+import { useAdminPermissions } from '../../../hooks/useAdminPermissions'
 import ToggleItem from '@/features/admin/components/ToggleItem'
 import ToggleSwitch from '@/features/admin/components/ToggleSwitch'
 import type { ContactoInfo } from '@/lib/types'
@@ -30,6 +32,9 @@ interface ContactoContentProps {
 }
 
 export default function ContactoContent({ data, onChange, visible, onVisibleChange, visibilidad, onVisibilidadChange, updatedAt, onGuardar, onReset, guardando, hasChanges }: ContactoContentProps) {
+  const { logAction } = useAdminAudit()
+  const { canEdit } = useAdminPermissions()
+
   // Valores por defecto para visibilidad
   const vis = visibilidad || { canales: true, ubicacion: true, empresarial: true, metadata: true }
   const handleVisChange = (key: keyof VisibilidadContacto, value: boolean) => {
@@ -43,15 +48,19 @@ export default function ContactoContent({ data, onChange, visible, onVisibleChan
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      <ContentHeader 
+      <SectionHeader 
         title="Información de Contacto"
-        subtitle="Canales de comunicación y datos de la empresa"
-        icon={Phone}
+        description="Canales de comunicación y datos de la empresa"
+        icon={<Phone className="w-4 h-4" />}
         updatedAt={updatedAt}
-        onGuardar={onGuardar}
-        onReset={onReset}
-        guardando={guardando}
-        hasChanges={hasChanges}
+        onSave={() => {
+          onGuardar()
+          logAction('UPDATE', 'CONTENT', 'save-contact-info', 'Guardada Información de Contacto')
+        }}
+        onCancel={onReset}
+        isSaving={guardando}
+        statusIndicator={hasChanges ? 'modificado' : 'guardado'}
+        variant="accent"
       />
 
       {/* Toggle de visibilidad global - Fila 2 */}

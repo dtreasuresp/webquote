@@ -3,6 +3,7 @@
 import React from 'react'
 import { Edit2, Trash2, Key, ShieldCheck, User } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { ROLE_UI_CONFIG } from '@/lib/constants/roles'
 
 // ==================== TIPOS ====================
 
@@ -13,6 +14,10 @@ interface User {
   email: string | null
   telefono: string | null
   role: 'SUPER_ADMIN' | 'ADMIN' | 'CLIENT'
+  roleRef?: {
+    color: string | null
+    displayName?: string | null
+  }
   quotationAssignedId: string | null
   organizationId: string | null
   quotationAssigned?: {
@@ -59,15 +64,14 @@ function getUserStatus(lastLogin?: string | null): {
   return { status: 'offline', color: 'bg-red-500', label: 'Desconectado' }
 }
 
-function getRoleColor(role: string): string {
-  switch (role) {
-    case 'SUPER_ADMIN':
-      return 'bg-amber-500/20'
-    case 'ADMIN':
-      return 'bg-purple-500/20'
-    default:
-      return 'bg-gh-accent/20'
-  }
+function getRoleBadgeClasses(role: string): string {
+  const config = ROLE_UI_CONFIG[role as keyof typeof ROLE_UI_CONFIG] || ROLE_UI_CONFIG.USER
+  return config.badge
+}
+
+function getRoleLabel(role: string): string {
+  const config = ROLE_UI_CONFIG[role as keyof typeof ROLE_UI_CONFIG] || ROLE_UI_CONFIG.USER
+  return config.label
 }
 
 function getRoleIcon(role: string): string {
@@ -80,37 +84,14 @@ function getRoleIcon(role: string): string {
   }
 }
 
-function getRoleLabel(role: string): string {
-  switch (role) {
-    case 'SUPER_ADMIN':
-      return 'Super Admin'
-    case 'ADMIN':
-      return 'Administrador'
-    default:
-      return 'Cliente'
-  }
-}
-
-function getRoleBadgeClasses(role: string): string {
-  switch (role) {
-    case 'SUPER_ADMIN':
-      return 'bg-amber-500/20 text-amber-400'
-    case 'ADMIN':
-      return 'bg-purple-500/20 text-purple-400'
-    default:
-      return 'bg-gh-info/20 text-gh-info'
-  }
-}
-
 function getIconColor(role: string): string {
-  switch (role) {
-    case 'SUPER_ADMIN':
-      return 'text-amber-400'
-    case 'ADMIN':
-      return 'text-purple-400'
-    default:
-      return 'text-gh-accent'
-  }
+  const config = ROLE_UI_CONFIG[role as keyof typeof ROLE_UI_CONFIG] || ROLE_UI_CONFIG.USER
+  return config.iconColor
+}
+
+function getRoleBgColor(role: string): string {
+  const config = ROLE_UI_CONFIG[role as keyof typeof ROLE_UI_CONFIG] || ROLE_UI_CONFIG.USER
+  return config.bgColor
 }
 
 // ==================== COMPONENTE ====================
@@ -169,36 +150,37 @@ export default function UsersTable({
 
   if (loading) {
     return (
-      <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg p-8">
-        <div className="flex justify-center">
+      <div className="bg-gh-bg-secondary/10 backdrop-blur-md border border-gh-border/50 rounded-xl p-12 shadow-xl">
+        <div className="flex flex-col items-center gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gh-accent"></div>
+          <span className="text-xs text-gh-text-muted animate-pulse">Cargando usuarios...</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-gh-bg-secondary border border-gh-border/30 rounded-lg overflow-hidden">
+    <div className="bg-gh-bg-secondary/10 backdrop-blur-md border border-gh-border/50 rounded-xl overflow-hidden shadow-xl">
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gh-bg-tertiary/30 border-b border-gh-border/20">
+        <table className="w-full border-collapse">
+          <thead className="bg-gh-bg-secondary/40 border-b border-gh-border/50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gh-text-muted uppercase tracking-wide">
+              <th className="px-4 py-3 text-left text-[11px] font-bold text-gh-text-muted uppercase tracking-wider">
                 Usuario
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gh-text-muted uppercase tracking-wide">
+              <th className="px-4 py-3 text-left text-[11px] font-bold text-gh-text-muted uppercase tracking-wider">
                 Nombre
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gh-text-muted uppercase tracking-wide">
+              <th className="px-4 py-3 text-left text-[11px] font-bold text-gh-text-muted uppercase tracking-wider">
                 Rol
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gh-text-muted uppercase tracking-wide">
+              <th className="px-4 py-3 text-left text-[11px] font-bold text-gh-text-muted uppercase tracking-wider">
                 Cotización
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gh-text-muted uppercase tracking-wide">
+              <th className="px-4 py-3 text-left text-[11px] font-bold text-gh-text-muted uppercase tracking-wider">
                 Estado
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gh-text-muted uppercase tracking-wide">
+              <th className="px-4 py-3 text-right text-[11px] font-bold text-gh-text-muted uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
@@ -206,20 +188,32 @@ export default function UsersTable({
           <tbody className="divide-y divide-gh-border/10">
             {users.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gh-text-muted text-sm">
-                  No hay usuarios registrados
+                <td colSpan={6} className="px-4 py-12 text-center">
+                  <div className="flex flex-col items-center gap-2 text-gh-text-muted">
+                    <User className="w-8 h-8 opacity-20" />
+                    <p className="text-sm">No hay usuarios registrados</p>
+                  </div>
                 </td>
               </tr>
             ) : (
               users.map(user => (
-                <tr key={user.id} className="hover:bg-gh-bg-tertiary/20 transition-colors">
+                <tr key={user.id} className="hover:bg-gh-accent/5 transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-full ${getRoleColor(user.role)}`}>
+                      <div 
+                        className={`p-1.5 rounded-full transition-colors`}
+                        style={user.roleRef?.color ? { backgroundColor: `${user.roleRef.color}26` } : {}}
+                      >
                         {getRoleIcon(user.role) === 'shield' ? (
-                          <ShieldCheck className={`w-3.5 h-3.5 ${getIconColor(user.role)}`} />
+                          <ShieldCheck 
+                            className={`w-3.5 h-3.5 transition-colors`} 
+                            style={user.roleRef?.color ? { color: user.roleRef.color } : {}}
+                          />
                         ) : (
-                          <User className={`w-3.5 h-3.5 ${getIconColor(user.role)}`} />
+                          <User 
+                            className={`w-3.5 h-3.5 transition-colors`} 
+                            style={user.roleRef?.color ? { color: user.roleRef.color } : {}}
+                          />
                         )}
                       </div>
                       <span className="text-gh-text font-mono text-xs">{user.username}</span>
@@ -239,8 +233,15 @@ export default function UsersTable({
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getRoleBadgeClasses(user.role)}`}>
-                      {getRoleLabel(user.role)}
+                    <span 
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors ${!user.roleRef?.color ? getRoleBadgeClasses(user.role) : ''}`}
+                      style={user.roleRef?.color ? {
+                        backgroundColor: `${user.roleRef.color}26`,
+                        color: user.roleRef.color,
+                        borderColor: `${user.roleRef.color}66`
+                      } : {}}
+                    >
+                      {user.roleRef?.displayName || getRoleLabel(user.role)}
                     </span>
                   </td>
                   <td className="px-4 py-3">

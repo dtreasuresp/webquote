@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, Download, ArrowLeft, Edit, X, Check, CreditCard, Save, FileText, Globe, Headphones, Percent, History, Gift, Settings, User, Briefcase, Tags, AlertTriangle, Eye, Book, LineChart, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Download, ArrowLeft, Edit, X, Check, CreditCard, Save, FileText, Globe, Headphones, Percent, History, Gift, Settings, User, Users, Briefcase, Tags, AlertTriangle, Eye, Book, LineChart, Loader2, BarChart3, Building2, ShoppingCart, Wallet, Package, Monitor, Key, } from 'lucide-react'
 import Link from 'next/link'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import DatePicker from '@/components/ui/DatePicker'
@@ -32,15 +32,15 @@ const OfertaTab = lazy(() => import('@/features/admin/components/tabs/OfertaTab'
 const ContenidoTab = lazy(() => import('@/features/admin/components/tabs/ContenidoTab'))
 const PreferenciasTab = lazy(() => import('@/features/admin/components/tabs/PreferenciasTab'))
 const PaqueteContenidoTab = lazy(() => import('@/features/admin/components/tabs/PaqueteContenidoTab'))
+const CrmTab = lazy(() => import('@/features/admin/components/tabs/CrmTab'))
+const AnalyticsTab = lazy(() => import('@/features/admin/components/tabs/AnalyticsTab'))
+const ModulePlaceholderTab = lazy(() => import('@/features/admin/components/tabs/ModulePlaceholderTab'))
 const UnifiedAdminSidebar = lazy(() => import('@/features/admin/components/UnifiedAdminSidebar'))
 const FloatingAdminFooter = lazy(() => import('@/features/admin/components/FloatingAdminFooter'))
 const AdminBreadcrumbs = lazy(() => import('@/features/admin/components/AdminBreadcrumbs'))
 const KPICards = lazy(() => import('@/features/admin/components/KPICards'))
 const DialogoGenerico = lazy(() => import('@/features/admin/components/DialogoGenerico'))
 const DialogoGenericoDinamico = lazy(() => import('@/features/admin/components/DialogoGenericoDinamico'))
-const AnalyticsDashboard = lazy(() => import('@/features/admin/components/AnalyticsDashboard'))
-const OfertaAnalyticsSection = lazy(() => import('@/features/admin/components/OfertaAnalyticsSection'))
-const HistorialAnalyticsSection = lazy(() => import('@/features/admin/components/HistorialAnalyticsSection'))
 const SyncStatusIndicator = lazy(() => import('@/features/admin/components/SyncStatusIndicator'))
 // jsPDF se cargará solo cuando se necesite (en handleDescargarPdf)
 const loadJsPDF = () => import('jspdf').then(mod => mod.jsPDF)
@@ -63,7 +63,7 @@ import {
 // Analytics y Tracking
 import { AnalyticsProvider } from '@/features/admin/contexts'
 import { useEventTracking } from '@/features/admin/hooks'
-import { useUserPreferencesStore, useQuotationStore, useServicesStore, useDiscountsStore, usePaymentStore, useSnapshotStore, useValidationStore, useTemplateStore, useModalStore } from '@/stores'
+import { useUserPreferencesStore, useQuotationStore, useServicesStore, useDiscountsStore, usePaymentStore, useSnapshotStore, useValidationStore, useTemplateStore, useModalStore, useCrmStore } from '@/stores'
 import { useUIStore } from '@/stores/uiStore'
 import { useDataStore } from '@/stores/dataStore'
 import { useModalDataStore } from '@/stores/modalDataStore'
@@ -164,6 +164,7 @@ export default function Administrador() {
   const storeSnapshotsHistoria = useSnapshotStore((s) => s.snapshotsHistoria)
   const storeSnapshotLoading = useSnapshotStore((s) => s.isLoading)
   const storeSnapshotErrors = useSnapshotStore((s) => s.errors)
+  const isCompact = useSidebarStore((s) => s.isCompact)
   const { loadSnapshots: loadSnapshotsStore, createSnapshot, updateSnapshot, deleteSnapshot, compareSnapshots, selectSnapshot, setSnapshotActual, startEditing: startEditingSnapshot, cancelEditing: cancelEditingSnapshot, setNewSnapshot, startComparison, resetSnapshots, setSnapshots, setSnapshotEditando } = useSnapshotStore()
   
   // 🟢 PHASE 2.2: Selectores del validationStore (Integración gradual)
@@ -1180,20 +1181,79 @@ export default function Administrador() {
    * Traduce clicks de la sidebar a cambios de tabs
    */
   const handleSidebarSectionChange = (section: SidebarSection) => {
-    // Mapeo completo de secciones a tabs
+    // Mapeo completo de secciones a tabs (NovaSuite 10 Módulos)
     const sectionToTabMap: Record<SidebarSection, string> = {
-      // Cotización (3 secciones → 1 tab)
+      // Analytics
+      'analytics-dashboard': 'analytics',
+      'analytics-ventas': 'analytics',
+      'analytics-clientes': 'analytics',
+      // CRM
+      'crm-dashboard': 'crm',
+      'crm-clientes': 'crm',
+      'crm-contactos': 'crm',
+      'crm-oportunidades': 'crm',
+      'crm-interacciones': 'crm',
+      'crm-productos': 'crm',
+      'crm-historial': 'crm',
+      'crm-pricing': 'crm',
+      'crm-suscripciones': 'crm',
+      'crm-facturas': 'crm',
+      'crm-cotizaciones': 'crm',
+      'crm-reportes': 'crm',
+      'crm-compliance': 'crm',
+      'crm-reglas': 'crm',
+      'crm-plantillas': 'crm',
+      'crm-configuracion': 'crm',
+      // Sales
+      'sales-cotizaciones': 'sales',
+      'sales-pedidos': 'sales',
+      'sales-facturas': 'sales',
+      'sales-descuentos': 'sales',
+      'sales-reportes': 'sales',
+      // Inventory
+      'inv-productos': 'inventory',
+      'inv-stock': 'inventory',
+      'inv-movimientos': 'inventory',
+      'inv-categorias': 'inventory',
+      // Finance
+      'fin-cobros': 'finance',
+      'fin-pagos': 'finance',
+      'fin-impuestos': 'finance',
+      'fin-contabilidad': 'finance',
+      // People
+      'ppl-empleados': 'people',
+      'ppl-nomina': 'people',
+      'ppl-asistencia': 'people',
+      // Projects
+      'prj-proyectos': 'projects',
+      'prj-tareas': 'projects',
+      'prj-recursos': 'projects',
+      // POS
+      'pos-venta': 'pos',
+      'pos-caja': 'pos',
+      'pos-tickets': 'pos',
+      // eCommerce
+      'eco-tiendas': 'ecommerce',
+      'eco-pedidos': 'ecommerce',
+      'eco-clientes': 'ecommerce',
+      // Licensing
+      'lic-suscripciones': 'licensing',
+      'lic-planes': 'licensing',
+      'lic-modulos': 'licensing',
+      // Settings
+      'set-general': 'settings',
+      'set-personalizacion': 'settings',
+      'set-integraciones': 'settings',
+      // Legacy / Contextual
       'cot-info': 'cotizacion',
       'cot-cliente': 'cotizacion',
       'cot-proveedor': 'cotizacion',
-      // Oferta (6 secciones → 1 tab)
       'oferta-desc': 'oferta',
       'oferta-base': 'oferta',
       'oferta-opt': 'oferta',
       'oferta-fin': 'oferta',
       'oferta-paq': 'oferta',
       'oferta-caract': 'oferta',
-      // Contenido (13 secciones → 1 tab)
       'cont-resumen': 'contenido',
       'cont-analisis': 'contenido',
       'cont-fortale': 'contenido',
@@ -1209,18 +1269,6 @@ export default function Administrador() {
       'cont-terminos': 'contenido',
       // Historial (1 sección → 1 tab, pero no existe actualmente)
       'hist-versiones': 'historial',
-      // CRM (11 secciones → 1 tab futuro)
-      'crm-clientes': 'crm',
-      'crm-contactos': 'crm',
-      'crm-productos': 'crm',
-      'crm-oportunidades': 'crm',
-      'crm-interacciones': 'crm',
-      'crm-historial': 'crm',
-      'crm-pricing': 'crm',
-      'crm-suscripciones': 'crm',
-      'crm-compliance': 'crm',
-      'crm-reglas': 'crm',
-      'crm-plantillas': 'crm',
       // Preferencias (11 secciones → 1 tab)
       'pref-config': 'preferencias',
       'pref-sync': 'preferencias',
@@ -1237,6 +1285,28 @@ export default function Administrador() {
 
     const targetTab = sectionToTabMap[section]
     
+    // Sincronizar con CRM Store si la sección es de CRM
+    if (section.startsWith('crm-')) {
+      const crmSection = section.replace('crm-', '') as any
+      // Mapeo especial para nombres que no coinciden exactamente
+      const crmMapping: Record<string, string> = {
+        'clientes': 'clients',
+        'contactos': 'contacts',
+        'productos': 'products',
+        'oportunidades': 'opportunities',
+        'interacciones': 'interactions',
+        'historial': 'history',
+        'facturas': 'invoices',
+        'cotizaciones': 'quotes',
+        'reportes': 'reports',
+        'configuracion': 'settings',
+        'plantillas': 'templates',
+        'reglas': 'rules'
+      }
+      const finalCrmSection = crmMapping[crmSection] || crmSection
+      useCrmStore.getState().setActiveSection(finalCrmSection)
+    }
+
     // Cambiar sección en el store
     setActiveSidebarSection(section)
     
@@ -1251,26 +1321,46 @@ export default function Administrador() {
     }
   }
 
-  // Sincronizar cambios de tab hacia la sidebar (cuando se clickea TabsModal)
+  // Sincronizar cambios de tab hacia la sidebar
   useEffect(() => {
-    // Mapeo de secciones a tabs para validación
+    // Mapeo de secciones a tabs para validación (NovaSuite)
     const sectionToTabMap: Record<string, string> = {
-      'cot-info': 'cotizacion', 'cot-cliente': 'cotizacion', 'cot-proveedor': 'cotizacion',
-      'oferta-desc': 'oferta', 'oferta-base': 'oferta', 'oferta-opt': 'oferta', 'oferta-fin': 'oferta', 'oferta-paq': 'oferta', 'oferta-caract': 'oferta',
-      'cont-resumen': 'contenido', 'cont-analisis': 'contenido', 'cont-fortale': 'contenido', 'cont-compar': 'contenido', 'cont-crono': 'contenido', 'cont-cuotas': 'contenido', 'cont-paq': 'contenido', 'cont-notas': 'contenido', 'cont-concl': 'contenido', 'cont-faq': 'contenido', 'cont-garant': 'contenido', 'cont-contact': 'contenido', 'cont-terminos': 'contenido',
-      'pref-config': 'preferencias', 'pref-sync': 'preferencias', 'pref-usuarios': 'preferencias', 'pref-org': 'preferencias', 'pref-roles': 'preferencias', 'pref-permisos': 'preferencias', 'pref-matriz': 'preferencias', 'pref-permuser': 'preferencias', 'pref-logs': 'preferencias', 'pref-backups': 'preferencias', 'pref-reportes': 'preferencias',
+      'analytics-dashboard': 'analytics',
+      'crm-dashboard': 'crm',
+      'sales-cotizaciones': 'sales',
+      'inv-productos': 'inventory',
+      'fin-cobros': 'finance',
+      'ppl-empleados': 'people',
+      'prj-proyectos': 'projects',
+      'pos-venta': 'pos',
+      'eco-tiendas': 'ecommerce',
+      'lic-suscripciones': 'licensing',
+      'set-general': 'settings',
+      'cot-info': 'cotizacion',
+      'oferta-desc': 'oferta',
+      'cont-resumen': 'contenido',
       'hist-versiones': 'historial',
-      'crm-clientes': 'crm', 'crm-contactos': 'crm', 'crm-productos': 'crm', 'crm-oportunidades': 'crm', 'crm-interacciones': 'crm', 'crm-historial': 'crm', 'crm-pricing': 'crm', 'crm-suscripciones': 'crm', 'crm-compliance': 'crm', 'crm-reglas': 'crm', 'crm-plantillas': 'crm'
     }
 
     // Mapeo de tabs a sección por defecto
     const tabToSectionMap: Record<string, SidebarSection> = {
+      'analytics': 'analytics-dashboard',
+      'crm': 'crm-dashboard',
+      'sales': 'sales-cotizaciones',
+      'inventory': 'inv-productos',
+      'finance': 'fin-cobros',
+      'people': 'ppl-empleados',
+      'projects': 'prj-proyectos',
+      'pos': 'pos-venta',
+      'ecommerce': 'eco-tiendas',
+      'licensing': 'lic-suscripciones',
+      'settings': 'set-general',
       'cotizacion': 'cot-info',
       'oferta': 'oferta-desc',
       'contenido': 'cont-resumen',
       'historial': 'hist-versiones',
       'preferencias': 'pref-config',
-      'crm': 'crm-clientes',
+      'crm': 'crm-dashboard',
     }
     
     // Solo sincronizar si la sección actual NO pertenece al tab actual
@@ -3794,130 +3884,24 @@ export default function Administrador() {
       hasChanges: false,
     },
     {
+      id: 'crm',
+      label: 'CRM',
+      icon: <Users className="w-4 h-4" />,
+      content: <div />, // Placeholder
+      hasChanges: false,
+    },
+    {
       id: 'historial',
       label: 'Historial',
       icon: <History className="w-4 h-4" />,
-      content: (
-        <Historial 
-          quotations={quotations} 
-          snapshots={snapshots}
-          showActivateButton={modoSeleccionCotizacion}
-          onEdit={(quotation) => {
-            abrirModalEditar(quotation)
-          }}
-          onRestaurarVersion={handleRestaurarVersion}
-          onDuplicarVersion={handleDuplicarVersion}
-          onActivarCotizacion={async (quotationId) => {
-            // Handler para activar cotización desde el modo selección
-            await desactivarTodas(quotationId)
-            setModoSeleccionCotizacion(false)
-            toast.success('✅ Cotización activada correctamente')
-            await recargarQuotations()
-            // Cargar la cotización activada
-            const cotizacionActivada = quotations.find(q => q.id === quotationId)
-            if (cotizacionActivada) {
-              setCotizacionConfig(cotizacionActivada as QuotationConfig)
-            }
-          }}
-          onDelete={(quotationId) => {
-            // Verificar si es la cotización activa
-            const esCotizacionActiva = cotizacionConfig?.id === quotationId
-            
-            if (esCotizacionActiva) {
-              // Guardar el ID para eliminar después de confirmación
-              setQuotationIdPendienteEliminar(quotationId)
-              // Mostrar diálogo de confirmación
-              mostrarDialogoGenerico({
-                tipo: 'warning',
-                titulo: '¿Eliminar Cotización Activa?',
-                icono: '🗑️',
-                mensaje: 'Estás a punto de eliminar la cotización que está actualmente activa. Después de eliminarla, deberás crear una nueva o activar una existente.',
-                botones: [
-                  {
-                    label: 'Cancelar',
-                    style: 'secondary',
-                    action: () => {
-                      setQuotationIdPendienteEliminar(null)
-                      cerrarDialogoGenerico()
-                    },
-                  },
-                  {
-                    label: 'Eliminar',
-                    style: 'danger',
-                    action: async () => {
-                      cerrarDialogoGenerico()
-                      await ejecutarEliminacionCotizacion(quotationId)
-                      return false // Evitar que el renderizado cierre el diálogo recién abierto
-                    },
-                  },
-                ],
-              })
-            } else {
-              // No es activa, eliminar directamente con confirmación simple
-              mostrarDialogoGenerico({
-                tipo: 'warning',
-                titulo: 'Confirmar Eliminación',
-                icono: '🗑️',
-                mensaje: '¿Estás seguro de que deseas eliminar esta cotización? Esta acción no se puede deshacer.',
-                botones: [
-                  {
-                    label: 'Cancelar',
-                    style: 'secondary',
-                    action: () => cerrarDialogoGenerico(),
-                  },
-                  {
-                    label: 'Eliminar',
-                    style: 'danger',
-                    action: async () => {
-                      cerrarDialogoGenerico()
-                      await ejecutarEliminacionCotizacionSimple(quotationId)
-                    },
-                  },
-                ],
-              })
-            }
-          }}
-            onToggleActive={async (quotationId, newStatus) => {
-              try {
-                // FASE 3: Si va a activarse, desactivar todas las otras
-                if (newStatus.isGlobal === true) {
-                  await desactivarTodas(quotationId)
-                  toast.success('✓ Cotización activada. El resto de cotizaciones han sido desactivadas')
-                } else {
-                  // Si va a desactivarse, solo actualizar este registro
-                  const response = await fetch(`/api/quotations/${quotationId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      activo: newStatus.activo,
-                      isGlobal: newStatus.isGlobal
-                    })
-                  })
-                  if (response.ok) {
-                    toast.success('✓ Cotización desactivada')
-                  } else {
-                    throw new Error('Error al desactivar')
-                  }
-                }
-                // Recargar cotizaciones
-                await recargarQuotations()
-              } catch (error) {
-                console.error('Error actualizando cotización:', error)
-                toast.error('Error al actualizar el estado')
-              }
-            }}
-            onViewProposal={(quotation) => {
-              abrirModalVer(quotation)
-            }}
-          />
-      ),
+      content: <div />,
       hasChanges: false,
     },
     {
       id: 'preferencias',
       label: 'Preferencias',
       icon: <Settings className="w-4 h-4" />,
-      content: <div />, // Placeholder
+      content: <div />,
       hasChanges: false,
     },
   ]
@@ -4180,8 +4164,8 @@ export default function Administrador() {
       
       {/* 🟢 LAYOUT PRINCIPAL CON SIDEBAR UNIFICADA */}
       <div className="flex relative z-10 pt-[60px]">
-        {/* SIDEBAR UNIFICADA - Nueva (anchura fija: 224px) */}
-        <aside className="w-56 flex-shrink-0 sticky top-[60px] h-[calc(100vh-60px-28px)] overflow-hidden">
+        {/* SIDEBAR UNIFICADA - Nueva (anchura dinámica) */}
+        <aside className={`${isCompact ? 'w-16' : 'w-56'} flex-shrink-0 sticky top-[60px] h-[calc(100vh-60px-28px)] overflow-hidden transition-all duration-300`}>
           <Suspense fallback={<ComponentLoader />}>
             <UnifiedAdminSidebar 
               onSectionChange={handleSidebarSectionChange}
@@ -4189,64 +4173,51 @@ export default function Administrador() {
           </Suspense>
         </aside>
         
-        {/* CONTENIDO PRINCIPAL - Modificado para flex-1 */}
+        {/* CONTENIDO PRINCIPAL - Modificado para flex-1 y ancho completo */}
         <main className="flex-1 min-w-0 pb-12">
-          <div className="max-w-7xl mx-auto w-full py-8 px-4">
-            <Suspense fallback={null}>
-              <AdminBreadcrumbs />
-            </Suspense>
-
+          <div className="w-full py-6 px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              {/* Header con botones de acción */}
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-gh-border pb-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gh-text mb-2">
-                Panel Administrativo
-              </h1>
-              <p className="text-sm text-gh-text-muted">
-                Gestione toda la configuración de su propuesta de cotización.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 items-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleDescargarPdf}
-                className="px-6 py-2.5 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all flex items-center gap-2 text-sm font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gh-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-gh-bg"
-              >
-                <Download /> Descargar PDF
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={crearNuevaCotizacion}
-                className="px-6 py-2.5 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all flex items-center gap-2 text-sm font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gh-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-gh-bg"
-              >
-                <Plus /> Nueva Cotización
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={mostrarConfirmacionGuardar}
-                className="px-6 py-2.5 bg-gh-success text-white rounded-lg hover:bg-gh-success-hover transition-all flex items-center gap-2 text-sm font-semibold active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-gh-success/50 focus-visible:ring-offset-2 focus-visible:ring-offset-gh-bg-absolute"
-              >
-                <Save /> Guardar Cotización
-              </motion.button>
-              <Link href="/">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-all flex items-center gap-2 text-xs font-semibold border border-white/50 backdrop-blur focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117]"
-                >
-                  <ArrowLeft /> Volver
-                </motion.button>
-              </Link>
-            </div>
-          </div>
+              {/* Header Minimalista */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-white/10 pb-6">
+                <div>
+                  <h1 className="text-2xl font-bold text-white tracking-tight">
+                    Panel Administrativo
+                  </h1>
+                  <p className="text-[11px] text-white/40 mt-1">
+                    Gestión integral de la plataforma NovaSuite
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleDescargarPdf}
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/10 transition-all flex items-center gap-2 text-xs font-medium backdrop-blur-md"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Descargar PDF
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={crearNuevaCotizacion}
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/10 transition-all flex items-center gap-2 text-xs font-medium backdrop-blur-md"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Nueva Cotización
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={mostrarConfirmacionGuardar}
+                    className="px-4 py-2 bg-gh-success/20 hover:bg-gh-success/30 text-gh-success rounded-xl border border-gh-success/30 transition-all flex items-center gap-2 text-xs font-bold backdrop-blur-md"
+                  >
+                    <Save className="w-3.5 h-3.5" /> Guardar Cambios
+                  </motion.button>
+                </div>
+              </div>
 
           {/* Tab Navigation */}
           <Suspense fallback={<ComponentLoader />}>
@@ -4259,224 +4230,423 @@ export default function Administrador() {
             </div>
           </Suspense>
 
-          {/* Tab Content - usando componentes */}
-          <div className="bg-gh-bg rounded-b-md border-b border-l border-r border-gh-border">
-            {/* TAB 0: ANALYTICS */}
-            {activePageTab === 'analytics' && (
-              <div className="p-6 space-y-8">
-                <Suspense fallback={<ComponentLoader />}>
-                  {/* 1. Dashboard de Analytics completo */}
-                  <AnalyticsDashboard />
-                  
-                  {/* 2. KPI Cards - Resumen de paquetes */}
-                  <KPICards snapshots={snapshots} cargandoSnapshots={cargandoSnapshots} />
-                  
-                  {/* 3. Analítica de Ofertas */}
-                  <OfertaAnalyticsSection />
-                  
-                  {/* 4. Analítica de Historial */}
-                  <HistorialAnalyticsSection />
-                </Suspense>
-              </div>
-            )}
+          {/* Tab Content - usando componentes con transparencia y blur */}
+          <div className="bg-transparent rounded-b-md border-b border-l border-r border-gh-border backdrop-blur-[2px] overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activePageTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                {/* TAB 0: ANALYTICS */}
+                {activePageTab === 'analytics' && (
+                  <Suspense fallback={<ComponentLoader />}>
+                    <AnalyticsTab 
+                      activeSectionId={activeSidebarSection}
+                      snapshots={snapshots as any}
+                      cargandoSnapshots={cargandoSnapshots}
+                    />
+                  </Suspense>
+                )}
 
-            {/* TAB 1: COTIZACIÓN */}
-            {activePageTab === 'cotizacion' && (
-              <Suspense fallback={<ComponentLoader />}>
-                <CotizacionTab
-                  activeSectionId={activeSidebarSection}
-                  cotizacionConfig={cotizacionConfig as any}
-                  setCotizacionConfig={setCotizacionConfig as any}
-                  erroresValidacionCotizacion={erroresValidacionCotizacion}
-                  setErroresValidacionCotizacion={setErroresValidacionCotizacion}
-                  validarEmail={validarEmail}
-                  validarWhatsApp={validarWhatsApp}
-                  validarFechas={validarFechas}
-                  formatearFechaLarga={formatearFechaLarga}
-                  calcularFechaVencimiento={calcularFechaVencimiento}
-                />
-              </Suspense>
-            )}
+                {/* TAB: SALES */}
+                {activePageTab === 'sales' && (
+                  <ModulePlaceholderTab 
+                    title="Módulo de Ventas" 
+                    description="Gestión de pedidos, facturación y descuentos." 
+                    icon={ShoppingCart} 
+                  />
+                )}
 
-            {/* TAB 2: OFERTA */}
-            {activePageTab === 'oferta' && (
-              <Suspense fallback={<ComponentLoader />}>
-                <OfertaTab
-                activeSectionId={activeSidebarSection}
-                serviciosBase={serviciosBase as any}
-                setServiciosBase={setServiciosBase as any}
-                nuevoServicioBase={nuevoServicioBase as any}
-                setNuevoServicioBase={setNuevoServicioBase as any}
-                editandoServicioBaseId={editandoServicioBaseId}
-                setEditandoServicioBaseId={setEditandoServicioBaseId}
-                servicioBaseEditando={servicioBaseEditando as any}
-                setServicioBaseEditando={setServicioBaseEditando as any}
-                paqueteActual={paqueteActual as any}
-                setPaqueteActual={setPaqueteActual as any}
-                serviciosOpcionales={serviciosOpcionales as any}
-                setServiciosOpcionales={setServiciosOpcionales as any}
-                nuevoServicio={nuevoServicio as any}
-                setNuevoServicio={setNuevoServicio as any}
-                editandoServicioId={editandoServicioId}
-                setEditandoServicioId={setEditandoServicioId}
-                servicioEditando={servicioEditando as any}
-                setServicioEditando={setServicioEditando as any}
-                descripcionTextareaRef={descripcionTextareaRef}
-                agregarServicioBase={agregarServicioBase}
-                abrirEditarServicioBase={abrirEditarServicioBase}
-                guardarEditarServicioBase={guardarEditarServicioBase}
-                cancelarEditarServicioBase={cancelarEditarServicioBase}
-                eliminarServicioBase={eliminarServicioBase}
-                agregarServicioOpcional={agregarServicioOpcional}
-                abrirEditarServicioOpcional={abrirEditarServicioOpcional}
-                guardarEditarServicioOpcional={guardarEditarServicioOpcional}
-                cancelarEditarServicioOpcional={cancelarEditarServicioOpcional}
-                eliminarServicioOpcional={eliminarServicioOpcional}
-                normalizarMeses={normalizarMeses}
-                serviciosOpcionalesValidos={serviciosOpcionalesValidos}
-                todoEsValido={!!todoEsValido}
-                // Props para PaquetesContent (sidebar integrado)
-                snapshots={snapshots}
-                setSnapshots={setSnapshots}
-                cargandoSnapshots={cargandoSnapshots}
-                errorSnapshots={errorSnapshots}
-                abrirModalEditar={(snapshot) => {
-                  const quotation = quotations.find(q => q.id === snapshot.quotationConfigId)
-                  if (quotation) {
-                    abrirModalEditar(quotation)
-                  }
-                }}
-                handleEliminarSnapshot={handleEliminarSnapshot}
-                calcularCostoInicialSnapshot={calcularCostoInicialSnapshot}
-                calcularCostoAño1Snapshot={calcularCostoAño1Snapshot}
-                calcularCostoAño2Snapshot={calcularCostoAño2Snapshot}
-                actualizarSnapshot={actualizarSnapshot}
-                refreshSnapshots={refreshSnapshots}
-                toast={{ success: (m) => toast.success(m), error: (m) => toast.error(m), info: (m) => toast.info(m), warning: (m) => toast.warning(m) }}
-                mostrarDialogoGenerico={mostrarDialogoGenerico}
-                cotizacionConfig={cotizacionConfig as any}
-                onCompararPaquete={handleCompararPaquete}
-                onCompararPaqueteIndividual={handleCompararPaqueteIndividual}
-                paqueteParaComparar={paqueteParaComparar}
-                // Props para FinancieroContent
-                opcionesPago={opcionesPagoActual as any}
-                setOpcionesPago={setOpcionesPagoActual}
-                metodoPagoPreferido={metodoPagoPreferido as any}
-                setMetodoPagoPreferido={setMetodoPagoPreferido}
-                notasPago={notasPago as any}
-                setNotasPago={setNotasPago}
-                metodosPreferidos={metodosPreferidos}
-                setMetodosPreferidos={setMetodosPreferidos}
-                configDescuentos={configDescuentosActual as any}
-                setConfigDescuentos={(c: any) => setConfigDescuentosActual(c)}
-                // Props para modo edición del paquete (descripción)
-                modoEdicionPaquete={modoEdicionPaquete}
-                setModoEdicionPaquete={setModoEdicionPaquete}
-                // Props para templates de descripción de paquete
-                descripcionesTemplate={descripcionesTemplate as any}
-                setDescripcionesTemplate={(t: any) => setDescripcionesTemplate(t)}
-                // Props para Características de Paquetes
-                paquetesCaracteristicasData={paquetesCaracteristicasData}
-                onPaquetesCaracteristicasChange={handlePaquetesCaracteristicasChange}
-                // Indica si la configuración aún está cargando (para evitar flash de reordenamiento)
-                isConfigLoading={!initialLoad.isComplete}
-                // Props para Métodos de Pago (contenido)
-                metodosPagoData={metodosPagoOfertaData}
-                onMetodosPagoChange={handleMetodosPagoOfertaChange}
-                // Props para Financial Templates
-                financialTemplates={financialTemplates as any}
-                setFinancialTemplates={setFinancialTemplates as any}
-                onSaveFinancialTemplate={handleSaveFinancialTemplate}
-                onUpdateFinancialTemplate={handleUpdateFinancialTemplate}
-                onDeleteFinancialTemplate={handleDeleteFinancialTemplate}
-                onNuevaOfertaFinanciera={handleNuevaOfertaFinanciera}
-              />
-              </Suspense>
-            )}
+                {/* TAB: INVENTORY */}
+                {activePageTab === 'inventory' && (
+                  <ModulePlaceholderTab 
+                    title="Módulo de Inventario" 
+                    description="Control de stock, productos y movimientos." 
+                    icon={Package} 
+                  />
+                )}
 
-            {/* TAB 3: CONTENIDO */}
-            {activePageTab === 'contenido' && (
-              <Suspense fallback={<ComponentLoader />}>
-                <ContenidoTab
-                activeSectionId={activeSidebarSection}
-                cotizacionConfig={cotizacionConfig as any}
-                setCotizacionConfig={setCotizacionConfig as any}
-                onSave={async (config: QuotationConfig) => {
-                  try {
-                    const response = await fetch(`/api/quotation-config/${config.id}`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(config)
-                    })
-                    if (!response.ok) throw new Error('Error al guardar')
-                    const result = await response.json()
-                    if (result.success) {
-                      // Actualizar quotations y cotizacionConfig con los datos devueltos
-                      useDataStore.getState().updateQuotations((prev: any) => prev.map((q: any) => 
-                        q.id === config.id ? result.data : q
-                      ))
-                      setCotizacionConfig(result.data)
-                    }
-                  } catch (error) {
-                    console.error('Error guardando contenido:', error)
-                    throw error
-                  }
-                }}
-                onSaveSeccion={async (id: string, seccion: string, datos: unknown, timestamp: string, visibilidad?: Record<string, boolean>) => {
-                  // API optimizada: solo envía la sección que cambió + visibilidad
-                  const response = await fetch(`/api/quotation-config/${id}/contenido`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ seccion, datos, timestamp, visibilidad })
-                  })
-                  if (!response.ok) throw new Error('Error al guardar sección')
-                  const result = await response.json()
-                  if (result.success) {
-                    // Actualizar quotations y cotizacionConfig con los datos devueltos
-                    useDataStore.getState().updateQuotations((prev: any) => prev.map((q: any) => 
-                      q.id === id ? result.data : q
-                    ))
-                    setCotizacionConfig(result.data)
-                    console.log(`[OPTIMIZADO] Guardado exitoso: ${result.meta?.payloadSize || 'N/A'} bytes`)
-                  }
-                }}
-                toast={{ 
-                  success: (m) => toast.success(m), 
-                  error: (m) => toast.error(m),
-                  info: (m) => toast.info(m), 
-                  warning: (m) => toast.warning(m) 
-                }}
-              />
-              </Suspense>
-            )}
+                {/* TAB: FINANCE */}
+                {activePageTab === 'finance' && (
+                  <ModulePlaceholderTab 
+                    title="Módulo de Finanzas" 
+                    description="Cuentas por cobrar, pagar e impuestos." 
+                    icon={Wallet} 
+                  />
+                )}
 
-            {/* TAB 5: PREFERENCIAS */}
-            {activePageTab === 'preferencias' && (
-              <Suspense fallback={<ComponentLoader />}>
-                <PreferenciasTab
-                activeSectionId={activeSidebarSection}
-                quotations={quotations.map(q => ({ id: q.id, nombre: q.empresa, numero: q.numero }))}
-                guardarPreferencias={async () => {
-                  try {
-                    await useUserPreferencesStore.getState().persistPreferences()
-                    const prefs = useUserPreferencesStore.getState()
-                    cachePreferences(prefs as any)
+                {/* TAB: PEOPLE */}
+                {activePageTab === 'people' && (
+                  <ModulePlaceholderTab 
+                    title="Módulo de Personal" 
+                    description="Gestión de empleados y nómina." 
+                    icon={Users} 
+                  />
+                )}
 
-                    const valor = prefs.intervaloVerificacionConexion || 30
-                    const unidad = prefs.unidadIntervaloConexion || 'segundos'
-                    const nuevoIntervalo = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
-                    connectionPolling.setInterval(nuevoIntervalo)
-                    console.log(`⏱️ Intervalo de polling actualizado al guardar: ${nuevoIntervalo}ms`)
+                {/* TAB: PROJECTS */}
+                {activePageTab === 'projects' && (
+                  <ModulePlaceholderTab 
+                    title="Módulo de Proyectos" 
+                    description="Gestión de proyectos y tareas." 
+                    icon={Briefcase} 
+                  />
+                )}
 
-                    toast.success('✓ Preferencias guardadas correctamente')
-                  } catch (error) {
-                    console.error('Error guardando preferencias:', error)
-                    toast.error('Error al guardar preferencias')
-                  }
-                }}
-              />
-              </Suspense>
-            )}
+                {/* TAB: POS */}
+                {activePageTab === 'pos' && (
+                  <ModulePlaceholderTab 
+                    title="Módulo POS" 
+                    description="Terminal de punto de venta y cierre de caja." 
+                    icon={Monitor} 
+                  />
+                )}
+
+                {/* TAB: ECOMMERCE */}
+                {activePageTab === 'ecommerce' && (
+                  <ModulePlaceholderTab 
+                    title="Módulo eCommerce" 
+                    description="Gestión de tiendas online y pedidos web." 
+                    icon={Globe} 
+                  />
+                )}
+
+                {/* TAB: LICENSING */}
+                {activePageTab === 'licensing' && (
+                  <ModulePlaceholderTab 
+                    title="Módulo de Licenciamiento" 
+                    description="Gestión de suscripciones y planes." 
+                    icon={Key} 
+                  />
+                )}
+
+                {/* TAB 1: COTIZACIÓN */}
+                {activePageTab === 'cotizacion' && (
+                  <Suspense fallback={<ComponentLoader />}>
+                    <CotizacionTab
+                      activeSectionId={activeSidebarSection}
+                      cotizacionConfig={cotizacionConfig as any}
+                      setCotizacionConfig={setCotizacionConfig as any}
+                      erroresValidacionCotizacion={erroresValidacionCotizacion}
+                      setErroresValidacionCotizacion={setErroresValidacionCotizacion}
+                      validarEmail={validarEmail}
+                      validarWhatsApp={validarWhatsApp}
+                      validarFechas={validarFechas}
+                      formatearFechaLarga={formatearFechaLarga}
+                      calcularFechaVencimiento={calcularFechaVencimiento}
+                    />
+                  </Suspense>
+                )}
+
+                {/* TAB 2: OFERTA */}
+                {activePageTab === 'oferta' && (
+                  <Suspense fallback={<ComponentLoader />}>
+                    <OfertaTab
+                    activeSectionId={activeSidebarSection}
+                    serviciosBase={serviciosBase as any}
+                    setServiciosBase={setServiciosBase as any}
+                    nuevoServicioBase={nuevoServicioBase as any}
+                    setNuevoServicioBase={setNuevoServicioBase as any}
+                    editandoServicioBaseId={editandoServicioBaseId}
+                    setEditandoServicioBaseId={setEditandoServicioBaseId}
+                    servicioBaseEditando={servicioBaseEditando as any}
+                    setServicioBaseEditando={setServicioBaseEditando as any}
+                    paqueteActual={paqueteActual as any}
+                    setPaqueteActual={setPaqueteActual as any}
+                    serviciosOpcionales={serviciosOpcionales as any}
+                    setServiciosOpcionales={setServiciosOpcionales as any}
+                    nuevoServicio={nuevoServicio as any}
+                    setNuevoServicio={setNuevoServicio as any}
+                    editandoServicioId={editandoServicioId}
+                    setEditandoServicioId={setEditandoServicioId}
+                    servicioEditando={servicioEditando as any}
+                    setServicioEditando={setServicioEditando as any}
+                    descripcionTextareaRef={descripcionTextareaRef}
+                    agregarServicioBase={agregarServicioBase}
+                    abrirEditarServicioBase={abrirEditarServicioBase}
+                    guardarEditarServicioBase={guardarEditarServicioBase}
+                    cancelarEditarServicioBase={cancelarEditarServicioBase}
+                    eliminarServicioBase={eliminarServicioBase}
+                    agregarServicioOpcional={agregarServicioOpcional}
+                    abrirEditarServicioOpcional={abrirEditarServicioOpcional}
+                    guardarEditarServicioOpcional={guardarEditarServicioOpcional}
+                    cancelarEditarServicioOpcional={cancelarEditarServicioOpcional}
+                    eliminarServicioOpcional={eliminarServicioOpcional}
+                    normalizarMeses={normalizarMeses}
+                    serviciosOpcionalesValidos={serviciosOpcionalesValidos}
+                    todoEsValido={!!todoEsValido}
+                    // Props para PaquetesContent (sidebar integrado)
+                    snapshots={snapshots}
+                    setSnapshots={setSnapshots}
+                    cargandoSnapshots={cargandoSnapshots}
+                    errorSnapshots={errorSnapshots}
+                    abrirModalEditar={(snapshot) => {
+                      const quotation = quotations.find(q => q.id === snapshot.quotationConfigId)
+                      if (quotation) {
+                        abrirModalEditar(quotation)
+                      }
+                    }}
+                    handleEliminarSnapshot={handleEliminarSnapshot}
+                    calcularCostoInicialSnapshot={calcularCostoInicialSnapshot}
+                    calcularCostoAño1Snapshot={calcularCostoAño1Snapshot}
+                    calcularCostoAño2Snapshot={calcularCostoAño2Snapshot}
+                    actualizarSnapshot={actualizarSnapshot}
+                    refreshSnapshots={refreshSnapshots}
+                    toast={{ success: (m) => toast.success(m), error: (m) => toast.error(m), info: (m) => toast.info(m), warning: (m) => toast.warning(m) }}
+                    mostrarDialogoGenerico={mostrarDialogoGenerico}
+                    cotizacionConfig={cotizacionConfig as any}
+                    onCompararPaquete={handleCompararPaquete}
+                    onCompararPaqueteIndividual={handleCompararPaqueteIndividual}
+                    paqueteParaComparar={paqueteParaComparar}
+                    // Props para FinancieroContent
+                    opcionesPago={opcionesPagoActual as any}
+                    setOpcionesPago={setOpcionesPagoActual}
+                    metodoPagoPreferido={metodoPagoPreferido as any}
+                    setMetodoPagoPreferido={setMetodoPagoPreferido}
+                    notasPago={notasPago as any}
+                    setNotasPago={setNotasPago}
+                    metodosPreferidos={metodosPreferidos}
+                    setMetodosPreferidos={setMetodosPreferidos}
+                    configDescuentos={configDescuentosActual as any}
+                    setConfigDescuentos={(c: any) => setConfigDescuentosActual(c)}
+                    // Props para modo edición del paquete (descripción)
+                    modoEdicionPaquete={modoEdicionPaquete}
+                    setModoEdicionPaquete={setModoEdicionPaquete}
+                    // Props para templates de descripción de paquete
+                    descripcionesTemplate={descripcionesTemplate as any}
+                    setDescripcionesTemplate={(t: any) => setDescripcionesTemplate(t)}
+                    // Props para Características de Paquetes
+                    paquetesCaracteristicasData={paquetesCaracteristicasData}
+                    onPaquetesCaracteristicasChange={handlePaquetesCaracteristicasChange}
+                    // Indica si la configuración aún está cargando (para evitar flash de reordenamiento)
+                    isConfigLoading={!initialLoad.isComplete}
+                    // Props para Métodos de Pago (contenido)
+                    metodosPagoData={metodosPagoOfertaData}
+                    onMetodosPagoChange={handleMetodosPagoOfertaChange}
+                    // Props para Financial Templates
+                    financialTemplates={financialTemplates as any}
+                    setFinancialTemplates={setFinancialTemplates as any}
+                    onSaveFinancialTemplate={handleSaveFinancialTemplate}
+                    onUpdateFinancialTemplate={handleUpdateFinancialTemplate}
+                    onDeleteFinancialTemplate={handleDeleteFinancialTemplate}
+                    onNuevaOfertaFinanciera={handleNuevaOfertaFinanciera}
+                  />
+                  </Suspense>
+                )}
+
+                {/* TAB 3: CONTENIDO */}
+                {activePageTab === 'contenido' && (
+                  <Suspense fallback={<ComponentLoader />}>
+                    <ContenidoTab
+                    activeSectionId={activeSidebarSection}
+                    cotizacionConfig={cotizacionConfig as any}
+                    setCotizacionConfig={setCotizacionConfig as any}
+                    onSave={async (config: QuotationConfig) => {
+                      try {
+                        const response = await fetch(`/api/quotation-config/${config.id}`, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(config)
+                        })
+                        if (!response.ok) throw new Error('Error al guardar')
+                        const result = await response.json()
+                        if (result.success) {
+                          // Actualizar quotations y cotizacionConfig con los datos devueltos
+                          useDataStore.getState().updateQuotations((prev: any) => prev.map((q: any) => 
+                            q.id === config.id ? result.data : q
+                          ))
+                          setCotizacionConfig(result.data)
+                        }
+                      } catch (error) {
+                        console.error('Error guardando contenido:', error)
+                        throw error
+                      }
+                    }}
+                    onSaveSeccion={async (id: string, seccion: string, datos: unknown, timestamp: string, visibilidad?: Record<string, boolean>) => {
+                      // API optimizada: solo envía la sección que cambió + visibilidad
+                      const response = await fetch(`/api/quotation-config/${id}/contenido`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ seccion, datos, timestamp, visibilidad })
+                      })
+                      if (!response.ok) throw new Error('Error al guardar sección')
+                      const result = await response.json()
+                      if (result.success) {
+                        // Actualizar quotations y cotizacionConfig con los datos devueltos
+                        useDataStore.getState().updateQuotations((prev: any) => prev.map((q: any) => 
+                          q.id === id ? result.data : q
+                        ))
+                        setCotizacionConfig(result.data)
+                        console.log(`[OPTIMIZADO] Guardado exitoso: ${result.meta?.payloadSize || 'N/A'} bytes`)
+                      }
+                    }}
+                    toast={{ 
+                      success: (m) => toast.success(m), 
+                      error: (m) => toast.error(m),
+                      info: (m) => toast.info(m), 
+                      warning: (m) => toast.warning(m) 
+                    }}
+                  />
+                  </Suspense>
+                )}
+
+                {/* TAB 5: PREFERENCIAS */}
+                {activePageTab === 'preferencias' && (
+                  <Suspense fallback={<ComponentLoader />}>
+                    <PreferenciasTab
+                    activeSectionId={activeSidebarSection}
+                    quotations={quotations.map(q => ({ id: q.id, nombre: q.empresa, numero: q.numero }))}
+                    guardarPreferencias={async () => {
+                      try {
+                        await useUserPreferencesStore.getState().persistPreferences()
+                        const prefs = useUserPreferencesStore.getState()
+                        cachePreferences(prefs as any)
+
+                        const valor = prefs.intervaloVerificacionConexion || 30
+                        const unidad = prefs.unidadIntervaloConexion || 'segundos'
+                        const nuevoIntervalo = unidad === 'minutos' ? valor * 60 * 1000 : valor * 1000
+                        connectionPolling.setInterval(nuevoIntervalo)
+                        console.log(`⏱️ Intervalo de polling actualizado al guardar: ${nuevoIntervalo}ms`)
+
+                        toast.success('✓ Preferencias guardadas correctamente')
+                      } catch (error) {
+                        console.error('Error guardando preferencias:', error)
+                        toast.error('Error al guardar preferencias')
+                      }
+                    }}
+                  />
+                  </Suspense>
+                )}
+
+                {/* TAB 6: HISTORIAL */}
+                {activePageTab === 'historial' && (
+                  <div className="p-6">
+                    <Historial 
+                      quotations={quotations} 
+                      snapshots={snapshots}
+                      showActivateButton={modoSeleccionCotizacion}
+                      onEdit={(quotation) => {
+                        abrirModalEditar(quotation)
+                      }}
+                      onRestaurarVersion={handleRestaurarVersion}
+                      onDuplicarVersion={handleDuplicarVersion}
+                      onActivarCotizacion={async (quotationId) => {
+                        // Handler para activar cotización desde el modo selección
+                        await desactivarTodas(quotationId)
+                        setModoSeleccionCotizacion(false)
+                        toast.success('✅ Cotización activada correctamente')
+                        await recargarQuotations()
+                        // Cargar la cotización activada
+                        const cotizacionActivada = quotations.find(q => q.id === quotationId)
+                        if (cotizacionActivada) {
+                          setCotizacionConfig(cotizacionActivada as QuotationConfig)
+                        }
+                      }}
+                      onDelete={(quotationId) => {
+                        // Verificar si es la cotización activa
+                        const esCotizacionActiva = cotizacionConfig?.id === quotationId
+                        
+                        if (esCotizacionActiva) {
+                          // Guardar el ID para eliminar después de confirmación
+                          setQuotationIdPendienteEliminar(quotationId)
+                          // Mostrar diálogo de confirmación
+                          mostrarDialogoGenerico({
+                            tipo: 'warning',
+                            titulo: '¿Eliminar Cotización Activa?',
+                            icono: '🗑️',
+                            mensaje: 'Estás a punto de eliminar la cotización que está actualmente activa. Después de eliminarla, deberás crear una nueva o activar una existente.',
+                            botones: [
+                              {
+                                label: 'Cancelar',
+                                style: 'secondary',
+                                action: () => {
+                                  setQuotationIdPendienteEliminar(null)
+                                  cerrarDialogoGenerico()
+                                },
+                              },
+                              {
+                                label: 'Eliminar',
+                                style: 'danger',
+                                action: async () => {
+                                  cerrarDialogoGenerico()
+                                  await ejecutarEliminacionCotizacion(quotationId)
+                                  return false // Evitar que el renderizado cierre el diálogo recién abierto
+                                },
+                              },
+                            ],
+                          })
+                        } else {
+                          // No es activa, eliminar directamente con confirmación simple
+                          mostrarDialogoGenerico({
+                            tipo: 'warning',
+                            titulo: 'Confirmar Eliminación',
+                            icono: '🗑️',
+                            mensaje: '¿Estás seguro de que deseas eliminar esta cotización? Esta acción no se puede deshacer.',
+                            botones: [
+                              {
+                                label: 'Cancelar',
+                                style: 'secondary',
+                                action: () => cerrarDialogoGenerico(),
+                              },
+                              {
+                                label: 'Eliminar',
+                                style: 'danger',
+                                action: async () => {
+                                  cerrarDialogoGenerico()
+                                  await ejecutarEliminacionCotizacionSimple(quotationId)
+                                },
+                              },
+                            ],
+                          })
+                        }
+                      }}
+                        onToggleActive={async (quotationId, newStatus) => {
+                          try {
+                            // FASE 3: Si va a activarse, desactivar todas las otras
+                            if (newStatus.isGlobal === true) {
+                              await desactivarTodas(quotationId)
+                              toast.success('✓ Cotización activada. El resto de cotizaciones han sido desactivadas')
+                            } else {
+                              // Si va a desactivarse, solo actualizar este registro
+                              const response = await fetch(`/api/quotations/${quotationId}`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  activo: newStatus.activo,
+                                  isGlobal: newStatus.isGlobal
+                                })
+                              })
+                              if (response.ok) {
+                                toast.success('✓ Cotización desactivada')
+                              } else {
+                                throw new Error('Error al desactivar')
+                              }
+                            }
+                            // Recargar cotizaciones
+                            await recargarQuotations()
+                          } catch (error) {
+                            console.error('Error actualizando cotización:', error)
+                            toast.error('Error al actualizar el estado')
+                          }
+                        }}
+                        onViewProposal={(quotation) => {
+                          abrirModalVer(quotation)
+                        }}
+                      />
+                  </div>
+                )}
+
+                {/* TAB 7: CRM */}
+                {activePageTab === 'crm' && (
+                  <Suspense fallback={<ComponentLoader />}>
+                    <CrmTab activeSectionId={activeSidebarSection} />
+                  </Suspense>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </motion.div>
       </div>

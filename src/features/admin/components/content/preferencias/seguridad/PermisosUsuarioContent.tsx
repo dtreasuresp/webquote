@@ -20,7 +20,8 @@ import {
 import DialogoGenericoDinamico from '../../../DialogoGenericoDinamico'
 import { DropdownSelect } from '@/components/ui/DropdownSelect'
 import { ItemsPerPageSelector } from '@/components/ui/ItemsPerPageSelector'
-import { usePermission } from '@/hooks/usePermission'
+import { useAdminAudit, useAdminPermissions } from '@/features/admin/hooks'
+import SectionHeader from '@/features/admin/components/SectionHeader'
 
 // ==================== TIPOS ====================
 
@@ -60,7 +61,19 @@ interface Permission {
 
 export default function PermisosUsuarioContent() {
   // Permisos granulares
-  const userPermsConfig = usePermission('security.user_permissions')
+  const { logAction } = useAdminAudit()
+  const { canEdit: canEditFn, canDelete: canDeleteFn, canView: canViewFn } = useAdminPermissions()
+  
+  const canEdit = canEditFn('USERS')
+  const canDelete = canDeleteFn('USERS')
+  const canView = canViewFn('USERS')
+  
+  // Configuración de permisos para la UI
+  const userPermsConfig = {
+    canAssign: canEdit,
+    canRevoke: canDelete,
+    canView: canView
+  }
   
   // Estado
   const [users, setUsers] = useState<User[]>([])
@@ -178,6 +191,7 @@ export default function PermisosUsuarioContent() {
 
   // Guardar permiso individual
   const handleSavePermission = async () => {
+    if (!canEdit) return
     if (!selectedUser || !selectedPermissionId) return
 
     try {
@@ -195,6 +209,9 @@ export default function PermisosUsuarioContent() {
       
       if (!res.ok) throw new Error('Error al guardar')
       
+      const perm = permissions.find(p => p.id === selectedPermissionId)
+      logAction('CREATE', 'USERS', selectedUser.id, `Asignado permiso individual: ${perm?.code} (${grantType})`)
+      
       setIsModalOpen(false)
       fetchData()
     } catch (err) {
@@ -205,7 +222,8 @@ export default function PermisosUsuarioContent() {
   }
 
   // Eliminar permiso individual
-  const handleRemovePermission = async (userPermissionId: string) => {
+  const handleRemovePermission = async (userPermissionId: string, userId: string, permCode: string) => {
+    if (!canDelete) return
     if (!confirm('¿Eliminar este permiso individual?')) return
 
     try {
@@ -214,6 +232,8 @@ export default function PermisosUsuarioContent() {
       })
       
       if (!res.ok) throw new Error('Error al eliminar')
+      
+      logAction('DELETE', 'USERS', userId, `Eliminado permiso individual: ${permCode}`)
       fetchData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar')
@@ -239,18 +259,12 @@ export default function PermisosUsuarioContent() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-gh-text flex items-center gap-2">
-            <Users className="w-4 h-4 text-gh-accent" />
-            Permisos por Usuario
-          </h3>
-          <p className="text-xs text-gh-text-muted mt-0.5">
-            Asigna permisos adicionales o restricciones a usuarios específicos
-          </p>
-        </div>
-      </div>
+      <SectionHeader
+        title="Permisos por Usuario"
+        description="Asigna permisos adicionales o restricciones a usuarios específicos"
+        icon={<Users className="w-4 h-4" />}
+        variant="accent"
+      />
 
       {/* Filtros */}
       <div className="flex flex-col gap-3">
@@ -410,9 +424,9 @@ export default function PermisosUsuarioContent() {
                         <X className="w-2.5 h-2.5" />
                       )}
                       <span>{up.Permission.name}</span>
-                      {userPermsConfig.canEdit && (
+                      {canDelete && (
                         <button
-                          onClick={() => handleRemovePermission(up.id)}
+                          onClick={() => handleRemovePermission(up.id, user.id, up.Permission.code)}
                           className="ml-1 hover:opacity-70 transition-opacity"
                         >
                           <Trash2 className="w-2.5 h-2.5" />

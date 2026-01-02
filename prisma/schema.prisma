@@ -8,20 +8,6 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-// ============================================================
-// ENUMS
-// ============================================================
-
-enum QuotationState {
-  CARGADA
-  ACTIVA
-  INACTIVA
-  ACEPTADA
-  RECHAZADA
-  NUEVA_PROPUESTA
-  EXPIRADA
-}
-
 model QuotationConfig {
   id                            String                @id @default(cuid())
   numero                        String                @unique @default("")
@@ -45,9 +31,6 @@ model QuotationConfig {
   emailCliente                  String                @default("")
   whatsappCliente               String                @default("")
   activo                        Boolean               @default(true)
-  estado                        QuotationState        @default(CARGADA)
-  activadoEn                    DateTime?
-  inactivadoEn                  DateTime?
   emailProveedor                String                @default("")
   isGlobal                      Boolean               @default(false)
   versionNumber                 Int                   @default(1)
@@ -65,14 +48,35 @@ model QuotationConfig {
   metodosPreferidos             Json?
   packagesSnapshot              Json?
   packagesSnapshotAt            DateTime?
+  organizationId                String?
+  estado                        QuotationState        @default(CARGADA)
+  activadoEn                    DateTime?
+  inactivadoEn                  DateTime?
   respondidoEn                  DateTime?
   diasParaAceptar               Int?
   expiradoEn                    DateTime?
-  // NUEVO: Relación con Organization
-  organizationId                String?
-  organization                  Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  snapshots                     PackageSnapshot[]
+  accountId                     String?
+  contactId                     String?
+  opportunityId                 String?
+  subtotal                      Decimal?              @db.Decimal(12, 2)
+  taxRate                       Decimal?              @db.Decimal(5, 2) @default(0)
+  taxTotal                      Decimal?              @db.Decimal(12, 2)
+  discountTotal                 Decimal?              @db.Decimal(12, 2)
+  total                         Decimal?              @db.Decimal(12, 2)
+  approvalStatus                ApprovalStatus        @default(DRAFT)
+  approvalNotes                 String?
+  approvedBy                    String?
+  approvedAt                    DateTime?
+  templateId                    String?
   clientResponses               ClientResponse[]
+  snapshots                     PackageSnapshot[]
+  approvalFlows                 ApprovalFlow[]
+  account                       Account?              @relation(fields: [accountId], references: [id])
+  contact                       Contact?              @relation(fields: [contactId], references: [id])
+  opportunity                   Opportunity?          @relation(fields: [opportunityId], references: [id])
+  organization                  Organization?         @relation(fields: [organizationId], references: [id])
+  documentTemplate              DocumentTemplate?     @relation(fields: [templateId], references: [id])
+  lineItems                     QuoteLineItem[]
   User                          User?
   UserQuotationAccess           UserQuotationAccess[]
 
@@ -83,6 +87,10 @@ model QuotationConfig {
   @@index([respondidoEn])
   @@index([expiradoEn])
   @@index([organizationId])
+  @@index([accountId])
+  @@index([contactId])
+  @@index([opportunityId])
+  @@index([templateId])
 }
 
 model PackageSnapshot {
@@ -135,26 +143,22 @@ model UserPreferences {
   mostrarNotificacionCacheLocal  Boolean  @default(true)
   sincronizarAlRecuperarConexion Boolean  @default(true)
   unidadIntervaloConexion        String   @default("segundos")
-  guardarAutomaticamente         Boolean  @default(true)
-  
-  // Preferencias de auditoría - Reportes automáticos
-  auditRetentionDays             Int      @default(90)
   auditAutoPurgeEnabled          Boolean  @default(false)
   auditAutoPurgeFrequency        String   @default("weekly")
   auditAutoReportEnabled         Boolean  @default(false)
   auditAutoReportPeriod          String   @default("weekly")
-  auditAutoReportHour            Int      @default(1)  // 0-23, default 1 AM
-  auditAutoReportMinute          Int      @default(0)  // 0-59
-  auditReportRetentionDays       Int      @default(90)  // Días para retener reportes generados
-  notifyOnManualReport           Boolean  @default(true)  // Notificar al crear reporte manual
-  notifyOnAutoReport             Boolean  @default(true)  // Notificar al crear reporte automático
-  
-  // Preferencias de backup automático
+  auditRetentionDays             Int      @default(90)
+  guardarAutomaticamente         Boolean  @default(true)
+  auditAutoReportHour            Int      @default(1)
+  auditAutoReportMinute          Int      @default(0)
   autoBackupEnabled              Boolean  @default(false)
+  autoBackupHour                 Int      @default(2)
+  autoBackupMinute               Int      @default(0)
   autoBackupPeriod               String   @default("weekly")
-  autoBackupHour                 Int      @default(2)  // 0-23, default 2 AM
-  autoBackupMinute               Int      @default(0)  // 0-59
   autoBackupRetentionDays        Int      @default(30)
+  auditReportRetentionDays       Int      @default(90)
+  notifyOnAutoReport             Boolean  @default(true)
+  notifyOnManualReport           Boolean  @default(true)
 
   @@index([userId])
 }
@@ -178,36 +182,34 @@ model FinancialTemplate {
   @@index([userId])
 }
 
-// ==================== MODELO: Organización (Jerarquía) ====================
 model Organization {
-  id            String   @id @default(cuid())
-  nombre        String
-  sector        String
-  descripcion   String?
-  
-  // Jerarquía
-  parentId      String?
-  parent        Organization? @relation("OrganizationHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children      Organization[] @relation("OrganizationHierarchy")
-  nivel         String    @default("RAIZ")  // RAIZ, EMPRESA, DEPARTAMENTO, EQUIPO, PROYECTO
-  
-  // Contacto
-  email         String?
-  telefono      String?
-  direccion     String?
-  ciudad        String?
-  pais          String?
-  
-  // Relaciones
-  users         User[]
-  quotations    QuotationConfig[]
-  
-  // Auditoría
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  createdBy     String
-  updatedBy     String
-  
+  id          String            @id @default(cuid())
+  nombre      String
+  legalName   String?
+  taxId       String?
+  sector      String
+  industry    String?
+  website     String?
+  descripcion String?
+  email       String?
+  telefono    String?
+  size        String?
+  revenue     String?
+  parentId    String?
+  nivel       String            @default("RAIZ")
+  activo      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  createdBy   String
+  updatedBy   String
+  direccion   String?
+  ciudad      String?
+  pais        String?
+  parent      Organization?     @relation("OrganizationHierarchy", fields: [parentId], references: [id])
+  children    Organization[]    @relation("OrganizationHierarchy")
+  quotations  QuotationConfig[]
+  users       User[]
+
   @@index([parentId])
   @@index([createdBy])
 }
@@ -218,9 +220,9 @@ model Permission {
   name            String
   description     String?
   category        String
-  isSystem        Boolean           @default(false)
   isActive        Boolean           @default(true)
   createdAt       DateTime          @default(now())
+  isSystem        Boolean           @default(false)
   RolePermissions RolePermissions[]
   UserPermission  UserPermission[]
 
@@ -229,35 +231,31 @@ model Permission {
   @@index([isActive])
 }
 
-// ==================== MODELO ROLE DINÁMICO ====================
 model Role {
-  id              String            @id @default(cuid())
-  name            String            @unique
-  displayName     String
-  description     String?
-  hierarchy       Int               @default(50)
-  color           String?
-  isSystem        Boolean           @default(false)
-  isActive        Boolean           @default(true)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-  users           User[]            @relation("UserRole")
-  permissions     RolePermissions[]
+  id          String            @id @default(cuid())
+  name        String            @unique
+  displayName String
+  description String?
+  hierarchy   Int               @default(50)
+  color       String?
+  isSystem    Boolean           @default(false)
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  permissions RolePermissions[]
+  users       User[]            @relation("UserRole")
 
   @@index([hierarchy])
   @@index([isActive])
 }
 
-// ==================== PERMISOS POR ROL (NUEVO - usa roleId) ====================
 model RolePermissions {
-  id            String     @id @default(cuid())
-  roleId        String
-  permissionId  String
-  accessLevel   String     @default("full")
-
-  role          Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission    Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  accessLevel  String     @default("full")
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
   @@index([roleId])
@@ -281,35 +279,29 @@ model User {
   email               String?               @unique
   passwordHash        String
   role                UserRole              @default(CLIENT)
-  // Campo para migración gradual al modelo Role dinámico
-  roleId              String?
-  roleRef             Role?                 @relation("UserRole", fields: [roleId], references: [id])
   nombre              String                @default("")
   empresa             String                @default("")
   telefono            String                @default("")
   quotationAssignedId String?               @unique
-  // NUEVO: Relación con Organization
-  organizationId      String?
-  organization        Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   activo              Boolean               @default(true)
   lastLogin           DateTime?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   createdBy           String?
   avatarUrl           String?
+  roleId              String?
+  organizationId      String?
+  AuditLog            AuditLog[]
+  AuditReports        AuditReport[]
+  BackupConfig        BackupConfig?
+  Notification        Notification[]
   Session             Session[]
+  organization        Organization?         @relation(fields: [organizationId], references: [id])
   quotationAssigned   QuotationConfig?      @relation(fields: [quotationAssignedId], references: [id])
+  roleRef             Role?                 @relation("UserRole", fields: [roleId], references: [id])
+  UserBackup          UserBackup[]
   UserPermission      UserPermission[]
   UserQuotationAccess UserQuotationAccess[]
-  AuditLog            AuditLog[]
-  Notification        Notification[]
-  
-  // Relaciones de backup
-  UserBackup          UserBackup[]
-  BackupConfig        BackupConfig?
-  
-  // Relaciones de reportes
-  AuditReports        AuditReport[]
 
   @@index([activo])
   @@index([email])
@@ -358,26 +350,18 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-enum UserRole {
-  ADMIN
-  CLIENT
-  SUPER_ADMIN
-}
-
-// ==================== SISTEMA DE AUDITORÍA ====================
 model AuditLog {
-  id          String   @id @default(cuid())
-  action      String
-  entityType  String
-  entityId    String?
-  userId      String?
-  userName    String
-  details     Json?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  userId     String?
+  userName   String
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
 
   @@index([action])
   @@index([entityType])
@@ -385,12 +369,9 @@ model AuditLog {
   @@index([createdAt])
 }
 
-// ==================== SISTEMA DE BACKUPS ====================
 model UserBackup {
   id           String    @id @default(cuid())
   userId       String
-  User         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   nombre       String
   descripcion  String?
   tipo         String    @default("manual")
@@ -401,6 +382,7 @@ model UserBackup {
   errorMessage String?
   createdAt    DateTime  @default(now())
   expiresAt    DateTime?
+  User         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -410,8 +392,6 @@ model UserBackup {
 model BackupConfig {
   id                  String    @id @default(cuid())
   userId              String    @unique
-  User                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   autoBackupEnabled   Boolean   @default(false)
   autoBackupFrequency String    @default("weekly")
   autoBackupRetention Int       @default(5)
@@ -421,36 +401,28 @@ model BackupConfig {
   nextAutoBackup      DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  User                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ==================== REPORTES DE AUDITORÍA ====================
 model AuditReport {
-  id                   String    @id @default(cuid())
-  userId               String
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  period               String    @default("weekly") // weekly, monthly, daily
-  dateRangeFrom        DateTime
-  dateRangeTo          DateTime
-  
-  // Resumen
-  totalLogs            Int
-  uniqueUsers          Int
-  uniqueActions        Int
-  uniqueEntities       Int
-  
-  // Datos completos del reporte (JSON para flexibilidad)
-  reportData           Json      // Contiene topActions, entityDistribution, topUsers, dailyActivity
-  
-  // Auditoría del reporte
-  generatedAt          DateTime  @default(now())
-  generatedBy          String    @default("system") // "system" o userId
-  filePath             String?   // Ruta si se guardó como archivo
-  status               String    @default("completed") // completed, pending, failed
-  errorMessage         String?
-  
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  period         String   @default("weekly")
+  dateRangeFrom  DateTime
+  dateRangeTo    DateTime
+  totalLogs      Int
+  uniqueUsers    Int
+  uniqueActions  Int
+  uniqueEntities Int
+  reportData     Json
+  generatedAt    DateTime @default(now())
+  generatedBy    String   @default("system")
+  filePath       String?
+  status         String   @default("completed")
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([period])
@@ -458,70 +430,334 @@ model AuditReport {
   @@index([createdAt])
 }
 
-// ==================== MODELO: Respuestas de Clientes ====================
 model ClientResponse {
-  id                    String   @id @default(cuid())
-  
-  // Referencia a cotización
-  quotationConfigId     String
-  quotationConfig       QuotationConfig @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
-  
-  // Información del cliente (desde sesión)
-  clientUserId          String?          // ID del usuario cliente (si disponible)
-  clientName            String           // Nombre del cliente
-  clientEmail           String           // Email del cliente
-  
-  // Tipo de respuesta
-  responseType          String  // "ACEPTADA" | "RECHAZADA" | "NUEVA_PROPUESTA"
-  
-  // Mensaje del cliente (textarea)
-  mensaje               String?  // Razones del rechazo o sugerencias de cambios
-  
-  // Auditoría
-  respondidoEn          DateTime @default(now())
-  diasRestantes         Int?     // Días que quedaban cuando respondió
-  
-  // Metadata
-  ipAddress             String?
-  userAgent             String?
-  
-  // Relación con notificaciones
-  notificaciones        Notification[]
-  
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
+  id                String          @id @default(cuid())
+  quotationConfigId String
+  clientUserId      String?
+  clientName        String
+  clientEmail       String
+  responseType      String
+  mensaje           String?
+  respondidoEn      DateTime        @default(now())
+  diasRestantes     Int?
+  ipAddress         String?
+  userAgent         String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  quotationConfig   QuotationConfig @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
+  notificaciones    Notification[]
+
   @@index([quotationConfigId])
   @@index([clientUserId])
   @@index([responseType])
   @@index([respondidoEn])
 }
 
-// ==================== MODELO: Notificaciones ====================
 model Notification {
-  id                    String   @id @default(cuid())
-  
-  // Para quién es la notificación
-  userId                String
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // De dónde viene
-  clientResponseId      String?
-  clientResponse        ClientResponse? @relation(fields: [clientResponseId], references: [id], onDelete: SetNull)
-  
-  // Información de la notificación
-  titulo                String   // "Cliente XXX ha aceptado/rechazado/propuesto cambios"
-  descripcion           String?  // Vista previa del mensaje
-  tipoNotificacion      String   // "CLIENTE_ACEPTACION" | "CLIENTE_RECHAZO" | "CLIENTE_PROPUESTA"
-  
-  // Estado
-  leida                 Boolean  @default(false)
-  leidoEn               DateTime?
-  
-  // Auditoría
-  createdAt             DateTime @default(now())
-  
+  id               String          @id @default(cuid())
+  userId           String
+  clientResponseId String?
+  titulo           String
+  descripcion      String?
+  tipoNotificacion String
+  leida            Boolean         @default(false)
+  leidoEn          DateTime?
+  createdAt        DateTime        @default(now())
+  clientResponse   ClientResponse? @relation(fields: [clientResponseId], references: [id])
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([leida])
   @@index([createdAt])
+}
+
+model Account {
+  id              String            @id @default(cuid())
+  legalName       String
+  commercialName  String?
+  taxId           String?           @unique
+  type            AccountType       @default(EMPRESA)
+  status          AccountStatus     @default(PROSPECT)
+  email           String?
+  phone           String?
+  website         String?
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  country         String?
+  sector          String?
+  size            String?
+  creditLimit     Decimal?          @db.Decimal(12, 2)
+  paymentTerms    String?
+  viesVerified    Boolean           @default(false)
+  complianceNotes String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdBy       String?
+  contacts        Contact[]
+  interactions    Interaction[]
+  opportunities   Opportunity[]
+  quotations      QuotationConfig[]
+  subscriptions   Subscription[]
+  compliance      ComplianceRecord[]
+
+  @@index([legalName])
+  @@index([taxId])
+  @@index([status])
+}
+
+model Contact {
+  id                    String            @id @default(cuid())
+  accountId             String
+  fullName              String
+  title                 String?
+  role                  ContactRole       @default(USER)
+  email                 String?
+  phone                 String?
+  mobile                String?
+  preferredContact      ContactPreference @default(EMAIL)
+  language              String            @default("es")
+  timezone              String?
+  preferredContactHours String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  account               Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  interactions          Interaction[]
+  quotations            QuotationConfig[]
+
+  @@index([accountId])
+  @@index([email])
+}
+
+model Product {
+  id               String           @id @default(cuid())
+  name             String
+  sku              String           @unique
+  type             ProductType      @default(PRODUCT)
+  category         String
+  description      String?
+  listPrice        Decimal          @db.Decimal(12, 2)
+  costPrice        Decimal?         @db.Decimal(12, 2)
+  available        Boolean          @default(true)
+  stock            Int?
+  leadTimeDays     Int?
+  taxCategory      String?
+  appliesTax       Boolean          @default(true)
+  billingFrequency BillingFrequency @default(ONE_TIME)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([sku])
+  @@index([category])
+}
+
+model Opportunity {
+  id                String            @id @default(cuid())
+  accountId         String
+  name              String
+  stage             OpportunityStage  @default(PROSPECT)
+  probability       Int               @default(0)
+  estimatedValue    Decimal?          @db.Decimal(12, 2)
+  expectedCloseDate DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  account           Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  quotations        QuotationConfig[]
+
+  @@index([accountId])
+  @@index([stage])
+}
+
+model Interaction {
+  id          String          @id @default(cuid())
+  accountId   String
+  contactId   String?
+  type        InteractionType @default(NOTE)
+  subject     String?
+  description String
+  messageId   String?
+  assignedTo  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  contact     Contact?        @relation(fields: [contactId], references: [id])
+
+  @@index([accountId])
+  @@index([contactId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum QuotationState {
+  CARGADA
+  ACTIVA
+  INACTIVA
+  ACEPTADA
+  RECHAZADA
+  NUEVA_PROPUESTA
+  EXPIRADA
+}
+
+enum UserRole {
+  ADMIN
+  CLIENT
+  SUPER_ADMIN
+}
+
+enum AccountType {
+  EMPRESA
+  INDIVIDUAL
+  PROSPECT
+}
+
+enum AccountStatus {
+  PROSPECT
+  LEAD
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ContactRole {
+  DECISION_MAKER
+  INFLUENCER
+  USER
+  TECHNICAL
+}
+
+enum ContactPreference {
+  EMAIL
+  PHONE
+  WHATSAPP
+  SMS
+}
+
+enum ProductType {
+  PRODUCT
+  SERVICE
+  LICENSE
+  SUBSCRIPTION
+}
+
+enum BillingFrequency {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  ONE_TIME
+}
+
+enum OpportunityStage {
+  PROSPECT
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum InteractionType {
+  EMAIL
+  CALL
+  MEETING
+  NOTE
+  DOCUMENT
+}
+
+model Subscription {
+  id               String           @id @default(cuid())
+  accountId        String
+  productId        String?
+  name             String
+  status           String           @default("ACTIVE")
+  billingFrequency BillingFrequency @default(MONTHLY)
+  amount           Decimal          @db.Decimal(12, 2)
+  startDate        DateTime         @default(now())
+  endDate          DateTime?
+  nextBillingDate  DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  account          Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([status])
+}
+
+model ComplianceRecord {
+  id             String   @id @default(cuid())
+  accountId      String
+  type           String
+  status         String   @default("PENDING")
+  documentUrl    String?
+  notes          String?
+  validUntil     DateTime?
+  verifiedAt     DateTime?
+  verifiedBy     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  account        Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([type])
+}
+
+model QuoteLineItem {
+  id                String          @id @default(cuid())
+  quotationConfigId String
+  productId         String?
+  description       String
+  quantity          Int             @default(1)
+  unitPrice         Decimal         @db.Decimal(12, 2)
+  discount          Decimal?        @db.Decimal(5, 2)
+  tax               Decimal?        @db.Decimal(5, 2)
+  total             Decimal         @db.Decimal(12, 2)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  quotationConfig   QuotationConfig @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
+
+  @@index([quotationConfigId])
+}
+
+enum ApprovalStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model AutomationRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  trigger     String   // e.g., "QUOTE_CREATED", "QUOTE_UPDATED"
+  conditions  Json     // e.g., { "total": { "gt": 10000 } }
+  actions     Json     // e.g., { "requireApproval": true, "approverRole": "MANAGER" }
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ApprovalFlow {
+  id                String          @id @default(cuid())
+  quotationConfigId String
+  approverId        String?
+  approverRole      String?
+  status            ApprovalStatus  @default(PENDING)
+  notes             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  quotationConfig   QuotationConfig @relation(fields: [quotationConfigId], references: [id], onDelete: Cascade)
+
+  @@index([quotationConfigId])
+}
+
+model DocumentTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // EMAIL, PDF, CONTRACT
+  content     String   @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  quotations  QuotationConfig[]
 }
